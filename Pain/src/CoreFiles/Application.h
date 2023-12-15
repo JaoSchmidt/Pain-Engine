@@ -4,7 +4,7 @@
 
 namespace pain {
 
-class EXPORT Application {
+class Application {
 public:
   Application();
   virtual ~Application();

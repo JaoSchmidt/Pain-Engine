@@ -1,6 +1,4 @@
 #include "Application.h"
-#include <iostream>
-#include <ostream>
 
 namespace pain {
 
@@ -12,8 +10,7 @@ int Application::test() { return 28; }
 
 void Application::Run() {
   while (true)
-    std::cout << "testing" << std::endl;
-  ;
+    ;
 }
 
 } // namespace pain

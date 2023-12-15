@@ -8,3 +8,5 @@
 #else
 #error "Only Windows or Linux supports Pain"
 #endif
+
+#define BIT(x) (1 << x)
