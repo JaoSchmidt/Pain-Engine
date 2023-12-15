@@ -4,3 +4,6 @@
 [submodule "Pain/external/glfw"]
 	path = Pain/external/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "Pain/external/spdlog"]
+	path = Pain/external/spdlog
+	url = https://github.com/gabime/spdlog.git

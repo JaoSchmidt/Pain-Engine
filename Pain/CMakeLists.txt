@@ -20,11 +20,13 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 include_directories($(GLEW_INCLUDE_DIRS))
 add_subdirectory(external/glfw)
+add_subdirectory(external/spdlog)
 
 target_link_libraries(${LIBRARY_NAME}
   ${OPENGL_LIBRARIES}
   ${GLEW_LIBRARIES}
   glfw
+  spdlog::spdlog
 )
 
 
