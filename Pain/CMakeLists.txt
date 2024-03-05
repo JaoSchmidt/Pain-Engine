@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "pain")
 project(pain VERSION 0.1.0.0)
@@ -7,7 +8,18 @@ project(pain VERSION 0.1.0.0)
 add_compile_definitions(PAIN_PLATFORM_LINUX=1)
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
-add_subdirectory(src)
+file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+file(GLOB EXTRA_SOURCES "${PROJECT_SOURCE_DIR}/src/**/*.cpp")
+add_library(${LIBRARY_NAME} STATIC ${SOURCES} ${EXTRA_SOURCES} )
+# add_executable(${LIBRARY_NAME} "${SOURCES}" )
+
+target_include_directories(${LIBRARY_NAME} PUBLIC
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CoreFiles>
+	)
+
+# target_compile_options(${LIBRARY_NAME} PRIVATE -Wall -std=c++20 -fmodules-ts -lGLEW -lglfw -lGLU -lGL -lglm)
+target_compile_options(${LIBRARY_NAME} PRIVATE -Wall -std=c++17 -lGLEW -lglfw -lGLU -lGL -lglm)
 # =========== Adding Libraries ==================================
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
@@ -37,8 +49,8 @@ target_link_libraries(${LIBRARY_NAME}
 #     ${PROJECT_SOURCE_DIR}/src
 # )
 
-# set(CMAKE_CXX_STANDARD 20)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # file(GLOB HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
 # message(${HEADER_FILES})
 # set_target_properties(${PROJECT_NAME} PROPERTIES 

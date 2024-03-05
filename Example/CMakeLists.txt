@@ -4,7 +4,8 @@ set(PROJECT_NAME "Painful Game Example")
 set(TARGET_NAME "example")
 project(${PROJECT_NAME})
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
-add_subdirectory(src)
+add_executable(${TARGET_NAME} ${SOURCES})
+target_compile_options(${TARGET_NAME} PRIVATE -Wall)
 
 target_include_directories(pain PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/Pain/src

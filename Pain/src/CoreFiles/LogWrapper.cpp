@@ -1,5 +1,5 @@
-#include "Core.h"
-#include "spdlog/spdlog.h"
+#include "CoreFiles/Core.h"
+#include <spdlog/spdlog.h>
 
 #include "LogWrapper.h"
 
