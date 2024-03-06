@@ -1,9 +1,10 @@
 #include "Layer.h"
-#include "pain.h"
+#include <string>
 
-namespace pain {
+namespace pain
+{
 
-Layer::Layer(const int id) : m_DebugId(id) {}
+Layer::Layer(const std::string id) : m_debugId(id) {}
 
 Layer::~Layer() {}
 

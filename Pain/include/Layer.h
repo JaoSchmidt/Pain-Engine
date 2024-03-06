@@ -1,22 +1,26 @@
 #pragma once
 
 #include "CoreFiles/Core.h"
+#include <string>
 
-namespace pain {
-class EXPORT Layer {
+namespace pain
+{
+class EXPORT Layer
+{
 public:
-  Layer(const int id = 0);
+  Layer(const std::string id);
+  // virtual because it is supposed to be defined inside a game
   virtual ~Layer();
 
-  virtual void OnAttach() {}
-  virtual void OnDetach() {}
-  virtual void OnUpdate() {}
-  virtual void OnEvent() {}
+  virtual void onAttach() = 0;
+  virtual void onDetach() = 0;
+  virtual void onUpdate() = 0;
+  virtual void onEvent() = 0;
 
-  inline const int &GetId() const { return m_DebugId; }
+  inline const std::string &GetId() const { return m_debugId; }
 
 protected:
-  int m_DebugId;
+  std::string m_debugId;
 };
 
 } // namespace pain

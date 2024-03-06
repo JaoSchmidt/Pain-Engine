@@ -2,10 +2,14 @@
 
 extern pain::Application *pain::CreateApplication();
 
-int main(int argc, char **argv) {
+pain::Application *app;
+
+int main(int argc, char **argv)
+{
   pain::LogWrapper::Init();
   PLOG_T("Initialized Log!");
-  pain::Application *app = pain::CreateApplication();
-  app->Run();
+  app = pain::CreateApplication();
+
+  app->run();
   delete app;
 }

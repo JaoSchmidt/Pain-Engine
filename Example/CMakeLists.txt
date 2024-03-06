@@ -5,14 +5,14 @@ set(TARGET_NAME "example")
 project(${PROJECT_NAME})
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_executable(${TARGET_NAME} ${SOURCES})
-target_compile_options(${TARGET_NAME} PRIVATE -Wall)
+target_compile_options(${TARGET_NAME} PRIVATE -g -Wall)
 
-target_include_directories(pain PUBLIC 
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/Pain/src
+target_include_directories(Pain PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/Pain
 )
 
 target_link_libraries(${TARGET_NAME} PUBLIC
-  pain
+  Pain
 )
 
 # =========== Other settings ==================================
@@ -21,3 +21,7 @@ target_link_libraries(${TARGET_NAME} PUBLIC
 # set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+# =========== Copying Resources ==================================
+# Copy all files from resources/ to build directory
+file(COPY ${PROJECT_SOURCE_DIR}/resources/ DESTINATION ${CMAKE_BINARY_DIR}/resources/)
