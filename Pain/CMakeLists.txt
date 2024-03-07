@@ -3,15 +3,15 @@ cmake_minimum_required(VERSION 3.25)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
-project(pain VERSION 0.1.0.0)
+project(${LIBRARY_NAME} VERSION 0.1.0.0)
 
 add_compile_definitions(PAIN_PLATFORM_LINUX=1)
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB EXTRA_SOURCES "${PROJECT_SOURCE_DIR}/src/**/*.cpp")
-add_library(${LIBRARY_NAME} STATIC ${SOURCES} ${EXTRA_SOURCES} )
-# add_executable(${LIBRARY_NAME} "${SOURCES}" )
+# target_compile_definitions(${LIBRARY_NAME} PUBLIC IS_LIB_STATIC)
+add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${EXTRA_SOURCES} )
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

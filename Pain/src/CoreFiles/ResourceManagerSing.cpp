@@ -4,6 +4,8 @@
 
 namespace pain
 {
+
+Resources *Resources::m_instance = nullptr;
 Resources *Resources::getInstance()
 {
   if (m_instance == nullptr) {

@@ -4,14 +4,18 @@
 #include "spdlog/spdlog.h"
 #include <memory>
 
-namespace pain {
+namespace pain
+{
 
-class EXPORT LogWrapper {
+class EXPORT LogWrapper
+{
 public:
-  inline static std::shared_ptr<spdlog::logger> &GetClientLogger() {
+  inline static std::shared_ptr<spdlog::logger> &GetClientLogger()
+  {
     return s_ClientLogger;
   }
-  inline static std::shared_ptr<spdlog::logger> &GetCoreLogger() {
+  inline static std::shared_ptr<spdlog::logger> &GetCoreLogger()
+  {
     return s_CoreLogger;
   }
   static void Init();

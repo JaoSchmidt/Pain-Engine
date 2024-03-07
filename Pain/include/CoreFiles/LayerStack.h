@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Core.h"
 #include "Layer.h"
 #include <vector>
 
@@ -10,7 +9,7 @@ namespace pain
  * um wrapper para o vetor
  * Mas vou confiar nele por enquanto
  * */
-class EXPORT LayerStack
+class LayerStack
 {
 public:
   LayerStack();

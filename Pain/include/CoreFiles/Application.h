@@ -10,16 +10,10 @@ namespace pain
 class EXPORT Application
 {
 public:
-  Application(const char *title, int x, int y, int w, int h);
+  Application(const char *title, int w, int h);
 
   // virtual because the real Application will be the game
   virtual ~Application();
-  // // The Handler of events
-  // void setEventCallback(std::function<void(void)> func);
-  // // The Hanlder of updates
-  // void setUpdateCallback(std::function<void(void)> func);
-  // // The Handler of renderers
-  // void setRenderCallback(std::function<void(void)> func);
   // Cycle of Pain
   void run();
   void stop();

@@ -13,8 +13,7 @@ public:
 class Sandbox : public pain::Application
 {
 public:
-  Sandbox(const char *title, int x, int y, int w, int h)
-      : Application(title, x, y, w, h)
+  Sandbox(const char *title, int w, int h) : Application(title, w, h)
   {
     pushLayer(new MainLayer());
   }
@@ -26,9 +25,7 @@ pain::Application *pain::CreateApplication()
 {
   LOG_T("Creating app");
   const char *title = "Developing Pain";
-  const int x = 100;
-  const int y = 100;
   const int width = 800;
   const int height = 600;
-  return new Sandbox(title, x, y, width, height);
+  return new Sandbox(title, width, height);
 }

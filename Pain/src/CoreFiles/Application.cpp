@@ -1,23 +1,27 @@
 #include "Application.h"
 #include "LogWrapper.h"
+#include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 
 namespace pain
 {
 
-Application::Application(const char *title, int x, int y, int w, int h)
-    : m_maxFrameRate(60)
+Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     PLOG_E("SDL could not be init", SDL_GetError());
   } else {
     PLOG_T("SDL video is initialized");
   }
-  m_window = SDL_CreateWindow(title, x, y, w, h, SDL_WINDOW_OPENGL);
+  m_window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED,
+                              SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL);
   m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
   if (m_window != nullptr && m_renderer != nullptr) {
     PLOG_T("Application window and render initialized");
@@ -41,18 +45,6 @@ void Application::pushLayer(Layer *layer) { m_layerStack->pushLayer(layer); }
 
 void Application::popLayer(Layer *layer) { m_layerStack->popLayer(layer); }
 
-// void Application::setEventCallback(std::function<void(void)> eventHandler)
-// {
-//   m_eventCallback = eventHandler;
-// }
-// void Application::setUpdateCallback(std::function<void(void)> updateHandler)
-// {
-//   m_updateCallback = updateHandler;
-// }
-// void Application::setRenderCallback(std::function<void(void)> renderHandler)
-// {
-//   m_renderCallback = renderHandler;
-// }
 void Application::stop() { m_isGameRunning = false; }
 
 void Application::handleEvents()
@@ -63,24 +55,34 @@ void Application::handleEvents()
   // Start our event loop
   while (SDL_PollEvent(&event)) {
     // Handle each specific event
-    if (event.type == SDL_QUIT) {
+    switch (event.type) {
+
+    case SDL_QUIT:
       stop();
+      break;
+    case SDL_KEYDOWN:
+      PLOG_I("key pressed: {}", SDL_GetKeyName(event.key.keysym.sym));
+      break;
+    default:
+      break;
     }
   }
 }
+
 void Application::handleUpdate()
 {
   for (auto pLayer = m_layerStack->end(); pLayer != m_layerStack->begin();) {
     (*--pLayer)->onUpdate();
   }
 }
+
 void Application::handleRender()
 {
-  SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+  SDL_SetRenderDrawColor(m_renderer, 50, 50, 50, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(m_renderer);
 
   // Do the actual drawing
-  SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+  // SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 
   // updates the screen
   SDL_RenderPresent(m_renderer);
