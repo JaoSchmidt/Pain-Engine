@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "BufferLayout.h"
 #include "LogWrapper.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include <GL/glew.h>
@@ -10,26 +11,14 @@
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
+#include <cstdint>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
 const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
 
 namespace pain
 {
-
-void glErrorHandler(unsigned int source, unsigned int type, unsigned int id,
-                    unsigned int severity, int lenght, const char *message,
-                    const void *userParam)
-{
-  LOG_E("OpenGL error:");
-  LOG_E("source - {}", source);
-  LOG_E("type - {}", type);
-  LOG_E("id - {}", id);
-  LOG_E("severity - {}", severity);
-  LOG_E("message: {}", message);
-}
-
-Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
+void Application::initialSetup(const char *title, int w, int h)
 {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     PLOG_E("SDL could not be init", SDL_GetError());
@@ -61,33 +50,62 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
          std::string(reinterpret_cast<const char *>(glGetString(GL_VERSION))));
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(glErrorHandler, 0);
+}
 
+Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
+{
+  initialSetup(title, w, h);
   m_layerStack = new LayerStack();
   glGenVertexArrays(1, &m_vertexArray);
   glBindVertexArray(m_vertexArray);
 
-  float vertices[3 * 3] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
-                           0.0f,  0.0f,  0.5f, 0.0f};
+  float vertices[3 * 7] = {
+      -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f, //
+      0.5f,  -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f, //
+      0.0f,  0.5f,  0.0f, 0.8f, 0.8f, 0.2f, 1.0f  //
+  };
 
-  m_vertexBuffer = new VertexBuffer(vertices, sizeof(vertices));
+  m_vertexBuffer.reset(new VertexBuffer(vertices, sizeof(vertices)));
 
+  {
+    BufferLayout layout = {
+        {ShaderDataType::Float3, "a_Position"}, //
+        {ShaderDataType::Float4, "a_Color"}     //
+    };
+
+    m_vertexBuffer->SetLayout(layout);
+  }
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, VERTEX_SIZE, 3 * sizeof(float), 0);
-
-  unsigned int indices[3] = {0, 1, 2};
-  m_indexBuffer =
-      new IndexBuffer(indices, sizeof(indices) / sizeof(unsigned int));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+  uint32_t index = 0;
+  const auto &layout = m_vertexBuffer->GetLayout();
+  for (const auto &element : layout) {
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(                       //
+        index,                                   //
+        element.getComponentCount(),             //
+        element.getComponentGLType(),            //
+        element.normalized ? GL_TRUE : GL_FALSE, //
+        layout.GetStride(),                      //
+        (const void *)element.offset);           //
+    index++;
+  }
+  uint32_t indices[3] = {0, 1, 2};
+  m_indexBuffer.reset(
+      new IndexBuffer(indices, sizeof(indices) / sizeof(unsigned int)));
 
   std::string vertexSrc = R"(
 			#version 330 core
 			
 			layout(location = 0) in vec3 a_Position;
+			layout(location = 1) in vec4 a_Color;
 
 			out vec3 v_Position;
-
+			out vec4 v_Color;
 			void main()
 			{
 				v_Position = a_Position;
+				v_Color = a_Color;
 				gl_Position = vec4(a_Position, 1.0);	
 			}
 		)";
@@ -97,22 +115,20 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 			
 			layout(location = 0) out vec4 color;
 
+			in vec4 v_Color;
 			in vec3 v_Position;
 
 			void main()
 			{
-				color = vec4(v_Position * 0.5 + 0.5, 1.0);
+				color = v_Color;
 			}
 		)";
 
-  m_shader = new Shader(vertexSrc, fragmentSrc);
+  m_shader.reset(new Shader(vertexSrc, fragmentSrc));
 }
 
 Application::~Application()
 {
-  delete m_shader;
-  delete m_vertexBuffer;
-  delete m_indexBuffer;
   SDL_GL_DeleteContext(m_context);
   delete m_layerStack;
   SDL_DestroyWindow(m_window);
@@ -169,7 +185,7 @@ void Application::handleRender()
 void Application::run()
 {
   while (m_isGameRunning) {
-    unsigned int start = SDL_GetTicks();
+    uint32_t start = SDL_GetTicks();
     // unsigned int buttons;
     // buttons = SDL_GetMouseState(&m_mouseX, &m_mouseY);
 
@@ -181,11 +197,24 @@ void Application::run()
     // hanlde our rendering
     handleRender();
 
-    unsigned int elapsedTime = SDL_GetTicks() - start;
+    uint32_t elapsedTime = SDL_GetTicks() - start;
     if (elapsedTime < m_maxFrameRate) {
       SDL_Delay(m_maxFrameRate - elapsedTime);
     }
   };
+}
+
+void Application::glErrorHandler(unsigned int source, unsigned int type,
+                                 unsigned int id, unsigned int severity,
+                                 int lenght, const char *message,
+                                 const void *userParam)
+{
+  LOG_E("OpenGL error:");
+  LOG_E("source - {}", source);
+  LOG_E("type - {}", type);
+  LOG_E("id - {}", id);
+  LOG_E("severity - {}", severity);
+  LOG_E("message: {}", message);
 }
 
 } // namespace pain

@@ -8,13 +8,13 @@ namespace pain
 // IndexBuffer
 // ======================================================================== //
 
-IndexBuffer::IndexBuffer(unsigned int *indices, unsigned int count)
+IndexBuffer::IndexBuffer(unsigned int *indexes, unsigned int count)
     : m_count(count)
 {
 
   glGenBuffers(1, &m_bufferId);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufferId);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), indices,
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), indexes,
                GL_STATIC_DRAW);
 }
 void IndexBuffer::Bind() const

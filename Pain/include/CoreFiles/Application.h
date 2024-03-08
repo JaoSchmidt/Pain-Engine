@@ -32,11 +32,12 @@ public:
   void handleEvents();
   void handleUpdate();
   void handleRender();
+  static void glErrorHandler(unsigned int source, unsigned int type,
+                             unsigned int id, unsigned int severity, int lenght,
+                             const char *message, const void *userParam);
 
 private:
-  // temp
-  int m_width;
-  int m_height;
+  void initialSetup(const char *title, int w, int h);
   // Refers to the game window
   SDL_Window *m_window = nullptr;
   SDL_GLContext m_context = nullptr;
@@ -47,12 +48,9 @@ private:
   unsigned int m_maxFrameRate;
   LayerStack *m_layerStack;
   unsigned int m_vertexArray;
-  Shader *m_shader;
-  VertexBuffer *m_vertexBuffer;
-  IndexBuffer *m_indexBuffer;
-  // std::unique_ptr<Shader> m_Shader;
-  // std::unique_ptr<VertexBuffer> m_VertexBuffer;
-  // std::unique_ptr<IndexBuffer> m_IndexBuffer;
+  std::unique_ptr<Shader> m_shader;
+  std::unique_ptr<VertexBuffer> m_vertexBuffer;
+  std::unique_ptr<IndexBuffer> m_indexBuffer;
 };
 
 // To be defined in CLIENT

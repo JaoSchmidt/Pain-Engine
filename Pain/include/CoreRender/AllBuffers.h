@@ -1,35 +1,41 @@
 #pragma once
 
+#include "BufferLayout.h"
+#include <cstdint>
+
 namespace pain
 {
 
 class VertexBuffer
 {
 public:
-  VertexBuffer(float *vertices, unsigned int size);
+  VertexBuffer(float *vertices, uint32_t size);
   ~VertexBuffer() {}
 
   void Bind() const;
   void Unbind() const;
 
+  inline const BufferLayout &GetLayout() const { return m_layout; }
+  inline void SetLayout(const BufferLayout &layout) { m_layout = layout; }
+
 private:
-  unsigned int m_bufferId;
+  uint32_t m_bufferId;
+  BufferLayout m_layout;
 };
 
 class IndexBuffer
 {
 public:
-  IndexBuffer(unsigned int *indeces, unsigned int count);
+  IndexBuffer(uint32_t *indexes, uint32_t count);
   ~IndexBuffer() {}
 
   void Bind() const;
   void Unbind() const;
 
-  unsigned int GetCount() const { return m_count; };
+  uint32_t GetCount() const { return m_count; };
 
 private:
-  unsigned int m_bufferId;
-  unsigned int m_count;
+  uint32_t m_bufferId;
+  uint32_t m_count;
 };
-
 } // namespace pain

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <string>
 
@@ -15,9 +16,9 @@ public:
   static std::pair<std::string, std::string> parseShader(const char *filepath);
 
 private:
-  unsigned int compileShader(unsigned int type, const std::string &source);
-  bool checkLinkProgram(unsigned int programID);
-  unsigned int m_programID;
+  uint32_t compileShader(uint32_t type, const std::string &source);
+  bool checkLinkProgram(uint32_t programID);
+  uint32_t m_programID;
   void createShaderFromStrings(const std::string &vertexShader,
                                const std::string &fragmentShader);
 };
