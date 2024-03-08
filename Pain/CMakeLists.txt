@@ -16,6 +16,7 @@ add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${EXTRA_SOURCES} )
 target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CoreFiles>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CoreRender>
 	)
 
 # target_compile_options(${LIBRARY_NAME} PRIVATE -Wall -std=c++20 -fmodules-ts -lGLEW -lglfw -lGLU -lGL -lglm)
@@ -33,7 +34,6 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 include_directories($(GLEW_INCLUDE_DIRS))
-add_subdirectory(external/glfw)
 add_subdirectory(external/spdlog)
 add_subdirectory(external/SDL)
 add_subdirectory(external/SDL_image)
@@ -41,7 +41,6 @@ add_subdirectory(external/SDL_image)
 target_link_libraries(${LIBRARY_NAME}
   ${OPENGL_LIBRARIES}
   ${GLEW_LIBRARIES}
-  glfw
   spdlog::spdlog
 	SDL2
 	SDL2_image

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "GL/glew.h"
 #include "spdlog/spdlog.h"
 #include <memory>
 
@@ -27,16 +28,16 @@ private:
 
 } // namespace pain
 
-// // Core log macros
+// Core log macros
 #define PLOG_T(...) ::pain::LogWrapper::GetCoreLogger()->trace(__VA_ARGS__)
 #define PLOG_I(...) ::pain::LogWrapper::GetCoreLogger()->info(__VA_ARGS__)
 #define PLOG_W(...) ::pain::LogWrapper::GetCoreLogger()->warn(__VA_ARGS__)
 #define PLOG_E(...) ::pain::LogWrapper::GetCoreLogger()->error(__VA_ARGS__)
-#define PLOG_F(...) ::pain::LogWrapper::GetCoreLogger()->fatal(__VA_ARGS__)
+#define PLOG_F(...) ::pain::LogWrapper::GetCoreLogger()->critical(__VA_ARGS__)
 
 // Client log macros
 #define LOG_T(...) ::pain::LogWrapper::GetClientLogger()->trace(__VA_ARGS__)
 #define LOG_I(...) ::pain::LogWrapper::GetClientLogger()->info(__VA_ARGS__)
 #define LOG_W(...) ::pain::LogWrapper::GetClientLogger()->warn(__VA_ARGS__)
 #define LOG_E(...) ::pain::LogWrapper::GetClientLogger()->error(__VA_ARGS__)
-#define LOG_F(...) ::pain::LogWrapper::GetClientLogger()->fatal(__VA_ARGS__)
+#define LOG_F(...) ::pain::LogWrapper::GetClientLogger()->critical(__VA_ARGS__)

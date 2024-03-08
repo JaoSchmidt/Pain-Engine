@@ -4,7 +4,7 @@ class MainLayer : public pain::Layer
 {
 public:
   MainLayer() : Layer("main") {}
-  void onUpdate() override { LOG_I("Update on the client"); }
+  void onUpdate() override {}
   void onEvent() override { LOG_I("Event on the client"); }
   void onDetach() override { LOG_I("Layer attached to the stack"); }
   void onAttach() override { LOG_I("Layer dettached from the stack"); }

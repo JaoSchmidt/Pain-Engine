@@ -1,8 +1,12 @@
 #pragma once
 
+#include "AllBuffers.h"
 #include "Core.h"
 #include "LayerStack.h"
+#include "Shader.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_video.h>
+#include <memory>
 
 namespace pain
 {
@@ -30,17 +34,25 @@ public:
   void handleRender();
 
 private:
+  // temp
+  int m_width;
+  int m_height;
   // Refers to the game window
   SDL_Window *m_window = nullptr;
-  SDL_Renderer *m_renderer = nullptr;
+  SDL_GLContext m_context = nullptr;
+  // SDL_Renderer *m_renderer = nullptr;
   bool m_isGameRunning = true;
   int m_mouseX;
   int m_mouseY;
   unsigned int m_maxFrameRate;
-  // std::function<void(void)> m_eventCallback;
-  // std::function<void(void)> m_updateCallback;
-  // std::function<void(void)> m_renderCallback;
   LayerStack *m_layerStack;
+  unsigned int m_vertexArray;
+  Shader *m_shader;
+  VertexBuffer *m_vertexBuffer;
+  IndexBuffer *m_indexBuffer;
+  // std::unique_ptr<Shader> m_Shader;
+  // std::unique_ptr<VertexBuffer> m_VertexBuffer;
+  // std::unique_ptr<IndexBuffer> m_IndexBuffer;
 };
 
 // To be defined in CLIENT
