@@ -1,8 +1,5 @@
 #pragma once
-
-#include <SDL2/SDL.h>
-#include <string>
-#include <unordered_map>
+#include "pch.gch"
 
 namespace pain
 {

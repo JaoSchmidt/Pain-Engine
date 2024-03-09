@@ -1,8 +1,6 @@
 #pragma once
-#include "LogWrapper.h"
-#include <cstdint>
-#include <string>
-#include <vector>
+
+#include "pch.gch"
 
 namespace pain
 {

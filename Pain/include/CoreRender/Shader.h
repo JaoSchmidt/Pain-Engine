@@ -1,8 +1,5 @@
 #pragma once
-
-#include <cstdint>
-#include <functional>
-#include <string>
+#include "pch.gch"
 
 class Shader
 {

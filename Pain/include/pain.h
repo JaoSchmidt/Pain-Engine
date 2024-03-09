@@ -1,6 +1,6 @@
 #pragma once
 
-// For use by Pain applications
+// For use specifically for games build with Pain
 
 #include "Application.h"
 #include "Layer.h"
@@ -12,6 +12,7 @@
 #define LOG_W(...) ::pain::LogWrapper::GetClientLogger()->warn(__VA_ARGS__)
 #define LOG_E(...) ::pain::LogWrapper::GetClientLogger()->error(__VA_ARGS__)
 #define LOG_F(...) ::pain::LogWrapper::GetClientLogger()->critical(__VA_ARGS__)
+
 #ifndef NDEBUG
 #define ASSERT(x, ...)                                                         \
   {                                                                            \

@@ -1,13 +1,12 @@
 #pragma once
+#include "pch.gch"
 
 #include "AllBuffers.h"
 #include "Core.h"
+#include "Layer.h"
 #include "LayerStack.h"
 #include "Shader.h"
 #include "VertexArray.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_video.h>
-#include <memory>
 
 namespace pain
 {

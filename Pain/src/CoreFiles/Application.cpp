@@ -1,20 +1,7 @@
 #include "Application.h"
 #include "BufferLayout.h"
-#include "Core.h"
 #include "LogWrapper.h"
-#include "VertexArray.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_mouse.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_scancode.h>
-#include <SDL2/SDL_stdinc.h>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_video.h>
-#include <cstdint>
-#include <memory>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
 const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
@@ -161,7 +148,7 @@ void Application::handleUpdate()
 
 void Application::handleRender()
 {
-  glClearColor(0.1f, 0.1f, 0.1f, 1);
+  glClearColor(0.5294117, 0.807843137, 0.921568627, 1);
   glClear(GL_COLOR_BUFFER_BIT);
 
   m_shader->bind();

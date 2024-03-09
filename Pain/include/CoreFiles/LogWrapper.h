@@ -1,9 +1,7 @@
 #pragma once
+#include "pch.gch"
 
 #include "Core.h"
-#include "GL/glew.h"
-#include "spdlog/spdlog.h"
-#include <memory>
 
 namespace pain
 {

@@ -1,7 +1,7 @@
 #pragma once
+#include "pch.gch"
 
-#include "CoreFiles/Core.h"
-#include <string>
+#include "Core.h"
 
 namespace pain
 {

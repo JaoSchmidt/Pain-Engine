@@ -1,9 +1,7 @@
 #pragma once
+#include "pch.gch"
 
 #include "AllBuffers.h"
-#include <cstdint>
-#include <memory>
-#include <vector>
 
 namespace pain
 {
@@ -16,6 +14,14 @@ public:
   void unbind() const;
   void addVertexBuffer(const std::shared_ptr<VertexBuffer> &vertexBuffer);
   void setIndexBuffer(const std::shared_ptr<IndexBuffer> &indexBuffer);
+  const std::vector<std::shared_ptr<VertexBuffer>> &getVertexBuffers() const
+  {
+    return m_vertexBuffer;
+  };
+  const std::shared_ptr<IndexBuffer> &getIndexBuffer() const
+  {
+    return m_indexBuffer;
+  }
 
 private:
   std::vector<std::shared_ptr<VertexBuffer>> m_vertexBuffer;
