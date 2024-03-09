@@ -36,8 +36,3 @@ private:
 #define PLOG_F(...) ::pain::LogWrapper::GetCoreLogger()->critical(__VA_ARGS__)
 
 // Client log macros
-#define LOG_T(...) ::pain::LogWrapper::GetClientLogger()->trace(__VA_ARGS__)
-#define LOG_I(...) ::pain::LogWrapper::GetClientLogger()->info(__VA_ARGS__)
-#define LOG_W(...) ::pain::LogWrapper::GetClientLogger()->warn(__VA_ARGS__)
-#define LOG_E(...) ::pain::LogWrapper::GetClientLogger()->error(__VA_ARGS__)
-#define LOG_F(...) ::pain::LogWrapper::GetClientLogger()->critical(__VA_ARGS__)

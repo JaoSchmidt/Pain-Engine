@@ -1,6 +1,8 @@
 #include "Application.h"
 #include "BufferLayout.h"
+#include "Core.h"
 #include "LogWrapper.h"
+#include "VertexArray.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -12,12 +14,14 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <cstdint>
+#include <memory>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
 const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
 
 namespace pain
 {
+/* Creates window, opengl context and init glew*/
 void Application::initialSetup(const char *title, int w, int h)
 {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -56,9 +60,7 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 {
   initialSetup(title, w, h);
   m_layerStack = new LayerStack();
-  glGenVertexArrays(1, &m_vertexArray);
-  glBindVertexArray(m_vertexArray);
-
+  m_vertexArray.reset(new VertexArray());
   float vertices[3 * 7] = {
       -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f, //
       0.5f,  -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f, //
@@ -67,32 +69,19 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 
   m_vertexBuffer.reset(new VertexBuffer(vertices, sizeof(vertices)));
 
-  {
-    BufferLayout layout = {
-        {ShaderDataType::Float3, "a_Position"}, //
-        {ShaderDataType::Float4, "a_Color"}     //
-    };
+  BufferLayout layout = {
+      {ShaderDataType::Float3, "a_Position"}, //
+      {ShaderDataType::Float4, "a_Color"}     //
+  };
 
-    m_vertexBuffer->SetLayout(layout);
-  }
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-  uint32_t index = 0;
-  const auto &layout = m_vertexBuffer->GetLayout();
-  for (const auto &element : layout) {
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(                       //
-        index,                                   //
-        element.getComponentCount(),             //
-        element.getComponentGLType(),            //
-        element.normalized ? GL_TRUE : GL_FALSE, //
-        layout.GetStride(),                      //
-        (const void *)element.offset);           //
-    index++;
-  }
+  m_vertexBuffer->setLayout(layout);
+  m_vertexArray->addVertexBuffer(m_vertexBuffer);
+
   uint32_t indices[3] = {0, 1, 2};
   m_indexBuffer.reset(
-      new IndexBuffer(indices, sizeof(indices) / sizeof(unsigned int)));
+      new IndexBuffer(indices, sizeof(indices) / sizeof(uint32_t)));
+
+  m_vertexArray->setIndexBuffer(m_indexBuffer);
 
   std::string vertexSrc = R"(
 			#version 330 core
@@ -176,8 +165,8 @@ void Application::handleRender()
   glClear(GL_COLOR_BUFFER_BIT);
 
   m_shader->bind();
-  glBindVertexArray(m_vertexArray);
-  glDrawElements(GL_TRIANGLES, m_indexBuffer->GetCount(), GL_UNSIGNED_INT, 0);
+  // m_vertexArray->bind();
+  glDrawElements(GL_TRIANGLES, m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
 
   SDL_GL_SwapWindow(m_window);
 }
@@ -209,12 +198,43 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
                                  int lenght, const char *message,
                                  const void *userParam)
 {
-  LOG_E("OpenGL error:");
-  LOG_E("source - {}", source);
-  LOG_E("type - {}", type);
-  LOG_E("id - {}", id);
-  LOG_E("severity - {}", severity);
-  LOG_E("message: {}", message);
-}
 
+  PLOG_W("---------------");
+  PLOG_W("Debug message ({}): {}", id, message);
+  // clang-format off
+    switch (source) 
+    { 
+        case GL_DEBUG_SOURCE_API:             PLOG_W(  "Source: API"); break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   PLOG_W(  "Source: Window System"); break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER: PLOG_W(  "Source: Shader Compiler"); break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:     PLOG_W(  "Source: Third Party"); break;
+        case GL_DEBUG_SOURCE_APPLICATION:     PLOG_W(  "Source: Application"); break;
+        case GL_DEBUG_SOURCE_OTHER:           PLOG_W(  "Source: Other"); break;
+    } 
+
+    switch (type) 
+    { 
+        case GL_DEBUG_TYPE_ERROR:               PLOG_E(  "Type: Error"); break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: PLOG_W(  "Type: Deprecated Behaviour"); break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  PLOG_W(  "Type: Undefined Behaviour"); break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         PLOG_W(  "Type: Portability"); break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         PLOG_W(  "Type: Performance"); break;
+        case GL_DEBUG_TYPE_MARKER:              PLOG_W(  "Type: Marker"); break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          PLOG_W(  "Type: Push Group"); break;
+        case GL_DEBUG_TYPE_POP_GROUP:           PLOG_W(  "Type: Pop Group"); break;
+        case GL_DEBUG_TYPE_OTHER:               PLOG_W(  "Type: Other"); break;
+    } 
+    
+    switch (severity)
+    {
+        case GL_DEBUG_SEVERITY_HIGH:         PLOG_E(  "Severity: high"); break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       PLOG_W(  "Severity: medium"); break;
+        case GL_DEBUG_SEVERITY_LOW:          PLOG_W(  "Severity: low"); break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION: PLOG_W(  "Severity: notification"); break;
+    }
+	if (GL_DEBUG_SEVERITY_HIGH == type || GL_DEBUG_TYPE_ERROR == type){
+		P_ASSERT(false,"OpenGL critical error");
+	}
+  // clang-format on
+}
 } // namespace pain

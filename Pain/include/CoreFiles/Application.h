@@ -4,6 +4,7 @@
 #include "Core.h"
 #include "LayerStack.h"
 #include "Shader.h"
+#include "VertexArray.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <memory>
@@ -47,10 +48,10 @@ private:
   int m_mouseY;
   unsigned int m_maxFrameRate;
   LayerStack *m_layerStack;
-  unsigned int m_vertexArray;
-  std::unique_ptr<Shader> m_shader;
-  std::unique_ptr<VertexBuffer> m_vertexBuffer;
-  std::unique_ptr<IndexBuffer> m_indexBuffer;
+  std::shared_ptr<VertexArray> m_vertexArray;
+  std::shared_ptr<Shader> m_shader;
+  std::shared_ptr<VertexBuffer> m_vertexBuffer;
+  std::shared_ptr<IndexBuffer> m_indexBuffer;
 };
 
 // To be defined in CLIENT

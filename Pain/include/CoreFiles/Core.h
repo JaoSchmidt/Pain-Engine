@@ -12,4 +12,15 @@
 #error "Only Windows or Linux supports Pain"
 #endif
 
-// #define BIT(x) (1 << x)
+#ifndef NDEBUG
+
+#define P_ASSERT(x, ...)                                                       \
+  {                                                                            \
+    if (!(x)) {                                                                \
+      PLOG_E("Assertion Failed: {0}", __VA_ARGS__);                            \
+      assert(x);                                                               \
+    }                                                                          \
+  }
+#else
+#define P_ASSERT(x, ...)
+#endif

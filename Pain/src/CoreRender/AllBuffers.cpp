@@ -17,11 +17,11 @@ IndexBuffer::IndexBuffer(unsigned int *indexes, unsigned int count)
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), indexes,
                GL_STATIC_DRAW);
 }
-void IndexBuffer::Bind() const
+void IndexBuffer::bind() const
 {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufferId);
 }
-void IndexBuffer::Unbind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
+void IndexBuffer::unbind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
 
 // ======================================================================== //
 // VertexBuffer
@@ -34,7 +34,7 @@ VertexBuffer::VertexBuffer(float *vertices, unsigned int size)
   glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 }
 
-void VertexBuffer::Bind() const { glBindBuffer(GL_ARRAY_BUFFER, m_bufferId); }
-void VertexBuffer::Unbind() const { glBindBuffer(GL_ARRAY_BUFFER, 0); }
+void VertexBuffer::bind() const { glBindBuffer(GL_ARRAY_BUFFER, m_bufferId); }
+void VertexBuffer::unbind() const { glBindBuffer(GL_ARRAY_BUFFER, 0); }
 
 } // namespace pain
