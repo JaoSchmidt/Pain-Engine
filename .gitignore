@@ -641,7 +641,6 @@ StyleCopReport.xml
 *.meta
 *.obj
 *.iobj
-*.pch
 *.pdb
 *.ipdb
 *.pgc
