@@ -1,7 +1,12 @@
 #include "Application.h"
 #include "BufferLayout.h"
 #include "LogWrapper.h"
+#include "Renderer.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
+#include <glm/fwd.hpp>
+#include <memory>
+
+#include <utility>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
 const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
@@ -45,6 +50,11 @@ void Application::initialSetup(const char *title, int w, int h)
 
 Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 {
+
+  m_orthocamera.reset(new OrthographicCamera(-1.0f, 1.0f, -1.0f, 1.0f));
+  // std::shared_ptr<OrthographicCamera> oc =
+  //     std::make_shared<OrthographicCamera>(-1.0f, 1.0f, -1.0f, 1.0f);
+  // m_orthocamera = std::static_pointer_cast<Camera>(oc);
   initialSetup(title, w, h);
   m_layerStack = new LayerStack();
   m_vertexArray.reset(new VertexArray());
@@ -101,6 +111,7 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 		)";
 
   m_shader.reset(new Shader(vertexSrc, fragmentSrc));
+  Renderer::beginScene(m_orthocamera);
 }
 
 Application::~Application()
@@ -148,14 +159,12 @@ void Application::handleUpdate()
 
 void Application::handleRender()
 {
-  glClearColor(0.5294117, 0.807843137, 0.921568627, 1);
-  glClear(GL_COLOR_BUFFER_BIT);
+  Renderer::setClearColor(glm::vec4(0.5294117, 0.807843137, 0.921568627, 1));
+  Renderer::clear();
 
-  m_shader->bind();
-  // m_vertexArray->bind();
-  glDrawElements(GL_TRIANGLES, m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
+  Renderer::submit(m_shader, m_vertexArray);
 
-  SDL_GL_SwapWindow(m_window);
+  Renderer::endScene(m_window);
 }
 
 void Application::run()

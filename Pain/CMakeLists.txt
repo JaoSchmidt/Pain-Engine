@@ -11,7 +11,6 @@ add_compile_definitions(PAIN_PLATFORM_LINUX=1)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB EXTRA_SOURCES "${PROJECT_SOURCE_DIR}/src/**/*.cpp")
-# target_compile_definitions(${LIBRARY_NAME} PUBLIC IS_LIB_STATIC)
 add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${EXTRA_SOURCES} )
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
@@ -40,12 +39,12 @@ add_subdirectory(external/spdlog)
 add_subdirectory(external/SDL)
 add_subdirectory(external/SDL_image)
 
-target_link_libraries(${LIBRARY_NAME}
-  ${OPENGL_LIBRARIES}
-  ${GLEW_LIBRARIES}
-  spdlog::spdlog
-	SDL2
-	SDL2_image
+target_link_libraries(${LIBRARY_NAME} PUBLIC
+		spdlog::spdlog
+		${OPENGL_LIBRARIES}
+		${GLEW_LIBRARIES}
+		SDL2
+		SDL2_image
 )
 
 

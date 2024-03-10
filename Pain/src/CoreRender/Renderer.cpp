@@ -2,7 +2,7 @@
 
 namespace pain
 {
-
+std::shared_ptr<Camera> Renderer::m_camera = nullptr;
 void Renderer::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray)
 {
   glDrawElements(GL_TRIANGLES, vertexArray->getIndexBuffer()->getCount(),
@@ -16,12 +16,19 @@ void setClearColor(const glm::vec4 color)
   glClearColor(color.r, color.g, color.b, color.a);
 }
 
-void Renderer::beginScene() {}
-
-void Renderer::endScene() {}
-
-void Renderer::submit(const std::shared_ptr<VertexArray> &vertexArray)
+void Renderer::beginScene(std::shared_ptr<Camera> &camera)
 {
+  m_camera = camera;
+}
+
+void Renderer::endScene(SDL_Window *m_window) { SDL_GL_SwapWindow(m_window); }
+
+void Renderer::submit(const std::shared_ptr<Shader> shader,
+                      const std::shared_ptr<VertexArray> &vertexArray)
+{
+  shader->bind();
+  shader->uploadUniformMat4("u_ViewProjection",
+                            m_camera->GetViewProjectionMatrix());
   vertexArray->bind();
   drawIndexed(vertexArray);
 }

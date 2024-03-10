@@ -15,13 +15,6 @@ target_link_libraries(${TARGET_NAME} PUBLIC
   Pain
 )
 
-# =========== Other settings ==================================
-
-# set(CMAKE_CXX_STANDARD 20)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-
 # =========== Copying Resources ==================================
 # Copy all files from resources/ to build directory
 file(COPY ${PROJECT_SOURCE_DIR}/resources/ DESTINATION ${CMAKE_BINARY_DIR}/resources/)

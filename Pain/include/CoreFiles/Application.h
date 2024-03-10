@@ -2,6 +2,7 @@
 #include "pch.gch"
 
 #include "AllBuffers.h"
+#include "Camera.h"
 #include "Core.h"
 #include "Layer.h"
 #include "LayerStack.h"
@@ -51,6 +52,7 @@ private:
   std::shared_ptr<Shader> m_shader;
   std::shared_ptr<VertexBuffer> m_vertexBuffer;
   std::shared_ptr<IndexBuffer> m_indexBuffer;
+  std::shared_ptr<Camera> m_orthocamera;
 };
 
 // To be defined in CLIENT

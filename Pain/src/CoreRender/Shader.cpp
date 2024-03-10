@@ -1,10 +1,21 @@
 
 #include "Shader.h"
-#include "LogWrapper.h"
-#include <fstream>
-#include <sstream>
 
-#include <GL/glew.h>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "LogWrapper.h"
+
+Shader::~Shader() { glDeleteProgram(m_programId); };
+
+void Shader::bind() const { glUseProgram(m_programId); };
+void Shader::unbind() const { glUseProgram(0); };
+
+void Shader::uploadUniformMat4(const std::string &name,
+                               const glm::mat4 &matrix_to_upload)
+{
+  GLint location = glGetUniformLocation(m_programId, name.c_str());
+  glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix_to_upload));
+}
 
 std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
 {
@@ -85,23 +96,18 @@ void Shader::createShaderFromStrings(const std::string &vertexShader,
 
   uint32_t vs = compileShader(GL_VERTEX_SHADER, vertexShader);
   uint32_t fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
-  m_programID = glCreateProgram();
-  glAttachShader(m_programID, vs);
-  glAttachShader(m_programID, fs);
-  glLinkProgram(m_programID);
+  m_programId = glCreateProgram();
+  glAttachShader(m_programId, vs);
+  glAttachShader(m_programId, fs);
+  glLinkProgram(m_programId);
 
-  if (!checkLinkProgram(m_programID)) {
-    glDetachShader(m_programID, vs);
-    glDetachShader(m_programID, fs);
+  if (!checkLinkProgram(m_programId)) {
+    glDetachShader(m_programId, vs);
+    glDetachShader(m_programId, fs);
     return;
   }
-  glValidateProgram(m_programID);
+  glValidateProgram(m_programId);
 
   glDeleteShader(vs);
   glDeleteShader(fs);
 }
-
-Shader::~Shader() { glDeleteProgram(m_programID); };
-
-void Shader::bind() const { glUseProgram(m_programID); };
-void Shader::unbind() const { glUseProgram(0); };
