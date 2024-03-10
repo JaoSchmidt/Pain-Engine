@@ -3,8 +3,11 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Core.h"
 #include "LogWrapper.h"
 
+namespace pain
+{
 Shader::~Shader() { glDeleteProgram(m_programId); };
 
 void Shader::bind() const { glUseProgram(m_programId); };
@@ -14,6 +17,8 @@ void Shader::uploadUniformMat4(const std::string &name,
                                const glm::mat4 &matrix_to_upload)
 {
   GLint location = glGetUniformLocation(m_programId, name.c_str());
+  P_ASSERT_W(location != -1, "Uniform {} was not found on shader program {}",
+             name, std::to_string(m_programId));
   glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix_to_upload));
 }
 
@@ -111,3 +116,5 @@ void Shader::createShaderFromStrings(const std::string &vertexShader,
   glDeleteShader(vs);
   glDeleteShader(fs);
 }
+
+} // namespace pain

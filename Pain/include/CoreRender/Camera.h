@@ -1,10 +1,12 @@
 #pragma once
 #include "pch.gch"
 
+#include "Core.h"
+
 namespace pain
 {
 
-class Camera
+class EXPORT Camera
 {
 public:
   void SetPosition(const glm::vec3 &position)

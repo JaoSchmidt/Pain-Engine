@@ -1,13 +1,14 @@
 #pragma once
 #include "pch.gch"
 
-#include "BufferLayout.h"
 #include "Core.h"
+
+#include "BufferLayout.h"
 
 namespace pain
 {
 
-class VertexBuffer
+class EXPORT VertexBuffer
 {
 public:
   VertexBuffer(float *vertices, uint32_t size);

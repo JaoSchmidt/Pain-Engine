@@ -2,10 +2,17 @@
 
 // For use specifically for games build with Pain
 
-#include "Application.h"
-#include "Layer.h"
-#include "LayerStack.h"
-#include "LogWrapper.h"
+#include "CoreFiles/Application.h"
+#include "CoreFiles/Layer.h"
+#include "CoreFiles/LayerStack.h"
+#include "CoreFiles/LogWrapper.h"
+
+#include "CoreRender/AllBuffers.h"
+#include "CoreRender/BufferLayout.h"
+#include "CoreRender/Camera.h"
+#include "CoreRender/Renderer.h"
+#include "CoreRender/Shader.h"
+#include "CoreRender/VertexArray.h"
 
 #ifndef NDEBUG
 #define ASSERT(x, ...)                                                         \

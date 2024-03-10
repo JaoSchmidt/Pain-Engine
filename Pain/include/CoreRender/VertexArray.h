@@ -1,11 +1,13 @@
 #pragma once
 #include "pch.gch"
 
+#include "Core.h"
+
 #include "AllBuffers.h"
 
 namespace pain
 {
-class VertexArray
+class EXPORT VertexArray
 {
 public:
   ~VertexArray();

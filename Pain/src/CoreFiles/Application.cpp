@@ -1,12 +1,8 @@
 #include "Application.h"
-#include "BufferLayout.h"
 #include "LogWrapper.h"
 #include "Renderer.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include <glm/fwd.hpp>
-#include <memory>
-
-#include <utility>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
 const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
@@ -51,67 +47,8 @@ void Application::initialSetup(const char *title, int w, int h)
 Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 {
 
-  m_orthocamera.reset(new OrthographicCamera(-1.0f, 1.0f, -1.0f, 1.0f));
-  // std::shared_ptr<OrthographicCamera> oc =
-  //     std::make_shared<OrthographicCamera>(-1.0f, 1.0f, -1.0f, 1.0f);
-  // m_orthocamera = std::static_pointer_cast<Camera>(oc);
   initialSetup(title, w, h);
-  m_layerStack = new LayerStack();
-  m_vertexArray.reset(new VertexArray());
-  float vertices[3 * 7] = {
-      -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f, //
-      0.5f,  -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f, //
-      0.0f,  0.5f,  0.0f, 0.8f, 0.8f, 0.2f, 1.0f  //
-  };
-
-  m_vertexBuffer.reset(new VertexBuffer(vertices, sizeof(vertices)));
-
-  BufferLayout layout = {
-      {ShaderDataType::Float3, "a_Position"}, //
-      {ShaderDataType::Float4, "a_Color"}     //
-  };
-
-  m_vertexBuffer->setLayout(layout);
-  m_vertexArray->addVertexBuffer(m_vertexBuffer);
-
-  uint32_t indices[3] = {0, 1, 2};
-  m_indexBuffer.reset(
-      new IndexBuffer(indices, sizeof(indices) / sizeof(uint32_t)));
-
-  m_vertexArray->setIndexBuffer(m_indexBuffer);
-
-  std::string vertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec4 a_Color;
-
-			out vec3 v_Position;
-			out vec4 v_Color;
-			void main()
-			{
-				v_Position = a_Position;
-				v_Color = a_Color;
-				gl_Position = vec4(a_Position, 1.0);	
-			}
-		)";
-
-  std::string fragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-
-			in vec4 v_Color;
-			in vec3 v_Position;
-
-			void main()
-			{
-				color = v_Color;
-			}
-		)";
-
-  m_shader.reset(new Shader(vertexSrc, fragmentSrc));
-  Renderer::beginScene(m_orthocamera);
+  m_layerStack = new pain::LayerStack();
 }
 
 Application::~Application()
@@ -128,25 +65,23 @@ void Application::popLayer(Layer *layer) { m_layerStack->popLayer(layer); }
 
 void Application::stop() { m_isGameRunning = false; }
 
-void Application::handleEvents()
+void Application::handleEvents(const SDL_Event &event)
 {
-  SDL_Event event;
-
+  // Handle each specific event
   // (1) Handle Input
-  // Start our event loop
-  while (SDL_PollEvent(&event)) {
-    // Handle each specific event
-    switch (event.type) {
+  for (auto player = m_layerStack->end(); player != m_layerStack->begin();) {
+    (*--player)->onEvent(event);
+  }
 
-    case SDL_QUIT:
-      stop();
-      break;
-    case SDL_KEYDOWN:
-      PLOG_I("key pressed: {}", SDL_GetKeyName(event.key.keysym.sym));
-      break;
-    default:
-      break;
-    }
+  switch (event.type) {
+  case SDL_QUIT:
+    stop();
+    break;
+  case SDL_KEYDOWN:
+    PLOG_I("key pressed: {}", SDL_GetKeyName(event.key.keysym.sym));
+    break;
+  default:
+    break;
   }
 }
 
@@ -155,17 +90,10 @@ void Application::handleUpdate()
   for (auto pLayer = m_layerStack->end(); pLayer != m_layerStack->begin();) {
     (*--pLayer)->onUpdate();
   }
+  SDL_GL_SwapWindow(m_window);
 }
 
-void Application::handleRender()
-{
-  Renderer::setClearColor(glm::vec4(0.5294117, 0.807843137, 0.921568627, 1));
-  Renderer::clear();
-
-  Renderer::submit(m_shader, m_vertexArray);
-
-  Renderer::endScene(m_window);
-}
+void Application::handleRender() {}
 
 void Application::run()
 {
@@ -175,17 +103,21 @@ void Application::run()
     // buttons = SDL_GetMouseState(&m_mouseX, &m_mouseY);
 
     // handle events first
-    handleEvents();
-    // handle any updates
-    handleUpdate();
-
-    // hanlde our rendering
-    handleRender();
+    // Start our event loop
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+      handleEvents(event);
+    }
 
     uint32_t elapsedTime = SDL_GetTicks() - start;
     if (elapsedTime < m_maxFrameRate) {
       SDL_Delay(m_maxFrameRate - elapsedTime);
     }
+    // handle any updates
+    handleUpdate();
+
+    // hanlde our rendering
+    handleRender();
   };
 }
 

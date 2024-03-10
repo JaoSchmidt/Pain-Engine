@@ -1,7 +1,11 @@
 #pragma once
 #include "pch.gch"
 
-class Shader
+#include "Core.h"
+
+namespace pain
+{
+class EXPORT Shader
 {
 public:
   Shader(const std::string &vertexShader, const std::string &fragmentShader);
@@ -20,3 +24,4 @@ private:
   void createShaderFromStrings(const std::string &vertexShader,
                                const std::string &fragmentShader);
 };
+} // namespace pain

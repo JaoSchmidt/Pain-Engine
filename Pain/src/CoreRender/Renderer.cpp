@@ -21,7 +21,7 @@ void Renderer::beginScene(std::shared_ptr<Camera> &camera)
   m_camera = camera;
 }
 
-void Renderer::endScene(SDL_Window *m_window) { SDL_GL_SwapWindow(m_window); }
+void Renderer::endScene() {}
 
 void Renderer::submit(const std::shared_ptr<Shader> shader,
                       const std::shared_ptr<VertexArray> &vertexArray)

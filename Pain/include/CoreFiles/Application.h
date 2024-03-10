@@ -30,7 +30,7 @@ public:
   void stopTheRun();
   void pushLayer(Layer *layer);
   void popLayer(Layer *layer);
-  void handleEvents();
+  void handleEvents(const SDL_Event &event);
   void handleUpdate();
   void handleRender();
   static void glErrorHandler(unsigned int source, unsigned int type,
@@ -48,11 +48,6 @@ private:
   int m_mouseY;
   unsigned int m_maxFrameRate;
   LayerStack *m_layerStack;
-  std::shared_ptr<VertexArray> m_vertexArray;
-  std::shared_ptr<Shader> m_shader;
-  std::shared_ptr<VertexBuffer> m_vertexBuffer;
-  std::shared_ptr<IndexBuffer> m_indexBuffer;
-  std::shared_ptr<Camera> m_orthocamera;
 };
 
 // To be defined in CLIENT
