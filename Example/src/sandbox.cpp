@@ -1,3 +1,4 @@
+#include "DeltaTime.h"
 #include <SDL2/SDL_events.h>
 #include <pain.h>
 
@@ -5,7 +6,7 @@ class MainLayer : public pain::Layer
 {
 public:
   MainLayer()
-      : Layer("main"), m_cameraPosistion(0.0f, 0.0f, 0.0f), m_cameraSpeed(0.01f)
+      : Layer("main"), m_cameraPosistion(0.0f, 0.0f, 0.0f), m_cameraSpeed(1.0f)
   {
     m_orthocamera.reset(new pain::OrthographicCamera(-1.0f, 1.0f, -0.9f, 0.9f));
     m_vertexArray.reset(new pain::VertexArray());
@@ -66,18 +67,19 @@ public:
     m_shader.reset(new pain::Shader(vertexSrc, fragmentSrc));
     pain::Renderer::beginScene(m_orthocamera);
   }
-  void onUpdate() override
+  void onUpdate(pain::DeltaTime deltaTime) override
   {
+    const double dtSeconds = deltaTime.GetSeconds();
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     if (state[SDL_SCANCODE_W])
-      m_cameraPosistion.y += m_cameraSpeed;
+      m_cameraPosistion.y += m_cameraSpeed * dtSeconds;
     if (state[SDL_SCANCODE_S])
-      m_cameraPosistion.y -= m_cameraSpeed;
+      m_cameraPosistion.y -= m_cameraSpeed * dtSeconds;
 
     if (state[SDL_SCANCODE_D])
-      m_cameraPosistion.x += m_cameraSpeed;
+      m_cameraPosistion.x += m_cameraSpeed * dtSeconds;
     if (state[SDL_SCANCODE_A])
-      m_cameraPosistion.x -= m_cameraSpeed;
+      m_cameraPosistion.x -= m_cameraSpeed * dtSeconds;
 
     m_orthocamera->SetPosition(m_cameraPosistion);
 

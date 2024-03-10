@@ -2,6 +2,7 @@
 #include "LogWrapper.h"
 #include "Renderer.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
+#include "external/SDL/include/SDL3/SDL_timer.h"
 #include <glm/fwd.hpp>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
@@ -85,10 +86,10 @@ void Application::handleEvents(const SDL_Event &event)
   }
 }
 
-void Application::handleUpdate()
+void Application::handleUpdate(DeltaTime deltaTime)
 {
   for (auto pLayer = m_layerStack->end(); pLayer != m_layerStack->begin();) {
-    (*--pLayer)->onUpdate();
+    (*--pLayer)->onUpdate(deltaTime);
   }
   SDL_GL_SwapWindow(m_window);
 }
@@ -98,7 +99,10 @@ void Application::handleRender() {}
 void Application::run()
 {
   while (m_isGameRunning) {
-    uint32_t start = SDL_GetTicks();
+    uint64_t start = SDL_GetPerformanceCounter();
+    m_deltaTime = start - m_lastFrameTime;
+    m_lastFrameTime = start;
+
     // unsigned int buttons;
     // buttons = SDL_GetMouseState(&m_mouseX, &m_mouseY);
 
@@ -109,12 +113,11 @@ void Application::run()
       handleEvents(event);
     }
 
-    uint32_t elapsedTime = SDL_GetTicks() - start;
-    if (elapsedTime < m_maxFrameRate) {
-      SDL_Delay(m_maxFrameRate - elapsedTime);
-    }
+    // if (elapsedTime < m_maxFrameRate) {
+    //   SDL_Delay(m_maxFrameRate - elapsedTime);
+    // }
     // handle any updates
-    handleUpdate();
+    handleUpdate(m_deltaTime);
 
     // hanlde our rendering
     handleRender();

@@ -1,13 +1,10 @@
 #pragma once
 #include "pch.gch"
 
-#include "AllBuffers.h"
-#include "Camera.h"
 #include "Core.h"
+#include "DeltaTime.h"
 #include "Layer.h"
 #include "LayerStack.h"
-#include "Shader.h"
-#include "VertexArray.h"
 
 namespace pain
 {
@@ -31,7 +28,7 @@ public:
   void pushLayer(Layer *layer);
   void popLayer(Layer *layer);
   void handleEvents(const SDL_Event &event);
-  void handleUpdate();
+  void handleUpdate(DeltaTime deltaTime);
   void handleRender();
   static void glErrorHandler(unsigned int source, unsigned int type,
                              unsigned int id, unsigned int severity, int lenght,
@@ -48,6 +45,8 @@ private:
   int m_mouseY;
   unsigned int m_maxFrameRate;
   LayerStack *m_layerStack;
+  DeltaTime m_deltaTime = 0;
+  uint64_t m_lastFrameTime = 0;
 };
 
 // To be defined in CLIENT
