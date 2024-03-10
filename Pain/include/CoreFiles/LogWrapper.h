@@ -32,5 +32,3 @@ private:
 #define PLOG_W(...) ::pain::LogWrapper::GetCoreLogger()->warn(__VA_ARGS__)
 #define PLOG_E(...) ::pain::LogWrapper::GetCoreLogger()->error(__VA_ARGS__)
 #define PLOG_F(...) ::pain::LogWrapper::GetCoreLogger()->critical(__VA_ARGS__)
-
-// Client log macros

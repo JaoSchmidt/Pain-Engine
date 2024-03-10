@@ -11,7 +11,7 @@ void Renderer::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray)
 
 void Renderer::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
-void setClearColor(const glm::vec4 color)
+void Renderer::setClearColor(const glm::vec4 color)
 {
   glClearColor(color.r, color.g, color.b, color.a);
 }

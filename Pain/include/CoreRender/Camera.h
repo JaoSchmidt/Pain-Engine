@@ -7,7 +7,6 @@ namespace pain
 class Camera
 {
 public:
-  virtual ~Camera() = 0;
   void SetPosition(const glm::vec3 &position)
   {
     m_Position = position;

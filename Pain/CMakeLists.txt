@@ -33,6 +33,7 @@ find_package(glm REQUIRED)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(SPDLOG_BUILD_SHARED OFF)
 
 include_directories($(GLEW_INCLUDE_DIRS))
 add_subdirectory(external/spdlog)
@@ -40,11 +41,11 @@ add_subdirectory(external/SDL)
 add_subdirectory(external/SDL_image)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
-		spdlog::spdlog
 		${OPENGL_LIBRARIES}
 		${GLEW_LIBRARIES}
 		SDL2
 		SDL2_image
+		spdlog::spdlog_header_only
 )
 
 
