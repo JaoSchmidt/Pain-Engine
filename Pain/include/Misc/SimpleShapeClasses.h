@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.gch"
 
+#include "Core.h"
 #include "CoreRender/AllBuffers.h"
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/Shader.h"
@@ -8,7 +9,7 @@
 
 namespace pain
 {
-class SimpleShape
+class EXPORT SimpleShape
 {
 public:
   // clang-format off
@@ -34,14 +35,20 @@ protected:
   std::shared_ptr<Shader> m_shader;
 };
 
-class Rectangle : public SimpleShape
+class EXPORT Rectangle : public SimpleShape
 {
 public:
   Rectangle(float x, float y, float w, float h);
   Rectangle();
 };
+class EXPORT TextureRectangle : public SimpleShape
+{
+public:
+  TextureRectangle(float x, float y, float w, float h);
+  TextureRectangle();
+};
 
-class IsocelesTriangle : public SimpleShape
+class EXPORT IsocelesTriangle : public SimpleShape
 {
 public:
   IsocelesTriangle(float w, float h);

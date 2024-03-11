@@ -13,6 +13,10 @@ Shader::~Shader() { glDeleteProgram(m_programId); };
 void Shader::bind() const { glUseProgram(m_programId); };
 void Shader::unbind() const { glUseProgram(0); };
 
+// ========================================================== //
+// Upload stuff to Shader
+// ========================================================== //
+
 GLint Shader::getUniformLocation(const std::string &name) const
 {
   GLint location = glGetUniformLocation(m_programId, name.c_str());
@@ -20,41 +24,45 @@ GLint Shader::getUniformLocation(const std::string &name) const
              name, std::to_string(m_programId));
   return location;
 }
-
-void Shader::uploadUniformFloat3(const std::string &name, const glm::vec3 &vec)
+void Shader::uploadUniformInt(const std::string &name, int value)
 {
   GLint location = getUniformLocation(name);
-  glUniform3f(location, vec.x, vec.y, vec.z);
+  glUniform1i(location, value);
 }
-
-void Shader::uploadUniformMat4(const std::string &name,
-                               const glm::mat4 &matrix_to_upload)
+void Shader::uploadUniformFloat(const std::string &name, float value)
 {
   GLint location = getUniformLocation(name);
-  glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix_to_upload));
+  glUniform1f(location, value);
 }
-
-std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
+void Shader::uploadUniformFloat2(const std::string &name, const glm::vec2 &val)
 {
-  enum class ShadertType { NONE = -1, VERTEX = 0, FRAGMENT = 1 };
-  std::ifstream stream(filepath);
-  std::string line;
-  std::stringstream ss[2];
-  ShadertType type = ShadertType::NONE;
-
-  while (getline(stream, line)) {
-    if (line.find("#shader") != std::string::npos) {
-      if (line.find("vertex") != std::string::npos) {
-        type = ShadertType::VERTEX;
-      } else if (line.find("fragment") != std::string::npos) {
-        type = ShadertType::FRAGMENT;
-      }
-    } else {
-      ss[(int)type] << line << '\n';
-    }
-  }
-  return {ss[0].str(), ss[1].str()};
+  GLint location = getUniformLocation(name);
+  glUniform2f(location, val.x, val.y);
 }
+void Shader::uploadUniformFloat3(const std::string &name, const glm::vec3 &val)
+{
+  GLint location = getUniformLocation(name);
+  glUniform3f(location, val.x, val.y, val.z);
+}
+void Shader::uploadUniformFloat4(const std::string &name, const glm::vec4 &val)
+{
+  GLint location = getUniformLocation(name);
+  glUniform4f(location, val.x, val.y, val.z, val.w);
+}
+void Shader::uploadUniformMat3(const std::string &name, const glm::mat3 &matrix)
+{
+  GLint location = getUniformLocation(name);
+  glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+void Shader::uploadUniformMat4(const std::string &name, const glm::mat4 &matrix)
+{
+  GLint location = getUniformLocation(name);
+  glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+// ========================================================== //
+// Shader interpretation and link
+// ========================================================== //
 
 uint32_t Shader::compileShader(uint32_t type, const std::string &source)
 {
@@ -93,6 +101,32 @@ bool Shader::checkLinkProgram(uint32_t programID)
     return false;
   }
   return true;
+}
+
+// ========================================================== //
+// Shader creation
+// ========================================================== //
+
+std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
+{
+  enum class ShadertType { NONE = -1, VERTEX = 0, FRAGMENT = 1 };
+  std::ifstream stream(filepath);
+  std::string line;
+  std::stringstream ss[2];
+  ShadertType type = ShadertType::NONE;
+
+  while (getline(stream, line)) {
+    if (line.find("#shader") != std::string::npos) {
+      if (line.find("vertex") != std::string::npos) {
+        type = ShadertType::VERTEX;
+      } else if (line.find("fragment") != std::string::npos) {
+        type = ShadertType::FRAGMENT;
+      }
+    } else {
+      ss[(int)type] << line << '\n';
+    }
+  }
+  return {ss[0].str(), ss[1].str()};
 }
 
 Shader::Shader(std::function<std::pair<std::string, std::string>()> fn)

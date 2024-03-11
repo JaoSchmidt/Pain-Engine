@@ -12,15 +12,16 @@
 #include "CoreRender/Camera.h"
 #include "CoreRender/Renderer.h"
 #include "CoreRender/Shader.h"
+#include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 
 #include "Misc/SimpleShapeClasses.h"
 
 #ifndef NDEBUG
-#define ASSERT(x, ...)                                                         \
+#define ASSERT(x, s, ...)                                                      \
   {                                                                            \
     if (!(x)) {                                                                \
-      LOG_E("Assertion Failed: {0}", __VA_ARGS__);                             \
+      LOG_E(std::string("Assertion Failed: ").append(s), __VA_ARGS__);         \
       assert(x);                                                               \
     }                                                                          \
   }

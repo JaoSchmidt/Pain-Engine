@@ -1,4 +1,5 @@
 #include "CoreRender/AllBuffers.h"
+#include "CoreFiles/LogWrapper.h"
 #include <GL/glew.h>
 
 namespace pain

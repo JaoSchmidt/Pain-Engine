@@ -7,7 +7,7 @@ namespace pain
 class Resources
 {
 public:
-  Resources *getInstance();
+  static Resources *getInstance();
   Resources(Resources &other) = delete;
   void operator=(const Resources &) = delete;
   static Resources *instance();

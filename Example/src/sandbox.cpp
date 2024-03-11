@@ -1,4 +1,3 @@
-#include "Misc/SimpleShapeClasses.h"
 #include <SDL2/SDL_events.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
@@ -9,18 +8,18 @@ class MainLayer : public pain::Layer
 {
 public:
   MainLayer()
-      : Layer("main"), m_cameraPosition(0.0f, 0.0f, 0.0f),
-        // m_triangule_position(0.0f, 0.0f, 0.0f), m_triangule_speed(2.0f),
-        m_cameraSpeed(1.0f)
+      : Layer("main"), m_cameraPosition(0.0f, 0.0f, 0.0f), m_cameraSpeed(1.0f)
   {
     m_orthocamera.reset(new pain::OrthographicCamera(-1.0f, 1.0f, -0.9f, 0.9f));
-    m_isocelesTriangle.reset(new pain::IsocelesTriangle(1.0f, 0.5f));
-    m_rectangle.reset(new pain::Rectangle());
-    m_rectangle->getShader()->bind();
-    m_rectangle->getShader()->uploadUniformFloat3("u_Color",
-                                                  glm::vec3(0.2f, 0.3, 0.5f));
+    // m_isocelesTriangle.reset(new pain::IsocelesTriangle(1.0f, 0.5f));
+    m_textureRectangle.reset(new pain::TextureRectangle());
+    m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
+    m_textureRectangle->getShader()->bind();
+    m_textureRectangle->getShader()->uploadUniformInt("u_Texture", 0);
+
     pain::Renderer::beginScene(m_orthocamera);
   }
+
   void onUpdate(pain::DeltaTime deltaTime) override
   {
     const double dtSeconds = deltaTime.GetSeconds();
@@ -36,9 +35,9 @@ public:
       m_cameraPosition.x -= m_cameraSpeed * dtSeconds;
 
     if (state[SDL_SCANCODE_LEFT])
-      m_isocelesTriangle->mvPositiveX(dtSeconds);
+      m_textureRectangle->mvPositiveX(dtSeconds);
     if (state[SDL_SCANCODE_RIGHT])
-      m_isocelesTriangle->mvNegativeX(dtSeconds);
+      m_textureRectangle->mvNegativeX(dtSeconds);
 
     m_orthocamera->SetPosition(m_cameraPosition);
 
@@ -47,17 +46,18 @@ public:
     pain::Renderer::clear();
 
     glm::mat4 transform =
-        glm::translate(glm::mat4(1.0f), m_rectangle->getPos()) *
+        glm::translate(glm::mat4(1.0f), m_textureRectangle->getPos()) *
         glm::scale(glm::mat4(1.0f), glm::vec3(1.5f));
-    pain::Renderer::submit(m_rectangle->getShader(),
-                           m_rectangle->getVertexArr(), transform);
-    pain::Renderer::endScene(m_rectangle->getVertexArr());
+    m_texture->bind();
+    pain::Renderer::submit(m_textureRectangle->getShader(),
+                           m_textureRectangle->getVertexArr(), transform);
+    pain::Renderer::endScene(m_textureRectangle->getVertexArr());
 
-    pain::Renderer::submit(
-        m_isocelesTriangle->getShader(), m_isocelesTriangle->getVertexArr(),
-        glm::translate(glm::mat4(1.0f), m_isocelesTriangle->getPos()));
+    // pain::Renderer::submit(
+    //     m_isocelesTriangle->getShader(), m_isocelesTriangle->getVertexArr(),
+    //     glm::translate(glm::mat4(1.0f), m_isocelesTriangle->getPos()));
 
-    pain::Renderer::endScene(m_isocelesTriangle->getVertexArr());
+    // pain::Renderer::endScene(m_isocelesTriangle->getVertexArr());
   }
   void onEvent(const SDL_Event &event) override {}
   void onDetach() override { LOG_I("Layer attached to the stack"); }
@@ -67,8 +67,9 @@ private:
   std::shared_ptr<pain::Camera> m_orthocamera;
   glm::vec3 m_cameraPosition;
   float m_cameraSpeed;
-  std::shared_ptr<pain::IsocelesTriangle> m_isocelesTriangle;
-  std::shared_ptr<pain::Rectangle> m_rectangle;
+  // std::shared_ptr<pain::IsocelesTriangle> m_isocelesTriangle;
+  std::shared_ptr<pain::TextureRectangle> m_textureRectangle;
+  std::shared_ptr<pain::Texture> m_texture;
 };
 
 class Sandbox : public pain::Application

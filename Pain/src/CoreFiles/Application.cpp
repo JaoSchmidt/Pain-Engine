@@ -3,6 +3,7 @@
 #include "CoreRender/Renderer.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include "external/SDL/include/SDL3/SDL_timer.h"
+#include <filesystem>
 #include <glm/fwd.hpp>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
@@ -41,8 +42,13 @@ void Application::initialSetup(const char *title, int w, int h)
                                  glewGetString(GLEW_VERSION))));
   PLOG_T("GL version: {}",
          std::string(reinterpret_cast<const char *>(glGetString(GL_VERSION))));
+  PLOG_T("Default relative path is: {}",
+         std::filesystem::current_path().string());
+
+#ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(glErrorHandler, 0);
+#endif
 }
 
 Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)

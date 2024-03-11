@@ -122,4 +122,58 @@ Rectangle::Rectangle()
 
   m_shader.reset(new Shader(vertexSrc, fragmSrc));
 }
+
+TextureRectangle::TextureRectangle()
+{
+  float squareVertices[5 * 4] = {
+      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, //
+      0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, //
+      0.5f,  0.5f,  0.0f, 1.0f, 1.0f, //
+      -0.5f, 0.5f,  0.0f, 0.0f, 1.0f  //
+  };
+
+  std::shared_ptr<VertexBuffer> vb;
+  vb.reset(new VertexBuffer(squareVertices, sizeof(squareVertices)));
+  vb->setLayout({{ShaderDataType::Float3, "a_Position"},
+                 {ShaderDataType::Float2, "a_TexCoord"}});
+
+  uint32_t squareIndices[6] = {0, 1, 2, 2, 3, 0};
+  std::shared_ptr<IndexBuffer> ib;
+  ib.reset(
+      new IndexBuffer(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+
+  m_vertexArray.reset(new VertexArray());
+  m_vertexArray->addVertexBuffer(vb);
+  m_vertexArray->setIndexBuffer(ib);
+
+  std::string vertexSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) in vec3 a_Position;
+			layout(location = 1) in vec2 a_TexCoord;
+			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
+			out vec2 v_TexCoord;
+			void main()
+			{
+				v_TexCoord = a_TexCoord;
+				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);	
+			}
+		)";
+
+  std::string fragmSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) out vec4 color;
+			in vec2 v_TexCoord;
+			
+			uniform sampler2D u_Texture;
+			void main()
+			{
+				color = texture(u_Texture, v_TexCoord);
+			}
+		)";
+
+  m_shader.reset(new Shader(vertexSrc, fragmSrc));
+}
 } // namespace pain
