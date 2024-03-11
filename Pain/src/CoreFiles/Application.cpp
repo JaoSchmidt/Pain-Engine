@@ -1,6 +1,6 @@
-#include "Application.h"
-#include "LogWrapper.h"
-#include "Renderer.h"
+#include "CoreFiles/Application.h"
+#include "CoreFiles/LogWrapper.h"
+#include "CoreRender/Renderer.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include "external/SDL/include/SDL3/SDL_timer.h"
 #include <glm/fwd.hpp>

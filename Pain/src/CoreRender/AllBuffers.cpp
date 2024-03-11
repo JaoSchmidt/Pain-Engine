@@ -1,4 +1,4 @@
-#include "AllBuffers.h"
+#include "CoreRender/AllBuffers.h"
 #include <GL/glew.h>
 
 namespace pain

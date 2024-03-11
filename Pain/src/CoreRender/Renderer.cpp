@@ -1,4 +1,4 @@
-#include "Renderer.h"
+#include "CoreRender/Renderer.h"
 
 namespace pain
 {
@@ -21,16 +21,20 @@ void Renderer::beginScene(std::shared_ptr<Camera> &camera)
   m_camera = camera;
 }
 
-void Renderer::endScene() {}
+void Renderer::endScene(const std::shared_ptr<VertexArray> &vertexArray)
+{
+  vertexArray->bind();
+  drawIndexed(vertexArray);
+}
 
 void Renderer::submit(const std::shared_ptr<Shader> shader,
-                      const std::shared_ptr<VertexArray> &vertexArray)
+                      const std::shared_ptr<VertexArray> &vertexArray,
+                      const glm::mat4 &transform)
 {
   shader->bind();
   shader->uploadUniformMat4("u_ViewProjection",
                             m_camera->GetViewProjectionMatrix());
-  vertexArray->bind();
-  drawIndexed(vertexArray);
+  shader->uploadUniformMat4("u_Transform", transform);
 }
 
 } // namespace pain

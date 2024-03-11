@@ -1,6 +1,6 @@
 #include <spdlog/spdlog.h>
 
-#include "LogWrapper.h"
+#include "CoreFiles/LogWrapper.h"
 
 #include "spdlog/sinks/stdout_color_sinks.h"
 

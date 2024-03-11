@@ -14,6 +14,8 @@
 #include "CoreRender/Shader.h"
 #include "CoreRender/VertexArray.h"
 
+#include "Misc/SimpleShapeClasses.h"
+
 #ifndef NDEBUG
 #define ASSERT(x, ...)                                                         \
   {                                                                            \

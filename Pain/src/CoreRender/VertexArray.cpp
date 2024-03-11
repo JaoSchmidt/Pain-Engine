@@ -1,8 +1,5 @@
-#include "VertexArray.h"
-#include "AllBuffers.h"
-
-#include <GL/glew.h>
-#include <memory>
+#include "CoreRender/VertexArray.h"
+#include "CoreRender/AllBuffers.h"
 
 namespace pain
 {

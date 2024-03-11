@@ -15,9 +15,7 @@ add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${EXTRA_SOURCES} )
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CoreFiles>
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CoreRender>
-	)
+)
 
 # target_compile_options(${LIBRARY_NAME} PRIVATE -Wall -std=c++20 -fmodules-ts -lGLEW -lglfw -lGLU -lGL -lglm)
 set(CMAKE_CXX_STANDARD 20)

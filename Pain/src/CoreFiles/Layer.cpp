@@ -1,5 +1,4 @@
-#include "Layer.h"
-#include <string>
+#include "CoreFiles/Layer.h"
 
 namespace pain
 {

@@ -3,7 +3,7 @@
 
 #include "Core.h"
 
-#include "BufferLayout.h"
+#include "CoreRender/BufferLayout.h"
 
 namespace pain
 {

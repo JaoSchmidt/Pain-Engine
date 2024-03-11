@@ -2,9 +2,9 @@
 #include "pch.gch"
 
 #include "Core.h"
-#include "DeltaTime.h"
-#include "Layer.h"
-#include "LayerStack.h"
+#include "CoreFiles/DeltaTime.h"
+#include "CoreFiles/Layer.h"
+#include "CoreFiles/LayerStack.h"
 
 namespace pain
 {
