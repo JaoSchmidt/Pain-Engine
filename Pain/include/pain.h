@@ -15,6 +15,7 @@
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 
+#include "Misc/CameraController.h"
 #include "Misc/SimpleShapeClasses.h"
 
 #ifndef NDEBUG

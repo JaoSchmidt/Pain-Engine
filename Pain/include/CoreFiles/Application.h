@@ -43,6 +43,7 @@ private:
   bool m_isGameRunning = true;
   int m_mouseX;
   int m_mouseY;
+  bool m_isMinimized;
   unsigned int m_maxFrameRate;
   LayerStack *m_layerStack;
   DeltaTime m_deltaTime = 0;

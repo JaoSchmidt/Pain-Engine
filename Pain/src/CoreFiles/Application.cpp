@@ -1,8 +1,10 @@
 #include "CoreFiles/Application.h"
+#include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include "external/SDL/include/SDL3/SDL_timer.h"
+#include "external/SDL/include/SDL3/SDL_video.h"
 #include <filesystem>
 #include <glm/fwd.hpp>
 
@@ -12,25 +14,26 @@ const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
 namespace pain
 {
 /* Creates window, opengl context and init glew*/
-void Application::initialSetup(const char *title, int w, int h)
+Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 {
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    PLOG_E("SDL could not be init", SDL_GetError());
-  } else {
-    PLOG_T("SDL video is initialized");
-  }
+  // =========================================================================//
+  // SDL Initial setup
+  // =========================================================================//
+  P_ASSERT(SDL_Init(SDL_INIT_VIDEO) >= 0, "SDL video could not be init {}",
+           SDL_GetError());
+  PLOG_T("SDL video is initialized");
+
   m_window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL);
-  // m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
-  // if (m_window != nullptr && m_renderer != nullptr) {
-  //   PLOG_T("Application window and render initialized");
-  // } else {
+  SDL_SetWindowResizable(m_window, SDL_TRUE);
   if (m_window == nullptr)
     PLOG_E("Application window not initialized");
-  //   if (m_renderer == nullptr)
-  //     PLOG_E("Renderer not initialized");
-  // }
   m_context = SDL_GL_CreateContext(m_window);
+  m_isMinimized = false;
+
+  // =========================================================================//
+  // OpenGL Initial setup
+  // =========================================================================//
 
   GLenum err = glewInit();
   if (GLEW_OK != err) {
@@ -45,16 +48,24 @@ void Application::initialSetup(const char *title, int w, int h)
   PLOG_T("Default relative path is: {}",
          std::filesystem::current_path().string());
 
+  int versionMajor;
+  int versionMinor;
+  glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
+  glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
+
+  P_ASSERT(versionMajor >= 4 && versionMinor >= 3,
+           "OpenGL version must be above 4.3, current version is {}.{}",
+           versionMajor, versionMinor);
+
 #ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(glErrorHandler, 0);
 #endif
-}
 
-Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
-{
+  // =========================================================================//
+  // OpenGL Initial setup
+  // =========================================================================//
 
-  initialSetup(title, w, h);
   m_layerStack = new pain::LayerStack();
 }
 
@@ -81,11 +92,17 @@ void Application::handleEvents(const SDL_Event &event)
   }
 
   switch (event.type) {
+  case SDL_WINDOWEVENT:
+    if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
+      m_isMinimized = true;
+    else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
+      m_isMinimized = false;
+    break;
   case SDL_QUIT:
     stop();
     break;
   case SDL_KEYDOWN:
-    PLOG_I("key pressed: {}", SDL_GetKeyName(event.key.keysym.sym));
+    // PLOG_I("key pressed: {}", SDL_GetKeyName(event.key.keysym.sym));
     break;
   default:
     break;
@@ -123,7 +140,8 @@ void Application::run()
     //   SDL_Delay(m_maxFrameRate - elapsedTime);
     // }
     // handle any updates
-    handleUpdate(m_deltaTime);
+    if (!m_isMinimized)
+      handleUpdate(m_deltaTime);
 
     // hanlde our rendering
     handleRender();
@@ -135,6 +153,10 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
                                  int lenght, const char *message,
                                  const void *userParam)
 {
+  // uncomment this if your gpu being too educated with warnings
+  // notification warnings are usually just optimizations anyway
+  // if(severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+  //   return;
 
   PLOG_W("---------------");
   PLOG_W("Debug message ({}): {}", id, message);
@@ -148,7 +170,6 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
         case GL_DEBUG_SOURCE_APPLICATION:     PLOG_W(  "Source: Application"); break;
         case GL_DEBUG_SOURCE_OTHER:           PLOG_W(  "Source: Other"); break;
     } 
-
     switch (type) 
     { 
         case GL_DEBUG_TYPE_ERROR:               PLOG_E(  "Type: Error"); break;
@@ -161,7 +182,6 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
         case GL_DEBUG_TYPE_POP_GROUP:           PLOG_W(  "Type: Pop Group"); break;
         case GL_DEBUG_TYPE_OTHER:               PLOG_W(  "Type: Other"); break;
     } 
-    
     switch (severity)
     {
         case GL_DEBUG_SEVERITY_HIGH:         PLOG_E(  "Severity: high"); break;
