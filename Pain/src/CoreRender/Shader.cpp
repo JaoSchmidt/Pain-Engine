@@ -1,7 +1,10 @@
 
 #include "CoreRender/Shader.h"
 
+#include <cstdio>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
+#include <iterator>
 
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
@@ -123,21 +126,43 @@ std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
         type = ShadertType::FRAGMENT;
       }
     } else {
+      P_ASSERT((int)type != -1,
+               "Could not identify shader type, make sure it has "
+               "\"#shader vertex\" or \"#shader fragment\" in the .glsl")
       ss[(int)type] << line << '\n';
     }
   }
   return {ss[0].str(), ss[1].str()};
 }
 
-Shader::Shader(std::function<std::pair<std::string, std::string>()> fn)
+Shader::Shader(const char *filepath)
 {
-  auto [vertexShader, fragmentShader] = fn();
+  // Extract name from filepath
+  std::filesystem::path fp(filepath);
+  m_name = fp.filename().stem();
+
+  auto [vertexShader, fragmentShader] = parseShader(filepath);
   createShaderFromStrings(vertexShader, fragmentShader);
 }
 
-Shader::Shader(const std::string &vertexShader,
+Shader::Shader(const std::string &name, const char *filepath)
+{
+  auto [vertexShader, fragmentShader] = parseShader(filepath);
+  m_name = name;
+  createShaderFromStrings(vertexShader, fragmentShader);
+}
+
+Shader::Shader(const std::string &name, const std::string &vertexShader,
                const std::string &fragmentShader)
 {
+  createShaderFromStrings(vertexShader, fragmentShader);
+}
+
+Shader::Shader(const std::string &name,
+               std::function<std::pair<std::string, std::string>()> fn)
+{
+  auto [vertexShader, fragmentShader] = fn();
+  m_name = name;
   createShaderFromStrings(vertexShader, fragmentShader);
 }
 

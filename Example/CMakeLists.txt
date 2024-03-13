@@ -17,4 +17,5 @@ target_link_libraries(${TARGET_NAME} PUBLIC
 
 # =========== Copying Resources ==================================
 # Copy all files from resources/ to build directory
-file(COPY ${PROJECT_SOURCE_DIR}/resources/ DESTINATION ${CMAKE_BINARY_DIR}/Example/resources/)
+file(COPY ${PROJECT_SOURCE_DIR}/resources/ 
+	DESTINATION ${CMAKE_BINARY_DIR}/Example/resources/)

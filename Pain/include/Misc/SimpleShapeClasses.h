@@ -15,7 +15,6 @@ public:
   // clang-format off
   inline std::shared_ptr<VertexArray> getVertexArr() 
     const { return m_vertexArray; }
-  inline std::shared_ptr<Shader> getShader() const { return m_shader; }
   inline float getPosX() const { return m_position.x; }
   inline float getPosY() const { return m_position.y; }
   inline glm::vec3 getPos() const { return m_position; }
@@ -32,7 +31,6 @@ protected:
   glm::vec3 m_speed = glm::vec3(1.0f);
   glm::vec3 m_position = glm::vec3(0.0f);
   std::shared_ptr<VertexArray> m_vertexArray;
-  std::shared_ptr<Shader> m_shader;
 };
 
 class EXPORT Rectangle : public SimpleShape

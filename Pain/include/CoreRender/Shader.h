@@ -8,13 +8,21 @@ namespace pain
 class EXPORT Shader
 {
 public:
-  Shader(const std::string &vertexShader, const std::string &fragmentShader);
-  Shader(std::function<std::pair<std::string, std::string>()> fn);
+  Shader(const char *filepath);
+  Shader(const std::string &name, const char *filepath);
+  Shader(const std::string &name, const std::string &vertexShader,
+         const std::string &fragmentShader);
+  Shader(const std::string &name,
+         std::function<std::pair<std::string, std::string>()> fn);
+
   ~Shader();
 
   void bind() const;
   void unbind() const;
   static std::pair<std::string, std::string> parseShader(const char *filepath);
+  inline const std::string &getName() const { return m_name; };
+
+  // upload variables to shaders
   void uploadUniformInt(const std::string &name, int integer);
   void uploadUniformFloat(const std::string &name, float value);
   void uploadUniformFloat2(const std::string &name, const glm::vec2 &value);
@@ -24,6 +32,7 @@ public:
   void uploadUniformMat4(const std::string &name, const glm::mat4 &matrix);
 
 private:
+  std::string m_name;
   GLint getUniformLocation(const std::string &name) const;
   uint32_t compileShader(uint32_t type, const std::string &source);
   bool checkLinkProgram(uint32_t programID);

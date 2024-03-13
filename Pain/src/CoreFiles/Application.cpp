@@ -29,7 +29,6 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   if (m_window == nullptr)
     PLOG_E("Application window not initialized");
   m_context = SDL_GL_CreateContext(m_window);
-  m_isMinimized = false;
 
   // =========================================================================//
   // OpenGL Initial setup
@@ -63,9 +62,10 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 #endif
 
   // =========================================================================//
-  // OpenGL Initial setup
+  // Application Initial setup
   // =========================================================================//
 
+  m_isMinimized = false;
   m_layerStack = new pain::LayerStack();
 }
 

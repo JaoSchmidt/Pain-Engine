@@ -46,6 +46,10 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 		spdlog::spdlog_header_only
 )
 
+# =========== Copying Resources ==================================
+# Copy all files from resources/ to build directory
+file(COPY ${PROJECT_SOURCE_DIR}/resources/ 
+	DESTINATION ${CMAKE_BINARY_DIR}/Example/resources/)
 
 # =========== Other settings ==================================
 

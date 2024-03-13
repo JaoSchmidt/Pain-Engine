@@ -1,3 +1,4 @@
+#include "CoreRender/Shader.h"
 #include "Misc/CameraController.h"
 #include <SDL2/SDL_events.h>
 #include <glm/ext/matrix_transform.hpp>
@@ -14,8 +15,9 @@ public:
     // m_isocelesTriangle.reset(new pain::IsocelesTriangle(1.0f, 0.5f));
     m_textureRectangle.reset(new pain::TextureRectangle());
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
-    m_textureRectangle->getShader()->bind();
-    m_textureRectangle->getShader()->uploadUniformInt("u_Texture", 0);
+    m_texture_shader.reset(new pain::Shader("resources/shaders/Texture.glsl"));
+    m_texture_shader->bind();
+    m_texture_shader->uploadUniformInt("u_Texture", 0);
 
     pain::Renderer::beginScene(m_orthocamera);
   }
@@ -39,8 +41,8 @@ public:
         glm::translate(glm::mat4(1.0f), m_textureRectangle->getPos()) *
         glm::scale(glm::mat4(1.0f), glm::vec3(1.5f));
     m_texture->bind();
-    pain::Renderer::submit(m_textureRectangle->getShader(),
-                           m_textureRectangle->getVertexArr(), transform);
+    pain::Renderer::submit(m_texture_shader, m_textureRectangle->getVertexArr(),
+                           transform);
     pain::Renderer::endScene(m_textureRectangle->getVertexArr());
 
     // pain::Renderer::submit(
@@ -57,6 +59,7 @@ public:
   void onAttach() override { LOG_I("Layer dettached from the stack"); }
 
 private:
+  std::shared_ptr<pain::Shader> m_texture_shader;
   std::shared_ptr<pain::OrthographicCameraController> m_orthocamera;
   std::shared_ptr<pain::TextureRectangle> m_textureRectangle;
   std::shared_ptr<pain::Texture> m_texture;
