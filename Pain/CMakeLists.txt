@@ -4,7 +4,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
-project(${LIBRARY_NAME} VERSION 0.1.0.0)
+project(${LIBRARY_NAME} VERSION 0.1.0)
 
 add_compile_definitions(PAIN_PLATFORM_LINUX=1)
 
@@ -22,32 +22,32 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 remove_definitions("-DNDEBUG")
 target_compile_options(${LIBRARY_NAME} PRIVATE -g -Wall -std=c++17 -lGLEW -lglfw -lGLU -lGL -lglm)
-# =========== Adding Libraries ==================================
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(glm REQUIRED)
 
+# =========== Adding Libraries ==================================
 # deactivate tests, examples, doc
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SPDLOG_BUILD_SHARED OFF)
 
-include_directories($(GLEW_INCLUDE_DIRS))
-add_subdirectory(external/spdlog)
+add_subdirectory(external/glm)
 add_subdirectory(external/SDL)
 add_subdirectory(external/SDL_image)
+add_subdirectory(external/glad)
+add_subdirectory(external/spdlog)
+
+find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+find_package(OpenGL REQUIRED)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
 		${OPENGL_LIBRARIES}
-		${GLEW_LIBRARIES}
-		SDL2
+		glad
+		glm::glm
+		SDL2::SDL2
 		SDL2_image
 		spdlog::spdlog_header_only
 )
 
-# =========== Copying Resources ==================================
-# Copy all files from resources/ to build directory
 file(COPY ${PROJECT_SOURCE_DIR}/resources/ 
 	DESTINATION ${CMAKE_BINARY_DIR}/Example/resources/)
 

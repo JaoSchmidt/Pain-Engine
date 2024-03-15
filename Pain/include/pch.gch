@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <glad/gl.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <algorithm>
@@ -17,4 +17,3 @@
 #include <vector>
 #include <fstream>
 #include <filesystem>
-

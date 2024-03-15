@@ -1,5 +1,5 @@
 #include "pain.h"
-#include "GL/glew.h"
+#include <glad/gl.h>
 
 extern pain::Application *pain::CreateApplication();
 

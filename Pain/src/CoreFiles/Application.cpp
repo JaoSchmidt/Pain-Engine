@@ -34,14 +34,11 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   // OpenGL Initial setup
   // =========================================================================//
 
-  GLenum err = glewInit();
-  if (GLEW_OK != err) {
-    PLOG_E("Error: {}", std::string(reinterpret_cast<const char *>(
-                            glewGetErrorString(err))));
+  int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+  if (version == 0) {
+    PLOG_E("Error: Failed to initialize glad");
     exit(1);
   }
-  PLOG_T("GLEW version: {}", std::string(reinterpret_cast<const char *>(
-                                 glewGetString(GLEW_VERSION))));
   PLOG_T("GL version: {}",
          std::string(reinterpret_cast<const char *>(glGetString(GL_VERSION))));
   PLOG_T("Default relative path is: {}",
