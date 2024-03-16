@@ -18,8 +18,8 @@ IsocelesTriangle::IsocelesTriangle(float w, float h)
   // clang-format on
   std::shared_ptr<VertexBuffer> vb;
   vb.reset(new VertexBuffer(vertices, sizeof(vertices)));
-  vb->setLayout({{pain::ShaderDataType::Float3, "a_Position"},
-                 {pain::ShaderDataType::Float4, "a_Color"}});
+  vb->setLayout({{ShaderDataType::Float3, "a_Position"},
+                 {ShaderDataType::Float4, "a_Color"}});
 
   uint32_t indices[3] = {
       0, 1, 2, //

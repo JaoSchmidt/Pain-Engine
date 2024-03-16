@@ -10,6 +10,7 @@ namespace pain
 class EXPORT VertexArray
 {
 public:
+  // NONCOPYABLE(VertexArray)
   ~VertexArray();
   VertexArray();
   void bind() const;

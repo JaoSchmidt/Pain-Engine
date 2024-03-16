@@ -9,9 +9,8 @@ project(${LIBRARY_NAME} VERSION 0.1.0)
 add_compile_definitions(PAIN_PLATFORM_LINUX=1)
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
-file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
-file(GLOB EXTRA_SOURCES "${PROJECT_SOURCE_DIR}/src/**/*.cpp")
-add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${EXTRA_SOURCES} )
+file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+add_library(${LIBRARY_NAME} SHARED ${SOURCES})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -48,8 +47,20 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 		spdlog::spdlog_header_only
 )
 
-file(COPY ${PROJECT_SOURCE_DIR}/resources/ 
-	DESTINATION ${CMAKE_BINARY_DIR}/Example/resources/)
+
+# =========== Resources/Assets Managment ==================================
+
+# TODO: BUILD THIS FOR WINDOWS
+# Define custom target to rsync resources
+if(UNIX OR APPLE)
+	add_custom_target(sync_resources
+		COMMAND rsync -av "${PROJECT_SOURCE_DIR}/resources/" "${CMAKE_BINARY_DIR}/Example/resources/"
+		COMMENT "Syncing resources folder"
+	)
+endif()
+
+# Add dependency to sync_resources target on make
+add_dependencies(${LIBRARY_NAME} sync_resources)
 
 # =========== Other settings ==================================
 

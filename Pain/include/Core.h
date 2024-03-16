@@ -30,3 +30,7 @@
 #else
 #define P_ASSERT(x, ...)
 #endif
+
+#define NONCOPYABLE(c)                                                         \
+  c(const c &) = delete;                                                       \
+  c &operator=(const c &) = delete;

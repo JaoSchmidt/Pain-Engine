@@ -19,8 +19,6 @@ public:
   // Cycle of Pain
   void run();
   void stop();
-  // Retriever of renderers
-  SDL_Renderer *getRenderer() const;
   int getMouseX();
   int getMouseY();
   // End the Cycle Pain

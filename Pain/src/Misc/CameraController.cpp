@@ -1,7 +1,7 @@
 #include "Misc/CameraController.h"
 #include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer.h"
+#include "CoreRender/Renderer2d.h"
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 
@@ -70,7 +70,7 @@ bool OrthographicCameraController::onMouseScrolled(const SDL_Event &event)
 
 bool OrthographicCameraController::onWindowResized(const SDL_Event &event)
 {
-  Renderer::setViewport(0, 0, event.window.data1, event.window.data2);
+  Renderer2d::setViewport(0, 0, event.window.data1, event.window.data2);
   m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
   m_camera.SetProjection(-m_aspectRatio * m_zoomLevel,
                          m_aspectRatio * m_zoomLevel, -m_zoomLevel,

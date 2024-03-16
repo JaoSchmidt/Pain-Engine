@@ -10,7 +10,7 @@
 #include "CoreRender/AllBuffers.h"
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/Camera.h"
-#include "CoreRender/Renderer.h"
+#include "CoreRender/Renderer2d.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"

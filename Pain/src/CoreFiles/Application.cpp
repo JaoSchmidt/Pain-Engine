@@ -1,7 +1,7 @@
 #include "CoreFiles/Application.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer.h"
+#include "CoreRender/Renderer2d.h"
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include "external/SDL/include/SDL3/SDL_timer.h"
 #include "external/SDL/include/SDL3/SDL_video.h"

@@ -11,6 +11,7 @@ namespace pain
 class EXPORT VertexBuffer
 {
 public:
+  VertexBuffer(uint32_t size);
   VertexBuffer(float *vertices, uint32_t size);
   ~VertexBuffer() {}
 
@@ -19,6 +20,7 @@ public:
 
   inline const BufferLayout &getLayout() const { return m_layout; }
   inline void setLayout(const BufferLayout &layout) { m_layout = layout; }
+  void setData(const void *data, uint32_t size);
 
 private:
   uint32_t m_bufferId;
