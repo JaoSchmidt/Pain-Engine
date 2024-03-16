@@ -5,8 +5,6 @@
 #include "external/SDL/include/SDL3/SDL_keyboard.h"
 #include "external/SDL/include/SDL3/SDL_timer.h"
 #include "external/SDL/include/SDL3/SDL_video.h"
-#include <filesystem>
-#include <glm/fwd.hpp>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
 const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
@@ -48,10 +46,13 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   int versionMinor;
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
-
   P_ASSERT(versionMajor >= 4 && versionMinor >= 3,
            "OpenGL version must be above 4.3, current version is {}.{}",
            versionMajor, versionMinor);
+
+  int maxTextureUnits;
+  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+  PLOG_T("GPU Texture Mapping Units: {}", maxTextureUnits);
 
 #ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);

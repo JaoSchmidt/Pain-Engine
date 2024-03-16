@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <functional>
 #include <glm/glm.hpp>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <spdlog/logger.h>
 #include <sstream>
