@@ -10,12 +10,14 @@
 #include "CoreRender/AllBuffers.h"
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/Camera.h"
-#include "CoreRender/Renderer2d.h"
+#include "CoreRender/Renderer/Renderer2d.h"
+#include "CoreRender/Renderer/Renderer3d.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 
-#include "Misc/CameraController.h"
+#include "Misc/OrthoCameraController.h"
+#include "Misc/PerspCameraController.h"
 #include "Misc/SimpleShapeClasses.h"
 
 #ifndef NDEBUG

@@ -4,10 +4,9 @@
 #include "Core.h"
 
 #include "CoreRender/Camera.h"
-#include "CoreRender/Renderer/QuadVertex.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/VertexArray.h"
-#include "Misc/CameraController.h"
+#include "Misc/OrthoCameraController.h"
 
 namespace pain
 {
@@ -30,7 +29,6 @@ public:
   static void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
                           uint32_t indexCount = 0);
 
-  static QuadVertexBatch *m_quadBatch;
   static std::shared_ptr<OrthographicCameraController> m_cameraController;
 
 private:

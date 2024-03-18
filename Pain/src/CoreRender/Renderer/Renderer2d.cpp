@@ -1,9 +1,8 @@
-#include "CoreRender/Renderer2d.h"
+#include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/QuadVertex.h"
 
 namespace pain
 {
-// std::shared_ptr<Camera> Renderer2d::m_camera = nullptr;
 static QuadVertexBatch *quadBatch = nullptr;
 std::shared_ptr<OrthographicCameraController> Renderer2d::m_cameraController =
     nullptr;
@@ -41,7 +40,7 @@ void Renderer2d::setViewport(int x, int y, int width, int height)
   glViewport(x, y, width, height);
 }
 
-void Renderer2d::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+void Renderer2d::clear() { glClear(GL_COLOR_BUFFER_BIT); }
 
 void Renderer2d::setClearColor(const glm::vec4 color)
 {
@@ -62,7 +61,7 @@ void Renderer2d::beginScene(const glm::mat4 &transform)
 void Renderer2d::endScene()
 {
   quadBatch->sendAllDataToOpenGL();
-  // NOTE: this probably won't be here in the future,
+  // NOTE: sendAllDataToOpenGL probably won't be here in the future,
   // otherwise flush() wouldn't need to be a function
   flush();
 }
