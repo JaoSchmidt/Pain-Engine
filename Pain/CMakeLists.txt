@@ -6,8 +6,6 @@ set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
 project(${LIBRARY_NAME} VERSION 0.1.0)
 
-add_compile_definitions(PAIN_PLATFORM_LINUX=1)
-
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_library(${LIBRARY_NAME} SHARED ${SOURCES})
@@ -16,7 +14,6 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 )
 
-# target_compile_options(${LIBRARY_NAME} PRIVATE -Wall -std=c++20 -fmodules-ts -lGLEW -lglfw -lGLU -lGL -lglm)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 remove_definitions("-DNDEBUG")
@@ -57,10 +54,10 @@ if(UNIX OR APPLE)
 		COMMAND rsync -av "${PROJECT_SOURCE_DIR}/resources/" "${CMAKE_BINARY_DIR}/Example/resources/"
 		COMMENT "Syncing resources folder"
 	)
+	# Add dependency to sync_resources target on make
+	add_dependencies(${LIBRARY_NAME} sync_resources)
 endif()
 
-# Add dependency to sync_resources target on make
-add_dependencies(${LIBRARY_NAME} sync_resources)
 
 # =========== Other settings ==================================
 

@@ -1,5 +1,4 @@
 #include "CoreFiles/ResourceManagerSing.h"
-#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_surface.h>
 
 namespace pain

@@ -2,9 +2,6 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "external/SDL/include/SDL3/SDL_keyboard.h"
-#include "external/SDL/include/SDL3/SDL_timer.h"
-#include "external/SDL/include/SDL3/SDL_video.h"
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
 const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
