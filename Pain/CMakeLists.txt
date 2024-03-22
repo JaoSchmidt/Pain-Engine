@@ -14,10 +14,10 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 remove_definitions("-DNDEBUG")
-target_compile_options(${LIBRARY_NAME} PRIVATE -g -Wall -std=c++17 -lGLEW -lglfw -lGLU -lGL -lglm)
+target_compile_options(${LIBRARY_NAME} PRIVATE -g -Wall -std=c++17 -lGLU -lGL -lglm)
 
 # =========== Adding Libraries ==================================
 # deactivate tests, examples, doc
@@ -32,7 +32,6 @@ add_subdirectory(external/SDL_image)
 add_subdirectory(external/glad)
 add_subdirectory(external/spdlog)
 
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
