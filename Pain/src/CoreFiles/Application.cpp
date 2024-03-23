@@ -15,7 +15,7 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   // SDL Initial setup
   // =========================================================================//
   // P_ASSERT(SDL_Init(SDL_INIT_VIDEO) >= 0, "SDL video could not be init {}",
-  //          SDL_GetError());
+  // SDL_GetError));
   PLOG_T("SDL video is initialized");
 
   m_window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED,
