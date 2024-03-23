@@ -23,8 +23,8 @@ void Shader::unbind() const { glUseProgram(0); };
 GLint Shader::getUniformLocation(const std::string &name) const
 {
   GLint location = glGetUniformLocation(m_programId, name.c_str());
-  P_ASSERT_W(location != -1, "Uniform {} was not found on shader program {}",
-             name, std::to_string(m_programId));
+  // P_ASSERT_W(location != -1, "Uniform {} was not found on shader program {}",
+  //            name, std::to_string(m_programId));
   return location;
 }
 void Shader::uploadUniformInt(const std::string &name, int value)

@@ -15,6 +15,10 @@ target_link_libraries(${TARGET_NAME} PUBLIC
   Pain
 )
 
+target_link_libraries(${TARGET_NAME} PRIVATE
+	SDL2::SDL2
+)
+
 # =========== Copying Resources ==================================
 # Copy all files from resources/ to build directory
 file(COPY ${PROJECT_SOURCE_DIR}/resources/ 

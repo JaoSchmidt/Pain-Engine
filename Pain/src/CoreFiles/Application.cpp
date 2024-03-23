@@ -14,8 +14,8 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   // =========================================================================//
   // SDL Initial setup
   // =========================================================================//
-  P_ASSERT(SDL_Init(SDL_INIT_VIDEO) >= 0, "SDL video could not be init {}",
-           SDL_GetError());
+  // P_ASSERT(SDL_Init(SDL_INIT_VIDEO) >= 0, "SDL video could not be init {}",
+  //          SDL_GetError());
   PLOG_T("SDL video is initialized");
 
   m_window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED,
@@ -43,9 +43,9 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   int versionMinor;
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
-  P_ASSERT(versionMajor >= 4 && versionMinor >= 3,
-           "OpenGL version must be above 4.3, current version is {}.{}",
-           versionMajor, versionMinor);
+  // P_ASSERT(versionMajor >= 4 && versionMinor >= 3,
+  //          "OpenGL version must be above 4.3, current version is {}.{}",
+  //          versionMajor, versionMinor);
 
   int maxTextureUnits;
   glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);

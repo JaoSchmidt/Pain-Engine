@@ -1,9 +1,10 @@
+#include <pain.h>
+
 #include "Misc/PerspCameraController.h"
 #include <SDL2/SDL_events.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
-#include <pain.h>
 
 class MainLayer : public pain::Layer
 {
