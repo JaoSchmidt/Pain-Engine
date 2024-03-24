@@ -2,6 +2,7 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include <SDL2/SDL_version.h>
 
 const unsigned int NUM_FLOATS_PER_VERTICE = 6;
 const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
@@ -24,6 +25,11 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   if (m_window == nullptr)
     PLOG_E("Application window not initialized");
   m_context = SDL_GL_CreateContext(m_window);
+
+  SDL_version sdl_version;
+  SDL_GetVersion(&sdl_version);
+  PLOG_T("SDL version: {}.{}.{}", sdl_version.major, sdl_version.minor,
+         sdl_version.patch);
 
   // =========================================================================//
   // OpenGL Initial setup

@@ -20,6 +20,8 @@
 #include "Misc/PerspCameraController.h"
 #include "Misc/SimpleShapeClasses.h"
 
+#include <SDL2/SDL_events.h>
+
 #ifndef NDEBUG
 #define ASSERT(x, s, ...)                                                      \
   {                                                                            \
