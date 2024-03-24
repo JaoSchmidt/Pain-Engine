@@ -9,6 +9,7 @@ target_compile_options(${TARGET_NAME} PRIVATE -g -Wall)
 
 target_include_directories(Pain PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/Pain
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/Pain/external/SDL
 )
 
 target_link_libraries(${TARGET_NAME} PUBLIC

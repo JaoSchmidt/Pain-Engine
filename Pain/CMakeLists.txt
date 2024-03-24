@@ -8,7 +8,8 @@ project(${LIBRARY_NAME} VERSION 0.1.0)
 
 # set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
-add_library(${LIBRARY_NAME} SHARED ${SOURCES})
+# STATIC?
+add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -17,7 +18,12 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 remove_definitions("-DNDEBUG")
-target_compile_options(${LIBRARY_NAME} PRIVATE -g -Wall -std=c++17 -lGLU -lGL -lglm)
+#target_compile_options(${LIBRARY_NAME} PRIVATE -g -Wall /std:c++17 -lGLU -lGL -lglm)
+if(MSVC)
+  target_compile_options(${LIBRARY_NAME} PRIVATE /W0)
+else()
+  target_compile_options(${LIBRARY_NAME} PRIVATE -Wall)
+endif()
 
 # =========== Adding Libraries ==================================
 # deactivate tests, examples, doc
@@ -26,12 +32,15 @@ set(SPDLOG_BUILD_SHARED OFF)
 add_subdirectory(external/glm)
 add_subdirectory(external/glad)
 add_subdirectory(external/spdlog)
+add_subdirectory(external/SDL)
 add_subdirectory(external/SDL_image)
+
 
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${LIBRARY_NAME} PRIVATE
 	SDL2
+	SDL2::SDL2main
 	SDL2_image
 )
 

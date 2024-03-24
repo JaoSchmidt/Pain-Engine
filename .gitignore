@@ -31,6 +31,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Notepad++ backup files
+*.bak
 ##### Linux
 *~
 

@@ -13,6 +13,10 @@
 #error "Only Windows or Linux supports Pain"
 #endif
 
+#ifdef _WIN64
+#define P_ASSERT(x, ...)
+#define P_ASSERT_W(x, s, ...)
+#else 
 #ifndef NDEBUG
 #define P_ASSERT(x, s, ...)                                                    \
   {                                                                            \
@@ -27,8 +31,7 @@
       PLOG_W(std::string("Assertion Failed: ").append(s), ##__VA_ARGS__);      \
     }                                                                          \
   }
-#else
-#define P_ASSERT(x, ...)
+#endif
 #endif
 
 #define NONCOPYABLE(c)                                                         \
