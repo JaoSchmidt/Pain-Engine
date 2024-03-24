@@ -11,7 +11,7 @@ target_include_directories(Pain PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/Pain
 )
 
-target_link_libraries(${TARGET_NAME} PRIVATE
+target_link_libraries(${TARGET_NAME} PUBLIC
   Pain
 )
 

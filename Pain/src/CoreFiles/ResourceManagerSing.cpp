@@ -1,8 +1,7 @@
 #include "CoreFiles/ResourceManagerSing.h"
 #include <SDL2/SDL_surface.h>
 
-// #include <SDL_image.h>
-
+#include <SDL_image.h>
 namespace pain
 {
 
@@ -20,8 +19,8 @@ SDL_Surface *Resources::getSurface(const std::string filepath)
   if (search != m_surfacesMap.end()) {
     return m_surfacesMap[filepath];
   } else {
-    // SDL_Surface *surface = IMG_Load(filepath.c_str());
-    // m_surfacesMap.insert(std::make_pair(filepath, surface));
+    SDL_Surface *surface = IMG_Load(filepath.c_str());
+    m_surfacesMap.insert(std::make_pair(filepath, surface));
     return m_surfacesMap[filepath];
   }
 }

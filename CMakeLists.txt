@@ -29,11 +29,12 @@ add_subdirectory(Pain/external/glm)
 add_subdirectory(Pain/external/glad)
 add_subdirectory(Pain/external/spdlog)
 add_subdirectory(Pain/external/SDL)
-
+add_subdirectory(Pain/external/SDL_image)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
 	${OPENGL_LIBRARIES}
+	SDL2_image
 	SDL2::SDL2
 	glad
 	glm::glm
