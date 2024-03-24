@@ -26,13 +26,11 @@ set(SPDLOG_BUILD_SHARED OFF)
 add_subdirectory(external/glm)
 add_subdirectory(external/glad)
 add_subdirectory(external/spdlog)
-add_subdirectory(external/SDL_image)
 
 find_package(OpenGL REQUIRED)
 
-target_link_libraries(${LIBRARY_NAME} PRIVATE
-	SDL2
-	SDL2_image
+target_link_libraries(${LIBRARY_NAME} PUBLIC
+	SDL2::SDL2
 )
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
@@ -41,15 +39,6 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 	glm::glm
 	spdlog::spdlog_header_only
 )
-
-# target_link_libraries(${LIBRARY_NAME} PRIVATE
-# 	SDL2_image
-# )
-
-# # libraries that have .cpp files must also be included this way:
-# include_directories(PUBLIC 
-# 	"${PROJECT_SOURCE_DIR}/external/SDL/include"
-# )
 
 # =========== Resources/Assets Managment ==================================
 

@@ -13,15 +13,6 @@ public:
   {
     m_cameraController.reset(
         new pain::PerspectiveCameraController(800.0, 600.0, 60.0f));
-    // m_isocelesTriangle.reset(new pain::IsocelesTriangle(1.0f, 0.5f));
-    // m_textureRectangle.reset(new pain::TextureRectangle());
-    // m_texture.reset(new
-    // pain::Texture("resources/textures/Checkerboard.png"));
-    // m_texture_shader.reset(new
-    // pain::Shader("resources/shaders/Texture.glsl"));
-    // m_texture_shader->bind();
-    // m_texture_shader->uploadUniformInt("u_Texture", 0);
-
     pain::Renderer3d::init(m_cameraController);
   }
   void drawThousandRandQuads()

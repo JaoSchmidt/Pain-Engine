@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.6)
-project(Glad)
 
-add_library(glad STATIC include/glad/gl.h src/gl.c)
-target_include_directories(glad PUBLIC include/)
+set(LIBRARY_NAME "glad")
+project(${LIBRARY_NAME})
+
+file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.c")
+add_library(${LIBRARY_NAME} SHARED ${SOURCES})
+target_include_directories(${LIBRARY_NAME} PUBLIC
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+)

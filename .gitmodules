@@ -4,8 +4,8 @@
 [submodule "Pain/external/spdlog"]
 	path = Pain/external/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "Pain/external/SDL"]
-	path = Pain/external/SDL
+[submodule "vendor/SDL"]
+	path = vendor/SDL
 	url = https://github.com/libsdl-org/SDL
 [submodule "Pain/external/SDL_image"]
 	path = Pain/external/SDL_image
