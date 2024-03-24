@@ -32,13 +32,9 @@ add_subdirectory(Pain/external/SDL)
 
 find_package(OpenGL REQUIRED)
 
-
-target_link_libraries(${LIBRARY_NAME} INTERFACE
-	SDL2::SDL2
-)
-
 target_link_libraries(${LIBRARY_NAME} PUBLIC
 	${OPENGL_LIBRARIES}
+	SDL2::SDL2
 	glad
 	glm::glm
 	spdlog::spdlog_header_only
@@ -57,5 +53,4 @@ if(UNIX OR APPLE)
 	add_dependencies(${LIBRARY_NAME} sync_resources)
 endif()
 
-# add_subdirectory(Pain)
 add_subdirectory(Example)
