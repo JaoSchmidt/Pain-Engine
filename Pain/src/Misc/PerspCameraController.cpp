@@ -31,14 +31,14 @@ void PerspectiveCameraController::onUpdate(double deltaTimeSec)
     m_position.x += m_translationSpeed * deltaTimeSec;
 
   if (state[SDL_SCANCODE_W])
-    m_position.z += m_translationSpeed * deltaTimeSec;
-  else if (state[SDL_SCANCODE_S])
     m_position.z -= m_translationSpeed * deltaTimeSec;
+  else if (state[SDL_SCANCODE_S])
+    m_position.z += m_translationSpeed * deltaTimeSec;
 
   if (state[SDL_SCANCODE_SPACE])
-    m_position.y += m_translationSpeed * deltaTimeSec;
-  else if (state[SDL_SCANCODE_C])
     m_position.y -= m_translationSpeed * deltaTimeSec;
+  else if (state[SDL_SCANCODE_C])
+    m_position.y += m_translationSpeed * deltaTimeSec;
 
   if (state[SDL_SCANCODE_Q]) {
     m_rotation.y += m_rotationSpeed * deltaTimeSec;

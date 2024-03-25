@@ -139,7 +139,7 @@ Shader::Shader(const char *filepath)
 {
   // Extract name from filepath
   std::filesystem::path fp(filepath);
-  m_name = fp.filename().stem();
+  m_name = fp.filename().stem().string();
 
   auto [vertexShader, fragmentShader] = parseShader(filepath);
   createShaderFromStrings(vertexShader, fragmentShader);

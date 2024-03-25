@@ -10,7 +10,7 @@ project(${LIBRARY_NAME} VERSION 0.1.0)
 
 # set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp")
-add_library(${LIBRARY_NAME} STATIC ${SOURCES})
+add_library(${LIBRARY_NAME} SHARED ${SOURCES})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
