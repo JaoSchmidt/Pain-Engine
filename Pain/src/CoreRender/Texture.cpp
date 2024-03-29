@@ -37,8 +37,8 @@ Texture::Texture(const std::string &path)
     m_dataFormat = GL_RGBA;
     m_internalFormat = GL_RGBA8;
   } else {
-    // P_ASSERT(false, "Unsupported number of bytes per pixel {}",
-    //          surface->format->BytesPerPixel);
+    P_ASSERT(false, "Unsupported number of bytes per pixel {}",
+             surface->format->BytesPerPixel);
   }
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
