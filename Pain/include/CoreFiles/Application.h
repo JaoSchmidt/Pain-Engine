@@ -31,6 +31,7 @@ public:
   static void glErrorHandler(unsigned int source, unsigned int type,
                              unsigned int id, unsigned int severity, int lenght,
                              const char *message, const void *userParam);
+  SDL_Window *getWindow() { return m_window; }
 
 private:
   void initialSetup(const char *title, int w, int h);

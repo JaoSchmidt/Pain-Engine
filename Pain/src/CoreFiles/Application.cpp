@@ -2,6 +2,7 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "SDL_mouse.h"
 #include <SDL2/SDL_version.h>
 #include <utility>
 
@@ -74,6 +75,9 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 
   m_isMinimized = false;
   m_layerStack = new pain::LayerStack();
+  SDL_SetRelativeMouseMode(SDL_TRUE);
+  // SDL_SetWindowGrab(m_window, SDL_TRUE);
+  // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
 }
 
 Application::~Application()
@@ -94,8 +98,8 @@ void Application::handleEvents(const SDL_Event &event)
 {
   // Handle each specific event
   // (1) Handle Input
-  for (auto player = m_layerStack->end(); player != m_layerStack->begin();) {
-    (*--player)->onEvent(event);
+  for (auto pLayer = m_layerStack->end(); pLayer != m_layerStack->begin();) {
+    (*--pLayer)->onEvent(event);
   }
 
   switch (event.type) {

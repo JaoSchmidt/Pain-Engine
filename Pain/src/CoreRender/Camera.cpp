@@ -1,5 +1,6 @@
 #include "CoreRender/Camera.h"
 #include "CoreFiles/LogWrapper.h"
+#include "glm/ext/matrix_transform.hpp"
 
 #include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -53,17 +54,12 @@ PerspectiveCamera::PerspectiveCamera(float aspectRatio,
 }
 
 void PerspectiveCamera::RecalculateViewMatrix(glm::vec3 position,
-                                              glm::vec3 rotation)
+                                              glm::vec3 frontCamera)
 {
-  glm::mat4 rotationMatrix = glm::rotate(
-      glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(1, 0, 0));
-  rotationMatrix =
-      glm::rotate(rotationMatrix, glm::radians(rotation.y), glm::vec3(0, 1, 0));
-
-  glm::mat4 transform =
-      glm::translate(glm::mat4(1.0f), position) * rotationMatrix;
-
-  m_ViewMatrix = glm::inverse(transform);
+  glm::vec3 frontUnit = glm::normalize(frontCamera);
+  glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+  // m_ViewMatrix = glm::inverse(transform);
+  m_ViewMatrix = glm::lookAt(position, position + frontUnit, up);
   m_ViewProjectionCacheMatrix = m_ProjectionMatrix * m_ViewMatrix;
 }
 
@@ -72,7 +68,7 @@ void PerspectiveCamera::SetProjection(float aspectRatio,
 {
 
   m_ProjectionMatrix = glm::perspective(glm::radians(fieldOfViewDegrees),
-                                        aspectRatio, 0.1f, 10.0f);
+                                        aspectRatio, 0.1f, 100.0f);
   m_ViewProjectionCacheMatrix = m_ProjectionMatrix * m_ViewMatrix;
 }
 
