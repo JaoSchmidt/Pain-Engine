@@ -1,4 +1,4 @@
-
+﻿
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/CubeVertex.h"

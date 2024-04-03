@@ -1,4 +1,4 @@
-#include "Misc/SimpleShapeClasses.h"
+﻿#include "Misc/SimpleShapeClasses.h"
 #include "CoreRender/AllBuffers.h"
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/VertexArray.h"

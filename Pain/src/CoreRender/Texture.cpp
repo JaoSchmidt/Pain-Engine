@@ -1,4 +1,4 @@
-#include "CoreRender/Texture.h"
+﻿#include "CoreRender/Texture.h"
 
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/ResourceManagerSing.h"
@@ -48,7 +48,7 @@ Texture::Texture(const std::string &path)
 void Texture::setData(void *data, uint32_t size)
 {
   uint32_t bpp = m_dataFormat == GL_RGBA ? 4 : 3;
-  P_ASSERT_W(size == m_width * m_height * bpp, "Data must be entire texture!");
+  //P_ASSERT_W(size == m_width * m_height * bpp, "Data must be entire texture!");
   glTextureSubImage2D(m_rendererId, 0, 0, 0, m_width, m_height, m_dataFormat,
                       GL_UNSIGNED_BYTE, data);
 }

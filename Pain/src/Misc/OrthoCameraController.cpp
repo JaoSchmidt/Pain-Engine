@@ -1,4 +1,4 @@
-#include "CoreFiles/DeltaTime.h"
+﻿#include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include <SDL2/SDL_events.h>

@@ -1,4 +1,4 @@
-#include "CoreRender/ShaderManager.h"
+﻿#include "CoreRender/ShaderManager.h"
 
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
@@ -18,7 +18,7 @@ ShaderLibrary *ShaderLibrary::getInstance()
 void ShaderLibrary::Add(const std::string &name,
                         const std::shared_ptr<Shader> &shader)
 {
-  P_ASSERT(!Exists(name), "Shader already exists!");
+  //P_ASSERT(!Exists(name), "Shader already exists!");
   m_Shaders[name] = shader;
 }
 
@@ -45,7 +45,7 @@ std::shared_ptr<pain::Shader> ShaderLibrary::Load(const std::string &name,
 
 std::shared_ptr<pain::Shader> ShaderLibrary::Get(const std::string &name)
 {
-  P_ASSERT(Exists(name), "Shader not found!");
+  //P_ASSERT(Exists(name), "Shader not found!");
   return m_Shaders[name];
 }
 

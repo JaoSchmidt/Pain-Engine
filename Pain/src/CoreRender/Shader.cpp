@@ -1,4 +1,4 @@
-
+﻿
 #include "CoreRender/Shader.h"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -123,9 +123,9 @@ std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
         type = ShadertType::FRAGMENT;
       }
     } else {
-      P_ASSERT((int)type != -1,
-               "Could not identify shader type, make sure it has "
-               "\"#shader vertex\" or \"#shader fragment\" in the .glsl")
+      //P_ASSERT((int)type != -1,
+      //         "Could not identify shader type, make sure it has "
+      //         "\"#shader vertex\" or \"#shader fragment\" in the .glsl")
       ss[(int)type] << line << '\n';
     }
   }

@@ -1,4 +1,4 @@
-#include "CoreFiles/DeltaTime.h"
+﻿#include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "glm/geometric.hpp"

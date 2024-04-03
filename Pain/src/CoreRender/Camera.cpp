@@ -1,4 +1,4 @@
-#include "CoreRender/Camera.h"
+﻿#include "CoreRender/Camera.h"
 #include "CoreFiles/LogWrapper.h"
 #include "glm/ext/matrix_transform.hpp"
 

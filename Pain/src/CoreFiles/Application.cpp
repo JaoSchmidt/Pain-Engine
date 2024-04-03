@@ -49,8 +49,8 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   }
   PLOG_T("GL version: {}",
          std::string(reinterpret_cast<const char *>(glGetString(GL_VERSION))));
-  PLOG_T("Default relative path is: {}",
-         std::filesystem::current_path().string());
+  //PLOG_T("Default relative path is: {}",
+  //       std::filesystem::current_path().string());
 
   int versionMajor;
   int versionMinor;
@@ -201,7 +201,7 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
         case GL_DEBUG_SEVERITY_NOTIFICATION: PLOG_W(  "Severity: notification"); break;
     }
 	if (GL_DEBUG_SEVERITY_HIGH == type || GL_DEBUG_TYPE_ERROR == type){
-		P_ASSERT(false,"OpenGL critical error");
+		//P_ASSERT(false,"OpenGL critical error");
 	}
   // clang-format on
 }

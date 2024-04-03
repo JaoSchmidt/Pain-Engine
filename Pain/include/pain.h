@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // For use specifically for games build with Pain
 

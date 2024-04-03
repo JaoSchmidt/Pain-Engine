@@ -1,4 +1,4 @@
-#include "CoreRender/Renderer/QuadVertex.h"
+﻿#include "CoreRender/Renderer/QuadVertex.h"
 
 namespace pain
 {

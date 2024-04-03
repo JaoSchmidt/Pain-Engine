@@ -1,11 +1,11 @@
-#pragma once
+﻿#pragma once
 #include "pch.h"
 
 #include "CoreFiles/Layer.h"
 
 namespace pain
 {
-/* Eu não sei pq o TheCherno criou essa classe ao invés de usar
+/* Eu nÃ£o sei pq o TheCherno criou essa classe ao invÃ©s de usar
  * um wrapper para o vetor
  * Mas vou confiar nele por enquanto
  * */

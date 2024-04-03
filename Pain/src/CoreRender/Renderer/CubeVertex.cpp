@@ -1,4 +1,4 @@
-#include "CoreRender/Renderer/CubeVertex.h"
+﻿#include "CoreRender/Renderer/CubeVertex.h"
 
 namespace pain
 {

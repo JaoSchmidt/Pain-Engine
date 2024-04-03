@@ -67,8 +67,12 @@ public:
   {
     m_cameraController->onEvent(event);
   }
-  void onDetach() override { LOG_I("Layer attached to the stack"); }
-  void onAttach() override { LOG_I("Layer dettached from the stack"); }
+  void onDetach() override {}
+  //LOG_I("Layer attached to the stack");
+
+  void onAttach() override {}
+  // LOG_I("Layer dettached from the stack");
+  
 
 private:
   std::shared_ptr<pain::Shader> m_texture_shader;
@@ -90,7 +94,7 @@ public:
 
 pain::Application *pain::CreateApplication()
 {
-  LOG_T("Creating app");
+  //LOG_T("Creating app");
   const char *title = "Developing Pain";
   const int width = 800;
   const int height = 600;

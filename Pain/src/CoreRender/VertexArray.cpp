@@ -1,4 +1,4 @@
-#include "CoreRender/VertexArray.h"
+﻿#include "CoreRender/VertexArray.h"
 #include "CoreRender/AllBuffers.h"
 
 namespace pain

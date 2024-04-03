@@ -1,4 +1,4 @@
-#include "pain.h"
+﻿#include "pain.h"
 #include <glad/gl.h>
 
 extern pain::Application *pain::CreateApplication();
