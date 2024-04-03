@@ -1,18 +1,14 @@
-﻿#include "pain.h"
+#include "pain.h"
 #include <glad/gl.h>
 
-extern pain::Application *pain::CreateApplication();
-
-pain::Application *app;
-
-int main(int argc, char **argv)
+void pain::Pain::initiate()
 {
   pain::LogWrapper::Init();
-
   PLOG_T("Initialized Log!");
-  app = pain::CreateApplication();
+}
 
-  app->run();
-  delete app;
-  return 0;
+void pain::Pain::runApplication(Application *app)
+{
+  Application application = std::move(*app);
+  application.run();
 }

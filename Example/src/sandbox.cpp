@@ -1,3 +1,4 @@
+#include "CoreFiles/Application.h"
 #include <pain.h>
 
 #include <glm/ext/matrix_transform.hpp>
@@ -68,11 +69,10 @@ public:
     m_cameraController->onEvent(event);
   }
   void onDetach() override {}
-  //LOG_I("Layer attached to the stack");
+  // LOG_I("Layer attached to the stack");
 
   void onAttach() override {}
   // LOG_I("Layer dettached from the stack");
-  
 
 private:
   std::shared_ptr<pain::Shader> m_texture_shader;
@@ -92,11 +92,18 @@ public:
   ~Sandbox() {}
 };
 
-pain::Application *pain::CreateApplication()
+pain::Application *CreateApplication()
 {
-  //LOG_T("Creating app");
+  // LOG_T("Creating app");
   const char *title = "Developing Pain";
   const int width = 800;
   const int height = 600;
   return new Sandbox(title, width, height);
+}
+
+int main(int argc, char *argv[])
+{
+  pain::Pain::initiate();
+  pain::Pain::runApplication(CreateApplication());
+  return 0;
 }

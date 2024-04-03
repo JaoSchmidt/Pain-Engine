@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 // For use specifically for games build with Pain
 
@@ -39,3 +39,11 @@
 #define LOG_W(...) ::pain::LogWrapper::GetClientLogger()->warn(__VA_ARGS__)
 #define LOG_E(...) ::pain::LogWrapper::GetClientLogger()->error(__VA_ARGS__)
 #define LOG_F(...) ::pain::LogWrapper::GetClientLogger()->critical(__VA_ARGS__)
+
+namespace pain
+{
+struct Pain {
+  static void initiate();
+  static void runApplication(Application *app);
+};
+} // namespace pain
