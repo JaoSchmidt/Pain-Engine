@@ -100,10 +100,19 @@ pain::Application *CreateApplication()
   const int height = 600;
   return new Sandbox(title, width, height);
 }
-
+#ifdef _WIN64
+INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
+                   INT nCmdShow)
+{
+  pain::Pain::initiate();
+  pain::Pain::runApplication(CreateApplication());
+  return 0;
+}
+#else
 int main(int argc, char *argv[])
 {
   pain::Pain::initiate();
   pain::Pain::runApplication(CreateApplication());
   return 0;
 }
+#endif
