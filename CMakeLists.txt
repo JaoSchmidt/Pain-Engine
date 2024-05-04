@@ -43,15 +43,24 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 
 # =========== Resources/Assets Managment ==================================
 
-# TODO: BUILD THIS FOR WINDOWS
+set(GAME_FOLDER "Example/example3d")
+
+# TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources
 if(UNIX OR APPLE)
 	add_custom_target(sync_resources
-		COMMAND rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/" "${CMAKE_BINARY_DIR}/Example/resources/"
+		COMMAND rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/" "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
 		COMMENT "Syncing resources folder"
 	)
 	# Add dependency to sync_resources target on make
 	add_dependencies(${LIBRARY_NAME} sync_resources)
+else()
+	add_custom_target(sync_resources
+		COMMAND Copy-Item -Path "${PROJECT_SOURCE_DIR}\\Pain\\resources\\*" -Destination "${CMAKE_BINARY_DIR}\\${GAME_FOLDER}\\resources\\" -Recurse
+		COMMENT "Syncing resources folder"
+	)
+
+	add_dependencies(${LIBRARY_NAME} sync_resources)
 endif()
 
-add_subdirectory(Example)
+add_subdirectory(${GAME_FOLDER})
