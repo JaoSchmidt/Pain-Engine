@@ -14,29 +14,7 @@ public:
         new pain::PerspectiveCameraController(800.0, 600.0, 60.0f));
     pain::Renderer3d::init(m_cameraController);
   }
-  void drawThousandRandQuads()
-  {
-    for (int i = 0; i < 1000; ++i) {
-      // Generate random positions between -1.0 and 1.0
-      float x = -1.0f + static_cast<float>(rand()) / (RAND_MAX / 2.0f);
-      float y = -1.0f + static_cast<float>(rand()) / (RAND_MAX / 2.0f);
 
-      // Generate random size between 0.1 and 0.3
-      float size = 0.1f + static_cast<float>(rand()) / (RAND_MAX / 0.2f);
-
-      // Generate random color components between 0.0 and 1.0
-      float r = static_cast<float>(rand()) / RAND_MAX;
-      float g = static_cast<float>(rand()) / RAND_MAX;
-      float b = static_cast<float>(rand()) / RAND_MAX;
-      float a = 1.0f; // Alpha component (opacity), set to 1.0 for fully opaque
-
-      glm::vec2 position(x, y);
-      glm::vec2 quadSize(size, size);
-      glm::vec4 color(r, g, b, a);
-
-      pain::Renderer2d::drawQuad(position, quadSize, color);
-    }
-  }
   void onUpdate(pain::DeltaTime deltaTime) override
   {
     const double dtSeconds = deltaTime.GetSeconds();

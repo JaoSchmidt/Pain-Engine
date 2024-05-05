@@ -75,7 +75,6 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 
   m_isMinimized = false;
   m_layerStack = new pain::LayerStack();
-  SDL_SetRelativeMouseMode(SDL_TRUE);
   // SDL_SetWindowGrab(m_window, SDL_TRUE);
   // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
 }
@@ -172,27 +171,27 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
   PLOG_W("---------------");
   PLOG_W("Debug message ({}): {}", id, message);
   // clang-format off
-    switch (source) 
-    { 
+    switch (source)
+    {
         case GL_DEBUG_SOURCE_API:             PLOG_W(  "Source: API"); break;
         case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   PLOG_W(  "Source: Window System"); break;
         case GL_DEBUG_SOURCE_SHADER_COMPILER: PLOG_W(  "Source: Shader Compiler"); break;
         case GL_DEBUG_SOURCE_THIRD_PARTY:     PLOG_W(  "Source: Third Party"); break;
         case GL_DEBUG_SOURCE_APPLICATION:     PLOG_W(  "Source: Application"); break;
         case GL_DEBUG_SOURCE_OTHER:           PLOG_W(  "Source: Other"); break;
-    } 
-    switch (type) 
-    { 
+    }
+    switch (type)
+    {
         case GL_DEBUG_TYPE_ERROR:               PLOG_E(  "Type: Error"); break;
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: PLOG_W(  "Type: Deprecated Behaviour"); break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  PLOG_W(  "Type: Undefined Behaviour"); break; 
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  PLOG_W(  "Type: Undefined Behaviour"); break;
         case GL_DEBUG_TYPE_PORTABILITY:         PLOG_W(  "Type: Portability"); break;
         case GL_DEBUG_TYPE_PERFORMANCE:         PLOG_W(  "Type: Performance"); break;
         case GL_DEBUG_TYPE_MARKER:              PLOG_W(  "Type: Marker"); break;
         case GL_DEBUG_TYPE_PUSH_GROUP:          PLOG_W(  "Type: Push Group"); break;
         case GL_DEBUG_TYPE_POP_GROUP:           PLOG_W(  "Type: Pop Group"); break;
         case GL_DEBUG_TYPE_OTHER:               PLOG_W(  "Type: Other"); break;
-    } 
+    }
     switch (severity)
     {
         case GL_DEBUG_SEVERITY_HIGH:         PLOG_E(  "Severity: high"); break;

@@ -1,4 +1,4 @@
-﻿#include "CoreFiles/DeltaTime.h"
+#include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "glm/geometric.hpp"
@@ -22,6 +22,7 @@ PerspectiveCameraController::PerspectiveCameraController(
   Renderer3d::setViewport(0, 0, windowWidth, windowHeight);
   setFrontVector({0.0f, 0.0f, 1.0f});
   setPosition({0.0f, 0.0f, 0.0f});
+  SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void PerspectiveCameraController::onUpdate(double deltaTimeSec)

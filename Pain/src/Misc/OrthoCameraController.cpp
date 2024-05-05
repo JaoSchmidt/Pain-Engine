@@ -1,4 +1,4 @@
-﻿#include "CoreFiles/DeltaTime.h"
+#include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include <SDL2/SDL_events.h>
@@ -25,18 +25,19 @@ void OrthographicCameraController::onUpdate(double deltaTimeSec)
 
   if (state[SDL_SCANCODE_A])
     m_position.x -= m_translationSpeed * deltaTimeSec;
-  else if (state[SDL_SCANCODE_D])
+  if (state[SDL_SCANCODE_D])
     m_position.x += m_translationSpeed * deltaTimeSec;
 
   if (state[SDL_SCANCODE_W])
     m_position.y += m_translationSpeed * deltaTimeSec;
-  else if (state[SDL_SCANCODE_S])
+  if (state[SDL_SCANCODE_S])
     m_position.y -= m_translationSpeed * deltaTimeSec;
 
   if (state[SDL_SCANCODE_Q]) {
     m_rotation += m_rotationSpeed * deltaTimeSec;
     setRotation(m_rotation);
-  } else if (state[SDL_SCANCODE_E]) {
+  }
+  if (state[SDL_SCANCODE_E]) {
     m_rotation -= m_rotationSpeed * deltaTimeSec;
     setRotation(m_rotation);
   }
