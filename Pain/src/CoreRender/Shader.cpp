@@ -1,4 +1,4 @@
-﻿
+
 #include "CoreRender/Shader.h"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -58,6 +58,12 @@ void Shader::uploadUniformMat4(const std::string &name, const glm::mat4 &matrix)
 {
   GLint location = getUniformLocation(name);
   glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+void Shader::uploadUniformIntArray(const std::string &name, int *values,
+                                   uint32_t count)
+{
+  GLint location = getUniformLocation(name);
+  glUniform1iv(location, count, values);
 }
 
 // ========================================================== //
@@ -123,9 +129,9 @@ std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
         type = ShadertType::FRAGMENT;
       }
     } else {
-      //P_ASSERT((int)type != -1,
-      //         "Could not identify shader type, make sure it has "
-      //         "\"#shader vertex\" or \"#shader fragment\" in the .glsl")
+      P_ASSERT((int)type != -1,
+               "Could not identify shader type, make sure it has "
+               "\"#shader vertex\" or \"#shader fragment\" in the .glsl")
       ss[(int)type] << line << '\n';
     }
   }

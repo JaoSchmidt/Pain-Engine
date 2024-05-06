@@ -1,4 +1,5 @@
-﻿#pragma once
+#pragma once
+#include "CoreRender/Texture.h"
 #include "pch.h"
 
 #include "Core.h"
@@ -17,8 +18,12 @@ public:
   static void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
   static void beginScene(const glm::mat4 &transform = glm::mat4(1.0f));
   static void endScene();
+
   static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                        const glm::vec4 &color);
+  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                       const std::shared_ptr<Texture> &texture,
+                       float tilingFactor, glm::vec4 tintColor);
 
   static void
   init(std::shared_ptr<OrthographicCameraController> &cameraController);

@@ -1,4 +1,6 @@
-﻿#include "CoreRender/Renderer/QuadVertex.h"
+#include "CoreRender/Renderer/QuadVertex.h"
+#include "CoreFiles/LogWrapper.h"
+#include <unistd.h>
 
 namespace pain
 {
@@ -14,44 +16,16 @@ void QuadVertexBatch::sendAllDataToOpenGL()
   m_vertexBuffer->setData((void *)m_vertexBufferBase, dataSize);
 }
 
-/* Batch logic mostly in this function */
-void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                               const glm::vec4 &color)
-{
-  m_vertexBufferPtr->Position = {position.x, position.y, 0.0f};
-  m_vertexBufferPtr->Color = color;
-  m_vertexBufferPtr->TexCoord = {0.0f, 0.0f};
-  m_vertexBufferPtr++;
-
-  m_vertexBufferPtr->Position = {position.x + size.x, position.y, 0.0f};
-  m_vertexBufferPtr->Color = color;
-  m_vertexBufferPtr->TexCoord = {1.0f, 0.0f};
-  m_vertexBufferPtr++;
-
-  m_vertexBufferPtr->Position = {position.x + size.x, position.y + size.y,
-                                 0.0f};
-  m_vertexBufferPtr->Color = color;
-  m_vertexBufferPtr->TexCoord = {1.0f, 1.0f};
-  m_vertexBufferPtr++;
-
-  m_vertexBufferPtr->Position = {position.x, position.y + size.y, 0.0f};
-  m_vertexBufferPtr->Color = color;
-  m_vertexBufferPtr->TexCoord = {0.0f, 1.0f};
-  m_vertexBufferPtr++;
-
-  m_indexCount += 6;
-}
-
 QuadVertexBatch::QuadVertexBatch()
 {
   m_vertexArray.reset(new VertexArray());
 
   m_vertexBuffer.reset(new VertexBuffer(MaxVertices * sizeof(QuadVertex)));
-  m_vertexBuffer->setLayout({
-      {ShaderDataType::Float3, "a_Position"}, //
-      {ShaderDataType::Float4, "a_Color"},    //
-      {ShaderDataType::Float2, "a_TexCoord"}  //
-  });
+  m_vertexBuffer->setLayout({{ShaderDataType::Float3, "a_Position"}, //
+                             {ShaderDataType::Float4, "a_Color"},    //
+                             {ShaderDataType::Float2, "a_TexCoord"}, //
+                             {ShaderDataType::Float, "a_TexIndex"},  //
+                             {ShaderDataType::Float, "a_TilingFactor"}});
   m_vertexArray->addVertexBuffer(m_vertexBuffer);
 
   m_vertexBufferBase = new QuadVertex[MaxVertices];
@@ -77,12 +51,120 @@ QuadVertexBatch::QuadVertexBatch()
   delete[] quadIndices;
 
   m_whiteTexture.reset(new Texture(1, 1));
-  // uint32_t whiteTextureData = 0xffffffff;
-  // m_whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
+  uint32_t whiteTextureData = 0xffffffff;
+  m_whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
+
+  int32_t samplers[MaxTextureSlots];
+  for (uint32_t i = 0; i < MaxTextureSlots; i++) {
+    samplers[i] = i;
+  }
 
   m_textureShader.reset(new Shader("resources/shaders/Texture.glsl"));
-  // m_textureShader->bind();
-  // m_textureShader->uploadUniformInt("u_Texture", 0);
+  m_textureShader->bind();
+  m_textureShader->uploadUniformIntArray("u_Textures", samplers,
+                                         MaxTextureSlots);
+  m_textureSlots[0] = m_whiteTexture;
+}
+void QuadVertexBatch::bindTextures()
+{
+  for (uint32_t i = 0; i < m_textureSlotIndex; i++)
+    m_textureSlots[i]->bind(i);
+}
+void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                               const std::shared_ptr<Texture> &texture,
+                               float tilingFactor, glm::vec4 tintColor)
+{
+  // constexpr glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
+  const glm::vec4 color = tintColor;
+
+  float textureIndex = 0.0f;
+  // tries to get texture from the m_textureSlots
+  for (uint32_t i = 1; i < m_textureSlotIndex; i++) {
+    if (*m_textureSlots[i].get() == *texture.get()) {
+      textureIndex = (float)i;
+      break;
+    }
+  }
+
+  // otherwise use it to allocate new texture
+  if (textureIndex == 0.0f) {
+    textureIndex = (float)m_textureSlotIndex;
+    m_textureSlots[m_textureSlotIndex] = texture;
+    m_textureSlotIndex++;
+  }
+  P_ASSERT_W(textureIndex != 0.0f,
+             "Missing texture inside a drawQuad that requires textures");
+  // PLOG_I("Texture being used {}, path:{}", textureIndex, texture->tempGet());
+
+  m_vertexBufferPtr->position = {position.x, position.y, 0.0f};
+  m_vertexBufferPtr->color = color;
+  m_vertexBufferPtr->texCoord = {0.0f, 0.0f};
+  m_vertexBufferPtr->texIndex = textureIndex;
+  m_vertexBufferPtr->tilingFactor = tilingFactor;
+  m_vertexBufferPtr++;
+
+  m_vertexBufferPtr->position = {position.x + size.x, position.y, 0.0f};
+  m_vertexBufferPtr->color = color;
+  m_vertexBufferPtr->texCoord = {1.0f, 0.0f};
+  m_vertexBufferPtr->texIndex = textureIndex;
+  m_vertexBufferPtr->tilingFactor = tilingFactor;
+  m_vertexBufferPtr++;
+
+  m_vertexBufferPtr->position = {position.x + size.x, position.y + size.y,
+                                 0.0f};
+  m_vertexBufferPtr->color = color;
+  m_vertexBufferPtr->texCoord = {1.0f, 1.0f};
+  m_vertexBufferPtr->texIndex = textureIndex;
+  m_vertexBufferPtr->tilingFactor = tilingFactor;
+  m_vertexBufferPtr++;
+
+  m_vertexBufferPtr->position = {position.x, position.y + size.y, 0.0f};
+  m_vertexBufferPtr->color = color;
+  m_vertexBufferPtr->texCoord = {0.0f, 1.0f};
+  m_vertexBufferPtr->texIndex = textureIndex;
+  m_vertexBufferPtr->tilingFactor = tilingFactor;
+  m_vertexBufferPtr++;
+
+  m_indexCount += 6;
+}
+
+/* Batch logic mostly in this function */
+void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                               const glm::vec4 &color)
+{
+  const float texIndex = 0.0f; // White Texture
+  const float tilingFactor = 1.0f;
+
+  m_vertexBufferPtr->position = {position.x, position.y, 0.0f};
+  m_vertexBufferPtr->color = color;
+  m_vertexBufferPtr->texCoord = {0.0f, 0.0f};
+  m_vertexBufferPtr->texIndex = texIndex;
+  m_vertexBufferPtr->tilingFactor = tilingFactor;
+  m_vertexBufferPtr++;
+
+  m_vertexBufferPtr->position = {position.x + size.x, position.y, 0.0f};
+  m_vertexBufferPtr->color = color;
+  m_vertexBufferPtr->texCoord = {1.0f, 0.0f};
+  m_vertexBufferPtr->texIndex = texIndex;
+  m_vertexBufferPtr->tilingFactor = tilingFactor;
+  m_vertexBufferPtr++;
+
+  m_vertexBufferPtr->position = {position.x + size.x, position.y + size.y,
+                                 0.0f};
+  m_vertexBufferPtr->color = color;
+  m_vertexBufferPtr->texCoord = {1.0f, 1.0f};
+  m_vertexBufferPtr->texIndex = texIndex;
+  m_vertexBufferPtr->tilingFactor = tilingFactor;
+  m_vertexBufferPtr++;
+
+  m_vertexBufferPtr->position = {position.x, position.y + size.y, 0.0f};
+  m_vertexBufferPtr->color = color;
+  m_vertexBufferPtr->texCoord = {0.0f, 1.0f};
+  m_vertexBufferPtr->texIndex = texIndex;
+  m_vertexBufferPtr->tilingFactor = tilingFactor;
+  m_vertexBufferPtr++;
+
+  m_indexCount += 6;
 }
 
 } // namespace pain

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Core.h"
@@ -30,6 +30,7 @@ public:
   void uploadUniformFloat4(const std::string &name, const glm::vec4 &value);
   void uploadUniformMat3(const std::string &name, const glm::mat3 &matrix);
   void uploadUniformMat4(const std::string &name, const glm::mat4 &matrix);
+  void uploadUniformIntArray(const std::string &name, int* values, uint32_t count);
 
 private:
   std::string m_name;

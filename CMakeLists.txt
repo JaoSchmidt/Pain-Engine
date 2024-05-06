@@ -43,7 +43,7 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/example2d")
+set(GAME_FOLDER "Example/spriteGame")
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources

@@ -1,10 +1,18 @@
-﻿#include "CoreRender/Texture.h"
+#include "CoreRender/Texture.h"
 
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/ResourceManagerSing.h"
 
 namespace pain
 {
+
+bool Texture::operator==(const Texture &other) const
+{
+  return m_rendererId == other.m_rendererId;
+}
+/*
+ * Sets a dump texture
+ */
 Texture::Texture(uint32_t width, uint32_t height)
     : m_width(width), m_height(height)
 {
@@ -21,8 +29,12 @@ Texture::Texture(uint32_t width, uint32_t height)
   glTextureParameteri(m_rendererId, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
+/*
+ * Sets a texture given a specific texture image path
+ */
 Texture::Texture(const std::string &path)
 {
+  m_path = path;
   SDL_Surface *surface = Resources::getInstance()->getSurface(path);
 
   glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererId);
@@ -48,7 +60,7 @@ Texture::Texture(const std::string &path)
 void Texture::setData(void *data, uint32_t size)
 {
   uint32_t bpp = m_dataFormat == GL_RGBA ? 4 : 3;
-  //P_ASSERT_W(size == m_width * m_height * bpp, "Data must be entire texture!");
+  P_ASSERT_W(size == m_width * m_height * bpp, "Data must be entire texture!");
   glTextureSubImage2D(m_rendererId, 0, 0, 0, m_width, m_height, m_dataFormat,
                       GL_UNSIGNED_BYTE, data);
 }

@@ -1,4 +1,4 @@
-﻿#include "CoreRender/Renderer/Renderer2d.h"
+#include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/QuadVertex.h"
 
 namespace pain
@@ -29,6 +29,13 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &color)
 {
   quadBatch->drawQuad(position, size, color);
+}
+
+void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const std::shared_ptr<Texture> &texture,
+                          float tilingFactor, glm::vec4 tintColor)
+{
+  quadBatch->drawQuad(position, size, texture, tilingFactor, tintColor);
 }
 
 // ================================================================= //
@@ -68,6 +75,7 @@ void Renderer2d::endScene()
 
 void Renderer2d::flush()
 {
+  quadBatch->bindTextures();
   drawIndexed(quadBatch->getVertexArray(), quadBatch->getIndexCount());
 }
 
