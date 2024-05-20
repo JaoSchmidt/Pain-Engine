@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Core.h"
@@ -19,18 +19,10 @@ public:
   // OrthographicCamera &getCamera() { return *m_camera; }
   const OrthographicCamera &getCamera() const { return m_camera; }
 
-  inline void setPosition(const glm::vec3 &position)
-  {
-    m_position = position;
-    m_camera.RecalculateViewMatrix(m_position, m_rotation);
-  }
+  inline void setPosition(const glm::vec3 &position);
   inline const glm::vec3 &getPosition() const { return m_position; }
 
-  inline void setRotation(float rotation)
-  {
-    m_rotation = rotation;
-    m_camera.RecalculateViewMatrix(m_position, m_rotation);
-  }
+  inline void setRotation(float rotation);
   inline float getRotation() const { return m_rotation; }
 
 private:
