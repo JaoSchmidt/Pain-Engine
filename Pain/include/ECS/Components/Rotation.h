@@ -1,18 +1,36 @@
 #pragma once
 
-struct transform_system {
+#include "pch.h"
+
+#include "CoreFiles/DeltaTime.h"
+#include "ECS/Entity.h"
+
+namespace pain
+{
+
+struct RotationComponent {
+  glm::vec3 m_rotDirection = {0.0f, 0.0f, 0.0f};
+  float m_rotation = 0.0f;
+  float m_rotationSpeed = 180.0f;
+  RotationComponent() = default;
+  RotationComponent(float rotation, float rotationSpeed)
+      : m_rotation(rotation), m_rotationSpeed(rotationSpeed)
+  {
+  }
+};
+
+struct RotationSystem {
   // we'll use a constant time for this demonstration
   float dt = 0.1f;
 
-  void update(Registry &reg)
+  void update(std::unordered_map<Entity, RotationComponent> map, DeltaTime dt)
   {
-    for (int e = 1; e <= max_entity; e++) {
-      // and each entity with a transform compnent will update
-      // their position with respect to their velocity
-      if (reg.transforms.contains(e)) {
-        reg.transforms[e].pos_x += reg.transforms[e].vel_x * dt;
-        reg.transforms[e].pos_y += reg.transforms[e].vel_y * dt;
-      }
+    for (auto pair : map) {
+      pair.second.m_rotDirection = {cos(glm::radians(pair.second.m_rotation)),
+                                    sin(glm::radians(pair.second.m_rotation)),
+                                    0};
     }
   }
 };
+
+} // namespace pain

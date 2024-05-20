@@ -16,27 +16,26 @@ public:
 
   template <typename T, typename... Args> T &addComponent(Args &&...args)
   {
-    PLOG_W(!hasComponent<T>(), "Entity already has component!");
-    return m_Scene.addComponent<T, Args...>(m_entity,
+    return m_scene.addComponent<T, Args...>(m_entity,
                                             std::forward<Args>(args)...);
   }
 
   template <typename T> T &getComponent()
   {
-    return m_Scene.getComponent<T>(m_entity);
+    return m_scene.getComponent<T>(m_entity);
   }
 
   template <typename T> bool hasComponent()
   {
-    return m_Scene.hasComponent<T>(m_entity);
+    return m_scene.hasComponent<T>(m_entity);
   }
 
-  template <typename T> void rmComponent() { m_Scene.rmComponent<T>(m_entity); }
+  template <typename T> void rmComponent() { m_scene.rmComponent<T>(m_entity); }
 
   operator bool() const { return m_entity != -1; }
 
-private:
+protected:
   Entity m_entity = -1;
-  Scene &m_Scene;
+  Scene &m_scene;
 };
 } // namespace pain

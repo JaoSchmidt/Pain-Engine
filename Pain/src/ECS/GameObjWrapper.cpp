@@ -3,11 +3,11 @@
 namespace pain
 {
 
-GameObjWrapper::GameObjWrapper(Scene &scene) : m_Scene(scene)
+GameObjWrapper::GameObjWrapper(Scene &scene) : m_scene(scene)
 {
   m_entity = scene.createEntity();
 }
 
-GameObjWrapper::~GameObjWrapper() { m_Scene.destroyEntity(m_entity); }
+GameObjWrapper::~GameObjWrapper() { m_scene.destroyEntity(m_entity); }
 
 } // namespace pain

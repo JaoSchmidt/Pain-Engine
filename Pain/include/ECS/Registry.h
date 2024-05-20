@@ -4,9 +4,16 @@
 
 #include "Core.h"
 
+template <typename T> struct TypeParseTraits;
+
+#define REGISTER_PARSE_TYPE(X)                                                 \
+  template <> struct TypeParseTraits<X> {                                      \
+    static const char *name;                                                   \
+  };                                                                           \
+  const char *TypeParseTraits<X>::name = #X
+
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
-#include "ECS/Components/Transform.h"
 #include "ECS/Entity.h"
 
 namespace pain
@@ -21,7 +28,8 @@ class Registry
   template <typename T> bool has(Entity entity);
   template <typename T> void remove(Entity entity);
 
-  template <typename T> std::unordered_map<Entity, T> &getComponentMap()
+  template <typename T>
+  constexpr std::unordered_map<Entity, T> &getComponentMap()
   {
     if constexpr (std::is_same_v<T, SpriteRendererComponent>) {
       return m_sprites;
@@ -29,19 +37,22 @@ class Registry
       return m_transforms;
     } else if constexpr (std::is_same_v<T, MovementComponent>) {
       return m_movement;
-    } else if constexpr (std::is_same_v<T, KeyinputComponent>) {
-      return m_keysinputs;
+    } else if constexpr (std::is_same_v<T, RotationComponent>) {
+      return m_rotation;
     } else {
-      static_assert(std::false_type::value, "Unsupported component type");
+      // static_assert(std::false_type::value, "Unsupported component type");
+      throw ParseError(TypeParseTraits<T>::name);
     }
   }
+  template <typename T> struct always_false : std::false_type {
+  };
 
   void removeAll(Entity entity)
   {
     if (has<TransformComponent>(entity))
       remove<TransformComponent>(entity);
-    if (has<KeyinputComponent>(entity))
-      remove<KeyinputComponent>(entity);
+    if (has<RotationComponent>(entity))
+      remove<RotationComponent>(entity);
     if (has<SpriteRendererComponent>(entity))
       remove<SpriteRendererComponent>(entity);
     if (has<MovementComponent>(entity))
@@ -51,7 +62,7 @@ class Registry
   std::unordered_map<Entity, MovementComponent> m_movement;
   std::unordered_map<Entity, SpriteRendererComponent> m_sprites;
   std::unordered_map<Entity, TransformComponent> m_transforms;
-  std::unordered_map<Entity, KeyinputComponent> m_keysinputs;
+  std::unordered_map<Entity, RotationComponent> m_rotation;
 };
 
 } // namespace pain

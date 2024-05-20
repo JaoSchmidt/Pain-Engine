@@ -23,7 +23,8 @@ void Scene::destroyEntity(Entity entity)
 
 void Scene::onUpdate(DeltaTime dt)
 {
-  MovementSystem::update(getComponentMap<MovementComponent>(), dt);
+  MovementSystem::update(getComponentMap<MovementComponent>(),
+                         getComponentMap<RotationComponent>(), dt);
 }
 
 } // namespace pain

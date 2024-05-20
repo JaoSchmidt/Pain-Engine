@@ -5,6 +5,7 @@
 #include <queue>
 
 #include "CoreFiles/DeltaTime.h"
+#include "CoreFiles/LogWrapper.h"
 #include "Entity.h"
 #include "Registry.h"
 
@@ -24,7 +25,7 @@ public:
   template <typename T, typename... Args>
   T &addComponent(Entity entity, Args &&...args)
   {
-    PLOG_W(!hasComponent<T>(), "Entity already has component!");
+    P_ASSERT_W(!hasComponent<T>(entity), "Entity already has component!");
     return m_registry.add<T>(entity, std::forward<Args>(args)...);
   }
 
@@ -44,7 +45,7 @@ public:
   }
   template <typename T> std::unordered_map<Entity, T> &getComponentMap()
   {
-    return m_registry.getComponentMap<Entity, T>();
+    return m_registry.getComponentMap<T>();
   }
 
 private:
