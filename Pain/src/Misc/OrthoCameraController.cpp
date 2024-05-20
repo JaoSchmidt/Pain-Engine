@@ -3,6 +3,7 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
+#include <cmath>
 
 namespace pain
 {
@@ -19,19 +20,35 @@ OrthographicCameraController::OrthographicCameraController(float aspectRatio)
   m_zoomSpeed = 0.25f;
 }
 
+inline void OrthographicCameraController::setPosition(const glm::vec3 &position)
+{
+  m_position = position;
+  m_camera.RecalculateViewMatrix(m_position, m_rotation);
+}
+
+inline void OrthographicCameraController::setRotation(float rotation)
+{
+  m_rotation = rotation;
+  m_camera.RecalculateViewMatrix(m_position, m_rotation);
+}
+
 void OrthographicCameraController::onUpdate(double deltaTimeSec)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-
-  if (state[SDL_SCANCODE_A])
-    m_position.x -= m_translationSpeed * deltaTimeSec;
-  if (state[SDL_SCANCODE_D])
-    m_position.x += m_translationSpeed * deltaTimeSec;
+  glm::vec3 rotVec = {cos(glm::radians(m_rotation)),
+                      sin(glm::radians(m_rotation)), 0};
+  float moveAmount = (float)(deltaTimeSec * m_translationSpeed * 1.0 +
+                             10.0 * state[SDL_SCANCODE_LSHIFT]);
 
   if (state[SDL_SCANCODE_W])
-    m_position.y += m_translationSpeed * deltaTimeSec;
+    m_position -= glm::cross(rotVec, {0.0f, 0.0f, 1.0f}) * moveAmount;
   if (state[SDL_SCANCODE_S])
-    m_position.y -= m_translationSpeed * deltaTimeSec;
+    m_position += glm::cross(rotVec, {0.0f, 0.0f, 1.0f}) * moveAmount;
+
+  if (state[SDL_SCANCODE_A])
+    m_position -= rotVec * moveAmount;
+  if (state[SDL_SCANCODE_D])
+    m_position += rotVec * moveAmount;
 
   if (state[SDL_SCANCODE_Q]) {
     m_rotation += m_rotationSpeed * deltaTimeSec;
