@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Core.h"
@@ -26,7 +26,8 @@ class EXPORT OrthographicCamera : public Camera
 {
 public:
   OrthographicCamera(float left, float right, float bottom, float top);
-  void RecalculateViewMatrix(glm::vec3 m_position, float m_rotation);
+  void RecalculateViewMatrix(const glm::vec3 &m_position,
+                             const float m_rotation);
   void SetProjection(float left, float right, float bottom, float top);
 };
 

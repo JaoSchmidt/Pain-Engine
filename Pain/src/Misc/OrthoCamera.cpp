@@ -15,30 +15,23 @@ OrthographicCameraEntity::OrthographicCameraEntity(Scene &scene,
 {
   addComponent<MovementComponent>(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f);
   addComponent<RotationComponent>(0.0f, 180.0f);
-  m_position = {0.0f, 0.0f, 0.0f};
-  m_rotation = 0.0f;
-  m_translationSpeed = 1.0f;
-  m_rotationSpeed = 180.0f;
   m_zoomSpeed = 0.25f;
 }
 
-inline void OrthographicCameraEntity::setPosition(const glm::vec3 &position)
+inline void
+OrthographicCameraEntity::recalculatePosition(const glm::vec3 &position,
+                                              float rotation)
 {
-  m_position = position;
-  m_camera.RecalculateViewMatrix(m_position, m_rotation);
-}
-
-inline void OrthographicCameraEntity::setRotation(float rotation)
-{
-  m_rotation = rotation;
-  m_camera.RecalculateViewMatrix(m_position, m_rotation);
+  m_camera.RecalculateViewMatrix(position, rotation);
 }
 
 void OrthographicCameraEntity::onUpdate(double deltaTimeSec)
 {
-  const Uint8 *state = SDL_GetKeyboardState(NULL);
-  RotationComponent rotStruct =
+  // const Uint8 *state = SDL_GetKeyboardState(NULL);
+  const RotationComponent rotStruct =
       m_scene.getComponent<RotationComponent>(m_entity);
+  MovementComponent movStruct =
+      m_scene.getComponent<MovementComponent>(m_entity);
 
   // if (state[SDL_SCANCODE_W])
   //   rotStruct.m_rotDirection -= glm::cross(rotVec, {0.0f, 0.0f, 1.0f});
@@ -59,9 +52,8 @@ void OrthographicCameraEntity::onUpdate(double deltaTimeSec)
   //   setRotation(m_rotation);
   // }
 
-  setPosition(m_position);
-
-  m_translationSpeed = m_zoomLevel;
+  movStruct.m_translationSpeed = m_zoomLevel;
+  recalculatePosition(movStruct.m_position, rotStruct.m_rotation);
 }
 
 void OrthographicCameraEntity::onEvent(const SDL_Event &event)
