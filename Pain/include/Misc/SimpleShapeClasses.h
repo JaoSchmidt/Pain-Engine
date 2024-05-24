@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Core.h"
@@ -13,12 +13,12 @@ class EXPORT SimpleShape
 {
 public:
   // clang-format off
-  inline std::shared_ptr<VertexArray> getVertexArr() 
+  inline std::shared_ptr<VertexArray> getVertexArr()
     const { return m_vertexArray; }
   inline float getPosX() const { return m_position.x; }
   inline float getPosY() const { return m_position.y; }
   inline glm::vec3 getPos() const { return m_position; }
-  inline void mvPositiveY(const double dtSeconds) { 
+  inline void mvPositiveY(const double dtSeconds) {
     m_position.y += m_speed.y * dtSeconds; }
   inline void mvPositiveX(const double dtSeconds) {
     m_position.x += m_speed.x * dtSeconds; }

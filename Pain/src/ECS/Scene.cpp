@@ -21,10 +21,4 @@ void Scene::destroyEntity(Entity entity)
   m_availableEntities.push(entity);
 }
 
-void Scene::onUpdate(DeltaTime dt)
-{
-  MovementSystem::update(getComponentMap<MovementComponent>(),
-                         getComponentMap<RotationComponent>(), dt);
-}
-
 } // namespace pain

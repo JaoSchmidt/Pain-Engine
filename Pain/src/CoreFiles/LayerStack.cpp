@@ -1,4 +1,4 @@
-﻿#include "CoreFiles/LayerStack.h"
+#include "CoreFiles/LayerStack.h"
 
 namespace pain
 {

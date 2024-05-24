@@ -6,7 +6,7 @@
 #include "CoreFiles/Layer.h"
 #include "CoreFiles/LayerStack.h"
 #include "CoreFiles/LogWrapper.h"
-
+// Renderer
 #include "CoreRender/AllBuffers.h"
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/Camera.h"
@@ -15,8 +15,13 @@
 #include "CoreRender/Shader.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
-
-#include "Misc/OrthoCameraController.h"
+// ECS
+#include "ECS/Components/Movement.h"
+#include "ECS/Components/Sprite.h"
+#include "ECS/Scene.h"
+#include "ECS/SceneManager.h"
+// Misc
+#include "Misc/BasicOrthoCamera.h"
 #include "Misc/PerspCameraController.h"
 #include "Misc/SimpleShapeClasses.h"
 

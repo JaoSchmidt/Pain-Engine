@@ -7,7 +7,7 @@
 #include "CoreRender/Camera.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/VertexArray.h"
-#include "Misc/OrthoCameraController.h"
+#include "Misc/BasicOrthoCamera.h"
 
 namespace pain
 {
@@ -25,8 +25,7 @@ public:
                        const std::shared_ptr<Texture> &texture,
                        float tilingFactor, glm::vec4 tintColor);
 
-  static void
-  init(std::shared_ptr<OrthographicCameraController> &cameraController);
+  static void init(std::shared_ptr<OrthoCameraEntity> &cameraController);
   static void shutdown();
   static void setViewport(int x, int y, int width, int height);
   static void setClearColor(const glm::vec4 color);
@@ -34,7 +33,7 @@ public:
   static void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
                           uint32_t indexCount = 0);
 
-  static std::shared_ptr<OrthographicCameraController> m_cameraController;
+  static std::shared_ptr<OrthoCameraEntity> m_cameraController;
 
 private:
   static void flush();

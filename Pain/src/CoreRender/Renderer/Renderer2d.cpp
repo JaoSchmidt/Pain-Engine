@@ -1,18 +1,17 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/QuadVertex.h"
+#include "Misc/BasicOrthoCamera.h"
 
 namespace pain
 {
 static QuadVertexBatch *quadBatch = nullptr;
-std::shared_ptr<OrthographicCameraController> Renderer2d::m_cameraController =
-    nullptr;
+std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraController = nullptr;
 
 // ================================================================= //
 // Render initialization and destruction
 // ================================================================= //
 
-void Renderer2d::init(
-    std::shared_ptr<OrthographicCameraController> &cameraController)
+void Renderer2d::init(std::shared_ptr<OrthoCameraEntity> &cameraController)
 {
   quadBatch = new QuadVertexBatch();
   // NOTE: This can be changed later in case the engine needs a camera mechanic

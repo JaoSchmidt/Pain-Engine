@@ -15,12 +15,13 @@ class EXPORT Scene
 {
 public:
   Scene();
-  ~Scene();
+  virtual ~Scene();
 
   Entity createEntity();
   void destroyEntity(Entity entity);
 
-  void onUpdate(DeltaTime ts);
+  virtual void onUpdate(DeltaTime ts) = 0;
+  virtual void onEvent(const SDL_Event &event) = 0;
 
   template <typename T, typename... Args>
   T &addComponent(Entity entity, Args &&...args)

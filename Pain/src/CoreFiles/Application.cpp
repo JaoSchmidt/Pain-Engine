@@ -49,8 +49,8 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   }
   PLOG_T("GL version: {}",
          std::string(reinterpret_cast<const char *>(glGetString(GL_VERSION))));
-  //PLOG_T("Default relative path is: {}",
-  //       std::filesystem::current_path().string());
+  // PLOG_T("Default relative path is: {}",
+  //        std::filesystem::current_path().string());
 
   int versionMajor;
   int versionMinor;
@@ -74,7 +74,7 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   // =========================================================================//
 
   m_isMinimized = false;
-  m_layerStack = new pain::LayerStack();
+  m_sceneManager = new pain::SceneManager();
   // SDL_SetWindowGrab(m_window, SDL_TRUE);
   // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
 }
@@ -82,23 +82,19 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
 Application::~Application()
 {
   SDL_GL_DeleteContext(m_context);
-  delete m_layerStack;
+  delete m_sceneManager;
   SDL_DestroyWindow(m_window);
   SDL_Quit();
 }
 
-void Application::pushLayer(Layer *layer) { m_layerStack->pushLayer(layer); }
-
-void Application::popLayer(Layer *layer) { m_layerStack->popLayer(layer); }
-
 void Application::stop() { m_isGameRunning = false; }
-
 void Application::handleEvents(const SDL_Event &event)
 {
   // Handle each specific event
   // (1) Handle Input
-  for (auto pLayer = m_layerStack->end(); pLayer != m_layerStack->begin();) {
-    (*--pLayer)->onEvent(event);
+  for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
+       ++pScene) {
+    (*pScene)->onEvent(event);
   }
 
   switch (event.type) {
@@ -121,8 +117,9 @@ void Application::handleEvents(const SDL_Event &event)
 
 void Application::handleUpdate(DeltaTime deltaTime)
 {
-  for (auto pLayer = m_layerStack->end(); pLayer != m_layerStack->begin();) {
-    (*--pLayer)->onUpdate(deltaTime);
+  for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
+       ++pScene) {
+    (*pScene)->onUpdate(deltaTime);
   }
   SDL_GL_SwapWindow(m_window);
 }
