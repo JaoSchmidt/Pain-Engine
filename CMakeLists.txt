@@ -41,6 +41,10 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 	spdlog::spdlog_header_only
 )
 
+target_precompile_headers(${LIBRARY_NAME} PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h
+)
+
 # =========== Resources/Assets Managment ==================================
 
 set(GAME_FOLDER "Example/spriteGame")
