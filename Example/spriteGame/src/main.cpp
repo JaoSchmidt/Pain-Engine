@@ -1,3 +1,4 @@
+#include "Misc/BasicOrthoCamera.h"
 #include <pain.h>
 
 #include <glm/ext/matrix_transform.hpp>
@@ -9,13 +10,17 @@ class MainScene : public pain::Scene
 public:
   MainScene() : pain::Scene()
   {
-    m_orthocamera.reset(new pain::OrthoCameraEntity(*this, 800.0 / 600.0));
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
+  }
+  void initCamera(std::shared_ptr<pain::OrthoCameraEntity> pCamera)
+  {
+    m_orthocamera = pCamera;
     pain::Renderer2d::init(m_orthocamera);
   }
 
   void onUpdate(pain::DeltaTime deltaTime) override
   {
+    pain::Scene::onUpdate(deltaTime);
     const double dtSeconds = deltaTime.GetSeconds();
 
     m_orthocamera->onUpdate(dtSeconds);
@@ -50,7 +55,12 @@ class Sandbox : public pain::Application
 public:
   Sandbox(const char *title, int w, int h) : Application(title, w, h)
   {
-    pushScene("main", new MainScene());
+    pain::Scene *scene = new MainScene();
+    pushScene("main", scene);
+    attachScene("main");
+    std::shared_ptr<pain::OrthoCameraEntity> pCamera =
+        std::make_shared<pain::OrthoCameraEntity>(scene, (float)w / h);
+    ((MainScene *)scene)->initCamera(pCamera);
   }
 
   ~Sandbox() {}

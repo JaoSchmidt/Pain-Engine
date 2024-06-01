@@ -17,7 +17,8 @@
 #include "CoreRender/VertexArray.h"
 // ECS
 #include "ECS/Components/Movement.h"
-#include "ECS/Components/Sprite.h"
+#include "ECS/Entity.h"
+#include "ECS/GameObjWrapper.h"
 #include "ECS/Scene.h"
 #include "ECS/SceneManager.h"
 // Misc

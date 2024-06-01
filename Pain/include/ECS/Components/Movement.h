@@ -49,11 +49,7 @@ struct MovementSystem {
 };
 
 struct RotationSystem {
-  // we'll use a constant time for this demonstration
-  float dt = 0.1f;
-
-  static void update(std::unordered_map<Entity, RotationComponent> map,
-                     DeltaTime dt)
+  static void update(std::unordered_map<Entity, RotationComponent> map)
   {
     for (auto &pair : map) {
       pair.second.m_rotation = {cos(glm::radians(pair.second.m_rotationAngle)),

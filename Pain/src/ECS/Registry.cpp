@@ -1,10 +1,10 @@
 #include "ECS/Registry.h"
-#include "ECS/GameObjWrapper.h"
 
 #include <stdexcept>
 
 namespace pain
 {
+
 template <typename T, typename... Args>
 T &Registry::add(Entity entity, Args &&...args)
 {
@@ -37,16 +37,75 @@ template <typename T> const T &Registry::get(Entity entity) const
   return it->second;
 };
 
-template <typename T> bool Registry::has(Entity entity)
+// template <typename T> bool Registry::has(Entity entity)
+// {
+//   const auto &componentMap = getComponentMap<T>();
+//   return componentMap.find(entity) != componentMap.end();
+// }
+
+// template <typename T> void Registry::remove(Entity entity)
+// {
+//   auto &componentMap = getComponentMap<T>();
+//   componentMap.erase(entity);
+// }
+
+void Registry::updateSystems(DeltaTime dt)
 {
-  const auto &componentMap = getComponentMap<T>();
-  return componentMap.find(entity) != componentMap.end();
+  MovementSystem::update(m_movement, m_transforms, dt);
+  RotationSystem::update(m_rotation);
 }
 
-template <typename T> void Registry::remove(Entity entity)
+void Registry::updateSystems(const SDL_Event &e) {}
+
+template <>
+std::unordered_map<Entity, TransformComponent> &
+Registry::getComponentMap<TransformComponent>()
 {
-  auto &componentMap = getComponentMap<T>();
+  return m_transforms;
+}
+template <>
+std::unordered_map<Entity, RotationComponent> &
+Registry::getComponentMap<RotationComponent>()
+{
+  return m_rotation;
+}
+template <>
+std::unordered_map<Entity, MovementComponent> &
+Registry::getComponentMap<MovementComponent>()
+{
+  return m_movement;
+}
+
+template <> void Registry::remove<MovementComponent>(Entity entity)
+{
+  auto &componentMap = getComponentMap<MovementComponent>();
   componentMap.erase(entity);
+}
+template <> void Registry::remove<TransformComponent>(Entity entity)
+{
+  auto &componentMap = getComponentMap<TransformComponent>();
+  componentMap.erase(entity);
+}
+template <> void Registry::remove<RotationComponent>(Entity entity)
+{
+  auto &componentMap = getComponentMap<RotationComponent>();
+  componentMap.erase(entity);
+}
+
+template <> bool Registry::has<MovementComponent>(Entity entity)
+{
+  const auto &componentMap = getComponentMap<MovementComponent>();
+  return componentMap.find(entity) != componentMap.end();
+}
+template <> bool Registry::has<TransformComponent>(Entity entity)
+{
+  const auto &componentMap = getComponentMap<TransformComponent>();
+  return componentMap.find(entity) != componentMap.end();
+}
+template <> bool Registry::has<RotationComponent>(Entity entity)
+{
+  const auto &componentMap = getComponentMap<RotationComponent>();
+  return componentMap.find(entity) != componentMap.end();
 }
 
 } // namespace pain

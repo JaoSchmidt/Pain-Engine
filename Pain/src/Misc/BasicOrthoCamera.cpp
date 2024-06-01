@@ -5,7 +5,7 @@
 namespace pain
 {
 
-OrthoCameraEntity::OrthoCameraEntity(Scene &scene, float aspectRatio)
+OrthoCameraEntity::OrthoCameraEntity(Scene *scene, float aspectRatio)
     : GameObjWrapper(scene), m_aspectRatio(aspectRatio), m_zoomLevel(1.0f),
       m_camera(-m_aspectRatio * m_zoomLevel, m_aspectRatio * m_zoomLevel,
                -m_zoomLevel, m_zoomLevel)
@@ -24,10 +24,10 @@ inline void OrthoCameraEntity::recalculatePosition(const glm::vec3 &position,
 void OrthoCameraEntity::onUpdate(double deltaTimeSec)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-  MovementComponent mc = m_scene.getComponent<MovementComponent>(m_entity);
-  RotationComponent rc = m_scene.getComponent<RotationComponent>(m_entity);
+  MovementComponent mc = m_scene->getComponent<MovementComponent>(m_entity);
+  RotationComponent rc = m_scene->getComponent<RotationComponent>(m_entity);
   const TransformComponent tc =
-      m_scene.getComponent<TransformComponent>(m_entity);
+      m_scene->getComponent<TransformComponent>(m_entity);
 
   recalculatePosition(tc.m_position, rc.m_rotationAngle);
   if (state[SDL_SCANCODE_W])

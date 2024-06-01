@@ -1,11 +1,11 @@
 #pragma once
-#include "CoreRender/Texture.h"
 #include "pch.h"
 
 #include "Core.h"
 
 #include "CoreRender/Camera.h"
 #include "CoreRender/Shader.h"
+#include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 #include "Misc/BasicOrthoCamera.h"
 

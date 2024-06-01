@@ -94,6 +94,7 @@ void Application::handleEvents(const SDL_Event &event)
   // (1) Handle Input
   for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
        ++pScene) {
+    (*pScene)->updateSystems(event);
     (*pScene)->onEvent(event);
   }
 
@@ -119,6 +120,7 @@ void Application::handleUpdate(DeltaTime deltaTime)
 {
   for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
        ++pScene) {
+    (*pScene)->updateSystems(deltaTime);
     (*pScene)->onUpdate(deltaTime);
   }
   SDL_GL_SwapWindow(m_window);

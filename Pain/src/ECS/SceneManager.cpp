@@ -7,12 +7,6 @@
 namespace pain
 {
 
-SceneManager::SceneManager()
-{
-  m_scenes = {};
-  m_currentScenes = {};
-}
-
 void SceneManager::addScene(const std::string &name, Scene *scene)
 {
   m_scenes[name] = scene;
@@ -23,6 +17,13 @@ void SceneManager::popScene(const std::string &name)
   P_ASSERT_W(m_scenes.find(name) != m_scenes.end(),
              "Trying to remove a scene that doesn't exist")
   m_scenes.erase(name);
+}
+
+Scene &SceneManager::getScene(const std::string &name)
+{
+  P_ASSERT_W(m_scenes.find(name) != m_scenes.end(),
+             "Trying to access scene that doesn't exist");
+  return *m_scenes.at(name);
 }
 
 const Scene &SceneManager::getScene(const std::string &name) const

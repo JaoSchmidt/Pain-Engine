@@ -1,17 +1,19 @@
 #pragma once
 #include "pch.h"
 
+#include "Core.h"
+
 #include "ECS/Scene.h"
 
 namespace pain
 {
 
-class SceneManager
+class EXPORT SceneManager
 {
 public:
   NONCOPYABLE(SceneManager)
-  SceneManager();
-  ~SceneManager();
+  SceneManager() = default;
+  ~SceneManager() = default;
 
   void addScene(const std::string &name, Scene *scene);
   // void popScene(Scene *scene);
@@ -27,7 +29,7 @@ public:
   std::unordered_set<Scene *>::iterator end();
 
 private:
-  std::unordered_map<std::string, Scene *> m_scenes;
-  std::unordered_set<Scene *> m_currentScenes;
+  std::unordered_map<std::string, Scene *> m_scenes = {};
+  std::unordered_set<Scene *> m_currentScenes = {};
 };
 } // namespace pain

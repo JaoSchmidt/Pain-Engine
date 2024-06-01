@@ -12,10 +12,10 @@ namespace pain
 class EXPORT OrthoCameraEntity : public GameObjWrapper
 {
 public:
-  OrthoCameraEntity(Scene &scene, float aspectRatio);
+  OrthoCameraEntity(Scene *scene, float aspectRatio);
 
-  void onUpdate(double deltaTimeSec);
-  void onEvent(const SDL_Event &e);
+  void onUpdate(double deltaTimeSec) override;
+  void onEvent(const SDL_Event &e) override;
 
   // OrthographicCamera &getCamera() { return *m_camera; }
   const OrthographicCamera &getCamera() const { return m_camera; }
