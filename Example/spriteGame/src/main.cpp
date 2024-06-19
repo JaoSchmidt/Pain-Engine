@@ -18,12 +18,9 @@ public:
     pain::Renderer2d::init(m_orthocamera);
   }
 
-  void onUpdate(pain::DeltaTime deltaTime) override
+  void onUpdate(double deltaTime) override
   {
-    pain::Scene::onUpdate(deltaTime);
-    const double dtSeconds = deltaTime.GetSeconds();
-
-    m_orthocamera->onUpdate(dtSeconds);
+    m_orthocamera->onUpdate(deltaTime);
 
     pain::Renderer2d::setClearColor(glm::vec4(0.2, 0.2, 0.2, 1));
     pain::Renderer2d::clear();

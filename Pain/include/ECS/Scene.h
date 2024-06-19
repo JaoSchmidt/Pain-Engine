@@ -20,8 +20,8 @@ public:
   Entity createEntity();
   void destroyEntity(Entity entity);
 
-  void updateSystems(DeltaTime dt, const SDL_Event &e);
-  virtual void onUpdate(DeltaTime ts) = 0;
+  void updateSystems(double dt, const SDL_Event &e);
+  virtual void onUpdate(double ts) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
 
   template <typename T, typename... Args>
@@ -50,10 +50,7 @@ public:
     return m_registry->getComponentMap<T>();
   }
 
-  void updateSystems(DeltaTime deltaTime)
-  {
-    m_registry->updateSystems(deltaTime);
-  }
+  void updateSystems(double deltaTime) { m_registry->updateSystems(deltaTime); }
 
   void updateSystems(const SDL_Event &event)
   {

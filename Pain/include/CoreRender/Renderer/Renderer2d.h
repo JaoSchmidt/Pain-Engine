@@ -25,7 +25,7 @@ public:
                        const std::shared_ptr<Texture> &texture,
                        float tilingFactor, glm::vec4 tintColor);
 
-  static void init(std::shared_ptr<OrthoCameraEntity> &cameraController);
+  static void init(const std::shared_ptr<OrthoCameraEntity> &cameraController);
   static void shutdown();
   static void setViewport(int x, int y, int width, int height);
   static void setClearColor(const glm::vec4 color);

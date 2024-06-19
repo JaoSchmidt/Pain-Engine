@@ -11,7 +11,8 @@ std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraController = nullptr;
 // Render initialization and destruction
 // ================================================================= //
 
-void Renderer2d::init(std::shared_ptr<OrthoCameraEntity> &cameraController)
+void Renderer2d::init(
+    const std::shared_ptr<OrthoCameraEntity> &cameraController)
 {
   quadBatch = new QuadVertexBatch();
   // NOTE: This can be changed later in case the engine needs a camera mechanic

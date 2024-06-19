@@ -27,9 +27,18 @@ private:
   friend class Scene;
   Registry() = default;
 
-  template <typename T, typename... Args> T &add(Entity entity, Args &&...args);
+  template <typename T, typename... Args> T &add(Entity entity, Args &&...args)
+  {
+    std::unordered_map<Entity, T> &componentMap = getComponentMap<T>();
+    auto [it, inserted] =
+        componentMap.emplace(entity, T(std::forward<Args>(args)...));
+    if (!inserted) {
+      throw std::runtime_error("Component already exists for the entity");
+    }
+    return it->second;
+  }
   template <typename T> T &get(Entity entity);
-  template <typename T> const T &get(Entity entity) const;
+  // template <typename T> inline T const &get(Entity entity, T a) const;
   template <typename T> bool has(Entity entity);
   template <typename T> void remove(Entity entity);
 
@@ -47,7 +56,7 @@ private:
   //     remove<MovementComponent>(entity);
   // }
 
-  void updateSystems(DeltaTime dt);
+  void updateSystems(double dt);
   void updateSystems(const SDL_Event &e);
 
   std::unordered_map<Entity, MovementComponent> m_movement = {};

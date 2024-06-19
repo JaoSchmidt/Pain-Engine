@@ -120,8 +120,9 @@ void Application::handleUpdate(DeltaTime deltaTime)
 {
   for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
        ++pScene) {
-    (*pScene)->updateSystems(deltaTime);
-    (*pScene)->onUpdate(deltaTime);
+    double seconds = deltaTime.GetSeconds();
+    (*pScene)->updateSystems(seconds);
+    (*pScene)->onUpdate(seconds);
   }
   SDL_GL_SwapWindow(m_window);
 }
