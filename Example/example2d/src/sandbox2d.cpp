@@ -32,17 +32,6 @@ public:
                                {0.8f, 0.9f, 0.3f, 1.0f});
 
     pain::Renderer2d::endScene();
-    // glm::mat4 transform =
-    //     glm::translate(glm::mat4(1.0f), m_textureRectangle->getPos()) *
-    //     glm::scale(glm::mat4(1.0f), glm::vec3(1.5f));
-    // m_texture->bind();
-    // pain::Renderer2d::submit(m_texture_shader,
-    //                          m_textureRectangle->getVertexArr(), transform);
-    // pain::Renderer2d::endScene(m_textureRectangle->getVertexArr());
-
-    // pain::Renderer2d::submit(
-    //     m_isocelesTriangle->getShader(), m_isocelesTriangle->getVertexArr(),
-    //     glm::translate(glm::mat4(1.0f), m_isocelesTriangle->getPos()));
   }
   void onEvent(const SDL_Event &event) override
   {

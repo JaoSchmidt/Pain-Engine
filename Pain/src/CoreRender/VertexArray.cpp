@@ -1,4 +1,4 @@
-﻿#include "CoreRender/VertexArray.h"
+#include "CoreRender/VertexArray.h"
 #include "CoreRender/AllBuffers.h"
 
 namespace pain
@@ -26,7 +26,8 @@ void VertexArray::addVertexBuffer(
         element.getComponentGLType(),            //
         element.normalized ? GL_TRUE : GL_FALSE, //
         layout.GetStride(),                      //
-        (const void *)element.offset);           //
+        // same as `(const void *)element.offset`, but won't generate warning
+        reinterpret_cast<const void *>(static_cast<uintptr_t>(element.offset)));
     index++;
   }
   m_vertexBuffer.push_back(vertexBuffer);

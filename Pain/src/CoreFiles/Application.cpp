@@ -8,9 +8,6 @@
 
 #include <string.h>
 
-const unsigned int NUM_FLOATS_PER_VERTICE = 6;
-const unsigned int VERTEX_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
-
 namespace pain
 {
 /* Creates window, opengl context and init glew*/
