@@ -1,4 +1,4 @@
-﻿#include "CoreRender/AllBuffers.h"
+#include "CoreRender/AllBuffers.h"
 #include "CoreFiles/LogWrapper.h"
 
 namespace pain

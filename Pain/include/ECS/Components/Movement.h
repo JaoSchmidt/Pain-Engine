@@ -18,6 +18,7 @@ struct TransformComponent {
   operator glm::vec3 &() { return m_position; }
   operator const glm::vec3 &() const { return m_position; }
 };
+
 struct MovementComponent {
   glm::vec3 m_velocityDir = {0.0f, 0.0f, 0.0f};
   float m_translationSpeed = 1.0f;

@@ -9,7 +9,7 @@ MINGW_PATH="/usr/x86_64-w64-mingw32"
 ARCH="x86_64"
 
 # Set the CMake generator for MinGW
-GENERATOR="MinGW Makefiles"
+GENERATOR="'Unix Makefiles'"
 
 # Set the directory where you want to build
 BUILD_DIR="./build"
@@ -36,7 +36,9 @@ else
   # Run CMake with default compiler
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         -DCMAKE_CXX_COMPILER="$DEFAULT_COMPILER" \
+				-DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
 				-DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold" \
+				-G "Unix Makefiles" \
         -S . \
         -B "$BUILD_DIR"
 fi

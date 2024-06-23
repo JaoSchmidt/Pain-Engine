@@ -1,4 +1,3 @@
-#include "Misc/BasicOrthoCamera.h"
 #include <pain.h>
 
 #include <glm/ext/matrix_transform.hpp>
@@ -11,6 +10,7 @@ public:
   MainScene() : pain::Scene()
   {
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
+    m_rect1.reset(new pain::Rectangle());
   }
   void initCamera(std::shared_ptr<pain::OrthoCameraEntity> pCamera)
   {
@@ -44,6 +44,10 @@ public:
 private:
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
+  std::shared_ptr<pain::Rectangle> m_rect1;
+  std::shared_ptr<pain::Rectangle> m_rect2;
+  std::shared_ptr<pain::TextureRectangle> m_rect3;
+  std::shared_ptr<pain::TextureRectangle> m_rect4;
   std::shared_ptr<pain::Texture> m_texture;
 };
 
