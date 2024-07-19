@@ -1,6 +1,8 @@
 #include "ECS/Registry.h"
-
-#include <stdexcept>
+#include "ECS/Components/Sprite.h"
+#include "ECS/Systems/MovementSys.h"
+#include "ECS/Systems/RotationSys.h"
+#include "ECS/Systems/SpriteSys.h"
 
 namespace pain
 {
@@ -43,6 +45,11 @@ void Registry::updateSystems(double dt)
   RotationSystem::update(m_rotation);
 }
 
+void Registry::renderSystems()
+{
+  SpriteSystem::render(m_sprites, m_transforms);
+}
+
 void Registry::updateSystems(const SDL_Event &e) {}
 
 template <>
@@ -63,6 +70,12 @@ Registry::getComponentMap<MovementComponent>()
 {
   return m_movement;
 }
+template <>
+std::unordered_map<Entity, SpriteRendererComponent> &
+Registry::getComponentMap<SpriteRendererComponent>()
+{
+  return m_sprites;
+}
 
 template <> void Registry::remove<MovementComponent>(Entity entity)
 {
@@ -79,6 +92,11 @@ template <> void Registry::remove<RotationComponent>(Entity entity)
   auto &componentMap = getComponentMap<RotationComponent>();
   componentMap.erase(entity);
 }
+template <> void Registry::remove<SpriteRendererComponent>(Entity entity)
+{
+  auto &componentMap = getComponentMap<SpriteRendererComponent>();
+  componentMap.erase(entity);
+}
 
 template <> bool Registry::has<MovementComponent>(Entity entity)
 {
@@ -93,6 +111,11 @@ template <> bool Registry::has<TransformComponent>(Entity entity)
 template <> bool Registry::has<RotationComponent>(Entity entity)
 {
   const auto &componentMap = getComponentMap<RotationComponent>();
+  return componentMap.find(entity) != componentMap.end();
+}
+template <> bool Registry::has<SpriteRendererComponent>(Entity entity)
+{
+  const auto &componentMap = getComponentMap<SpriteRendererComponent>();
   return componentMap.find(entity) != componentMap.end();
 }
 
@@ -122,6 +145,17 @@ template <> MovementComponent &Registry::get(Entity entity)
 {
   std::unordered_map<Entity, MovementComponent> &componentMap =
       getComponentMap<MovementComponent>();
+  auto it = componentMap.find(entity);
+  if (it == componentMap.end()) {
+    throw std::runtime_error("Entity does not have the requested component");
+  }
+  return it->second;
+}
+
+template <> SpriteRendererComponent &Registry::get(Entity entity)
+{
+  std::unordered_map<Entity, SpriteRendererComponent> &componentMap =
+      getComponentMap<SpriteRendererComponent>();
   auto it = componentMap.find(entity);
   if (it == componentMap.end()) {
     throw std::runtime_error("Entity does not have the requested component");

@@ -72,7 +72,7 @@ void QuadVertexBatch::bindTextures()
 }
 void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                                const std::shared_ptr<Texture> &texture,
-                               float tilingFactor, glm::vec4 tintColor)
+                               float tilingFactor, const glm::vec4 &tintColor)
 {
   // constexpr glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
   const glm::vec4 color = tintColor;
@@ -95,7 +95,6 @@ void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
   P_ASSERT_W(textureIndex != 0.0f,
              "Missing texture inside a drawQuad that requires textures");
   // PLOG_I("Texture being used {}, path:{}", textureIndex, texture->tempGet());
-
   m_vertexBufferPtr->position = {position.x, position.y, 0.0f};
   m_vertexBufferPtr->color = color;
   m_vertexBufferPtr->texCoord = {0.0f, 0.0f};

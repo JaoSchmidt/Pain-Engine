@@ -7,6 +7,14 @@
 #include "CoreRender/Shader.h"
 #include "CoreRender/VertexArray.h"
 
+// ======================================== //
+// ATTENTION
+// Most stuff here won't be used in the future
+// because of the sprite component inside the ECS
+//
+// NOTE: Delete this after making a cube out of the ECS
+// ======================================== //
+
 namespace pain
 {
 class EXPORT SimpleShape

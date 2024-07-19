@@ -51,6 +51,7 @@ public:
   }
 
   void updateSystems(double deltaTime) { m_registry->updateSystems(deltaTime); }
+  void renderSystems() { m_registry->renderSystems(); }
 
   void updateSystems(const SDL_Event &event)
   {

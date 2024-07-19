@@ -12,6 +12,7 @@ class EXPORT Texture
 public:
   Texture(const std::string &path);
   Texture(uint32_t width, uint32_t height);
+  Texture(Texture &t);
   ~Texture();
   void bind(uint32_t slot = 0) const;
   void setData(void *data, uint32_t size);

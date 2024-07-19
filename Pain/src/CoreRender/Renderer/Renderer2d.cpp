@@ -33,7 +33,7 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const std::shared_ptr<Texture> &texture,
-                          float tilingFactor, glm::vec4 tintColor)
+                          float tilingFactor, const glm::vec4 &tintColor)
 {
   quadBatch->drawQuad(position, size, texture, tilingFactor, tintColor);
 }
@@ -49,7 +49,7 @@ void Renderer2d::setViewport(int x, int y, int width, int height)
 
 void Renderer2d::clear() { glClear(GL_COLOR_BUFFER_BIT); }
 
-void Renderer2d::setClearColor(const glm::vec4 color)
+void Renderer2d::setClearColor(const glm::vec4 &color)
 {
   glClearColor(color.r, color.g, color.b, color.a);
 }

@@ -1,11 +1,11 @@
 #pragma once
-#include "ECS/SceneManager.h"
 #include "pch.h"
 
 #include "Core.h"
 #include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/Layer.h"
 #include "CoreFiles/LayerStack.h"
+#include "ECS/SceneManager.h"
 
 namespace pain
 {

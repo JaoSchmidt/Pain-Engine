@@ -32,9 +32,9 @@ void OrthoCameraEntity::onUpdate(double deltaTimeSec)
       m_scene->getComponent<TransformComponent>(m_entity);
 
   mc.m_velocityDir =
-      (state[SDL_SCANCODE_W] ? glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
+      (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
                              : glm::vec3(0.0)) +
-      (state[SDL_SCANCODE_S] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
+      (state[SDL_SCANCODE_S] ? glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
                              : glm::vec3(0.0)) +
       (state[SDL_SCANCODE_A] ? -rc.m_rotation : glm::vec3(0.0)) +
       (state[SDL_SCANCODE_D] ? rc.m_rotation : glm::vec3(0.0));

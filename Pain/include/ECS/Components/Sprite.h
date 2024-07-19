@@ -1,39 +1,21 @@
 #pragma once
-#include "pch.h"
 
-#include "CoreRender/Renderer/Renderer2d.h"
+#include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Texture.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Entity.h"
 
 namespace pain
 {
 struct SpriteRendererComponent {
-  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   glm::vec2 m_size{0.1f, 0.1f};
-  std::shared_ptr<Texture> m_texture;
+  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  std::shared_ptr<Texture> m_ptexture;
   const float m_tilingFactor;
-
-  SpriteRendererComponent(const SpriteRendererComponent &) = default;
-  SpriteRendererComponent(const glm::vec4 &color, float tilingFactor)
-      : m_color(color), m_tilingFactor(tilingFactor)
+  SpriteRendererComponent() = default;
+  SpriteRendererComponent(const glm::vec2 &size, const glm::vec4 &color,
+                          float tilingFactor, std::shared_ptr<Texture> ptexture)
+      : m_size(size), m_color(color), m_ptexture(ptexture),
+        m_tilingFactor(tilingFactor)
   {
-  }
-};
-
-struct SpriteSystem {
-  static void
-  render(std::unordered_map<Entity, SpriteRendererComponent> &sprMap,
-         std::unordered_map<Entity, TransformComponent> &traMap)
-  {
-    // and finally all sprites are rendered in this render method
-    // to their appropriate position on the screen
-    for (auto &pair : sprMap) {
-      const TransformComponent tc = traMap[pair.first];
-      const SpriteRendererComponent sc = pair.second;
-      Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_texture,
-                           sc.m_tilingFactor, sc.m_color);
-    }
   }
 };
 

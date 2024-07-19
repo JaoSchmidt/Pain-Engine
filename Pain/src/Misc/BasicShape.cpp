@@ -1,20 +1,18 @@
 #include "Misc/BasicShape.h"
+#include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
-#include "ECS/GameObjWrapper.h"
 
 namespace pain
 {
 
-BasicSpriteEntity::BasicSpriteEntity(Scene *scene, glm::vec2 &position,
-                                     const glm::vec2 &size,
-                                     const std::shared_ptr<Texture> &texture,
-                                     float tilingFactor, glm::vec4 tintColor)
-    : GameObjWrapper(scene)
+RectangleSprite::RectangleSprite(Scene *scene, const glm::vec2 &position,
+                                 const glm::vec2 &size,
+                                 const std::shared_ptr<Texture> &ptexture,
+                                 float tilingFactor, const glm::vec4 &color)
+    : BasicSpriteEntity(scene)
 {
-  addComponent<TransformComponent>();
-  addComponent<SpriteRendererComponent>();
+  addComponent<TransformComponent>(position);
+  addComponent<SpriteRendererComponent>(size, color, tilingFactor, ptexture);
 }
-
-void BasicSpriteEntity::render() {}
 
 } // namespace pain

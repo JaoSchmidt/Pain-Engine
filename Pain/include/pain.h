@@ -23,8 +23,8 @@
 #include "ECS/SceneManager.h"
 // Misc
 #include "Misc/BasicOrthoCamera.h"
+#include "Misc/BasicShape.h"
 #include "Misc/PerspCameraController.h"
-#include "Misc/SimpleShapeClasses.h"
 
 #include <SDL2/SDL_events.h>
 
@@ -40,12 +40,6 @@
 #define ASSERT(x, ...)
 #endif
 
-#define LOG_T(...) ::pain::LogWrapper::GetClientLogger()->trace(__VA_ARGS__)
-#define LOG_I(...) ::pain::LogWrapper::GetClientLogger()->info(__VA_ARGS__)
-#define LOG_W(...) ::pain::LogWrapper::GetClientLogger()->warn(__VA_ARGS__)
-#define LOG_E(...) ::pain::LogWrapper::GetClientLogger()->error(__VA_ARGS__)
-#define LOG_F(...) ::pain::LogWrapper::GetClientLogger()->critical(__VA_ARGS__)
-
 namespace pain
 {
 struct Pain {
@@ -53,3 +47,9 @@ struct Pain {
   static void runApplication(Application *app);
 };
 } // namespace pain
+
+#define LOG_T(...) ::pain::LogWrapper::GetClientLogger()->trace(__VA_ARGS__)
+#define LOG_I(...) ::pain::LogWrapper::GetClientLogger()->info(__VA_ARGS__)
+#define LOG_W(...) ::pain::LogWrapper::GetClientLogger()->warn(__VA_ARGS__)
+#define LOG_E(...) ::pain::LogWrapper::GetClientLogger()->error(__VA_ARGS__)
+#define LOG_F(...) ::pain::LogWrapper::GetClientLogger()->critical(__VA_ARGS__)

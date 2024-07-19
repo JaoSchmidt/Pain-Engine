@@ -1,7 +1,8 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Core.h"
+#include <spdlog/logger.h>
 
 namespace pain
 {

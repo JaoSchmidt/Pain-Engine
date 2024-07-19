@@ -2,11 +2,7 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "SDL_mouse.h"
 #include <SDL2/SDL_version.h>
-#include <utility>
-
-#include <string.h>
 
 namespace pain
 {
@@ -16,7 +12,6 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   // =========================================================================//
   // SDL Initial setup
   // =========================================================================//
-
   P_ASSERT(SDL_Init(SDL_INIT_VIDEO) >= 0, "SDL video could not be init {}",
            SDL_GetError());
   PLOG_T("SDL video is initialized");
@@ -121,10 +116,20 @@ void Application::handleUpdate(DeltaTime deltaTime)
     (*pScene)->updateSystems(seconds);
     (*pScene)->onUpdate(seconds);
   }
-  SDL_GL_SwapWindow(m_window);
 }
 
-void Application::handleRender() {}
+void Application::handleRender()
+{
+  Renderer2d::setClearColor(glm::vec4(0.2, 0.2, 0.2, 1));
+  Renderer2d::clear();
+  for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
+       ++pScene) {
+    Renderer2d::beginScene();
+    (*pScene)->renderSystems();
+    Renderer2d::endScene();
+  }
+  SDL_GL_SwapWindow(m_window);
+}
 
 void Application::run()
 {

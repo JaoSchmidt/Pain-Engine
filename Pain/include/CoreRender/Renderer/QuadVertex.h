@@ -40,7 +40,7 @@ public:
                 const glm::vec4 &color);
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                 const std::shared_ptr<Texture> &texture, float tilingFactor,
-                glm::vec4 tintColor);
+                const glm::vec4 &tintColor);
 
 private:
   const uint32_t MaxQuads = 10000;

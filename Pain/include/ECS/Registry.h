@@ -4,16 +4,8 @@
 
 #include "Core.h"
 
-// template <typename T> struct TypeParseTraits;
-
-/* #define REGISTER_PARSE_TYPE(X) \
-//   template <> struct TypeParseTraits<X> { \
-//     static const char *name; \
-//   }; \
-//   const char *TypeParseTraits<X>::name = #X
-*/
-
 #include "ECS/Components/Movement.h"
+#include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Entity.h"
 
@@ -58,9 +50,10 @@ private:
 
   void updateSystems(double dt);
   void updateSystems(const SDL_Event &e);
+  void renderSystems();
 
   std::unordered_map<Entity, MovementComponent> m_movement = {};
-  // std::unordered_map<Entity, SpriteRendererComponent> m_sprites;
+  std::unordered_map<Entity, SpriteRendererComponent> m_sprites = {};
   std::unordered_map<Entity, TransformComponent> m_transforms = {};
   std::unordered_map<Entity, RotationComponent> m_rotation = {};
 };
