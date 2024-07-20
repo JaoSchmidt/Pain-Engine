@@ -1,6 +1,7 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/Movement.h"
+#include "ECS/Components/Rotation.h"
 #include "glm/fwd.hpp"
 
 namespace pain

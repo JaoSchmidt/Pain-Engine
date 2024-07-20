@@ -2,7 +2,6 @@
 #include "pch.h"
 
 #include "Core.h"
-#include "CoreFiles/DeltaTime.h"
 #include "CoreRender/Camera.h"
 #include "ECS/GameObjWrapper.h"
 

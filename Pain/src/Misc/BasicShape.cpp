@@ -12,7 +12,7 @@ RectangleSprite::RectangleSprite(Scene *scene, const glm::vec2 &position,
     : BasicSpriteEntity(scene)
 {
   addComponent<TransformComponent>(position);
-  addComponent<SpriteRendererComponent>(size, color, tilingFactor, ptexture);
+  addComponent<SpriteComponent>(size, color, tilingFactor, ptexture);
 }
 
 } // namespace pain

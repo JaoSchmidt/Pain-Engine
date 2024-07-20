@@ -4,7 +4,6 @@
 
 #include <queue>
 
-#include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Entity.h"
 #include "Registry.h"
@@ -35,6 +34,10 @@ public:
   {
     return m_registry->get<T>(entity);
   }
+  template <typename T> const T &getComponent(Entity entity) const
+  {
+    return m_registry->get<T>(entity);
+  }
 
   template <typename T> bool hasComponent(Entity entity)
   {
@@ -45,23 +48,44 @@ public:
   {
     m_registry->remove<T>(entity);
   }
-  template <typename T> std::unordered_map<Entity, T> &getComponentMap()
+  template <typename T> typename std::unordered_map<Entity, T>::iterator begin()
   {
-    return m_registry->getComponentMap<T>();
+    return m_registry->getComponentMap<T>().begin();
   }
 
-  void updateSystems(double deltaTime) { m_registry->updateSystems(deltaTime); }
-  void renderSystems() { m_registry->renderSystems(); }
-
-  void updateSystems(const SDL_Event &event)
+  template <typename T> typename std::unordered_map<Entity, T>::iterator end()
   {
-    m_registry->updateSystems(event);
+    return m_registry->getComponentMap<T>().end();
   }
+
+  template <typename T>
+  typename std::unordered_map<Entity, T>::const_iterator begin() const
+  {
+    return m_registry->getComponentMap<T>().begin();
+  }
+
+  template <typename T>
+  typename std::unordered_map<Entity, T>::const_iterator end() const
+  {
+    return m_registry->getComponentMap<T>().end();
+  }
+
+  void updateSystems(double deltaTime)
+  {
+    rotationSystem();
+    movementSystem(deltaTime);
+  }
+  void renderSystems() { spriteSystem(); }
+
+  void updateSystems(const SDL_Event &event) {}
 
 private:
   Registry *m_registry;
   inline static std::queue<Entity> m_availableEntities = {};
   inline static Entity numberOfEntities = 0;
-};
 
+  void spriteSystem();
+  void rotationSystem();
+  void movementSystem(double dt);
+};
 } // namespace pain

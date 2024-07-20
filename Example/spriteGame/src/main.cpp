@@ -4,8 +4,6 @@
 #include <glm/fwd.hpp>
 #include <memory>
 
-#include <iostream>
-
 class MainScene : public pain::Scene
 {
 public:
@@ -18,6 +16,9 @@ public:
     m_rect1.reset(new pain::RectangleSprite(this, {0.0f, -0.8f}, {0.3f, 0.3f},
                                             m_texture, 1.0f,
                                             {0.9f, 0.3f, 0.2f, 1.0f}));
+    m_rect2.reset(new pain::RectangleSprite(this, {-0.5f, -0.5f}, {0.4f, 0.4f},
+                                            m_texture, 1.0f,
+                                            {1.0f, 1.0f, 1.0f, 1.0f}));
   }
 
   void onUpdate(double deltaTime) override
@@ -44,7 +45,7 @@ private:
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
   std::shared_ptr<pain::RectangleSprite> m_rect1;
-  // std::shared_ptr<pain::RectangleSprite> m_rect2;
+  std::shared_ptr<pain::RectangleSprite> m_rect2;
   // std::shared_ptr<pain::TextureRectangle> m_rect3;
   // std::shared_ptr<pain::TextureRectangle> m_rect4;
   std::shared_ptr<pain::Texture> m_texture;

@@ -4,21 +4,19 @@
 
 #include "Core.h"
 
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Rotation.h"
-#include "ECS/Components/Sprite.h"
 #include "ECS/Entity.h"
+#include <typeindex>
 
 namespace pain
 {
 
 class Registry
 {
-public:
-private:
   friend class Scene;
   Registry() = default;
-
+  // ---------------------------------------------------- //
+  // Entities
+  // ---------------------------------------------------- //
   template <typename T, typename... Args> T &add(Entity entity, Args &&...args)
   {
     std::unordered_map<Entity, T> &componentMap = getComponentMap<T>();
@@ -29,33 +27,53 @@ private:
     }
     return it->second;
   }
-  template <typename T> T &get(Entity entity);
-  // template <typename T> inline T const &get(Entity entity, T a) const;
-  template <typename T> bool has(Entity entity);
-  template <typename T> void remove(Entity entity);
 
-  template <typename T> std::unordered_map<Entity, T> &getComponentMap();
+  template <typename T> T &get(Entity entity)
+  {
+    std::unordered_map<Entity, T> &componentMap = getComponentMap<T>();
+    auto it = componentMap.find(entity);
+    if (it == componentMap.end()) {
+      throw std::runtime_error("Entity does not have the requested component");
+    }
+    return it->second;
+  }
 
-  // void removeAll(Entity entity)
-  // {
-  //   if (has<TransformComponent>(entity))
-  //     remove<TransformComponent>(entity);
-  //   if (has<RotationComponent>(entity))
-  //     remove<RotationComponent>(entity);
-  //   // if (has<SpriteRendererComponent>(entity))
-  //   //   remove<SpriteRendererComponent>(entity);
-  //   if (has<MovementComponent>(entity))
-  //     remove<MovementComponent>(entity);
-  // }
+  template <typename T> void remove(Entity entity)
+  {
+    std::unordered_map<Entity, T> &componentMap = getComponentMap<T>();
+    componentMap.erase(entity);
+  }
 
-  void updateSystems(double dt);
-  void updateSystems(const SDL_Event &e);
-  void renderSystems();
+  template <typename T> bool has(Entity entity)
+  {
+    const auto &componentMap = getComponentMap<T>();
+    return componentMap.find(entity) != componentMap.end();
+  }
 
-  std::unordered_map<Entity, MovementComponent> m_movement = {};
-  std::unordered_map<Entity, SpriteRendererComponent> m_sprites = {};
-  std::unordered_map<Entity, TransformComponent> m_transforms = {};
-  std::unordered_map<Entity, RotationComponent> m_rotation = {};
+  // ---------------------------------------------------- //
+  // Maps
+  // ---------------------------------------------------- //
+  template <typename T> std::unordered_map<Entity, T> &getComponentMap()
+  {
+    std::type_index typeIndex = std::type_index(typeid(T));
+    return *static_cast<std::unordered_map<Entity, T> *>(
+        componentMaps.at(typeIndex));
+  }
+  template <typename T>
+  const std::unordered_map<Entity, T> &getComponentMap() const
+  {
+    std::type_index typeIndex = std::type_index(typeid(T));
+    return *static_cast<std::unordered_map<Entity, T> *>(
+        componentMaps.at(typeIndex));
+  }
+  template <typename T> void addComponentMap()
+  {
+    std::type_index typeIndex = std::type_index(typeid(T));
+    if (componentMaps.find(typeIndex) == componentMaps.end()) {
+      componentMaps[typeIndex] = new std::unordered_map<Entity, T>();
+    }
+  }
+  std::unordered_map<std::type_index, void *> componentMaps = {};
 };
 
 } // namespace pain
