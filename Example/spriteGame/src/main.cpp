@@ -13,12 +13,16 @@ public:
     m_orthocamera = pCamera;
     pain::Renderer2d::init(m_orthocamera);
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
-    m_rect1.reset(new pain::RectangleSprite(this, {0.0f, -0.8f}, {0.3f, 0.3f},
+    m_rect1.reset(new pain::RectangleSprite(this, {0.0f, 0.0f}, {0.4f, 0.4f},
                                             m_texture, 1.0f,
-                                            {0.9f, 0.3f, 0.2f, 1.0f}));
+                                            {1.0f, 1.0f, 1.0f, 1.0f}));
     m_rect2.reset(new pain::RectangleSprite(this, {-0.5f, -0.5f}, {0.4f, 0.4f},
                                             m_texture, 1.0f,
                                             {1.0f, 1.0f, 1.0f, 1.0f}));
+    m_rect3.reset(new pain::Rectangle(this, {0.0f, -0.8f}, {0.3f, 0.3f},
+                                      {0.9f, 0.3f, 0.2f, 1.0f}));
+    m_rect4.reset(new pain::Rectangle(this, {-0.5f, 0.0f}, {0.3f, 0.3f},
+                                      {0.8f, 0.9f, 0.3f, 1.0f}));
   }
 
   void onUpdate(double deltaTime) override
@@ -46,8 +50,8 @@ private:
   std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
   std::shared_ptr<pain::RectangleSprite> m_rect1;
   std::shared_ptr<pain::RectangleSprite> m_rect2;
-  // std::shared_ptr<pain::TextureRectangle> m_rect3;
-  // std::shared_ptr<pain::TextureRectangle> m_rect4;
+  std::shared_ptr<pain::Rectangle> m_rect3;
+  std::shared_ptr<pain::Rectangle> m_rect4;
   std::shared_ptr<pain::Texture> m_texture;
 };
 

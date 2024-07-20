@@ -12,9 +12,10 @@ namespace pain
 Scene::Scene() : m_registry(new Registry())
 {
   m_registry->addComponentMap<TransformComponent>();
-  m_registry->addComponentMap<SpriteComponent>();
   m_registry->addComponentMap<MovementComponent>();
   m_registry->addComponentMap<RotationComponent>();
+  m_registry->addComponentMap<SpriteComponent>();
+  m_registry->addComponentMap<SpritelessComponent>();
 }
 
 Entity Scene::createEntity()
@@ -35,6 +36,7 @@ void Scene::destroyEntity(Entity entity)
   m_registry->remove<MovementComponent>(entity);
   m_registry->remove<RotationComponent>(entity);
   m_registry->remove<TransformComponent>(entity);
+  m_registry->remove<SpriteComponent>(entity);
   m_availableEntities.push(entity);
 }
 void Scene::spriteSystem()
@@ -47,6 +49,12 @@ void Scene::spriteSystem()
 
     Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_ptexture,
                          sc.m_tilingFactor, sc.m_color);
+  }
+  for (auto it = begin<SpritelessComponent>(); it != end<SpritelessComponent>();
+       ++it) {
+    const TransformComponent &tc = getComponent<TransformComponent>(it->first);
+    const SpritelessComponent &sc = it->second;
+    Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color);
   }
 }
 
