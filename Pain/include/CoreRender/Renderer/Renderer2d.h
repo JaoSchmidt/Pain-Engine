@@ -22,7 +22,7 @@ public:
                        const std::shared_ptr<Texture> &texture,
                        float tilingFactor, const glm::vec4 &tintColor);
 
-  static void init(const std::shared_ptr<OrthoCameraEntity> &cameraController);
+  static void init(OrthoCameraEntity *cameraEntity);
   static void shutdown();
   static void setViewport(int x, int y, int width, int height);
   static void setClearColor(const glm::vec4 &color);
@@ -30,7 +30,8 @@ public:
   static void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
                           uint32_t indexCount = 0);
 
-  static std::shared_ptr<OrthoCameraEntity> m_cameraController;
+  static OrthoCameraEntity *m_cameraEntity;
+  // static std::shared_ptr<OrthoCameraEntity> m_cameraEntity;
 
 private:
   static void flush();

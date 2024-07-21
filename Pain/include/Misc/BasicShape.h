@@ -2,12 +2,12 @@
 
 #include "Core.h"
 #include "CoreRender/Texture.h"
-#include "ECS/GameObjWrapper.h"
+#include "ECS/GameObject.h"
 
 namespace pain
 {
 
-class EXPORT RectangleSprite : public GameObjWrapper
+class EXPORT RectangleSprite : public GameObject
 {
 public:
   RectangleSprite(Scene *scene, const glm::vec2 &position,
@@ -19,7 +19,7 @@ public:
   void onEvent(const SDL_Event &e) {};
 };
 
-class EXPORT Rectangle : public GameObjWrapper
+class EXPORT Rectangle : public GameObject
 {
 public:
   Rectangle(Scene *scene, const glm::vec2 &position, const glm::vec2 &size,

@@ -8,10 +8,12 @@ class MainScene : public pain::Scene
 {
 public:
   MainScene() : pain::Scene() {}
-  void init(std::shared_ptr<pain::OrthoCameraEntity> pCamera)
+  void init(pain::OrthoCameraEntity *pCamera)
   {
     m_orthocamera = pCamera;
     pain::Renderer2d::init(m_orthocamera);
+    m_orthocamera->addComponent<pain::NativeScriptComponent>(m_orthocamera)
+        .bind<pain::OrthoCameraController>();
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
     m_rect1.reset(new pain::RectangleSprite(this, {0.0f, 0.0f}, {0.4f, 0.4f},
                                             m_texture, 1.0f,
@@ -27,7 +29,7 @@ public:
 
   void onUpdate(double deltaTime) override
   {
-    m_orthocamera->onUpdate(deltaTime);
+    // m_orthocamera->onUpdate(deltaTime);
 
     // pain::Renderer2d::beginScene();
     // pain::Renderer2d::drawQuad({0.0f, -0.8f}, {0.3f, 0.3f},
@@ -42,12 +44,13 @@ public:
   }
   void onEvent(const SDL_Event &event) override
   {
-    m_orthocamera->onEvent(event);
+    // m_orthocamera->onEvent(event);
   }
 
 private:
   std::shared_ptr<pain::Shader> m_texture_shader;
-  std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
+  // std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
+  pain::OrthoCameraEntity *m_orthocamera;
   std::shared_ptr<pain::RectangleSprite> m_rect1;
   std::shared_ptr<pain::RectangleSprite> m_rect2;
   std::shared_ptr<pain::Rectangle> m_rect3;
@@ -61,8 +64,9 @@ public:
   Sandbox(const char *title, int w, int h) : Application(title, w, h)
   {
     pain::Scene *scene = new MainScene();
-    std::shared_ptr<pain::OrthoCameraEntity> pCamera =
-        std::make_shared<pain::OrthoCameraEntity>(scene, (float)w / h);
+
+    pain::OrthoCameraEntity *pCamera =
+        new pain::OrthoCameraEntity(scene, (float)w / h, 1.0f);
     ((MainScene *)scene)->init(pCamera);
     pushScene("main", scene);
     attachScene("main");
@@ -73,7 +77,7 @@ public:
 
 pain::Application *pain::CreateApplication()
 {
-  // LOG_T("Creating app");
+  LOG_T("Creating app");
   const char *title = "Developing Pain";
   const int width = 800;
   const int height = 600;

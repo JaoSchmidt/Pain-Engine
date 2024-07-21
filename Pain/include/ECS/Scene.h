@@ -19,17 +19,18 @@ public:
   Entity createEntity();
   void destroyEntity(Entity entity);
 
-  void updateSystems(double dt, const SDL_Event &e);
   virtual void onUpdate(double ts) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
 
+  // ---------------------------------------------------- //
+  // Component Stuff
+  // ---------------------------------------------------- //
   template <typename T, typename... Args>
   T &addComponent(Entity entity, Args &&...args)
   {
     P_ASSERT_W(!hasComponent<T>(entity), "Entity already has component!");
     return m_registry->add<T>(entity, std::forward<Args>(args)...);
   }
-
   template <typename T> T &getComponent(Entity entity)
   {
     return m_registry->get<T>(entity);
@@ -38,12 +39,10 @@ public:
   {
     return m_registry->get<T>(entity);
   }
-
   template <typename T> bool hasComponent(Entity entity)
   {
     return m_registry->has<T>(entity);
   }
-
   template <typename T> void rmComponent(Entity entity)
   {
     m_registry->remove<T>(entity);
@@ -52,28 +51,30 @@ public:
   {
     return m_registry->getComponentMap<T>().begin();
   }
-
   template <typename T> typename std::unordered_map<Entity, T>::iterator end()
   {
     return m_registry->getComponentMap<T>().end();
   }
-
   template <typename T>
   typename std::unordered_map<Entity, T>::const_iterator begin() const
   {
     return m_registry->getComponentMap<T>().begin();
   }
-
   template <typename T>
   typename std::unordered_map<Entity, T>::const_iterator end() const
   {
     return m_registry->getComponentMap<T>().end();
   }
 
+  // ---------------------------------------------------- //
+  // Systems
+  // ---------------------------------------------------- //
+
   void updateSystems(double deltaTime)
   {
     rotationSystem();
     movementSystem(deltaTime);
+    scriptSystem(deltaTime);
   }
   void renderSystems() { spriteSystem(); }
 
@@ -85,6 +86,8 @@ private:
   inline static Entity numberOfEntities = 0;
 
   void spriteSystem();
+  void scriptSystem(double dt);
+  void scriptSystem(const SDL_Event &event);
   void rotationSystem();
   void movementSystem(double dt);
 };

@@ -5,18 +5,18 @@
 namespace pain
 {
 static QuadVertexBatch *quadBatch = nullptr;
-std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraController = nullptr;
+// std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraEntity = nullptr;
+OrthoCameraEntity *Renderer2d::m_cameraEntity = nullptr;
 
 // ================================================================= //
 // Render initialization and destruction
 // ================================================================= //
 
-void Renderer2d::init(
-    const std::shared_ptr<OrthoCameraEntity> &cameraController)
+void Renderer2d::init(OrthoCameraEntity *cameraEntity)
 {
   quadBatch = new QuadVertexBatch();
   // NOTE: This can be changed later in case the engine needs a camera mechanic
-  m_cameraController = cameraController;
+  m_cameraEntity = cameraEntity;
 }
 
 void Renderer2d::shutdown() { delete quadBatch; }
@@ -59,7 +59,7 @@ void Renderer2d::beginScene(const glm::mat4 &transform)
   quadBatch->getShader()->bind();
   quadBatch->getShader()->uploadUniformMat4(
       "u_ViewProjection",
-      m_cameraController->getCamera().getViewProjectionMatrix());
+      m_cameraEntity->getCamera().getViewProjectionMatrix());
   quadBatch->getShader()->uploadUniformMat4("u_Transform", transform);
 
   quadBatch->goBackToFirstQuad();

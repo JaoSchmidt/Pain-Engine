@@ -1,10 +1,12 @@
 #include "ECS/Scene.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "ECS/Components/Scripting.h"
 #include "ECS/Registry.h"
 
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
+#include <iostream>
 
 namespace pain
 {
@@ -16,6 +18,7 @@ Scene::Scene() : m_registry(new Registry())
   m_registry->addComponentMap<RotationComponent>();
   m_registry->addComponentMap<SpriteComponent>();
   m_registry->addComponentMap<SpritelessComponent>();
+  m_registry->addComponentMap<NativeScriptComponent>();
 }
 
 Entity Scene::createEntity()
@@ -37,6 +40,8 @@ void Scene::destroyEntity(Entity entity)
   m_registry->remove<RotationComponent>(entity);
   m_registry->remove<TransformComponent>(entity);
   m_registry->remove<SpriteComponent>(entity);
+  m_registry->remove<SpritelessComponent>(entity);
+  m_registry->remove<NativeScriptComponent>(entity);
   m_availableEntities.push(entity);
 }
 void Scene::spriteSystem()
@@ -76,6 +81,24 @@ void Scene::movementSystem(double dt)
     TransformComponent &tc = getComponent<TransformComponent>(it->first);
     const float moveAmount = (float)(dt * mc.m_translationSpeed);
     tc.m_position = tc.m_position + mc.m_velocityDir * moveAmount;
+  }
+}
+
+void Scene::scriptSystem(double dt)
+{
+  for (auto it = begin<NativeScriptComponent>();
+       it != end<NativeScriptComponent>(); ++it) {
+    auto &nsc = it->second;
+    if (!nsc.instance) {
+      nsc.instantiateFunction(nsc.instance);
+      nsc.instance->go = std::move(nsc.goInstance);
+
+      if (nsc.onCreateFunction)
+        nsc.onCreateFunction(nsc.instance);
+    }
+
+    if (nsc.onUpdateFunction)
+      nsc.onUpdateFunction(nsc.instance, dt);
   }
 }
 
