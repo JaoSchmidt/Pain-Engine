@@ -1,6 +1,5 @@
 #pragma once
 
-#include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Texture.h"
 
 namespace pain
