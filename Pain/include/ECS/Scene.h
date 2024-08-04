@@ -78,7 +78,7 @@ public:
   }
   void renderSystems() { spriteSystem(); }
 
-  void updateSystems(const SDL_Event &event) {}
+  void updateSystems(const SDL_Event &event) { scriptSystem(event); }
 
 private:
   Registry *m_registry;

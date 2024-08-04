@@ -10,23 +10,20 @@ namespace pain
 {
 OrthoCameraEntity::OrthoCameraEntity(Scene *scene, float aspectRatio,
                                      float zoomLevel)
-    : GameObject(scene), m_aspectRatio(aspectRatio), m_zoomLevel(zoomLevel),
-      m_camera(-m_aspectRatio * m_zoomLevel, m_aspectRatio * m_zoomLevel,
-               -m_zoomLevel, m_zoomLevel)
+    : GameObject(scene)
 {
   addComponent<MovementComponent>();
   addComponent<RotationComponent>();
   addComponent<TransformComponent>();
+  addComponent<OrthoCameraComponent>(aspectRatio, zoomLevel);
 };
-
-void OrthoCameraController::onCreate() {};
-void OrthoCameraController::onDestroy() {};
 
 inline void
 OrthoCameraController::recalculatePosition(const glm::vec3 &position,
                                            const float rotation)
 {
-  getComponent<OrthographicCamera>().RecalculateViewMatrix(position, rotation);
+  getComponent<OrthoCameraComponent>().m_camera->RecalculateViewMatrix(
+      position, rotation);
 }
 
 void OrthoCameraController::onUpdate(double deltaTimeSec)
@@ -35,6 +32,7 @@ void OrthoCameraController::onUpdate(double deltaTimeSec)
   MovementComponent &mc = getComponent<MovementComponent>();
   RotationComponent &rc = getComponent<RotationComponent>();
   const TransformComponent &tc = getComponent<TransformComponent>();
+  const OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
 
   mc.m_velocityDir =
       (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
@@ -50,41 +48,41 @@ void OrthoCameraController::onUpdate(double deltaTimeSec)
     rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTimeSec;
   // PLOG_I("({},{},{})", tc.m_position.x, tc.m_position.y, tc.m_position.z);
 
-  const OrthoCameraEntity cam = getEntity<OrthoCameraEntity>();
-  mc.m_translationSpeed = cam.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
+  mc.m_translationSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
   recalculatePosition(tc.m_position, rc.m_rotationAngle);
 }
 
 void OrthoCameraController::onEvent(const SDL_Event &event)
 {
+  OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
   if (event.type == SDL_MOUSEWHEEL)
-    onMouseScrolled(event);
+    onMouseScrolled(event, cc);
   if (event.type == SDL_WINDOWEVENT) {
     if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-      onWindowResized(event);
+      onWindowResized(event, cc);
     }
   }
 }
 
-bool OrthoCameraController::onMouseScrolled(const SDL_Event &event)
+bool OrthoCameraController::onMouseScrolled(const SDL_Event &event,
+                                            OrthoCameraComponent &cc)
 {
-  OrthoCameraEntity cam = getEntity<OrthoCameraEntity>();
-  cam.m_zoomLevel -= event.wheel.y * 0.25f;
-  cam.m_zoomLevel = std::max(cam.m_zoomLevel, 0.25f);
-  cam.getCamera().SetProjection(-cam.m_aspectRatio * cam.m_zoomLevel,
-                                cam.m_aspectRatio * cam.m_zoomLevel,
-                                -cam.m_zoomLevel, cam.m_zoomLevel);
+  cc.m_zoomLevel -= event.wheel.y * 0.25f;
+  cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
+  cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
+                             cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
+                             cc.m_zoomLevel);
   return false;
 }
 
-bool OrthoCameraController::onWindowResized(const SDL_Event &event)
+bool OrthoCameraController::onWindowResized(const SDL_Event &event,
+                                            OrthoCameraComponent &cc)
 {
   Renderer2d::setViewport(0, 0, event.window.data1, event.window.data2);
-  OrthoCameraEntity cam = getEntity<OrthoCameraEntity>();
-  cam.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
-  cam.getCamera().SetProjection(-cam.m_aspectRatio * cam.m_zoomLevel,
-                                cam.m_aspectRatio * cam.m_zoomLevel,
-                                -cam.m_zoomLevel, cam.m_zoomLevel);
+  cc.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
+  cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
+                             cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
+                             cc.m_zoomLevel);
   return false;
 }
 } // namespace pain

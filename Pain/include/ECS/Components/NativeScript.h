@@ -1,14 +1,22 @@
 #pragma once
 
-#include "ECS/GameObject.h"
+#include "ECS/Scriptable.h"
+
+template <typename T>
+concept has_onCreate_method = requires(T &&t) {
+  { t.onCreate() };
+};
+
+template <typename T>
+concept has_onDestroy_method = requires(T &&t) {
+  { t.onDestroy() };
+};
 
 namespace pain
 {
 
 struct NativeScriptComponent {
-  NativeScriptComponent(GameObject *go) : goInstance(go) {}
   ScriptableEntity *instance = nullptr;
-  GameObject *goInstance = nullptr;
 
   void (*instantiateFunction)(ScriptableEntity *&) = nullptr;
   void (*destroyInstanceFunction)(ScriptableEntity *&) = nullptr;
@@ -28,12 +36,22 @@ struct NativeScriptComponent {
       instance = nullptr;
     };
 
-    onCreateFunction = [](ScriptableEntity *instance) {
-      static_cast<T *>(instance)->onCreate();
-    };
-    onDestroyFunction = [](ScriptableEntity *instance) {
-      static_cast<T *>(instance)->onDestroy();
-    };
+    if constexpr (has_onCreate_method<T>) {
+      onCreateFunction = [](ScriptableEntity *instance) {
+        static_cast<T *>(instance)->onCreate();
+      };
+    } else {
+      onCreateFunction = nullptr;
+    }
+
+    if constexpr (has_onDestroy_method<T>) {
+      onDestroyFunction = [](ScriptableEntity *instance) {
+        static_cast<T *>(instance)->onDestroy();
+      };
+    } else {
+      onCreateFunction = nullptr;
+    }
+
     onUpdateFunction = [](ScriptableEntity *instance, double ts) {
       static_cast<T *>(instance)->onUpdate(ts);
     };

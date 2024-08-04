@@ -58,8 +58,8 @@ void Renderer2d::beginScene(const glm::mat4 &transform)
 {
   quadBatch->getShader()->bind();
   quadBatch->getShader()->uploadUniformMat4(
-      "u_ViewProjection",
-      m_cameraEntity->getCamera().getViewProjectionMatrix());
+      "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
+                              .m_camera->getViewProjectionMatrix());
   quadBatch->getShader()->uploadUniformMat4("u_Transform", transform);
 
   quadBatch->goBackToFirstQuad();

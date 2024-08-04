@@ -43,14 +43,4 @@ protected:
   Scene *m_scene;
 };
 
-class EXPORT ScriptableEntity
-{
-public:
-  template <typename T> T &getComponent() { return go->getComponent<T>(); }
-  template <typename T> T &getEntity() { return static_cast<T &>(*go); }
-
-private:
-  GameObject *go;
-  friend class Scene;
-};
 } // namespace pain

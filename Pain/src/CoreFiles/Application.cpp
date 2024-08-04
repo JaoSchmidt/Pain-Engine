@@ -141,19 +141,19 @@ void Application::run()
     // unsigned int buttons;
     // buttons = SDL_GetMouseState(&m_mouseX, &m_mouseY);
 
-    // handle events first
-    // Start our event loop
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-      handleEvents(event);
-    }
-
     // if (elapsedTime < m_maxFrameRate) {
     //   SDL_Delay(m_maxFrameRate - elapsedTime);
     // }
     // handle any updates
     if (!m_isMinimized)
       handleUpdate(m_deltaTime);
+
+    // handle events first
+    // Start our event loop
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+      handleEvents(event);
+    }
 
     // hanlde our rendering
     handleRender();

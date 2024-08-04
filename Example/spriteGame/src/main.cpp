@@ -12,8 +12,8 @@ public:
   {
     m_orthocamera = pCamera;
     pain::Renderer2d::init(m_orthocamera);
-    m_orthocamera->addComponent<pain::NativeScriptComponent>(m_orthocamera)
-        .bind<pain::OrthoCameraController>();
+    auto &a = m_orthocamera->addComponent<pain::NativeScriptComponent>();
+    a.bind<pain::OrthoCameraController>();
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
     m_rect1.reset(new pain::RectangleSprite(this, {0.0f, 0.0f}, {0.4f, 0.4f},
                                             m_texture, 1.0f,

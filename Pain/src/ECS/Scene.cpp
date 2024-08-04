@@ -1,18 +1,19 @@
 #include "ECS/Scene.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "ECS/Components/Scripting.h"
+#include "ECS/Components/NativeScript.h"
 #include "ECS/Registry.h"
 
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
-#include <iostream>
+#include "SDL_events.h"
 
 namespace pain
 {
 
 Scene::Scene() : m_registry(new Registry())
 {
+  m_registry->addComponentMap<OrthoCameraComponent>();
   m_registry->addComponentMap<TransformComponent>();
   m_registry->addComponentMap<MovementComponent>();
   m_registry->addComponentMap<RotationComponent>();
@@ -36,6 +37,7 @@ Entity Scene::createEntity()
 void Scene::destroyEntity(Entity entity)
 {
   // m_registry->removeAll(entity);
+  m_registry->remove<OrthoCameraComponent>(entity);
   m_registry->remove<MovementComponent>(entity);
   m_registry->remove<RotationComponent>(entity);
   m_registry->remove<TransformComponent>(entity);
@@ -91,7 +93,8 @@ void Scene::scriptSystem(double dt)
     auto &nsc = it->second;
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
-      nsc.instance->go = std::move(nsc.goInstance);
+      nsc.instance->m_scene = this;
+      nsc.instance->m_entity = it->first;
 
       if (nsc.onCreateFunction)
         nsc.onCreateFunction(nsc.instance);
@@ -99,6 +102,15 @@ void Scene::scriptSystem(double dt)
 
     if (nsc.onUpdateFunction)
       nsc.onUpdateFunction(nsc.instance, dt);
+  }
+}
+
+void Scene::scriptSystem(const SDL_Event &event)
+{
+  for (auto it = begin<NativeScriptComponent>();
+       it != end<NativeScriptComponent>(); ++it) {
+    auto &nsc = it->second;
+    nsc.onEventFunction(nsc.instance, event);
   }
 }
 
