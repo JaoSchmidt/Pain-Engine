@@ -16,12 +16,15 @@
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 // ECS
+#include "ECS/Components/Camera.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
+#include "ECS/Components/Sprite.h"
 #include "ECS/Entity.h"
 #include "ECS/GameObject.h"
 #include "ECS/Scene.h"
 #include "ECS/SceneManager.h"
+#include "ECS/Scriptable.h"
 // Misc
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/BasicShape.h"

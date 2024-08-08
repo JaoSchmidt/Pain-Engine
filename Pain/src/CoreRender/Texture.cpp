@@ -2,6 +2,7 @@
 
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/ResourceManagerSing.h"
+#include "glad/gl.h"
 
 namespace pain
 {
@@ -35,7 +36,8 @@ Texture::Texture(uint32_t width, uint32_t height)
 Texture::Texture(const std::string &path)
 {
   m_path = path;
-  SDL_Surface *surface = Resources::getInstance()->getSurface(path);
+  const SDL_Surface *surface =
+      flipVertical(Resources::getInstance()->getSurface(path));
 
   glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererId);
   glBindTexture(GL_TEXTURE_2D, m_rendererId);
@@ -54,6 +56,7 @@ Texture::Texture(const std::string &path)
   }
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexImage2D(GL_TEXTURE_2D, 0, m_dataFormat, surface->w, surface->h, 0,
                m_dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
 }
@@ -69,4 +72,5 @@ void Texture::bind(uint32_t slot) const
   glBindTextureUnit(slot, m_rendererId);
 }
 Texture::~Texture() { glDeleteTextures(1, &m_rendererId); }
+
 } // namespace pain

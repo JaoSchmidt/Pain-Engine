@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CoreRender/Camera.h"
 #include "pch.h"
 

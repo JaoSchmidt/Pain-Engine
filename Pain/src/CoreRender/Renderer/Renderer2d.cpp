@@ -16,6 +16,10 @@ void Renderer2d::init(OrthoCameraEntity *cameraEntity)
 {
   quadBatch = new QuadVertexBatch();
   // NOTE: This can be changed later in case the engine needs a camera mechanic
+
+  // glEnable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   m_cameraEntity = cameraEntity;
 }
 
@@ -36,6 +40,15 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           float tilingFactor, const glm::vec4 &tintColor)
 {
   quadBatch->drawQuad(position, size, texture, tilingFactor, tintColor);
+}
+
+void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const std::shared_ptr<Texture> &texture,
+                          float tilingFactor, const glm::vec4 &tintColor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
+{
+  quadBatch->drawQuad(position, size, texture, tilingFactor, tintColor,
+                      textureCoordinate);
 }
 
 // ================================================================= //

@@ -38,9 +38,15 @@ public:
   // draw functions
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                 const glm::vec4 &color);
+  // for pure texture
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                 const std::shared_ptr<Texture> &texture, float tilingFactor,
                 const glm::vec4 &tintColor);
+  // for sprites
+  void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                const std::shared_ptr<Texture> &texture, float tilingFactor,
+                const glm::vec4 &tintColor,
+                const std::array<glm::vec2, 4> &textureCoordinate);
 
 private:
   const uint32_t MaxQuads = 10000;

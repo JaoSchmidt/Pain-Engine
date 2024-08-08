@@ -14,6 +14,10 @@ public:
   {
     return m_scene->getComponent<T>(m_entity);
   }
+  template <typename T> const T &getComponent() const
+  {
+    return m_scene->getComponent<T>(m_entity);
+  }
 
 private:
   Scene *m_scene = nullptr;

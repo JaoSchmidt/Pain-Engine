@@ -19,6 +19,8 @@ public:
   bool operator==(const Texture &other) const;
 
   std::string tempGet() const { return m_path; }
+  const uint32_t getWidth() const { return m_width; }
+  const uint32_t getHeight() const { return m_height; }
 
 private:
   std::string m_path;
@@ -26,6 +28,24 @@ private:
   uint32_t m_dataFormat;
   uint32_t m_internalFormat;
   uint32_t m_rendererId;
+
+  static SDL_Surface *flipVertical(SDL_Surface *surface)
+  {
+    SDL_Surface *result = SDL_CreateRGBSurface(
+        surface->flags, surface->w, surface->h,
+        surface->format->BytesPerPixel * 8, surface->format->Rmask,
+        surface->format->Gmask, surface->format->Bmask, surface->format->Amask);
+    const auto pitch = surface->pitch;
+    const auto pxlength = pitch * (surface->h - 1);
+    auto pixels = static_cast<unsigned char *>(surface->pixels) + pxlength;
+    auto rpixels = static_cast<unsigned char *>(result->pixels);
+    for (auto line = 0; line < surface->h; ++line) {
+      memcpy(rpixels, pixels, pitch);
+      pixels -= pitch;
+      rpixels += pitch;
+    }
+    return result;
+  }
 };
 
 } // namespace pain

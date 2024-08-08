@@ -21,6 +21,10 @@ public:
   static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                        const std::shared_ptr<Texture> &texture,
                        float tilingFactor, const glm::vec4 &tintColor);
+  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                       const std::shared_ptr<Texture> &texture,
+                       float tilingFactor, const glm::vec4 &tintColor,
+                       const std::array<glm::vec2, 4> &textureCoordinate);
 
   static void init(OrthoCameraEntity *cameraEntity);
   static void shutdown();

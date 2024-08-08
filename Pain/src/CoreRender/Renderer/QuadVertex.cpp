@@ -74,9 +74,18 @@ void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                                const std::shared_ptr<Texture> &texture,
                                float tilingFactor, const glm::vec4 &tintColor)
 {
-  // constexpr glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
-  const glm::vec4 color = tintColor;
-
+  const std::array<glm::vec2, 4> textureCoord = {
+      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
+      glm::vec2(0.0f, 1.0f)};
+  drawQuad(position, size, texture, tilingFactor, tintColor, textureCoord);
+}
+void QuadVertexBatch::drawQuad(
+    const glm::vec2 &position, const glm::vec2 &size,
+    const std::shared_ptr<Texture> &texture, float tilingFactor,
+    const glm::vec4 &tintColor,
+    const std::array<glm::vec2, 4> &textureCoordinate)
+{
+  const glm::vec4 &color = tintColor;
   float textureIndex = 0.0f;
   // tries to get texture from the m_textureSlots
   for (uint32_t i = 1; i < m_textureSlotIndex; i++) {
@@ -97,14 +106,14 @@ void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
   // PLOG_I("Texture being used {}, path:{}", textureIndex, texture->tempGet());
   m_vertexBufferPtr->position = {position.x, position.y, 0.0f};
   m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = {0.0f, 0.0f};
+  m_vertexBufferPtr->texCoord = textureCoordinate[0];
   m_vertexBufferPtr->texIndex = textureIndex;
   m_vertexBufferPtr->tilingFactor = tilingFactor;
   m_vertexBufferPtr++;
 
   m_vertexBufferPtr->position = {position.x + size.x, position.y, 0.0f};
   m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = {1.0f, 0.0f};
+  m_vertexBufferPtr->texCoord = textureCoordinate[1];
   m_vertexBufferPtr->texIndex = textureIndex;
   m_vertexBufferPtr->tilingFactor = tilingFactor;
   m_vertexBufferPtr++;
@@ -112,14 +121,14 @@ void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
   m_vertexBufferPtr->position = {position.x + size.x, position.y + size.y,
                                  0.0f};
   m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = {1.0f, 1.0f};
+  m_vertexBufferPtr->texCoord = textureCoordinate[2];
   m_vertexBufferPtr->texIndex = textureIndex;
   m_vertexBufferPtr->tilingFactor = tilingFactor;
   m_vertexBufferPtr++;
 
   m_vertexBufferPtr->position = {position.x, position.y + size.y, 0.0f};
   m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = {0.0f, 1.0f};
+  m_vertexBufferPtr->texCoord = textureCoordinate[3];
   m_vertexBufferPtr->texIndex = textureIndex;
   m_vertexBufferPtr->tilingFactor = tilingFactor;
   m_vertexBufferPtr++;

@@ -120,7 +120,8 @@ void Application::handleUpdate(DeltaTime deltaTime)
 
 void Application::handleRender()
 {
-  Renderer2d::setClearColor(glm::vec4(0.2, 0.2, 0.2, 1));
+  // Renderer2d::setClearColor(glm::vec4(0.2, 0.2, 0.2, 1));
+  Renderer2d::setClearColor(glm::vec4(1.0, 0.2, 0.9, 1));
   Renderer2d::clear();
   for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
        ++pScene) {
