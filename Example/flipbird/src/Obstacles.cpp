@@ -1,8 +1,9 @@
 #include "Obstacles.h"
 
-Obstacles::Obstacles(pain::Scene *scene) : pain::GameObject(scene)
+Obstacles::Obstacles(pain::Scene *scene, const glm::vec3 &position)
+    : pain::GameObject(scene)
 {
-  addComponent<pain::TransformComponent>();
+  addComponent<pain::TransformComponent>(position);
   addComponent<pain::MovementComponent>();
   addComponent<pain::SpritelessComponent>();
 }
@@ -18,7 +19,7 @@ void ObstaclesController::onCreate()
   mc.m_velocityDir = glm::vec3(m_obstaclesSpeed, 0.0f, 0.0f);
 }
 
-bool ObstaclesController::checkIntersection(Player &player)
+bool ObstaclesController::checkIntersection(const Player &player)
 {
   pain::TransformComponent &tc = getComponent<pain::TransformComponent>();
   pain::SpritelessComponent &slc = getComponent<pain::SpritelessComponent>();

@@ -88,16 +88,25 @@ void Scene::movementSystem(double dt)
 
 void Scene::scriptSystem(double dt)
 {
+  PLOG_T("scriptSystem");
+  auto itt = begin<NativeScriptComponent>();
+  P_ASSERT(false, "gives err");
+  PLOG_T("itt: {}", itt->first);
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
+    PLOG_T("it");
+    PLOG_T("entity {}", it->first);
     auto &nsc = it->second;
+    PLOG_T("a");
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
       nsc.instance->m_scene = this;
       nsc.instance->m_entity = it->first;
 
+      PLOG_T("b");
       if (nsc.onCreateFunction)
         nsc.onCreateFunction(nsc.instance);
+      PLOG_T("c");
     }
 
     if (nsc.onUpdateFunction)

@@ -113,8 +113,8 @@ void Application::handleUpdate(DeltaTime deltaTime)
   for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
        ++pScene) {
     double seconds = deltaTime.GetSeconds();
-    (*pScene)->updateSystems(seconds);
     (*pScene)->onUpdate(seconds);
+    (*pScene)->updateSystems(seconds);
   }
 }
 

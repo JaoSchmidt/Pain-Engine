@@ -12,7 +12,7 @@ public:
   void onUpdate(double deltaTimeSec);
   void onEvent(const SDL_Event &event);
   void setObstaclesSpeed();
-  bool checkIntersection(Player &player);
+  bool checkIntersection(const Player &player);
 
 private:
   bool m_isAlive = true;
@@ -22,10 +22,11 @@ private:
   double m_deactivateTimout = 0.0f;
 };
 
-class Obstacles : pain::GameObject
+class Obstacles : public pain::GameObject
 {
 public:
   Obstacles(pain::Scene *scene);
+  Obstacles(pain::Scene *scene, const glm::vec3 &position);
   // Obstacles &operator=(const Obstacles &o) { return *this; }
   // Obstacles(const Obstacles &o, pain::Scene *scene) : GameObject(scene) {}
 };

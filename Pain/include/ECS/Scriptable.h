@@ -19,7 +19,7 @@ public:
     return m_scene->getComponent<T>(m_entity);
   }
 
-private:
+protected:
   Scene *m_scene = nullptr;
   Entity m_entity = 0;
   friend class Scene;

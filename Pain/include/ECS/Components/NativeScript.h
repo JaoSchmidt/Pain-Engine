@@ -4,12 +4,23 @@
 
 template <typename T>
 concept has_onCreate_method = requires(T &&t) {
-  { t.onCreate() };
+  {
+    t.onCreate()
+  };
 };
+
+// template <typename T>
+// concept has_onUpdate_method = requires(T &&t) {
+//   {
+//     t.onUpdate()
+//   };
+// };
 
 template <typename T>
 concept has_onDestroy_method = requires(T &&t) {
-  { t.onDestroy() };
+  {
+    t.onDestroy()
+  };
 };
 
 namespace pain

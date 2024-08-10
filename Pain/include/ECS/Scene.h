@@ -72,8 +72,11 @@ public:
 
   void updateSystems(double deltaTime)
   {
+    PLOG_T("updateSystems");
     rotationSystem();
+    PLOG_T("rotationSystems");
     movementSystem(deltaTime);
+    PLOG_T("movementSystem");
     scriptSystem(deltaTime);
   }
   void renderSystems() { spriteSystem(); }

@@ -20,6 +20,7 @@ struct SpriteComponent {
 struct SpritelessComponent {
   glm::vec2 m_size{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  SpritelessComponent() = default;
   SpritelessComponent(const glm::vec2 &size, const glm::vec4 &color)
       : m_size(size), m_color(color)
   {

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 set(PROJECT_NAME "Painful Sprite Game Example")
 project(${PROJECT_NAME})
-set(TARGET_NAME "spriteGame")
+set(TARGET_NAME "flipbird")
 
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_executable(${TARGET_NAME} ${SOURCES})

@@ -1,5 +1,6 @@
 #include "CameraController.h"
 
+void CameraController::onUpdate(double dt) {}
 void CameraController::onEvent(const SDL_Event &event)
 {
   pain::OrthoCameraComponent &cc = getComponent<pain::OrthoCameraComponent>();

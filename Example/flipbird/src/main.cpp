@@ -1,5 +1,6 @@
 #include <pain.h>
 
+#include "Game.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
@@ -46,12 +47,13 @@ class Sandbox : public pain::Application
 public:
   Sandbox(const char *title, int w, int h) : Application(title, w, h)
   {
-    pain::Scene *scene = new MainScene();
+    // pain::Scene *scene = new MainScene();
 
-    pain::OrthoCameraEntity *pCamera =
-        // new pain::OrthoCameraEntity(scene, (float)w / h, 40.0f);
-        new pain::OrthoCameraEntity(scene, (float)w / h, 10.0f);
-    ((MainScene *)scene)->init(pCamera);
+    // pain::OrthoCameraEntity *pCamera =
+    //     // new pain::OrthoCameraEntity(scene, (float)w / h, 40.0f);
+    //     new pain::OrthoCameraEntity(scene, (float)w / h, 10.0f);
+    // ((MainScene *)scene)->init(pCamera);
+    pain::Scene *scene = new Game();
     pushScene("main", scene);
     attachScene("main");
   }
