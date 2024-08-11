@@ -8,7 +8,7 @@ class MainScene : public pain::Scene
 {
 public:
   MainScene() : pain::Scene() {}
-  void init(pain::OrthoCameraEntity *pCamera)
+  void init(std::shared_ptr<pain::OrthoCameraEntity> pCamera)
   {
     m_orthocamera = pCamera;
     pain::Renderer2d::init(m_orthocamera);
@@ -16,31 +16,39 @@ public:
     a.bind<pain::OrthoCameraController>();
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
     m_rect1.reset(new pain::RectangleSprite(this, {0.0f, 0.0f}, {0.4f, 0.4f},
-                                            m_texture, 1.0f,
-                                            {1.0f, 1.0f, 1.0f, 1.0f}));
-    m_rect2.reset(new pain::RectangleSprite(this, {-0.5f, -0.5f}, {0.4f, 0.4f},
-                                            m_texture, 1.0f,
-                                            {1.0f, 1.0f, 1.0f, 1.0f}));
-    m_rect3.reset(new pain::Rectangle(this, {0.0f, -0.8f}, {0.3f, 0.3f},
-                                      {0.9f, 0.3f, 0.2f, 1.0f}));
-    m_rect4.reset(new pain::Rectangle(this, {-0.5f, 0.0f}, {0.3f, 0.3f},
-                                      {0.8f, 0.9f, 0.3f, 1.0f}));
+                                            {1.0f, 1.0f, 1.0f, 1.0f}, m_texture,
+                                            1.0f));
+    // m_rect2.reset(new pain::RectangleSprite(this, {-0.5f, -0.5f}, {0.4f,
+    // 0.4f},
+    //                                         {1.0f, 1.0f, 1.0f, 1.0f},
+    //                                         m_texture, 1.0f));
+    // m_rect3.reset(new pain::Rectangle(this, {0.0f, -0.8f}, {0.3f, 0.3f},
+    //                                   {0.9f, 0.3f, 0.2f, 1.0f}));
+    // m_rect4.reset(new pain::Rectangle(this, {-0.5f, 0.0f}, {0.3f, 0.3f},
+    //                                   {0.8f, 0.9f, 0.3f, 1.0f}));
   }
-
-  void onUpdate(double deltaTime) override
+  void onRender() override
   {
-    // m_orthocamera->onUpdate(deltaTime);
-
-    // pain::Renderer2d::beginScene();
     // pain::Renderer2d::drawQuad({0.0f, -0.8f}, {0.3f, 0.3f},
     //                            {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
-    // pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, m_texture, 1.0f,
-    //                            {1.0f, 1.0f, 1.0f, 1.0f});
-    // pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f}, m_texture, 1.0f,
-    //                            {1.0f, 1.0f, 1.0f, 1.0f});
-    // pain::Renderer2d::endScene();
+    // pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f},
+    //                            {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f);
+    pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f},
+                               {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f);
+    pain::Renderer2d::drawRotQuad({-0.6f, 0.8f}, {0.4f, 0.4f},
+                                  {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f,
+                                  m_radians);
+    pain::Renderer2d::drawRotQuad({0.7f, 0.7f}, {0.3f, 0.3f},
+                                  {0.8f, 0.9f, 0.3f, 1.0f}, m_radians);
+  }
+  void onUpdate(double deltaTimeSec) override
+  {
+    // m_orthocamera->onUpdate(deltaTime);
+    m_radians = m_radians + std::fmod(10.0f * deltaTimeSec, 2 * 3.14159265359f);
+    // PLOG_T("rad = {}", m_radians);
+    // PLOG_T("time = {}", deltaTimeSec);
   }
   void onEvent(const SDL_Event &event) override
   {
@@ -48,9 +56,10 @@ public:
   }
 
 private:
+  float m_radians = 0.0f;
   std::shared_ptr<pain::Shader> m_texture_shader;
   // std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
-  pain::OrthoCameraEntity *m_orthocamera;
+  std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
   std::shared_ptr<pain::RectangleSprite> m_rect1;
   std::shared_ptr<pain::RectangleSprite> m_rect2;
   std::shared_ptr<pain::Rectangle> m_rect3;
@@ -66,8 +75,8 @@ public:
   {
     pain::Scene *scene = new MainScene();
 
-    pain::OrthoCameraEntity *pCamera =
-        new pain::OrthoCameraEntity(scene, (float)w / h, 1.0f);
+    std::shared_ptr<pain::OrthoCameraEntity> pCamera;
+    pCamera.reset(new pain::OrthoCameraEntity(scene, (float)w / h, 1.0f));
     ((MainScene *)scene)->init(pCamera);
     pushScene("main", scene);
     attachScene("main");

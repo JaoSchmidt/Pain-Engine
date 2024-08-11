@@ -22,6 +22,9 @@ struct MovementComponent {
   float m_translationSpeed = 1.0f;
   float m_rotationSpeed = 180.0f;
   MovementComponent() = default;
+  MovementComponent(const glm::vec3 &velocityDir) : m_velocityDir(velocityDir)
+  {
+  }
   MovementComponent(const glm::vec3 &velocityDir, float translationSpeed,
                     float rotationSpeed)
       : m_velocityDir(velocityDir), m_translationSpeed(translationSpeed),

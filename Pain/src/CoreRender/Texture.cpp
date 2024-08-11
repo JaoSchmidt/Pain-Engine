@@ -60,7 +60,7 @@ Texture::Texture(const std::string &path)
   glTexImage2D(GL_TEXTURE_2D, 0, m_dataFormat, surface->w, surface->h, 0,
                m_dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
 }
-void Texture::setData(void *data, uint32_t size)
+void Texture::setData(const void *data, uint32_t size)
 {
   uint32_t bpp = m_dataFormat == GL_RGBA ? 4 : 3;
   P_ASSERT_W(size == m_width * m_height * bpp, "Data must be entire texture!");

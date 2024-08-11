@@ -49,7 +49,7 @@ target_precompile_headers(${LIBRARY_NAME} PRIVATE
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/flipbird")
+set(GAME_FOLDER "Example/example2d")
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources

@@ -15,7 +15,7 @@ public:
   Texture(Texture &t);
   ~Texture();
   void bind(uint32_t slot = 0) const;
-  void setData(void *data, uint32_t size);
+  void setData(const void *data, uint32_t size);
   bool operator==(const Texture &other) const;
 
   std::string tempGet() const { return m_path; }

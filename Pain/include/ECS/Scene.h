@@ -19,6 +19,7 @@ public:
   Entity createEntity();
   void destroyEntity(Entity entity);
 
+  virtual void onRender() = 0;
   virtual void onUpdate(double ts) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
 
@@ -47,21 +48,21 @@ public:
   {
     m_registry->remove<T>(entity);
   }
-  template <typename T> typename std::unordered_map<Entity, T>::iterator begin()
+  template <typename T> std::unordered_map<Entity, T>::iterator begin()
   {
     return m_registry->getComponentMap<T>().begin();
   }
-  template <typename T> typename std::unordered_map<Entity, T>::iterator end()
+  template <typename T> std::unordered_map<Entity, T>::iterator end()
   {
     return m_registry->getComponentMap<T>().end();
   }
   template <typename T>
-  typename std::unordered_map<Entity, T>::const_iterator begin() const
+  const std::unordered_map<Entity, T>::const_iterator begin() const
   {
     return m_registry->getComponentMap<T>().begin();
   }
   template <typename T>
-  typename std::unordered_map<Entity, T>::const_iterator end() const
+  const std::unordered_map<Entity, T>::const_iterator end() const
   {
     return m_registry->getComponentMap<T>().end();
   }
@@ -72,11 +73,8 @@ public:
 
   void updateSystems(double deltaTime)
   {
-    PLOG_T("updateSystems");
     rotationSystem();
-    PLOG_T("rotationSystems");
     movementSystem(deltaTime);
-    PLOG_T("movementSystem");
     scriptSystem(deltaTime);
   }
   void renderSystems() { spriteSystem(); }

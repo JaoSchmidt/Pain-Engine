@@ -1,7 +1,9 @@
 #include "CoreRender/Renderer/QuadVertex.h"
 #include "CoreFiles/LogWrapper.h"
-#include <unistd.h>
 
+#include "glm/ext/matrix_transform.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <unistd.h>
 namespace pain
 {
 void QuadVertexBatch::goBackToFirstQuad()
@@ -51,7 +53,7 @@ QuadVertexBatch::QuadVertexBatch()
   delete[] quadIndices;
 
   m_whiteTexture.reset(new Texture(1, 1));
-  uint32_t whiteTextureData = 0xffffffff;
+  const uint32_t whiteTextureData = 0xffffffff;
   m_whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
 
   int32_t samplers[MaxTextureSlots];
@@ -70,22 +72,36 @@ void QuadVertexBatch::bindTextures()
   for (uint32_t i = 0; i < m_textureSlotIndex; i++)
     m_textureSlots[i]->bind(i);
 }
-void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                               const std::shared_ptr<Texture> &texture,
-                               float tilingFactor, const glm::vec4 &tintColor)
-{
-  const std::array<glm::vec2, 4> textureCoord = {
-      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-      glm::vec2(0.0f, 1.0f)};
-  drawQuad(position, size, texture, tilingFactor, tintColor, textureCoord);
-}
+
+// ================================================================= //
+// Draws
+// ================================================================= //
+
 void QuadVertexBatch::drawQuad(
     const glm::vec2 &position, const glm::vec2 &size,
-    const std::shared_ptr<Texture> &texture, float tilingFactor,
-    const glm::vec4 &tintColor,
-    const std::array<glm::vec2, 4> &textureCoordinate)
+    const glm::vec4 &tintColor, const float textureIndex,
+    const float tilingFactor, const std::array<glm::vec2, 4> &textureCoordinate)
 {
-  const glm::vec4 &color = tintColor;
+  const glm::mat4 transform =
+      glm::translate(glm::mat4(1.0f), {position, 0.f}) *
+      glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+
+  for (int i = 0; i < 4; i++) {
+    m_vertexBufferPtr->position = transform * m_quadVertexPositions[i];
+    m_vertexBufferPtr->color = tintColor;
+    m_vertexBufferPtr->texCoord = textureCoordinate[i];
+    m_vertexBufferPtr->texIndex = textureIndex;
+    m_vertexBufferPtr->tilingFactor = tilingFactor;
+    m_vertexBufferPtr++;
+  }
+  m_indexCount += 6;
+}
+
+void QuadVertexBatch::drawQuad(
+    const glm::vec2 &position, const glm::vec2 &size,
+    const glm::vec4 &tintColor, const std::shared_ptr<Texture> &texture,
+    const float tilingFactor, const std::array<glm::vec2, 4> &textureCoordinate)
+{
   float textureIndex = 0.0f;
   // tries to get texture from the m_textureSlots
   for (uint32_t i = 1; i < m_textureSlotIndex; i++) {
@@ -94,7 +110,6 @@ void QuadVertexBatch::drawQuad(
       break;
     }
   }
-
   // otherwise use it to allocate new texture
   if (textureIndex == 0.0f) {
     textureIndex = (float)m_textureSlotIndex;
@@ -103,76 +118,60 @@ void QuadVertexBatch::drawQuad(
   }
   P_ASSERT_W(textureIndex != 0.0f,
              "Missing texture inside a drawQuad that requires textures");
-  // PLOG_I("Texture being used {}, path:{}", textureIndex, texture->tempGet());
-  m_vertexBufferPtr->position = {position.x, position.y, 0.0f};
-  m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = textureCoordinate[0];
-  m_vertexBufferPtr->texIndex = textureIndex;
-  m_vertexBufferPtr->tilingFactor = tilingFactor;
-  m_vertexBufferPtr++;
+  drawQuad(position, size, tintColor, textureIndex, tilingFactor,
+           textureCoordinate);
+}
 
-  m_vertexBufferPtr->position = {position.x + size.x, position.y, 0.0f};
-  m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = textureCoordinate[1];
-  m_vertexBufferPtr->texIndex = textureIndex;
-  m_vertexBufferPtr->tilingFactor = tilingFactor;
-  m_vertexBufferPtr++;
+// ================================================================= //
+// Draws with rotation
+// ================================================================= //
 
-  m_vertexBufferPtr->position = {position.x + size.x, position.y + size.y,
-                                 0.0f};
-  m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = textureCoordinate[2];
-  m_vertexBufferPtr->texIndex = textureIndex;
-  m_vertexBufferPtr->tilingFactor = tilingFactor;
-  m_vertexBufferPtr++;
+void QuadVertexBatch::drawRotQuad(
+    const glm::vec2 &position, const glm::vec2 &size,
+    const glm::vec4 &tintColor, const float textureIndex,
+    const float tilingFactor, const std::array<glm::vec2, 4> &textureCoordinate,
+    const float rotation)
+{
+  const glm::mat4 transform =
+      glm::translate(glm::mat4(1.0f), {position, 0.f}) *
+      glm::rotate(glm::mat4(1.0f), glm::radians(rotation), {0.0f, 0.0f, 1.0f}) *
+      glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 
-  m_vertexBufferPtr->position = {position.x, position.y + size.y, 0.0f};
-  m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = textureCoordinate[3];
-  m_vertexBufferPtr->texIndex = textureIndex;
-  m_vertexBufferPtr->tilingFactor = tilingFactor;
-  m_vertexBufferPtr++;
-
+  for (int i = 0; i < 4; i++) {
+    m_vertexBufferPtr->position = transform * m_quadVertexPositions[i];
+    m_vertexBufferPtr->color = tintColor;
+    m_vertexBufferPtr->texCoord = textureCoordinate[i];
+    m_vertexBufferPtr->texIndex = textureIndex;
+    m_vertexBufferPtr->tilingFactor = tilingFactor;
+    m_vertexBufferPtr++;
+  }
   m_indexCount += 6;
 }
 
-/* Batch logic mostly in this function */
-void QuadVertexBatch::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                               const glm::vec4 &color)
+void QuadVertexBatch::drawRotQuad(
+    const glm::vec2 &position, const glm::vec2 &size,
+    const glm::vec4 &tintColor, const std::shared_ptr<Texture> &texture,
+    const float tilingFactor, const std::array<glm::vec2, 4> &textureCoordinate,
+    const float rotation)
 {
-  const float texIndex = 0.0f; // White Texture
-  const float tilingFactor = 1.0f;
-
-  m_vertexBufferPtr->position = {position.x, position.y, 0.0f};
-  m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = {0.0f, 0.0f};
-  m_vertexBufferPtr->texIndex = texIndex;
-  m_vertexBufferPtr->tilingFactor = tilingFactor;
-  m_vertexBufferPtr++;
-
-  m_vertexBufferPtr->position = {position.x + size.x, position.y, 0.0f};
-  m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = {1.0f, 0.0f};
-  m_vertexBufferPtr->texIndex = texIndex;
-  m_vertexBufferPtr->tilingFactor = tilingFactor;
-  m_vertexBufferPtr++;
-
-  m_vertexBufferPtr->position = {position.x + size.x, position.y + size.y,
-                                 0.0f};
-  m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = {1.0f, 1.0f};
-  m_vertexBufferPtr->texIndex = texIndex;
-  m_vertexBufferPtr->tilingFactor = tilingFactor;
-  m_vertexBufferPtr++;
-
-  m_vertexBufferPtr->position = {position.x, position.y + size.y, 0.0f};
-  m_vertexBufferPtr->color = color;
-  m_vertexBufferPtr->texCoord = {0.0f, 1.0f};
-  m_vertexBufferPtr->texIndex = texIndex;
-  m_vertexBufferPtr->tilingFactor = tilingFactor;
-  m_vertexBufferPtr++;
-
-  m_indexCount += 6;
+  float textureIndex = 0.0f;
+  // tries to get texture from the m_textureSlots
+  for (uint32_t i = 1; i < m_textureSlotIndex; i++) {
+    if (*m_textureSlots[i].get() == *texture.get()) {
+      textureIndex = (float)i;
+      break;
+    }
+  }
+  // otherwise use it to allocate new texture
+  if (textureIndex == 0.0f) {
+    textureIndex = (float)m_textureSlotIndex;
+    m_textureSlots[m_textureSlotIndex] = texture;
+    m_textureSlotIndex++;
+  }
+  P_ASSERT_W(textureIndex != 0.0f,
+             "Missing texture inside a drawQuad that requires textures");
+  drawRotQuad(position, size, tintColor, textureIndex, tilingFactor,
+              textureCoordinate, rotation);
 }
 
 } // namespace pain

@@ -12,21 +12,14 @@ namespace pain
 class EXPORT Renderer2d
 {
 public:
+  static void init(std::shared_ptr<OrthoCameraEntity> cameraEntity);
+  // ================================================================= //
+  // Renderer basic wrapper around opengl
+  // ================================================================= //
+
   static void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
   static void beginScene(const glm::mat4 &transform = glm::mat4(1.0f));
   static void endScene();
-
-  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                       const glm::vec4 &color);
-  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                       const std::shared_ptr<Texture> &texture,
-                       float tilingFactor, const glm::vec4 &tintColor);
-  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                       const std::shared_ptr<Texture> &texture,
-                       float tilingFactor, const glm::vec4 &tintColor,
-                       const std::array<glm::vec2, 4> &textureCoordinate);
-
-  static void init(OrthoCameraEntity *cameraEntity);
   static void shutdown();
   static void setViewport(int x, int y, int width, int height);
   static void setClearColor(const glm::vec4 &color);
@@ -34,8 +27,74 @@ public:
   static void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
                           uint32_t indexCount = 0);
 
-  static OrthoCameraEntity *m_cameraEntity;
-  // static std::shared_ptr<OrthoCameraEntity> m_cameraEntity;
+  // static OrthoCameraEntity *m_cameraEntity;
+  static std::shared_ptr<OrthoCameraEntity> m_cameraEntity;
+
+  // ================================================================= //
+  // Draw Quads
+  // ================================================================= //
+  // Draw texturesless quad
+  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                       const glm::vec4 &tintColor);
+  // Draw quad w/texture
+  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                       const glm::vec4 &tintColor,
+                       const std::shared_ptr<Texture> &texture,
+                       const float tilingFactor);
+  // Draw quad w/texture and its specific coordinates (e.g. for spritesheets)
+  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                       const glm::vec4 &tintColor,
+                       const std::shared_ptr<Texture> &texture,
+                       const float tilingFactor,
+                       const std::array<glm::vec2, 4> &textureCoordinate);
+  // ===== Draw w/rotation =========================================== //
+  static void drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor, const float rotation);
+  // Draw quad w/texture
+  static void drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor,
+                          const std::shared_ptr<Texture> &texture,
+                          const float tilingFactor, const float rotation);
+  // Draw quad w/texture and its specific coordinates (e.g. for spritesheets)
+  static void drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor,
+                          const std::shared_ptr<Texture> &texture,
+                          const float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate,
+                          const float rotation);
+
+  // ================================================================= //
+  // Draw Tri
+  // ================================================================= //
+  // Draw texturesless quad
+  static void drawTri(const glm::vec2 &position, const glm::vec2 &size,
+                      const glm::vec4 &tintColor);
+  // Draw quad w/texture
+  static void drawTri(const glm::vec2 &position, const glm::vec2 &size,
+                      const glm::vec4 &tintColor,
+                      const std::shared_ptr<Texture> &texture,
+                      const float tilingFactor);
+  // Draw quad w/texture and its specific coordinates (e.g. for spritesheets)
+  static void drawTri(const glm::vec2 &position, const glm::vec2 &size,
+                      const glm::vec4 &tintColor,
+                      const std::shared_ptr<Texture> &texture,
+                      const float tilingFactor,
+                      const std::array<glm::vec2, 4> &textureCoordinate);
+  // ===== Draw w/rotation =========================================== //
+  static void drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
+                         const glm::vec4 &tintColor, const float rotation);
+  // Draw quad w/texture
+  static void drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
+                         const glm::vec4 &tintColor,
+                         const std::shared_ptr<Texture> &texture,
+                         const float tilingFactor, const float rotation);
+  // Draw quad w/texture and its specific coordinates (e.g. for spritesheets)
+  static void drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
+                         const glm::vec4 &tintColor,
+                         const std::shared_ptr<Texture> &texture,
+                         const float tilingFactor,
+                         const std::array<glm::vec2, 4> &textureCoordinate,
+                         const float rotation);
 
 private:
   static void flush();
