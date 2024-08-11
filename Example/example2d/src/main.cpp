@@ -15,9 +15,9 @@ public:
     auto &a = m_orthocamera->addComponent<pain::NativeScriptComponent>();
     a.bind<pain::OrthoCameraController>();
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
-    m_rect1.reset(new pain::RectangleSprite(this, {0.0f, 0.0f}, {0.4f, 0.4f},
-                                            {1.0f, 1.0f, 1.0f, 1.0f}, m_texture,
-                                            1.0f));
+    // m_rect1.reset(new pain::RectangleSprite(this, {0.0f, 0.0f}, {0.4f, 0.4f},
+    //                                         {1.0f, 1.0f, 1.0f, 1.0f},
+    //                                         m_texture, 1.0f));
     // m_rect2.reset(new pain::RectangleSprite(this, {-0.5f, -0.5f}, {0.4f,
     // 0.4f},
     //                                         {1.0f, 1.0f, 1.0f, 1.0f},
@@ -35,8 +35,11 @@ public:
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
     // pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f},
     //                            {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f);
-    pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f},
-                               {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f);
+    // pain::Renderer2d::drawQuad({0.5f, -0.5f}, {0.4f, 0.4f},
+    //                            {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f);
+
+    pain::Renderer2d::drawTri({-0.5f, -0.5f}, {0.5f, 0.5f},
+                              {0.2f, 0.9f, 0.8f, 1.0f});
     pain::Renderer2d::drawRotQuad({-0.6f, 0.8f}, {0.4f, 0.4f},
                                   {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f,
                                   m_radians);
@@ -45,10 +48,7 @@ public:
   }
   void onUpdate(double deltaTimeSec) override
   {
-    // m_orthocamera->onUpdate(deltaTime);
     m_radians = m_radians + std::fmod(10.0f * deltaTimeSec, 2 * 3.14159265359f);
-    // PLOG_T("rad = {}", m_radians);
-    // PLOG_T("time = {}", deltaTimeSec);
   }
   void onEvent(const SDL_Event &event) override
   {
@@ -58,7 +58,6 @@ public:
 private:
   float m_radians = 0.0f;
   std::shared_ptr<pain::Shader> m_texture_shader;
-  // std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
   std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
   std::shared_ptr<pain::RectangleSprite> m_rect1;
   std::shared_ptr<pain::RectangleSprite> m_rect2;

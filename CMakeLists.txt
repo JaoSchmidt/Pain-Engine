@@ -56,6 +56,8 @@ set(GAME_FOLDER "Example/example2d")
 if(UNIX OR APPLE)
 	add_custom_target(sync_resources
 		COMMAND rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/" "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
+		# For debuging purposes
+		COMMAND rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/" "${PROJECT_SOURCE_DIR}/resources/"
 		COMMENT "Syncing resources folder"
 	)
 	# Add dependency to sync_resources target on make

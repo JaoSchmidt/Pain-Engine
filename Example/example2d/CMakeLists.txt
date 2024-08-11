@@ -20,3 +20,7 @@ target_link_libraries(${TARGET_NAME} PUBLIC
 message(${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${PROJECT_SOURCE_DIR}/resources/ 
 	DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/resources/)
+
+# For debuging purposes
+file(COPY ${PROJECT_SOURCE_DIR}/resources/ 
+	DESTINATION ${CMAKE_SOURCE_DIR}/resources/)

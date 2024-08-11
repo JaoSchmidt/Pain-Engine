@@ -18,44 +18,66 @@ struct QuadVertex {
   float tilingFactor;
 };
 
-class QuadVertexBatch
+struct TriVertex {
+  glm::vec3 position;
+  glm::vec4 color;
+};
+
+class VertexBatch
 {
-  QuadVertexBatch();
+  VertexBatch();
   friend class Renderer2d;
-  const std::shared_ptr<VertexArray> &getVertexArray() const
+  const std::shared_ptr<VertexArray> &getQuadVertexArray() const
   {
-    return m_vertexArray;
+    return m_quadVertexArray;
   };
-  const uint32_t &getIndexCount() const { return m_indexCount; };
-  void goBackToFirstQuad();
-  void sendAllDataToOpenGL();
-  inline const std::shared_ptr<Shader> getShader() const
+  const std::shared_ptr<VertexArray> &getTriVertexArray() const
   {
-    return m_textureShader;
+    return m_triVertexArray;
+  };
+  const uint32_t &getQuadIndexCount() const { return m_quadIndexCount; };
+  void goBackToFirstVertex();
+  void drawBatch(const glm::mat4 &viewProjectionMatrix);
+  void sendAllDataToOpenGL();
+  inline const std::shared_ptr<Shader> getQuadShader() const
+  {
+    return m_quadTextureShader;
+  };
+  inline const std::shared_ptr<Shader> getTriShader() const
+  {
+    return m_triShader;
   };
   void bindTextures();
   // clang-format on
 
-  // Quads
-  const uint32_t MaxQuads = 10000;
-  const uint32_t MaxVertices = MaxQuads * 4;
-  const uint32_t MaxIndices = MaxQuads * 6;
+  constexpr static uint32_t MaxQuads = 10000;
+  constexpr static uint32_t MaxQuadVertices = MaxQuads * 4;
+  constexpr static uint32_t MaxQuadIndices = MaxQuads * 6;
 
-  const uint32_t MaxTri = 10000;
-  const uint32_t MaxTriVertices = MaxTri * 3;
+  constexpr static uint32_t MaxTri = 10000;
+  constexpr static uint32_t MaxTriVertices = MaxTri * 3;
+  constexpr static uint32_t MaxTriIndices = MaxTri * 3;
 
   // TODO: eventually dinamically see MaxTextureSlots value on gpu
   static const uint32_t MaxTextureSlots = 32;
 
-  std::shared_ptr<VertexArray> m_vertexArray;
-  std::shared_ptr<VertexBuffer> m_vertexBuffer;
-  std::shared_ptr<Shader> m_textureShader;
+  std::shared_ptr<VertexArray> m_quadVertexArray;
+  std::shared_ptr<VertexBuffer> m_quadVertexBuffer;
+  std::shared_ptr<Shader> m_quadTextureShader;
+
+  std::shared_ptr<VertexArray> m_triVertexArray;
+  std::shared_ptr<VertexBuffer> m_triVertexBuffer;
+  std::shared_ptr<Shader> m_triShader;
+
   std::shared_ptr<Texture> m_whiteTexture;
   std::array<std::shared_ptr<Texture>, MaxTextureSlots> m_textureSlots;
 
-  QuadVertex *m_vertexBufferBase = nullptr;
-  QuadVertex *m_vertexBufferPtr = nullptr;
-  uint32_t m_indexCount = 0;
+  QuadVertex *m_quadVertexBufferBase = nullptr;
+  QuadVertex *m_quadVertexBufferPtr = nullptr;
+  TriVertex *m_triVertexBufferBase = nullptr;
+  TriVertex *m_triVertexBufferPtr = nullptr;
+  uint32_t m_quadIndexCount = 0;
+  uint32_t m_triIndexCount = 0;
   uint32_t m_textureSlotIndex = 1;
   // clang-format off
   constexpr static glm::vec4 m_quadVertexPositions[4] = {
@@ -64,7 +86,11 @@ class QuadVertexBatch
       glm::vec4( 0.5f, 0.5f,0.f,1.f),
       glm::vec4(-0.5f, 0.5f,0.f,1.f),
   };
-  // clang format on
+  constexpr static glm::vec4 m_triVertexPositions[3] = {
+      glm::vec4(-0.5f, 0.0f,0.f,1.f),
+      glm::vec4( 0.0f, 0.5f,0.f,1.f),
+      glm::vec4( 0.5f, 0.0f,0.f,1.f),
+  };
 
 
   // ================================================================= //
@@ -98,32 +124,12 @@ class QuadVertexBatch
     const std::array<glm::vec2, 4> &textureCoordinate,
     const float rotation);
 
-  // void drawTri(
-  //   const glm::vec2 &position, const glm::vec2 &size, const glm::vec4 &tintColor,
-  //   const std::shared_ptr<Texture> &texture,
-  //   const float tilingFactor,
-  //   const std::array<glm::vec2, 4> &textureCoordinate);
+  // ===== Triangles =========================================== //
+  void drawTri(const glm::vec2 &position, const glm::vec2 &size,
+               const glm::vec4 &tintColor);
 
-  // void drawTri(
-  //   const glm::vec2 &position, const glm::vec2 &size, const glm::vec4 &tintColor,
-  //   const float textureIndex, // default texture index = 0.0f
-  //   const float tilingFactor,
-  //   const std::array<glm::vec2, 4> &textureCoordinate);
-
-  // void drawRotTri(
-  //   const glm::vec2 &position, const glm::vec2 &size, const glm::vec4 &tintColor,
-  //   const float textureIndex, // default texture index = 0.0f
-  //   const float tilingFactor,
-  //   const std::array<glm::vec2, 4> &textureCoordinate,
-  //   const float rotation);
-
-  // void drawRotTri(
-  //   const glm::vec2 &position, const glm::vec2 &size, const glm::vec4 &tintColor,
-  //   const std::shared_ptr<Texture> &texture,
-  //   const float tilingFactor,
-  //   const std::array<glm::vec2, 4> &textureCoordinate,
-  //   const float rotation);
-
- };
+  void drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
+                  const glm::vec4 &tintColor, const float rotation);
+};
 
 } // namespace pain

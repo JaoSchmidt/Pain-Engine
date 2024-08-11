@@ -115,6 +115,9 @@ bool Shader::checkLinkProgram(uint32_t programID)
 
 std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
 {
+  P_ASSERT(std::filesystem::exists(filepath), "File {} does not exist.",
+           filepath);
+
   enum class ShadertType { NONE = -1, VERTEX = 0, FRAGMENT = 1 };
   std::ifstream stream(filepath);
   std::string line;
@@ -181,6 +184,7 @@ void Shader::createShaderFromStrings(const std::string &vertexShader,
   glLinkProgram(m_programId);
 
   if (!checkLinkProgram(m_programId)) {
+    PLOG_W("Program {} name: {}", m_programId, m_name);
     glDetachShader(m_programId, vs);
     glDetachShader(m_programId, fs);
     return;
@@ -189,6 +193,7 @@ void Shader::createShaderFromStrings(const std::string &vertexShader,
 
   glDeleteShader(vs);
   glDeleteShader(fs);
+  PLOG_I("Shader {} created: {}", m_programId, m_name);
 }
 
 } // namespace pain

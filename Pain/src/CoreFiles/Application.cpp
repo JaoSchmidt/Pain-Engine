@@ -207,7 +207,7 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
         case GL_DEBUG_SEVERITY_NOTIFICATION: PLOG_W(  "Severity: notification"); break;
     }
 	if (GL_DEBUG_SEVERITY_HIGH == type || GL_DEBUG_TYPE_ERROR == type){
-		//P_ASSERT(false,"OpenGL critical error");
+		P_ASSERT(false,"OpenGL critical error");
 	}
   // clang-format on
 }
