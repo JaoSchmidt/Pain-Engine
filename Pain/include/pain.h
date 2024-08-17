@@ -19,6 +19,7 @@
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
+#include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Entity.h"
 #include "ECS/GameObject.h"

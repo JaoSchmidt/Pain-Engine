@@ -7,7 +7,6 @@
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "SDL_events.h"
-#include <iostream>
 
 namespace pain
 {
@@ -54,9 +53,19 @@ void Scene::spriteSystem()
   for (auto it = begin<SpriteComponent>(); it != end<SpriteComponent>(); ++it) {
     const TransformComponent &tc = getComponent<TransformComponent>(it->first);
     const SpriteComponent &sc = it->second;
-
-    Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
-                         sc.m_tilingFactor);
+    if (hasComponent<RotationComponent>(it->first)) {
+      const RotationComponent &rc = getComponent<RotationComponent>(it->first);
+      PLOG_I("rc.m_rotationAngle {}", rc.m_rotationAngle);
+      Renderer2d::drawRotQuad(
+          tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
+          sc.m_tilingFactor,
+          rc.m_rotationAngle); // TODO: Remove m_rotation of rc... should only
+                               // have angle, in the case of the camera
+                               // inclune rot direction in its script
+    } else {
+      Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
+                           sc.m_tilingFactor);
+    }
   }
   for (auto it = begin<SpritelessComponent>(); it != end<SpritelessComponent>();
        ++it) {

@@ -69,29 +69,6 @@ void VertexBatch::bindTextures()
 VertexBatch::VertexBatch()
 {
 
-  // ====== Triangles ============================================== //
-  m_triVertexArray.reset(new VertexArray());
-
-  m_triVertexBuffer.reset(new VertexBuffer(MaxTriVertices * sizeof(TriVertex)));
-  m_triVertexBuffer->setLayout({{ShaderDataType::Float3, "a_Position"},
-                                {ShaderDataType::Float4, "a_Color"}});
-  m_triVertexArray->addVertexBuffer(m_triVertexBuffer);
-  m_triVertexBufferBase = new TriVertex[MaxTriVertices];
-
-  // indices
-  uint32_t *triIndices = new uint32_t[MaxTriIndices];
-  for (uint32_t i = 0, offset = 0; i < MaxTriIndices; i += 3, offset += 3) {
-    triIndices[i + 0] = offset + 0;
-    triIndices[i + 1] = offset + 1;
-    triIndices[i + 2] = offset + 2;
-  }
-  std::shared_ptr<IndexBuffer> triIB;
-  triIB.reset(new IndexBuffer(triIndices, MaxTriIndices));
-  m_triVertexArray->setIndexBuffer(triIB);
-  delete[] triIndices;
-
-  m_triShader.reset(new Shader("resources/shaders/Triangles.glsl"));
-
   // ====== Quads ================================================== //
   m_quadVertexArray.reset(new VertexArray());
 
@@ -135,6 +112,29 @@ VertexBatch::VertexBatch()
   m_quadTextureShader->uploadUniformIntArray("u_Textures", samplers,
                                              MaxTextureSlots);
   m_textureSlots[0] = m_whiteTexture;
+
+  // ====== Triangles ============================================== //
+  m_triVertexArray.reset(new VertexArray());
+
+  m_triVertexBuffer.reset(new VertexBuffer(MaxTriVertices * sizeof(TriVertex)));
+  m_triVertexBuffer->setLayout({{ShaderDataType::Float3, "a_Position"},
+                                {ShaderDataType::Float4, "a_Color"}});
+  m_triVertexArray->addVertexBuffer(m_triVertexBuffer);
+  m_triVertexBufferBase = new TriVertex[MaxTriVertices];
+
+  // indices
+  uint32_t *triIndices = new uint32_t[MaxTriIndices];
+  for (uint32_t i = 0, offset = 0; i < MaxTriIndices; i += 3, offset += 3) {
+    triIndices[i + 0] = offset + 0;
+    triIndices[i + 1] = offset + 1;
+    triIndices[i + 2] = offset + 2;
+  }
+  std::shared_ptr<IndexBuffer> triIB;
+  triIB.reset(new IndexBuffer(triIndices, MaxTriIndices));
+  m_triVertexArray->setIndexBuffer(triIB);
+  delete[] triIndices;
+
+  m_triShader.reset(new Shader("resources/shaders/Triangles.glsl"));
 }
 
 // ================================================================= //

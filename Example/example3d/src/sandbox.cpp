@@ -5,10 +5,10 @@
 #include <glm/fwd.hpp>
 #include <memory>
 
-class MainLayer : public pain::Layer
+class MainLayer : public pain::Scene
 {
 public:
-  MainLayer() : Layer("main")
+  MainLayer() : Scene()
   {
     m_cameraController.reset(
         new pain::PerspectiveCameraController(800.0, 600.0, 60.0f));
@@ -64,7 +64,12 @@ class Sandbox : public pain::Application
 public:
   Sandbox(const char *title, int w, int h) : Application(title, w, h)
   {
-    pushLayer(new MainLayer());
+    pain::Scene *scene = new MainLayer();
+    pushScene("main", scene);
+    attachScene("main");
+    std::shared_ptr<pain::PerspectiveCamera> pCamera =
+        std::make_shared<pain::OrthoCameraEntity>(scene, (float)w / h);
+    ((MainScene *)scene)->initCamera(pCamera);
   }
 
   ~Sandbox() {}

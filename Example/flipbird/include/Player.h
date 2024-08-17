@@ -2,7 +2,7 @@
 
 #include <pain.h>
 
-class PlayerController : pain::ScriptableEntity
+class PlayerController : public pain::ScriptableEntity
 {
 public:
   void onCreate();
@@ -10,11 +10,11 @@ public:
   void onEvent(const SDL_Event &event);
 
 private:
-  const glm::vec3 m_acceleration = {0.f, -1.f, 0.f};
+  const float m_gravity = -3.0f;
 };
 
 class Player : public pain::GameObject
 {
 public:
-  Player(pain::Scene *scene, const glm::vec3 &position);
+  Player(pain::Scene *scene, std::shared_ptr<pain::Texture> &pTexture);
 };

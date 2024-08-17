@@ -35,9 +35,10 @@ Texture::Texture(uint32_t width, uint32_t height)
  */
 Texture::Texture(const std::string &path)
 {
+  SDL_Surface *surface = Resources::getInstance()->getSurface(path);
+  P_ASSERT(surface != nullptr, "Texture path \"{}\" was not found!", path);
+  surface = flipVertical(surface);
   m_path = path;
-  const SDL_Surface *surface =
-      flipVertical(Resources::getInstance()->getSurface(path));
 
   glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererId);
   glBindTexture(GL_TEXTURE_2D, m_rendererId);

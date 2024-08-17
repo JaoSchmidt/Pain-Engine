@@ -3,9 +3,14 @@ cmake_minimum_required(VERSION 3.25)
 set(PROJECT_NAME "Painful Sprite Game Example")
 project(${PROJECT_NAME})
 set(TARGET_NAME "spriteGame")
-file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+
+file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_executable(${TARGET_NAME} ${SOURCES})
 target_compile_options(${TARGET_NAME} PRIVATE -g -Wall)
+
+target_include_directories(${TARGET_NAME} PRIVATE 
+	${PROJECT_SOURCE_DIR}/include
+)
 
 target_include_directories(Pain PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/Pain

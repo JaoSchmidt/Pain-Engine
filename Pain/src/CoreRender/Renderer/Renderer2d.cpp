@@ -96,7 +96,7 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
   constexpr std::array<glm::vec2, 4> textureCoordinate = {
       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
       glm::vec2(0.0f, 1.0f)};
-  quadBatch->drawQuad(position, size, tintColor, tilingFactor, texIndex,
+  quadBatch->drawQuad(position, size, tintColor, texIndex, tilingFactor,
                       textureCoordinate);
 }
 
@@ -134,7 +134,7 @@ void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
   constexpr std::array<glm::vec2, 4> textureCoordinate = {
       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
       glm::vec2(0.0f, 1.0f)};
-  quadBatch->drawRotQuad(position, size, tintColor, tilingFactor, texIndex,
+  quadBatch->drawRotQuad(position, size, tintColor, texIndex, tilingFactor,
                          textureCoordinate, rotation);
 }
 // Draw quad w/rotation and texture
