@@ -3,8 +3,7 @@
 
 #include "Core.h"
 #include "CoreFiles/DeltaTime.h"
-#include "CoreFiles/Layer.h"
-#include "CoreFiles/LayerStack.h"
+#include "CoreFiles/ImGuiController.h"
 #include "ECS/SceneManager.h"
 
 namespace pain
@@ -25,9 +24,11 @@ public:
   // End the Cycle Pain
 
   void stopTheRun();
-  void handleEvents(const SDL_Event &event);
-  void handleUpdate(DeltaTime deltaTime);
-  void handleRender();
+  // TODO: define those in the source file later
+  void addImGuiInstance(ImGuiInstance *imGuiInstance)
+  {
+    m_imguiController->addImGuiMenu(imGuiInstance);
+  }
 
   static void glErrorHandler(unsigned int source, unsigned int type,
                              unsigned int id, unsigned int severity, int lenght,
@@ -52,10 +53,18 @@ private:
   int m_mouseX;
   int m_mouseY;
   bool m_isMinimized;
+  bool m_imguiEndFrame;
+
   unsigned int m_maxFrameRate;
   SceneManager *m_sceneManager;
   DeltaTime m_deltaTime = 0;
   uint64_t m_lastFrameTime = 0;
+  std::unique_ptr<ImGuiController> m_imguiController;
+
+  // Dark Grey
+  glm::vec4 m_clearColor = glm::vec4(0.2,0.2,0.2,1);
+  // Strong Pink
+  // glm::vec4 m_clearColor = glm::vec4(1.0, 0.2, 0.9, 1);
 };
 
 // To be defined in CLIENT

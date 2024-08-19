@@ -1,7 +1,5 @@
 ﻿cmake_minimum_required(VERSION 3.25)
 
-project(topproject)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
 set(PROJECT_NAME "Pain Engine")
@@ -32,6 +30,7 @@ add_subdirectory(Pain/external/glad)
 add_subdirectory(Pain/external/spdlog)
 add_subdirectory(Pain/external/SDL)
 add_subdirectory(Pain/external/SDL_image)
+add_subdirectory(Pain/external/imgui)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
@@ -41,6 +40,7 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 	glad
 	glm::glm
 	spdlog::spdlog_header_only
+	imgui
 )
 
 target_precompile_headers(${LIBRARY_NAME} PRIVATE

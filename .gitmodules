@@ -10,3 +10,6 @@
 [submodule "Pain/external/SDL"]
 	path = Pain/external/SDL
 	url = https://github.com/libsdl-org/SDL
+[submodule "Pain/external/imgui"]
+	path = Pain/external/imgui
+	url = https://github.com/ocornut/imgui.git

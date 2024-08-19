@@ -3,6 +3,7 @@
 // For use specifically for games build with Pain
 
 #include "CoreFiles/Application.h"
+#include "CoreFiles/ImGuiController.h"
 #include "CoreFiles/Layer.h"
 #include "CoreFiles/LayerStack.h"
 #include "CoreFiles/LogWrapper.h"
@@ -32,6 +33,8 @@
 #include "Misc/PerspCameraController.h"
 
 #include <SDL2/SDL_events.h>
+
+#include "imgui.h"
 
 #ifndef NDEBUG
 #define ASSERT(x, s, ...)                                                      \

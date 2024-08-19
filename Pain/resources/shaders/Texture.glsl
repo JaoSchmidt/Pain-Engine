@@ -9,7 +9,6 @@ layout(location = 4) in float a_TilingFactor;
 
 uniform mat4 u_ViewProjection;
 uniform mat4 u_Transform;
-uniform mat4 u_Testing;
 
 out vec4 v_Color;
 out vec2 v_TexCoord;

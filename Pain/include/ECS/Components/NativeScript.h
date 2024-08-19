@@ -4,11 +4,13 @@
 
 template <typename T>
 concept has_onCreate_method = requires(T &&t) {
-  {
-    t.onCreate()
-  };
+  { t.onCreate() };
 };
 
+template <typename T>
+concept has_onRender_method = requires(T &&t) {
+  { t.onRender() };
+};
 // template <typename T>
 // concept has_onUpdate_method = requires(T &&t) {
 //   {
@@ -18,9 +20,7 @@ concept has_onCreate_method = requires(T &&t) {
 
 template <typename T>
 concept has_onDestroy_method = requires(T &&t) {
-  {
-    t.onDestroy()
-  };
+  { t.onDestroy() };
 };
 
 namespace pain
@@ -34,6 +34,7 @@ struct NativeScriptComponent {
 
   void (*onCreateFunction)(ScriptableEntity *) = nullptr;
   void (*onDestroyFunction)(ScriptableEntity *) = nullptr;
+  void (*onRenderFunction)(ScriptableEntity *) = nullptr;
   void (*onUpdateFunction)(ScriptableEntity *, double) = nullptr;
   void (*onEventFunction)(ScriptableEntity *, const SDL_Event &) = nullptr;
 
@@ -63,9 +64,20 @@ struct NativeScriptComponent {
       onCreateFunction = nullptr;
     }
 
+    if constexpr (has_onRender_method<T>) {
+      onRenderFunction = [](ScriptableEntity *instance) {
+        static_cast<T *>(instance)->onRender();
+      };
+    } else {
+      onCreateFunction = nullptr;
+    }
+
+    // TODO: Check if has onUpdate and onEvent functions, be aware of extra
+    // argument
     onUpdateFunction = [](ScriptableEntity *instance, double ts) {
       static_cast<T *>(instance)->onUpdate(ts);
     };
+
     onEventFunction = [](ScriptableEntity *instance, const SDL_Event &e) {
       static_cast<T *>(instance)->onEvent(e);
     };

@@ -9,6 +9,7 @@ void pain::Pain::initiate()
 
 void pain::Pain::runApplication(Application *app)
 {
-  Application application = std::move(*app);
-  application.run();
+  Application *application = app;
+  application->run();
+  delete application;
 }

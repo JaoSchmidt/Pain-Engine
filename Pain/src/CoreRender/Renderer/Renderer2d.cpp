@@ -15,12 +15,11 @@ std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraEntity = nullptr;
 void Renderer2d::init(std::shared_ptr<OrthoCameraEntity> cameraEntity)
 {
   P_ASSERT(cameraEntity != nullptr, "Camera Entity must be initialized");
-  quadBatch = new VertexBatch();
   // NOTE: This can be changed later in case the engine needs a camera mechanic
-
   // glEnable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
+  glEnable(GL_BLEND); // transparency
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  quadBatch = new VertexBatch();
   m_cameraEntity = cameraEntity;
 }
 

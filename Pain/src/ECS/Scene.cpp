@@ -21,6 +21,7 @@ Scene::Scene() : m_registry(new Registry())
   m_registry->addComponentMap<SpritelessComponent>();
   m_registry->addComponentMap<NativeScriptComponent>();
 }
+// TODO: Create way to move and copy components to another scene
 
 Entity Scene::createEntity()
 {
@@ -120,6 +121,17 @@ void Scene::scriptSystem(const SDL_Event &event)
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
     auto &nsc = it->second;
+    // NOTE: If there is a future where Events runs before Updates, uncomment
+    // this instance check
+
+    // if (!nsc.instance) {
+    //   nsc.instantiateFunction(nsc.instance);
+    //   nsc.instance->m_scene = this;
+    //   nsc.instance->m_entity = it->first;
+
+    //   if (nsc.onCreateFunction)
+    //     nsc.onCreateFunction(nsc.instance);
+    // }
     nsc.onEventFunction(nsc.instance, event);
   }
 }

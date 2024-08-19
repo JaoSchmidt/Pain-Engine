@@ -1,5 +1,6 @@
 #include "CoreFiles/Application.h"
 #include "Core.h"
+#include "CoreFiles/ImGuiController.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include <SDL2/SDL_version.h>
@@ -12,15 +13,22 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   // =========================================================================//
   // SDL Initial setup
   // =========================================================================//
-  P_ASSERT(SDL_Init(SDL_INIT_VIDEO) >= 0, "SDL video could not be init {}",
-           SDL_GetError());
+  P_ASSERT(
+      SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) >= 0,
+      "SDL video could not be init {}", SDL_GetError());
   PLOG_T("SDL video is initialized");
 
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#ifdef SDL_HINT_IME_SHOW_UI
+  SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+#endif
 
-  m_window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED,
-                              SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL);
-  SDL_SetWindowResizable(m_window, SDL_TRUE);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+  m_window = SDL_CreateWindow(
+      title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
+      SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
   if (m_window == nullptr)
     PLOG_E("Application window not initialized");
   m_context = SDL_GL_CreateContext(m_window);
@@ -60,81 +68,17 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(glErrorHandler, 0);
 #endif
-
   // =========================================================================//
   // Application Initial setup
   // =========================================================================//
-
+  m_imguiController = std::make_unique<ImGuiController>();
   m_isMinimized = false;
   m_sceneManager = new pain::SceneManager();
   // SDL_SetWindowGrab(m_window, SDL_TRUE);
   // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
 }
 
-Application::~Application()
-{
-  SDL_GL_DeleteContext(m_context);
-  delete m_sceneManager;
-  SDL_DestroyWindow(m_window);
-  SDL_Quit();
-}
-
 void Application::stop() { m_isGameRunning = false; }
-void Application::handleEvents(const SDL_Event &event)
-{
-  // Handle each specific event
-  // (1) Handle Input
-  for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
-       ++pScene) {
-    (*pScene)->updateSystems(event);
-    (*pScene)->onEvent(event);
-  }
-
-  switch (event.type) {
-  case SDL_WINDOWEVENT:
-    if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-      m_isMinimized = true;
-    else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
-      m_isMinimized = false;
-    break;
-  case SDL_QUIT:
-    stop();
-    break;
-  case SDL_KEYDOWN:
-    // PLOG_I("key pressed: {}", SDL_GetKeyName(event.key.keysym.sym));
-    break;
-  default:
-    break;
-  }
-}
-
-void Application::handleUpdate(DeltaTime deltaTime)
-{
-  for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
-       ++pScene) {
-    double seconds = deltaTime.GetSeconds();
-    (*pScene)->onUpdate(seconds);
-    (*pScene)->updateSystems(seconds);
-  }
-}
-
-void Application::handleRender()
-{
-  // Dark Grey
-  Renderer2d::setClearColor(glm::vec4(0.2, 0.2, 0.2, 1));
-  // Strong pink
-  // Renderer2d::setClearColor(glm::vec4(1.0, 0.2, 0.9, 1));
-
-  Renderer2d::clear();
-  for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
-       ++pScene) {
-    Renderer2d::beginScene();
-    (*pScene)->onRender();
-    (*pScene)->renderSystems();
-    Renderer2d::endScene();
-  }
-  SDL_GL_SwapWindow(m_window);
-}
 
 void Application::run()
 {
@@ -149,20 +93,80 @@ void Application::run()
     // if (elapsedTime < m_maxFrameRate) {
     //   SDL_Delay(m_maxFrameRate - elapsedTime);
     // }
-    // handle any updates
-    if (!m_isMinimized)
-      handleUpdate(m_deltaTime);
-
-    // handle events first
-    // Start our event loop
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-      handleEvents(event);
+    // =============================================================== //
+    // Handle Updates
+    // =============================================================== //
+    double seconds = m_deltaTime.GetSeconds();
+    m_imguiController->onUpdate(m_isMinimized);
+    for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
+         ++pScene) {
+      (*pScene)->onUpdate(seconds);
+      (*pScene)->updateSystems(seconds);
     }
 
-    // hanlde our rendering
-    handleRender();
+    // =============================================================== //
+    // Handle Events
+    // =============================================================== //
+    SDL_Event event;
+    // Start our event loop (goes until the queue is free)
+    while (SDL_PollEvent(&event)) {
+      m_imguiController->onEvent(event);
+      switch (event.type) {
+      case SDL_QUIT:
+        stop();
+        break;
+      case SDL_WINDOWEVENT:
+        if (event.window.event == SDL_WINDOWEVENT_CLOSE &&
+            event.window.windowID == SDL_GetWindowID(m_window))
+          stop();
+        else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
+          m_isMinimized = true;
+        else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
+          m_isMinimized = false;
+        break;
+      default:
+        break;
+      }
+      // Handle each specific event
+      for (auto pScene = m_sceneManager->begin();
+           pScene != m_sceneManager->end(); ++pScene) {
+        (*pScene)->updateSystems(event);
+        (*pScene)->onEvent(event);
+      }
+    }
+
+    // =============================================================== //
+    // Handle rendering
+    // =============================================================== //
+    if (!m_isMinimized) {
+      // int w, h;
+      // SDL_GetWindowSize(m_window, &w, &h);
+      // Renderer2d::setViewport(0, 0, w, h);
+      Renderer2d::setClearColor(m_clearColor);
+      Renderer2d::clear();
+
+      for (auto pScene = m_sceneManager->begin();
+           pScene != m_sceneManager->end(); ++pScene) {
+        Renderer2d::beginScene();
+        (*pScene)->onRender();
+        (*pScene)->renderSystems();
+        Renderer2d::endScene();
+      }
+      m_imguiController->onRender();
+      SDL_GL_SwapWindow(m_window);
+    } else {
+      m_imguiController->onRender();
+      SDL_GL_SwapWindow(m_window);
+    }
   };
+}
+
+Application::~Application()
+{
+  SDL_GL_DeleteContext(m_context);
+  delete m_sceneManager;
+  SDL_DestroyWindow(m_window);
+  SDL_Quit();
 }
 
 void Application::glErrorHandler(unsigned int source, unsigned int type,
@@ -172,8 +176,8 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
 {
   // uncomment this if your gpu being too educated with warnings
   // notification warnings are usually just optimizations anyway
-  // if(severity == GL_DEBUG_SEVERITY_NOTIFICATION)
-  //   return;
+  if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+    return;
 
   PLOG_W("---------------");
   PLOG_W("Debug message ({}): {}", id, message);

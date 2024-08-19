@@ -193,7 +193,7 @@ void Shader::createShaderFromStrings(const std::string &vertexShader,
 
   glDeleteShader(vs);
   glDeleteShader(fs);
-  PLOG_I("Shader {} created: {}", m_programId, m_name);
+  PLOG_I("Shader programId = {} created. Name: {}", m_programId, m_name);
 }
 
 } // namespace pain
