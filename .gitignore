@@ -3,7 +3,6 @@
 CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
 .cmake/
-resources/
 
 ##### Windows
 # Windows thumbnail cache files
