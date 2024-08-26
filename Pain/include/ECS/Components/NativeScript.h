@@ -61,7 +61,7 @@ struct NativeScriptComponent {
         static_cast<T *>(instance)->onDestroy();
       };
     } else {
-      onCreateFunction = nullptr;
+      onDestroyFunction = nullptr;
     }
 
     if constexpr (has_onRender_method<T>) {
@@ -69,7 +69,7 @@ struct NativeScriptComponent {
         static_cast<T *>(instance)->onRender();
       };
     } else {
-      onCreateFunction = nullptr;
+      onRenderFunction = nullptr;
     }
 
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra

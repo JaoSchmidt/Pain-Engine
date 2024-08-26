@@ -196,11 +196,11 @@ void VertexBatch::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
                               const float textureIndex,
                               const float tilingFactor,
                               const std::array<glm::vec2, 4> &textureCoordinate,
-                              const float rotation)
+                              const float rotationAngleRadians)
 {
   const glm::mat4 transform =
       glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-      glm::rotate(glm::mat4(1.0f), glm::radians(rotation), {0.0f, 0.0f, 1.0f}) *
+      glm::rotate(glm::mat4(1.0f), rotationAngleRadians, {0.0f, 0.0f, 1.0f}) *
       glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 
   for (int i = 0; i < 4; i++) {
@@ -219,7 +219,7 @@ void VertexBatch::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
                               const std::shared_ptr<Texture> &texture,
                               const float tilingFactor,
                               const std::array<glm::vec2, 4> &textureCoordinate,
-                              const float rotation)
+                              const float rotationAngleRadians)
 {
   float textureIndex = 0.0f;
   // tries to get texture from the m_textureSlots
@@ -238,7 +238,7 @@ void VertexBatch::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
   P_ASSERT_W(textureIndex != 0.0f,
              "Missing texture inside a drawQuad that requires textures");
   drawRotQuad(position, size, tintColor, textureIndex, tilingFactor,
-              textureCoordinate, rotation);
+              textureCoordinate, rotationAngleRadians);
 }
 
 // ================================================================= //
@@ -260,11 +260,12 @@ void VertexBatch::drawTri(const glm::vec2 &position, const glm::vec2 &size,
 }
 
 void VertexBatch::drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
-                             const glm::vec4 &tintColor, const float rotation)
+                             const glm::vec4 &tintColor,
+                             const float rotationAngleRadians)
 {
   const glm::mat4 transform =
       glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-      glm::rotate(glm::mat4(1.0f), glm::radians(rotation), {0.0f, 0.0f, 1.0f}) *
+      glm::rotate(glm::mat4(1.0f), rotationAngleRadians, {0.0f, 0.0f, 1.0f}) *
       glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 
   for (int i = 0; i < 4; i++) {

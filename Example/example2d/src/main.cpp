@@ -9,12 +9,12 @@ class ShapesController : public pain::ImGuiInstance
 public:
   const void onImGuiUpdate() override
   {
-    // ImGui::Begin("Shapes Controller");
-    // ImGui::Text("First Quad");
-    // ImGui::InputFloat2("Position", m_vecPos);
-    // ImGui::InputFloat2("Size", m_vecSize);
-    // ImGui::ColorEdit4("Color", m_vecColor);
-    // ImGui::End();
+    ImGui::Begin("Shapes Controller");
+    ImGui::Text("First Quad");
+    ImGui::InputFloat2("Position", m_vecPos);
+    ImGui::InputFloat2("Size", m_vecSize);
+    ImGui::ColorEdit4("Color", m_vecColor);
+    ImGui::End();
   }
 
   float m_vecPos[2] = {0.0f, -0.80f};
@@ -26,8 +26,7 @@ class MainScene : public pain::Scene
 {
 public:
   MainScene() : pain::Scene() {}
-  void init(std::shared_ptr<pain::OrthoCameraEntity> pCamera,
-            ShapesController *sc)
+  void init(std::shared_ptr<pain::OrthoCameraEntity> pCamera)
   {
     m_orthocamera = pCamera;
     pain::Renderer2d::init(m_orthocamera);
@@ -35,6 +34,8 @@ public:
     a.bind<pain::OrthoCameraController>();
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
 
+    ShapesController *sc = new ShapesController();
+    pain::Application::Get().addImGuiInstance(sc);
     m_sc = sc;
     // m_rect1.reset(new pain::RectangleSprite(this, {0.0f, 0.0f}, {0.4f, 0.4f},
     //                                         {1.0f, 1.0f, 1.0f, 1.0f},
@@ -102,9 +103,7 @@ public:
 
     std::shared_ptr<pain::OrthoCameraEntity> pCamera;
     pCamera.reset(new pain::OrthoCameraEntity(scene, (float)w / h, 1.0f));
-    ShapesController *sc = new ShapesController();
-    ((MainScene *)scene)->init(pCamera, sc);
-    addImGuiInstance(sc);
+    ((MainScene *)scene)->init(pCamera);
 
     pushScene("main", scene);
     attachScene("main");

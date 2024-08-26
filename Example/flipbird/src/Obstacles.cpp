@@ -8,16 +8,16 @@ Obstacles::Obstacles(pain::Scene *scene, const glm::vec3 &position)
   addComponent<pain::SpritelessComponent>();
 }
 
-ObstaclesController::ObstaclesController(float obstaclesSpeed)
-    : m_obstaclesSpeed(obstaclesSpeed)
-{
-}
-
 void ObstaclesController::onCreate()
 {
+  m_obstaclesSpeed = -0.5f;
   pain::MovementComponent &mc = getComponent<pain::MovementComponent>();
   mc.m_velocityDir = glm::vec3(m_obstaclesSpeed, 0.0f, 0.0f);
 }
+
+void ObstaclesController::onUpdate(double deltaTimeSec) {}
+
+void ObstaclesController::onEvent(const SDL_Event &e) {}
 
 bool ObstaclesController::checkIntersection(const Player &player)
 {

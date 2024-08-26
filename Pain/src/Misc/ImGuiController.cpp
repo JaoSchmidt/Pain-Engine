@@ -49,7 +49,7 @@ void ImGuiController::onUpdate(bool isMinimized)
   ImGui_ImplSDL2_NewFrame();
   ImGui::NewFrame();
   if (!isMinimized) {
-    ImGui::ShowDemoWindow(); // Show demo window! :)
+    // ImGui::ShowDemoWindow(); // Show demo window! :)
 
     for (ImGuiInstance *i : m_imguiInstances) {
       i->onImGuiUpdate();

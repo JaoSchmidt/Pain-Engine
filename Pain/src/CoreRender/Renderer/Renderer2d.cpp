@@ -126,7 +126,8 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 // ===== Draw w/rotation =========================================== //
 
 void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
-                             const glm::vec4 &tintColor, const float rotation)
+                             const glm::vec4 &tintColor,
+                             const float rotationRadians)
 {
   constexpr float texIndex = 0.0f; // White Texture
   constexpr float tilingFactor = 1.0f;
@@ -134,19 +135,20 @@ void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
       glm::vec2(0.0f, 1.0f)};
   quadBatch->drawRotQuad(position, size, tintColor, texIndex, tilingFactor,
-                         textureCoordinate, rotation);
+                         textureCoordinate, rotationRadians);
 }
 // Draw quad w/rotation and texture
 void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
                              const glm::vec4 &tintColor,
                              const std::shared_ptr<Texture> &texture,
-                             const float tilingFactor, const float rotation)
+                             const float tilingFactor,
+                             const float rotationRadians)
 {
   constexpr std::array<glm::vec2, 4> textureCoordinate = {
       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
       glm::vec2(0.0f, 1.0f)};
   quadBatch->drawRotQuad(position, size, tintColor, texture, tilingFactor,
-                         textureCoordinate, rotation);
+                         textureCoordinate, rotationRadians);
 }
 
 // Draw quad w/rotation, texture and its specific coordinates (e.g. for
@@ -156,10 +158,10 @@ void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
                              const std::shared_ptr<Texture> &texture,
                              const float tilingFactor,
                              const std::array<glm::vec2, 4> &textureCoordinate,
-                             const float rotation)
+                             const float rotationRadians)
 {
   quadBatch->drawRotQuad(position, size, tintColor, texture, tilingFactor,
-                         textureCoordinate, rotation);
+                         textureCoordinate, rotationRadians);
 }
 
 // ================================================================= //
@@ -172,9 +174,10 @@ void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
   quadBatch->drawTri(position, size, tintColor);
 }
 void Renderer2d::drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
-                            const glm::vec4 &tintColor, const float rotation)
+                            const glm::vec4 &tintColor,
+                            const float rotationRadians)
 {
-  quadBatch->drawRotTri(position, size, tintColor, rotation);
+  quadBatch->drawRotTri(position, size, tintColor, rotationRadians);
 }
 
 } // namespace pain

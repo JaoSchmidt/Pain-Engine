@@ -56,7 +56,6 @@ void Scene::spriteSystem()
     const SpriteComponent &sc = it->second;
     if (hasComponent<RotationComponent>(it->first)) {
       const RotationComponent &rc = getComponent<RotationComponent>(it->first);
-      PLOG_I("rc.m_rotationAngle {}", rc.m_rotationAngle);
       Renderer2d::drawRotQuad(
           tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
           sc.m_tilingFactor,

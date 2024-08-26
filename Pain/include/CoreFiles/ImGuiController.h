@@ -11,8 +11,6 @@ namespace pain
 class ImGuiInstance
 {
 public:
-  ImGuiInstance() = default;
-  ~ImGuiInstance() = default;
   const virtual void onImGuiUpdate() = 0;
 };
 

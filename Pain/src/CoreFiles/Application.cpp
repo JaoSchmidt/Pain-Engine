@@ -7,8 +7,9 @@
 
 namespace pain
 {
+Application *Application::s_instance = nullptr;
 /* Creates window, opengl context and init glew*/
-Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
+Application::Application(const char *title, int w, int h)
 {
   // =========================================================================//
   // SDL Initial setup
@@ -71,6 +72,7 @@ Application::Application(const char *title, int w, int h) : m_maxFrameRate(60)
   // =========================================================================//
   // Application Initial setup
   // =========================================================================//
+  s_instance = this;
   m_imguiController = std::make_unique<ImGuiController>();
   m_isMinimized = false;
   m_sceneManager = new pain::SceneManager();
@@ -82,10 +84,13 @@ void Application::stop() { m_isGameRunning = false; }
 
 void Application::run()
 {
+  DeltaTime deltaTime;
+  uint64_t lastFrameTime = SDL_GetPerformanceCounter();
+
   while (m_isGameRunning) {
     uint64_t start = SDL_GetPerformanceCounter();
-    m_deltaTime = start - m_lastFrameTime;
-    m_lastFrameTime = start;
+    deltaTime = start - lastFrameTime;
+    lastFrameTime = start;
 
     // unsigned int buttons;
     // buttons = SDL_GetMouseState(&m_mouseX, &m_mouseY);
@@ -96,7 +101,7 @@ void Application::run()
     // =============================================================== //
     // Handle Updates
     // =============================================================== //
-    double seconds = m_deltaTime.GetSeconds();
+    double seconds = deltaTime.GetSeconds();
     m_imguiController->onUpdate(m_isMinimized);
     for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
          ++pScene) {

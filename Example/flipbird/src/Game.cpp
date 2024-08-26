@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "CameraController.h"
 #include "Player.h"
+#include "SDL_events.h"
 
 void Game::onRender() {}
 void Game::onEvent(const SDL_Event &event) {}

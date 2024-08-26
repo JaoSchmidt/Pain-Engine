@@ -49,19 +49,21 @@ public:
                        const std::array<glm::vec2, 4> &textureCoordinate);
   // ===== Draw w/rotation =========================================== //
   static void drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor, const float rotation);
+                          const glm::vec4 &tintColor,
+                          const float rotationRadians);
   // Draw quad w/texture
   static void drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
                           const std::shared_ptr<Texture> &texture,
-                          const float tilingFactor, const float rotation);
+                          const float tilingFactor,
+                          const float rotationRadians);
   // Draw quad w/texture and its specific coordinates (e.g. for spritesheets)
   static void drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
                           const std::shared_ptr<Texture> &texture,
                           const float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate,
-                          const float rotation);
+                          const float rotationRadians);
 
   // ================================================================= //
   // Draw Tri
@@ -69,7 +71,8 @@ public:
   static void drawTri(const glm::vec2 &position, const glm::vec2 &size,
                       const glm::vec4 &tintColor);
   static void drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
-                         const glm::vec4 &tintColor, const float rotation);
+                         const glm::vec4 &tintColor,
+                         const float rotationRadians);
 
 private:
   static void flush();

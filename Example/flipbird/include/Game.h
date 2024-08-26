@@ -1,6 +1,7 @@
 #pragma once
 #include <pain.h>
 
+#include "ImGuiController.h"
 #include "Obstacles.h"
 #include "Player.h"
 
@@ -32,6 +33,7 @@ private:
   float m_obstaclesInterval = 5.0f;
   float m_xPosLimit = -2.0f;
   bool m_isRunning = true;
+  std::shared_ptr<ImGuiController> m_shapeController;
   std::unique_ptr<Player> m_pplayer;
   std::shared_ptr<pain::OrthoCameraEntity> m_Camera;
   std::shared_ptr<pain::Texture> m_texture;
