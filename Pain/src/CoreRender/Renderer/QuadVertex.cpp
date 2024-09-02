@@ -251,7 +251,7 @@ void VertexBatch::drawTri(const glm::vec2 &position, const glm::vec2 &size,
       glm::translate(glm::mat4(1.0f), {position, 0.f}) *
       glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     m_triVertexBufferPtr->position = transform * m_triVertexPositions[i];
     m_triVertexBufferPtr->color = tintColor;
     m_triVertexBufferPtr++;
@@ -268,7 +268,7 @@ void VertexBatch::drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
       glm::rotate(glm::mat4(1.0f), rotationAngleRadians, {0.0f, 0.0f, 1.0f}) *
       glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     m_triVertexBufferPtr->position = transform * m_triVertexPositions[i];
     m_triVertexBufferPtr->color = tintColor;
     m_triVertexBufferPtr++;

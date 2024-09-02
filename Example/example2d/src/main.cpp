@@ -14,12 +14,26 @@ public:
     ImGui::InputFloat2("Position", m_vecPos);
     ImGui::InputFloat2("Size", m_vecSize);
     ImGui::ColorEdit4("Color", m_vecColor);
+    ImGui::Text("First Triangle");
+    ImGui::InputFloat2("Tri Position", m_triPos);
+    ImGui::InputFloat2("Tri Size", m_triSize);
+    ImGui::ColorEdit4("Tri Color", m_triColor);
+    ImGui::Text("Second Triangle");
+    ImGui::InputFloat2("Tri2 Position", m_tri2Pos);
+    ImGui::InputFloat2("Tri2 Size", m_tri2Size);
+    ImGui::ColorEdit4("Tri2 Color", m_tri2Color);
     ImGui::End();
   }
 
   float m_vecPos[2] = {0.0f, -0.80f};
   float m_vecSize[2] = {0.3f, 0.3f};
   float m_vecColor[4] = {0.9f, 0.3f, 0.2f, 1.0f};
+  float m_triPos[2] = {-0.5f, -0.5f};
+  float m_triSize[2] = {0.5f, 0.5f};
+  float m_triColor[4] = {0.2f, 0.9f, 0.8f, 1.0f};
+  float m_tri2Pos[2] = {-0.5f, -0.5f};
+  float m_tri2Size[2] = {0.5f, 0.5f};
+  float m_tri2Color[4] = {0.9f, 0.9f, 0.2f, 1.0f};
 };
 
 class MainScene : public pain::Scene
@@ -55,6 +69,12 @@ public:
     const auto &pos = m_sc->m_vecPos;
     const auto &size = m_sc->m_vecSize;
     const auto &col = m_sc->m_vecColor;
+    const auto &triPos = m_sc->m_triPos;
+    const auto &triSize = m_sc->m_triSize;
+    const auto &triColor = m_sc->m_triColor;
+    const auto &tri2Pos = m_sc->m_tri2Pos;
+    const auto &tri2Size = m_sc->m_tri2Size;
+    const auto &tri2Color = m_sc->m_tri2Color;
     pain::Renderer2d::drawQuad({pos[0], pos[1]}, {size[0], size[1]},
                                {col[0], col[1], col[2], col[3]});
     pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
@@ -63,9 +83,13 @@ public:
     //                            {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f);
     // pain::Renderer2d::drawQuad({0.5f, -0.5f}, {0.4f, 0.4f},
     //                            {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f);
+    pain::Renderer2d::drawTri(
+        {tri2Pos[0], tri2Pos[1]}, {tri2Size[0], tri2Size[1]},
+        {tri2Color[0], tri2Color[1], tri2Color[2], tri2Color[3]});
 
-    pain::Renderer2d::drawTri({-0.5f, -0.5f}, {0.5f, 0.5f},
-                              {0.2f, 0.9f, 0.8f, 1.0f});
+    pain::Renderer2d::drawTri(
+        {triPos[0], triPos[1]}, {triSize[0], triSize[1]},
+        {triColor[0], triColor[1], triColor[2], triColor[3]});
     pain::Renderer2d::drawRotQuad({-0.6f, 0.8f}, {0.4f, 0.4f},
                                   {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f,
                                   m_radians);

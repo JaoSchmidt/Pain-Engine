@@ -19,6 +19,7 @@ Scene::Scene() : m_registry(new Registry())
   m_registry->addComponentMap<RotationComponent>();
   m_registry->addComponentMap<SpriteComponent>();
   m_registry->addComponentMap<SpritelessComponent>();
+  m_registry->addComponentMap<TrianguleComponent>();
   m_registry->addComponentMap<NativeScriptComponent>();
 }
 // TODO: Create way to move and copy components to another scene
@@ -44,10 +45,27 @@ void Scene::destroyEntity(Entity entity)
   m_registry->remove<TransformComponent>(entity);
   m_registry->remove<SpriteComponent>(entity);
   m_registry->remove<SpritelessComponent>(entity);
+  m_registry->remove<TrianguleComponent>(entity);
   m_registry->remove<NativeScriptComponent>(entity);
   m_availableEntities.push(entity);
 }
-void Scene::spriteSystem()
+
+// =============================================================== //
+// Systems
+// =============================================================== //
+void Scene::initializeScripts(NativeScriptComponent &nsc, const GameObject &go)
+{
+  if (!nsc.instance) {
+    nsc.instantiateFunction(nsc.instance);
+    nsc.instance->m_scene = this;
+    nsc.instance->m_entity = go.m_entity;
+
+    if (nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
+  }
+}
+
+void Scene::renderSystems()
 {
   // and finally all sprites are rendered in this render method
   // to their appropriate position on the screen
@@ -67,37 +85,48 @@ void Scene::spriteSystem()
                            sc.m_tilingFactor);
     }
   }
+
   for (auto it = begin<SpritelessComponent>(); it != end<SpritelessComponent>();
        ++it) {
     const TransformComponent &tc = getComponent<TransformComponent>(it->first);
     const SpritelessComponent &sc = it->second;
     Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color);
   }
+
+  for (auto it = begin<TrianguleComponent>(); it != end<TrianguleComponent>();
+       ++it) {
+    const TransformComponent &tc = getComponent<TransformComponent>(it->first);
+    const TrianguleComponent &sc = it->second;
+    Renderer2d::drawTri(tc.m_position, sc.m_height, sc.m_color);
+  }
 }
 
-void Scene::rotationSystem()
+void Scene::updateSystems(double deltaTime)
 {
+  // =============================================================== //
+  // Update Rotation Components
+  // =============================================================== //
   for (auto it = begin<RotationComponent>(); it != end<RotationComponent>();
        ++it) {
     RotationComponent &rc = it->second;
     rc.m_rotation = {cos(glm::radians(rc.m_rotationAngle)),
                      sin(glm::radians(rc.m_rotationAngle)), 0};
   }
-}
 
-void Scene::movementSystem(double dt)
-{
+  // =============================================================== //
+  // Update Movement Components
+  // =============================================================== //
   for (auto it = begin<MovementComponent>(); it != end<MovementComponent>();
        ++it) {
     const MovementComponent &mc = it->second;
     TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const float moveAmount = (float)(dt * mc.m_translationSpeed);
+    const float moveAmount = (float)(deltaTime * mc.m_translationSpeed);
     tc.m_position = tc.m_position + mc.m_velocityDir * moveAmount;
   }
-}
 
-void Scene::scriptSystem(double dt)
-{
+  // =============================================================== //
+  // Update Native Script Components
+  // =============================================================== //
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
     auto &nsc = it->second;
@@ -111,11 +140,11 @@ void Scene::scriptSystem(double dt)
     }
 
     if (nsc.onUpdateFunction)
-      nsc.onUpdateFunction(nsc.instance, dt);
+      nsc.onUpdateFunction(nsc.instance, deltaTime);
   }
 }
 
-void Scene::scriptSystem(const SDL_Event &event)
+void Scene::updateSystems(const SDL_Event &event)
 {
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {

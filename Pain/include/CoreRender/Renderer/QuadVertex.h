@@ -87,9 +87,9 @@ class VertexBatch
       glm::vec4(-0.5f, 0.5f,0.f,1.f),
   };
   constexpr static glm::vec4 m_triVertexPositions[3] = {
-      glm::vec4(-0.5f, 0.0f,0.f,1.f),
       glm::vec4( 0.0f, 0.5f,0.f,1.f),
-      glm::vec4( 0.5f, 0.0f,0.f,1.f),
+      glm::vec4( 0.5f,-0.5f,0.f,1.f),
+      glm::vec4(-0.5f,-0.5f,0.f,1.f),
   };
 
 

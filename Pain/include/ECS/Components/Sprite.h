@@ -27,4 +27,14 @@ struct SpritelessComponent {
   }
 };
 
+struct TrianguleComponent {
+  glm::vec2 m_height{0.1f, 0.1f};
+  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  TrianguleComponent() = default;
+  TrianguleComponent(const glm::vec2 &height, const glm::vec4 &color)
+      : m_height(height), m_color(color)
+  {
+  }
+};
+
 } // namespace pain

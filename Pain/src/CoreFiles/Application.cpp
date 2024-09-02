@@ -102,12 +102,12 @@ void Application::run()
     // Handle Updates
     // =============================================================== //
     double seconds = deltaTime.GetSeconds();
-    m_imguiController->onUpdate(m_isMinimized);
     for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
          ++pScene) {
       (*pScene)->onUpdate(seconds);
       (*pScene)->updateSystems(seconds);
     }
+    m_imguiController->onUpdate(m_isMinimized);
 
     // =============================================================== //
     // Handle Events

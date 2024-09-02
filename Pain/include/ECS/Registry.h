@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CoreFiles/LogWrapper.h"
 #include "pch.h"
 
 #include "Core.h"
@@ -22,9 +23,8 @@ class Registry
     std::unordered_map<Entity, T> &componentMap = getComponentMap<T>();
     auto [it, inserted] =
         componentMap.emplace(entity, T(std::forward<Args>(args)...));
-    if (!inserted) {
-      throw std::runtime_error("Component already exists for the entity");
-    }
+    P_ASSERT(it != componentMap.end(),
+             "Component already exists for the entity");
     return it->second;
   }
 
@@ -32,9 +32,9 @@ class Registry
   {
     std::unordered_map<Entity, T> &componentMap = getComponentMap<T>();
     auto it = componentMap.find(entity);
-    if (it == componentMap.end()) {
-      throw std::runtime_error("Entity does not have the requested component");
-    }
+    P_ASSERT(it != componentMap.end(),
+             "Entity does not have the requested component");
+
     return it->second;
   }
 
@@ -56,6 +56,9 @@ class Registry
   template <typename T> std::unordered_map<Entity, T> &getComponentMap()
   {
     std::type_index typeIndex = std::type_index(typeid(T));
+    P_ASSERT(componentMaps.find(typeIndex) != componentMaps.end(),
+             "Some component map is unitialized, did you create a new "
+             "component but forget to add to the scene?");
     return *static_cast<std::unordered_map<Entity, T> *>(
         componentMaps.at(typeIndex));
   }
@@ -63,6 +66,9 @@ class Registry
   const std::unordered_map<Entity, T> &getComponentMap() const
   {
     std::type_index typeIndex = std::type_index(typeid(T));
+    P_ASSERT(componentMaps.find(typeIndex) != componentMaps.end(),
+             "Some component map is unitialized, did you create a new "
+             "component but forget to add to the scene?");
     return *static_cast<std::unordered_map<Entity, T> *>(
         componentMaps.at(typeIndex));
   }

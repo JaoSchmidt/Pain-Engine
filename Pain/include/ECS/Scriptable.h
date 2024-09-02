@@ -2,7 +2,6 @@
 
 #include "Core.h"
 #include "ECS/Entity.h"
-#include "ECS/GameObject.h"
 
 namespace pain
 {
@@ -19,9 +18,9 @@ public:
     return m_scene->getComponent<T>(m_entity);
   }
 
-protected:
-  Scene *m_scene = nullptr;
+private:
   Entity m_entity = 0;
+  Scene *m_scene = nullptr;
   friend class Scene;
 };
 } // namespace pain

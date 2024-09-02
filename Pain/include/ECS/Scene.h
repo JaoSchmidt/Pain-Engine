@@ -10,6 +10,9 @@
 
 namespace pain
 {
+class GameObject;
+struct NativeScriptComponent;
+
 class EXPORT Scene
 {
 public:
@@ -71,25 +74,14 @@ public:
   // Systems
   // ---------------------------------------------------- //
 
-  void updateSystems(double deltaTime)
-  {
-    rotationSystem();
-    movementSystem(deltaTime);
-    scriptSystem(deltaTime);
-  }
-  void renderSystems() { spriteSystem(); }
-
-  void updateSystems(const SDL_Event &event) { scriptSystem(event); }
+  void updateSystems(double deltaTime);
+  void updateSystems(const SDL_Event &event);
+  void initializeScripts(NativeScriptComponent &scene, const GameObject &go);
+  void renderSystems();
 
 private:
   Registry *m_registry;
   inline static std::queue<Entity> m_availableEntities = {};
   inline static Entity numberOfEntities = 0;
-
-  void spriteSystem();
-  void scriptSystem(double dt);
-  void scriptSystem(const SDL_Event &event);
-  void rotationSystem();
-  void movementSystem(double dt);
 };
 } // namespace pain

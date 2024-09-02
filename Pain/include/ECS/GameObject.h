@@ -41,6 +41,7 @@ public:
 protected:
   Entity m_entity = -1;
   Scene *m_scene;
+  friend class Scene;
 };
 
 } // namespace pain
