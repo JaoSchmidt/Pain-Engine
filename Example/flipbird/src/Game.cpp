@@ -114,38 +114,36 @@ bool Game::checkIntersection(const Player &player, const Obstacles &obstacle,
   auto &otgc = obstacle.getComponent<pain::TrianguleComponent>();
 
   // get quad vertices
-  const glm::vec2 halfQuadSize = psc.m_size * 0.5f;
-  const glm::vec2 quadCenter = {ptc.m_position.x, ptc.m_position.y};
-  std::array<glm::vec2, 4> qVertices = {
-      glm::vec2{halfQuadSize.x, halfQuadSize.y},
-      glm::vec2{-halfQuadSize.x, halfQuadSize.y},
-      glm::vec2{halfQuadSize.x, -halfQuadSize.y},
-      glm::vec2{-halfQuadSize.x, -halfQuadSize.y},
+  constexpr glm::vec4 quadVertexPositions[4] = {
+      glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
+      glm::vec4(0.5f, -0.5f, 0.f, 1.f),
+      glm::vec4(0.5f, 0.5f, 0.f, 1.f),
+      glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
   };
-  const auto rad = glm::radians(prc.m_rotationAngle);
-  const glm::mat2 rot = {cos(rad), sin(rad), -sin(rad), cos(rad)};
+  const glm::mat4 transform = pain::Renderer2d::getTransform(
+      ptc.m_position, psc.m_size, prc.m_rotationAngle);
 
-  for (int i = 0; i < 4; i++)
-    qVertices[i] = quadCenter + rot * qVertices[i];
-  // LOG_I("qVertices [({},{}) ({},{}) ({},{}) ({},{})]", //
-  //       qVertices[0].x, qVertices[0].y,                //
-  //       qVertices[1].x, qVertices[1].y,                //
-  //       qVertices[2].x, qVertices[2].y,                //
-  //       qVertices[3].x, qVertices[3].y                 //
-  // );
-  // get tri vertices
-  const float halfTriBase = otgc.m_height.x * 0.5f;
-  const glm::vec2 triCenter = {otc.m_position.x, otc.m_position.y};
+  std::array<glm::vec2, 4> qVertices = {
+      transform * quadVertexPositions[0],
+      transform * quadVertexPositions[1],
+      transform * quadVertexPositions[2],
+      transform * quadVertexPositions[3],
+  };
+
+  // triangle
+  constexpr glm::vec4 triVertexPositions[3] = {
+      glm::vec4(0.0f, 0.5f, 0.f, 1.f),
+      glm::vec4(0.5f, -0.5f, 0.f, 1.f),
+      glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
+  };
+  const glm::mat4 transformTri =
+      pain::Renderer2d::getTransform(otc.m_position, otgc.m_height);
   const std::array<glm::vec2, 3> tVertices = {
-      glm::vec2(triCenter.x - halfTriBase, triCenter.y),
-      glm::vec2(triCenter.x + halfTriBase, triCenter.y),
-      glm::vec2(triCenter.x, triCenter.y + otgc.m_height.y)};
-  // if (index == 1)
-  //   LOG_I("tVertices [({},{}) ({},{}) ({},{})]", //
-  //         tVertices[0].x, tVertices[0].y,        //
-  //         tVertices[1].x, tVertices[1].y,        //
-  //         tVertices[2].x, tVertices[2].y         //
-  //   );
+      transformTri * triVertexPositions[0], //
+      transformTri * triVertexPositions[1], //
+      transformTri * triVertexPositions[2], //
+  };
+
   std::vector<glm::vec2> axes;
   for (size_t i = 0; i < 4; i++) {
     glm::vec2 edge = qVertices[(i + 1) % 4] - qVertices[i];

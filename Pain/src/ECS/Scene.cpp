@@ -109,8 +109,7 @@ void Scene::updateSystems(double deltaTime)
   for (auto it = begin<RotationComponent>(); it != end<RotationComponent>();
        ++it) {
     RotationComponent &rc = it->second;
-    rc.m_rotation = {cos(glm::radians(rc.m_rotationAngle)),
-                     sin(glm::radians(rc.m_rotationAngle)), 0};
+    rc.m_rotation = {cos(rc.m_rotationAngle), sin(rc.m_rotationAngle), 0};
   }
 
   // =============================================================== //

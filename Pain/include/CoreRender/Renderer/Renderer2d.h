@@ -75,6 +75,12 @@ public:
   static void drawTri(const glm::vec2 &position, const glm::vec2 &size,
                       const glm::vec4 &tintColor, const float rotationRadians);
 
+  static const glm::mat4 getTransform(const glm::vec2 &position,
+                                      const glm::vec2 &size,
+                                      const float rotationRadians);
+  static const glm::mat4 getTransform(const glm::vec2 &position,
+                                      const glm::vec2 &size);
+
 private:
   static void flush();
   // ================================================================= //
@@ -83,11 +89,6 @@ private:
   static void initBatches();
   static void bindTextures();
   static float allocateTextures(const std::shared_ptr<Texture> &texture);
-  static const glm::mat4 getTransform(const glm::vec2 &position,
-                                      const glm::vec2 &size,
-                                      const float rotationRadians);
-  static const glm::mat4 getTransform(const glm::vec2 &position,
-                                      const glm::vec2 &size);
 
   static void allocateQuad(const glm::mat4 &transform,
                            const glm::vec4 &tintColor, const float tilingFactor,
