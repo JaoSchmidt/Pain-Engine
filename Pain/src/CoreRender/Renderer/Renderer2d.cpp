@@ -1,10 +1,8 @@
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "CoreRender/Renderer/QuadVertex.h"
 #include "Misc/BasicOrthoCamera.h"
 
 namespace pain
 {
-static VertexBatch *quadBatch = nullptr;
 std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraEntity = nullptr;
 // OrthoCameraEntity *Renderer2d::m_cameraEntity = nullptr;
 
@@ -15,18 +13,22 @@ std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraEntity = nullptr;
 void Renderer2d::init(std::shared_ptr<OrthoCameraEntity> cameraEntity)
 {
   P_ASSERT(cameraEntity != nullptr, "Camera Entity must be initialized");
-  // NOTE: This can be changed later in case the engine needs a camera mechanic
+  // NOTE: This can be changed later in case we need some camera mechanic
   // glEnable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND); // transparency
+
+  // transparency
+  glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  quadBatch = new VertexBatch();
+
+  // quadBatch = new VertexBatch();
+  initBatches();
   m_cameraEntity = cameraEntity;
 }
 
 // ================================================================= //
 // Renderer: basic wrapper around opengl
 // ================================================================= //
-void Renderer2d::shutdown() { delete quadBatch; }
+void Renderer2d::shutdown() {}
 
 void Renderer2d::setViewport(int x, int y, int width, int height)
 {
@@ -42,19 +44,19 @@ void Renderer2d::setClearColor(const glm::vec4 &color)
 
 void Renderer2d::beginScene(const glm::mat4 &transform)
 {
-  quadBatch->getQuadShader()->bind();
-  quadBatch->getQuadShader()->uploadUniformMat4(
+  m_quadTextureShader->bind();
+  m_quadTextureShader->uploadUniformMat4(
       "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
                               .m_camera->getViewProjectionMatrix());
-  quadBatch->getQuadShader()->uploadUniformMat4("u_Transform", transform);
+  m_quadTextureShader->uploadUniformMat4("u_Transform", transform);
 
-  quadBatch->getTriShader()->bind();
-  quadBatch->getTriShader()->uploadUniformMat4(
+  m_triShader->bind();
+  m_triShader->uploadUniformMat4(
       "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
                               .m_camera->getViewProjectionMatrix());
-  quadBatch->getTriShader()->uploadUniformMat4("u_Transform", transform);
+  m_triShader->uploadUniformMat4("u_Transform", transform);
 
-  quadBatch->goBackToFirstVertex();
+  goBackToFirstVertex();
 }
 
 void Renderer2d::endScene()
@@ -67,10 +69,9 @@ void Renderer2d::endScene()
 
 void Renderer2d::flush()
 {
-  // quadBatch->bindTextures();
-
-  quadBatch->drawBatch(m_cameraEntity->getComponent<OrthoCameraComponent>()
-                           .m_camera->getViewProjectionMatrix());
+  // bindTextures();
+  drawBatches(m_cameraEntity->getComponent<OrthoCameraComponent>()
+                  .m_camera->getViewProjectionMatrix());
 }
 
 void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
@@ -86,82 +87,29 @@ void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 // Draw Quads
 // ================================================================= //
 
-// Draw texturesless quad
-void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor)
-{
-  constexpr float texIndex = 0.0f; // White Texture
-  constexpr float tilingFactor = 1.0f;
-  constexpr std::array<glm::vec2, 4> textureCoordinate = {
-      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-      glm::vec2(0.0f, 1.0f)};
-  quadBatch->drawQuad(position, size, tintColor, texIndex, tilingFactor,
-                      textureCoordinate);
-}
-
-// Draw quad w/texture
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
                           const std::shared_ptr<Texture> &texture,
-                          float tilingFactor)
+                          float tilingFactor, // will prevent fancy tiling
+                          const std::array<glm::vec2, 4> &textureCoordinate)
 {
-  constexpr std::array<glm::vec2, 4> textureCoordinate = {
-      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-      glm::vec2(0.0f, 1.0f)};
-  quadBatch->drawQuad(position, size, tintColor, texture, tilingFactor,
-                      textureCoordinate);
+  const float texIndex =
+      texture ? allocateTextures(texture) : 0.0f; // White Texture if nullptr
+  const glm::mat4 transform = getTransform(position, size);
+  allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
 
-// Draw quad w/texture and its specific coordinates (e.g. for spritesheets)
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
+                          const float rotationRadians,
                           const std::shared_ptr<Texture> &texture,
                           float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
-  quadBatch->drawQuad(position, size, tintColor, texture, tilingFactor,
-                      textureCoordinate);
-}
-
-// ===== Draw w/rotation =========================================== //
-
-void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
-                             const glm::vec4 &tintColor,
-                             const float rotationRadians)
-{
-  constexpr float texIndex = 0.0f; // White Texture
-  constexpr float tilingFactor = 1.0f;
-  constexpr std::array<glm::vec2, 4> textureCoordinate = {
-      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-      glm::vec2(0.0f, 1.0f)};
-  quadBatch->drawRotQuad(position, size, tintColor, texIndex, tilingFactor,
-                         textureCoordinate, rotationRadians);
-}
-// Draw quad w/rotation and texture
-void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
-                             const glm::vec4 &tintColor,
-                             const std::shared_ptr<Texture> &texture,
-                             const float tilingFactor,
-                             const float rotationRadians)
-{
-  constexpr std::array<glm::vec2, 4> textureCoordinate = {
-      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-      glm::vec2(0.0f, 1.0f)};
-  quadBatch->drawRotQuad(position, size, tintColor, texture, tilingFactor,
-                         textureCoordinate, rotationRadians);
-}
-
-// Draw quad w/rotation, texture and its specific coordinates (e.g. for
-// spritesheets)
-void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
-                             const glm::vec4 &tintColor,
-                             const std::shared_ptr<Texture> &texture,
-                             const float tilingFactor,
-                             const std::array<glm::vec2, 4> &textureCoordinate,
-                             const float rotationRadians)
-{
-  quadBatch->drawRotQuad(position, size, tintColor, texture, tilingFactor,
-                         textureCoordinate, rotationRadians);
+  const float texIndex =
+      texture ? allocateTextures(texture) : 0.0f; // White Texture if nullptr
+  const glm::mat4 transform = getTransform(position, size, rotationRadians);
+  allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
 
 // ================================================================= //
@@ -171,13 +119,15 @@ void Renderer2d::drawRotQuad(const glm::vec2 &position, const glm::vec2 &size,
 void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
                          const glm::vec4 &tintColor)
 {
-  quadBatch->drawTri(position, size, tintColor);
+  const glm::mat4 transform = getTransform(position, size);
+  allocateTri(transform, tintColor);
 }
-void Renderer2d::drawRotTri(const glm::vec2 &position, const glm::vec2 &size,
-                            const glm::vec4 &tintColor,
-                            const float rotationRadians)
+void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
+                         const glm::vec4 &tintColor,
+                         const float rotationRadians)
 {
-  quadBatch->drawRotTri(position, size, tintColor, rotationRadians);
+  const glm::mat4 transform = getTransform(position, size, rotationRadians);
+  allocateTri(transform, tintColor);
 }
 
 } // namespace pain

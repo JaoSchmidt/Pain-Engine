@@ -28,6 +28,9 @@ private:
 
 } // namespace pain
 
+#define TP_VEC4(vec) (vec).x, (vec).y, (vec).z, (vec).w
+#define TP_VEC3(vec) (vec).x, (vec).y, (vec).z
+#define TP_VEC2(vec) (vec).x, (vec).y
 // Core log macros
 #define PLOG_T(...) ::pain::LogWrapper::GetCoreLogger()->trace(__VA_ARGS__)
 #define PLOG_I(...) ::pain::LogWrapper::GetCoreLogger()->info(__VA_ARGS__)

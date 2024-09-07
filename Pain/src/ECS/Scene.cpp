@@ -74,12 +74,12 @@ void Scene::renderSystems()
     const SpriteComponent &sc = it->second;
     if (hasComponent<RotationComponent>(it->first)) {
       const RotationComponent &rc = getComponent<RotationComponent>(it->first);
-      Renderer2d::drawRotQuad(
-          tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
-          sc.m_tilingFactor,
-          rc.m_rotationAngle); // TODO: Remove m_rotation of rc... should only
-                               // have angle, in the case of the camera
-                               // inclune rot direction in its script
+      Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color,
+                           rc.m_rotationAngle, sc.m_ptexture,
+                           sc.m_tilingFactor);
+      // TODO: Remove m_rotation of rc... should only
+      // have angle, in the case of the camera
+      // inclune rot direction in its script
     } else {
       Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
                            sc.m_tilingFactor);
