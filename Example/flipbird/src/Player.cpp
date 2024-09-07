@@ -1,5 +1,4 @@
 #include "Player.h"
-#include "glm/trigonometric.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>

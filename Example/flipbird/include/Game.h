@@ -32,6 +32,7 @@ private:
   float m_waveColor = 90.;
   float m_waveHeight = 90.;
   bool m_isRunning = true;
+  bool m_collision = false;
   int m_index = 0;
 
   std::shared_ptr<ImGuiController> m_shapeController;
@@ -39,4 +40,10 @@ private:
 
   std::vector<std::unique_ptr<Obstacles>> m_obstacles = {};
   void reviveObstacle(int index, float random, bool upsideDown);
+  bool checkIntersection(const Player &player, const Obstacles &obstacle,
+                         int index);
+
+  template <std::size_t T>
+  glm::vec2 projection(const std::array<glm::vec2, T> &shape,
+                       const glm::vec2 &axis);
 };

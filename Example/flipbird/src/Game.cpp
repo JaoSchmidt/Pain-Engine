@@ -61,10 +61,13 @@ void Game::onUpdate(double deltaTime)
                     0.4f + sin(waveColorRadians + M_PI * 3 / 4) * 0.6f // blue
     );
     for (char i = 0; i < m_numberOfObstacles; i++) {
-      ((ObstaclesController *)m_obstacles.at(i)
-           ->getComponent<pain::NativeScriptComponent>()
-           .instance)
-          ->changeColor(color);
+      Obstacles *obstacle = (Obstacles *)m_obstacles.at(i).get();
+      auto *inst = (ObstaclesController *)obstacle
+                       ->getComponent<pain::NativeScriptComponent>()
+                       .instance;
+      inst->changeColor(color);
+      LOG_I("intersect {}", checkIntersection(*m_pplayer, *obstacle, i));
+      // m_collision = checkIntersection(*m_pplayer, *obstacle, i);
     }
   }
 }
@@ -87,6 +90,89 @@ void Game::reviveObstacle(int index, float randomAngle, bool upsideDown)
       ->revive(m_defaultObstacleSpeed, height, upsideDown);
 }
 
+template <std::size_t T>
+glm::vec2 Game::projection(const std::array<glm::vec2, T> &shape,
+                           const glm::vec2 &axis)
+{
+  float min = glm::dot(shape[0], axis);
+  float max = min;
+  for (size_t i = 1; i < shape.size(); i++) {
+    float projection = glm::dot(shape[i], axis);
+    min = std::min(min, projection);
+    max = std::max(max, projection);
+  }
+  return {min, max};
+}
+
+bool Game::checkIntersection(const Player &player, const Obstacles &obstacle,
+                             int index)
+{
+  auto &ptc = player.getComponent<pain::TransformComponent>();
+  auto &prc = player.getComponent<pain::RotationComponent>();
+  auto &psc = player.getComponent<pain::SpriteComponent>();
+  auto &otc = obstacle.getComponent<pain::TransformComponent>();
+  auto &otgc = obstacle.getComponent<pain::TrianguleComponent>();
+
+  // get quad vertices
+  const glm::vec2 halfQuadSize = psc.m_size * 0.5f;
+  const glm::vec2 quadCenter = {ptc.m_position.x, ptc.m_position.y};
+  std::array<glm::vec2, 4> qVertices = {
+      glm::vec2{halfQuadSize.x, halfQuadSize.y},
+      glm::vec2{-halfQuadSize.x, halfQuadSize.y},
+      glm::vec2{halfQuadSize.x, -halfQuadSize.y},
+      glm::vec2{-halfQuadSize.x, -halfQuadSize.y},
+  };
+  const auto rad = glm::radians(prc.m_rotationAngle);
+  const glm::mat2 rot = {cos(rad), sin(rad), -sin(rad), cos(rad)};
+
+  for (int i = 0; i < 4; i++)
+    qVertices[i] = quadCenter + rot * qVertices[i];
+  // LOG_I("qVertices [({},{}) ({},{}) ({},{}) ({},{})]", //
+  //       qVertices[0].x, qVertices[0].y,                //
+  //       qVertices[1].x, qVertices[1].y,                //
+  //       qVertices[2].x, qVertices[2].y,                //
+  //       qVertices[3].x, qVertices[3].y                 //
+  // );
+  // get tri vertices
+  const float halfTriBase = otgc.m_height.x * 0.5f;
+  const glm::vec2 triCenter = {otc.m_position.x, otc.m_position.y};
+  const std::array<glm::vec2, 3> tVertices = {
+      glm::vec2(triCenter.x - halfTriBase, triCenter.y),
+      glm::vec2(triCenter.x + halfTriBase, triCenter.y),
+      glm::vec2(triCenter.x, triCenter.y + otgc.m_height.y)};
+  // if (index == 1)
+  //   LOG_I("tVertices [({},{}) ({},{}) ({},{})]", //
+  //         tVertices[0].x, tVertices[0].y,        //
+  //         tVertices[1].x, tVertices[1].y,        //
+  //         tVertices[2].x, tVertices[2].y         //
+  //   );
+  std::vector<glm::vec2> axes;
+  for (size_t i = 0; i < 4; i++) {
+    glm::vec2 edge = qVertices[(i + 1) % 4] - qVertices[i];
+    glm::vec2 axis(-edge.y, edge.x); // Perpendicular to the edge
+    axis = glm::normalize(axis);
+    axes.push_back(axis);
+  }
+  for (size_t i = 0; i < 3; i++) {
+    glm::vec2 edge = tVertices[(i + 1) % 3] - tVertices[i];
+    glm::vec2 axis(-edge.y, edge.x);
+    axis = glm::normalize(axis);
+    axes.push_back(axis);
+  }
+  // Perform SAT check on all axes
+  for (const glm::vec2 &axis : axes) {
+    auto boundA = projection(qVertices, axis);
+    auto boundB = projection(tVertices, axis);
+
+    // Check for overlap
+    if (boundA.y < boundB.x || boundB.y < boundA.x) {
+      return false; // No collision
+    }
+  }
+
+  return true;
+}
+
 const void Game::onImGuiUpdate()
 {
   ImGui::Begin("Player Controller");
@@ -103,5 +189,6 @@ const void Game::onImGuiUpdate()
   ImGui::SeparatorText("Info");
   ImGui::Text("Obstacle Spawn counter: %.2f seconds", m_obstaclesInterval);
   ImGui::Text("Last Obstacle index: %.2d", m_index);
+  // ImGui::Text("Collision: %s", m_collision ? "true" : "false");
   ImGui::End();
 }
