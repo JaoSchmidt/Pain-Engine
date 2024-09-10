@@ -1,6 +1,7 @@
 #include "ECS/Scene.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/NativeScript.h"
+#include "ECS/Components/Particle.h"
 #include "ECS/Registry.h"
 
 #include "ECS/Components/Movement.h"
@@ -21,6 +22,7 @@ Scene::Scene() : m_registry(new Registry())
   m_registry->addComponentMap<SpritelessComponent>();
   m_registry->addComponentMap<TrianguleComponent>();
   m_registry->addComponentMap<NativeScriptComponent>();
+  m_registry->addComponentMap<ParticleSprayComponent>();
 }
 // TODO: Create way to move and copy components to another scene
 
@@ -47,6 +49,7 @@ void Scene::destroyEntity(Entity entity)
   m_registry->remove<SpritelessComponent>(entity);
   m_registry->remove<TrianguleComponent>(entity);
   m_registry->remove<NativeScriptComponent>(entity);
+  m_registry->remove<ParticleSprayComponent>(entity);
   m_availableEntities.push(entity);
 }
 
@@ -65,7 +68,7 @@ void Scene::initializeScripts(NativeScriptComponent &nsc, const GameObject &go)
   }
 }
 
-void Scene::renderSystems()
+void Scene::renderSystems(double currentTime)
 {
   // and finally all sprites are rendered in this render method
   // to their appropriate position on the screen
@@ -98,6 +101,22 @@ void Scene::renderSystems()
     const TransformComponent &tc = getComponent<TransformComponent>(it->first);
     const TrianguleComponent &sc = it->second;
     Renderer2d::drawTri(tc.m_position, sc.m_height, sc.m_color);
+  }
+  // =============================================================== //
+  // Render Particle Systems
+  // =============================================================== //
+  for (auto it = begin<ParticleSprayComponent>();
+       it != end<ParticleSprayComponent>(); ++it) {
+    ParticleSprayComponent &psc = it->second;
+    Renderer2d::beginSprayParticle(currentTime, psc.m_velocity,
+                                   psc.m_emiterPosition);
+    for (Particle &pa : psc.m_particles) {
+      Renderer2d::drawSprayParticle(pa);
+      // Remove dead particles
+      if (currentTime - pa.m_startTime >= psc.m_lifeTime) {
+        pa.m_alive = false;
+      }
+    }
   }
 }
 
@@ -150,7 +169,8 @@ void Scene::updateSystems(const SDL_Event &event)
     auto &nsc = it->second;
     // NOTE: If there is a future where Events runs before Updates, uncomment
     // this instance check
-
+    P_ASSERT(nsc.instance != nullptr,
+             "The nsc.instance should be instanciated before updating events");
     // if (!nsc.instance) {
     //   nsc.instantiateFunction(nsc.instance);
     //   nsc.instance->m_scene = this;
@@ -159,7 +179,8 @@ void Scene::updateSystems(const SDL_Event &event)
     //   if (nsc.onCreateFunction)
     //     nsc.onCreateFunction(nsc.instance);
     // }
-    nsc.onEventFunction(nsc.instance, event);
+    if (nsc.onEventFunction)
+      nsc.onEventFunction(nsc.instance, event);
   }
 }
 

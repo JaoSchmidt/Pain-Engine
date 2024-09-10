@@ -8,8 +8,6 @@ Obstacles::Obstacles(pain::Scene *scene) : pain::GameObject(scene)
                                          glm::vec4(0.2f, 0.3f, 0.9f, 1.0f));
 }
 
-void ObstaclesController::onCreate() {}
-
 void ObstaclesController::changeColor(glm::vec3 color)
 {
   pain::TrianguleComponent &tgc = getComponent<pain::TrianguleComponent>();
@@ -34,10 +32,6 @@ void ObstaclesController::revive(float obstacleSpeed, float height,
   // screen might not work depending on the resolution. Consider alternatives
   tc.m_position = glm::vec3(1.5f, height, 0.f);
 }
-
-void ObstaclesController::onUpdate(double deltaTimeSec) {}
-
-void ObstaclesController::onEvent(const SDL_Event &e) {}
 
 bool ObstaclesController::checkIntersection(const Player &player)
 {

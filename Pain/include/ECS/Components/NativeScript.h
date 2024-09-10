@@ -8,19 +8,23 @@ concept has_onCreate_method = requires(T &&t) {
 };
 
 template <typename T>
-concept has_onRender_method = requires(T &&t) {
-  { t.onRender() };
+concept has_onRender_method = requires(T &&t, double d) {
+  { t.onRender(d) };
 };
-// template <typename T>
-// concept has_onUpdate_method = requires(T &&t) {
-//   {
-//     t.onUpdate()
-//   };
-// };
+
+template <typename T>
+concept has_onUpdate_method = requires(T &&t, double d) {
+  { t.onUpdate(d) };
+};
 
 template <typename T>
 concept has_onDestroy_method = requires(T &&t) {
   { t.onDestroy() };
+};
+
+template <typename T>
+concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
+  { t.onEvent() };
 };
 
 namespace pain
@@ -34,7 +38,7 @@ struct NativeScriptComponent {
 
   void (*onCreateFunction)(ScriptableEntity *) = nullptr;
   void (*onDestroyFunction)(ScriptableEntity *) = nullptr;
-  void (*onRenderFunction)(ScriptableEntity *) = nullptr;
+  void (*onRenderFunction)(ScriptableEntity *, double) = nullptr;
   void (*onUpdateFunction)(ScriptableEntity *, double) = nullptr;
   void (*onEventFunction)(ScriptableEntity *, const SDL_Event &) = nullptr;
 
@@ -65,8 +69,8 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](ScriptableEntity *instance) {
-        static_cast<T *>(instance)->onRender();
+      onRenderFunction = [](ScriptableEntity *instance, double realTime) {
+        static_cast<T *>(instance)->onRender(realTime);
       };
     } else {
       onRenderFunction = nullptr;
@@ -74,14 +78,22 @@ struct NativeScriptComponent {
 
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
-    onUpdateFunction = [](ScriptableEntity *instance, double ts) {
-      static_cast<T *>(instance)->onUpdate(ts);
-    };
+    if constexpr (has_onUpdate_method<T>) {
+      onUpdateFunction = [](ScriptableEntity *instance, double deltaTime) {
+        static_cast<T *>(instance)->onUpdate(deltaTime);
+      };
+    } else {
+      onUpdateFunction = nullptr;
+    }
 
-    onEventFunction = [](ScriptableEntity *instance, const SDL_Event &e) {
-      static_cast<T *>(instance)->onEvent(e);
-    };
-  }
+    if constexpr (has_onEvent_method<T>) {
+      onEventFunction = [](ScriptableEntity *instance, const SDL_Event &e) {
+        static_cast<T *>(instance)->onEvent(e);
+      };
+    } else {
+      onEventFunction = nullptr;
+    }
+  };
 };
 
 } // namespace pain

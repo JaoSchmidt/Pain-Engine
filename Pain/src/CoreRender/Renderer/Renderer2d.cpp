@@ -42,7 +42,7 @@ void Renderer2d::setClearColor(const glm::vec4 &color)
   glClearColor(color.r, color.g, color.b, color.a);
 }
 
-void Renderer2d::beginScene(const glm::mat4 &transform)
+void Renderer2d::beginScene(float globalTime, const glm::mat4 &transform)
 {
   m_quadTextureShader->bind();
   m_quadTextureShader->uploadUniformMat4(
@@ -55,6 +55,13 @@ void Renderer2d::beginScene(const glm::mat4 &transform)
       "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
                               .m_camera->getViewProjectionMatrix());
   m_triShader->uploadUniformMat4("u_Transform", transform);
+
+  m_sprayShader->bind();
+  m_sprayShader->uploadUniformMat4(
+      "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
+                              .m_camera->getViewProjectionMatrix());
+  m_sprayShader->uploadUniformMat4("u_Transform", transform);
+  m_sprayShader->uploadUniformFloat("u_Time", globalTime);
 
   goBackToFirstVertex();
 }
@@ -128,6 +135,16 @@ void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
 {
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   allocateTri(transform, tintColor);
+}
+
+// ================================================================= //
+// Draw Spray Particles
+// ================================================================= //
+
+void Renderer2d::drawSprayParticle(const Particle &p)
+{
+  allocateSprayParticles(p.m_position, p.m_offset, p.m_normal, p.m_startTime,
+                         p.m_rotationSpeed);
 }
 
 } // namespace pain

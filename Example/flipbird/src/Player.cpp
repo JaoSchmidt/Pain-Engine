@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "ECS/Components/Particle.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -13,6 +14,7 @@ Player::Player(pain::Scene *scene, std::shared_ptr<pain::Texture> &pTexture)
   addComponent<pain::RotationComponent>(glm::vec3(0.f, 1.f, 0.f), 315.f);
   addComponent<pain::SpriteComponent>(
       glm::vec2(0.1f, 0.1f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, pTexture);
+  addComponent<pain::ParticleSprayComponent>();
 };
 
 void PlayerController::onCreate()
@@ -30,17 +32,42 @@ void PlayerController::onCreate()
   m_displayUpdates = false;
 }
 
+void PlayerController::onRender(double currentTime)
+{
+  // const pain::TransformComponent &tc =
+  // getComponent<pain::TransformComponent>(); const pain::RotationComponent &rc
+  // = getComponent<pain::RotationComponent>();
+
+  // pain::ParticleSprayComponent &psc =
+  //     getComponent<pain::ParticleSprayComponent>();
+  // const Uint8 *state = SDL_GetKeyboardState(NULL);
+  // if (state[SDL_SCANCODE_SPACE]) {
+  //   m_jumpForce = m_jumpImpulse;
+  //   // particles
+
+  //   // Check if it's time to emit a new particle
+  //   if (m_timeSinceLastEmission >= m_emissionInterval) {
+  //     psc.emitParticle(currentTime, tc.m_position, rc.m_rotation);
+  //     m_timeSinceLastEmission = 0.0f; // Reset the timer
+  //   }
+  // }
+}
+
 void PlayerController::onUpdate(double deltaTimeSec)
 {
   pain::TransformComponent &tc = getComponent<pain::TransformComponent>();
   pain::MovementComponent &mc = getComponent<pain::MovementComponent>();
   pain::RotationComponent &rc = getComponent<pain::RotationComponent>();
+  pain::ParticleSprayComponent &psc =
+      getComponent<pain::ParticleSprayComponent>();
 
   if (m_jumpForce > 0.f)
     m_jumpForce = m_jumpForce - deltaTimeSec * m_dampingFactor;
   else if (m_jumpForce <= 0.f)
     m_jumpForce = 0.f;
 
+  m_timeSinceLastEmission += deltaTimeSec;
+  psc.m_emiterPosition = rc.m_rotation * 0.2f + tc.m_position;
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   if (state[SDL_SCANCODE_SPACE])
     m_jumpForce = m_jumpImpulse;
@@ -71,22 +98,6 @@ void PlayerController::onUpdate(double deltaTimeSec)
     LOG_I("Y/X {}", mc.m_velocityDir.y / m_pseudoVelocityX);
     LOG_I("atan {}", rc.m_rotationAngle);
   }
-  // for (Obstacles *ob = ((Game *)m_scene)->begin();
-  //      ob != ((Game *)m_scene)->end(); ++ob) {
-  //   pain::NativeScriptComponent &nsc =
-  //       ob->getComponent<pain::NativeScriptComponent>();
-  //   const bool isInter = ((ObstaclesController &)nsc)
-  //                            .checkIntersection(((Game
-  //                            *)m_scene)->getPlayer());
-  //   if (isInter)
-  //     ((Game *)m_scene)->removeLife();
-  // }
-}
-
-void PlayerController::onEvent(const SDL_Event &e)
-{
-  // if (e.type != 1024) // moving cursor around
-  //   PLOG_I("event.type={}", e.type);
 }
 
 const void PlayerController::resetPosition()

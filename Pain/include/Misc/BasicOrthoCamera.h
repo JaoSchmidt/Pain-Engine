@@ -12,6 +12,7 @@ class EXPORT OrthoCameraController : public ScriptableEntity
 {
 public:
   void onUpdate(double deltaTimeSec);
+  void onRender(double currentTime) {};
   void onEvent(const SDL_Event &e);
 
   inline void recalculatePosition(const glm::vec3 &position, float rotation);

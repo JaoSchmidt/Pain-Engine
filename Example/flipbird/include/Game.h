@@ -9,7 +9,7 @@ class Game : public pain::Scene, public pain::ImGuiInstance
 {
 public:
   void onCreate();
-  void onRender();
+  void onRender(double currenTime);
   void onUpdate(double deltaTime);
   const void onImGuiUpdate();
   void onEvent(const SDL_Event &event);

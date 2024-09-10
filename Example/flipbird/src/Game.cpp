@@ -1,7 +1,7 @@
 #include "Game.h"
 #include <cstdlib>
 
-void Game::onRender() {}
+void Game::onRender(double currentTime) {}
 void Game::onEvent(const SDL_Event &event) {}
 
 void Game::onCreate()

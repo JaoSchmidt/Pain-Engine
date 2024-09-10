@@ -22,8 +22,8 @@ public:
   Entity createEntity();
   void destroyEntity(Entity entity);
 
-  virtual void onRender() = 0;
-  virtual void onUpdate(double ts) = 0;
+  virtual void onRender(double realTime) = 0;
+  virtual void onUpdate(double deltaTime) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
 
   // ---------------------------------------------------- //
@@ -77,7 +77,7 @@ public:
   void updateSystems(double deltaTime);
   void updateSystems(const SDL_Event &event);
   void initializeScripts(NativeScriptComponent &scene, const GameObject &go);
-  void renderSystems();
+  void renderSystems(double currentTime);
 
 private:
   Registry *m_registry;

@@ -8,7 +8,7 @@ class PlayerController : public pain::ScriptableEntity,
 public:
   void onCreate();
   void onUpdate(double deltaTimeSec);
-  void onEvent(const SDL_Event &event);
+  void onRender(double currentTime);
   const void onImGuiUpdate() override;
 
   const void resetPosition();
@@ -21,6 +21,9 @@ private:
   float m_jumpImpulse = 5.f;
   float m_dampingFactor = 1.f;
   bool m_displayUpdates = false;
+  // particle emission
+  float m_timeSinceLastEmission = 0.f;
+  float m_emissionInterval = 0.f;
 };
 
 class Player : public pain::GameObject

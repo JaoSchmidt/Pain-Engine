@@ -6,10 +6,7 @@ class ObstaclesController : public pain::ScriptableEntity
 {
 public:
   void revive(bool upsideDown, bool movable);
-  void onCreate();
-  void onUpdate(double deltaTimeSec);
   const void onImGuiUpdate();
-  void onEvent(const SDL_Event &event);
   void setObstaclesSpeed();
   bool checkIntersection(const Player &player);
   void revive(float obstacleSpeed, float height, bool upsideDown);

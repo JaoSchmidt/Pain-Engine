@@ -85,7 +85,7 @@ void Application::stop() { m_isGameRunning = false; }
 void Application::run()
 {
   DeltaTime deltaTime;
-  uint64_t lastFrameTime = SDL_GetPerformanceCounter();
+  DeltaTime lastFrameTime = SDL_GetPerformanceCounter();
 
   while (m_isGameRunning) {
     uint64_t start = SDL_GetPerformanceCounter();
@@ -101,11 +101,13 @@ void Application::run()
     // =============================================================== //
     // Handle Updates
     // =============================================================== //
-    double seconds = deltaTime.GetSeconds();
+    // NOTE: Eventually render and update systems need to execute at different
+    // rates...
+    double deltaSeconds = deltaTime.GetSeconds();
     for (auto pScene = m_sceneManager->begin(); pScene != m_sceneManager->end();
          ++pScene) {
-      (*pScene)->onUpdate(seconds);
-      (*pScene)->updateSystems(seconds);
+      (*pScene)->onUpdate(deltaSeconds);
+      (*pScene)->updateSystems(deltaSeconds);
     }
     m_imguiController->onUpdate(m_isMinimized);
 
@@ -150,11 +152,12 @@ void Application::run()
       Renderer2d::setClearColor(m_clearColor);
       Renderer2d::clear();
 
+      double globalTime = lastFrameTime.GetSeconds();
       for (auto pScene = m_sceneManager->begin();
            pScene != m_sceneManager->end(); ++pScene) {
-        Renderer2d::beginScene();
-        (*pScene)->onRender();
-        (*pScene)->renderSystems();
+        Renderer2d::beginScene(globalTime);
+        (*pScene)->onRender(globalTime);
+        (*pScene)->renderSystems(globalTime);
         Renderer2d::endScene();
       }
       m_imguiController->onRender();
@@ -184,40 +187,44 @@ void Application::glErrorHandler(unsigned int source, unsigned int type,
   if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
     return;
 
-  PLOG_W("---------------");
-  PLOG_W("Debug message ({}): {}", id, message);
+  if (GL_DEBUG_SEVERITY_HIGH == type || GL_DEBUG_TYPE_ERROR == type) {
+    PLOG_E("-----------------------------------");
+    PLOG_E("Debug message ({}): {}", id, message);
+  } else {
+    PLOG_W("-----------------------------------");
+    PLOG_W("Debug message ({}): {}", id, message);
+  }
   // clang-format off
-    switch (source)
-    {
-        case GL_DEBUG_SOURCE_API:             PLOG_W(  "Source: API"); break;
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   PLOG_W(  "Source: Window System"); break;
-        case GL_DEBUG_SOURCE_SHADER_COMPILER: PLOG_W(  "Source: Shader Compiler"); break;
-        case GL_DEBUG_SOURCE_THIRD_PARTY:     PLOG_W(  "Source: Third Party"); break;
-        case GL_DEBUG_SOURCE_APPLICATION:     PLOG_W(  "Source: Application"); break;
-        case GL_DEBUG_SOURCE_OTHER:           PLOG_W(  "Source: Other"); break;
-    }
-    switch (type)
-    {
-        case GL_DEBUG_TYPE_ERROR:               PLOG_E(  "Type: Error"); break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: PLOG_W(  "Type: Deprecated Behaviour"); break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  PLOG_W(  "Type: Undefined Behaviour"); break;
-        case GL_DEBUG_TYPE_PORTABILITY:         PLOG_W(  "Type: Portability"); break;
-        case GL_DEBUG_TYPE_PERFORMANCE:         PLOG_W(  "Type: Performance"); break;
-        case GL_DEBUG_TYPE_MARKER:              PLOG_W(  "Type: Marker"); break;
-        case GL_DEBUG_TYPE_PUSH_GROUP:          PLOG_W(  "Type: Push Group"); break;
-        case GL_DEBUG_TYPE_POP_GROUP:           PLOG_W(  "Type: Pop Group"); break;
-        case GL_DEBUG_TYPE_OTHER:               PLOG_W(  "Type: Other"); break;
-    }
-    switch (severity)
-    {
-        case GL_DEBUG_SEVERITY_HIGH:         PLOG_E(  "Severity: high"); break;
-        case GL_DEBUG_SEVERITY_MEDIUM:       PLOG_W(  "Severity: medium"); break;
-        case GL_DEBUG_SEVERITY_LOW:          PLOG_W(  "Severity: low"); break;
-        case GL_DEBUG_SEVERITY_NOTIFICATION: PLOG_W(  "Severity: notification"); break;
-    }
-	if (GL_DEBUG_SEVERITY_HIGH == type || GL_DEBUG_TYPE_ERROR == type){
+  switch (source)
+  {
+      case GL_DEBUG_SOURCE_API:             PLOG_W(  "Source: API"); break;
+      case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   PLOG_W(  "Source: Window System"); break;
+      case GL_DEBUG_SOURCE_SHADER_COMPILER: PLOG_W(  "Source: Shader Compiler"); break;
+      case GL_DEBUG_SOURCE_THIRD_PARTY:     PLOG_W(  "Source: Third Party"); break;
+      case GL_DEBUG_SOURCE_APPLICATION:     PLOG_W(  "Source: Application"); break;
+      case GL_DEBUG_SOURCE_OTHER:           PLOG_W(  "Source: Other"); break;
+  }
+  switch (type)
+  {
+      case GL_DEBUG_TYPE_ERROR:               PLOG_E(  "Type: Error"); break;
+      case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: PLOG_W(  "Type: Deprecated Behaviour"); break;
+      case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  PLOG_W(  "Type: Undefined Behaviour"); break;
+      case GL_DEBUG_TYPE_PORTABILITY:         PLOG_W(  "Type: Portability"); break;
+      case GL_DEBUG_TYPE_PERFORMANCE:         PLOG_W(  "Type: Performance"); break;
+      case GL_DEBUG_TYPE_MARKER:              PLOG_W(  "Type: Marker"); break;
+      case GL_DEBUG_TYPE_PUSH_GROUP:          PLOG_W(  "Type: Push Group"); break;
+      case GL_DEBUG_TYPE_POP_GROUP:           PLOG_W(  "Type: Pop Group"); break;
+      case GL_DEBUG_TYPE_OTHER:               PLOG_W(  "Type: Other"); break;
+  }
+  switch (severity)
+  {
+      case GL_DEBUG_SEVERITY_HIGH:         PLOG_E(  "Severity: high"); break;
+      case GL_DEBUG_SEVERITY_MEDIUM:       PLOG_W(  "Severity: medium"); break;
+      case GL_DEBUG_SEVERITY_LOW:          PLOG_W(  "Severity: low"); break;
+      case GL_DEBUG_SEVERITY_NOTIFICATION: PLOG_W(  "Severity: notification"); break;
+  }
+	if (GL_DEBUG_SEVERITY_HIGH == type || GL_DEBUG_TYPE_ERROR == type)
 		P_ASSERT(false,"OpenGL critical error");
-	}
   // clang-format on
 }
 } // namespace pain

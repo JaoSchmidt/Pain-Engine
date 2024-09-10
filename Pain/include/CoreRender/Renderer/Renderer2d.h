@@ -5,6 +5,7 @@
 #include "CoreRender/Shader.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
+#include "ECS/Components/Particle.h"
 #include "Misc/BasicOrthoCamera.h"
 
 namespace pain
@@ -22,6 +23,14 @@ struct TriVertex {
   glm::vec4 color;
 };
 
+struct ParticleVertex {
+  glm::vec2 position;
+  glm::vec2 offset;
+  glm::vec2 normal;
+  float time;
+  float rotationSpeed;
+};
+
 class EXPORT Renderer2d
 {
 public:
@@ -31,7 +40,8 @@ public:
   // ================================================================= //
 
   static void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
-  static void beginScene(const glm::mat4 &transform = glm::mat4(1.0f));
+  static void beginScene(float globalTime,
+                         const glm::mat4 &transform = glm::mat4(1.0f));
   static void endScene();
   static void shutdown();
   static void setViewport(int x, int y, int width, int height);
@@ -75,6 +85,12 @@ public:
   static void drawTri(const glm::vec2 &position, const glm::vec2 &size,
                       const glm::vec4 &tintColor, const float rotationRadians);
 
+  /** Draws a bunch of particles in a spray format */
+  static void beginSprayParticle(const float globalTime,
+                                 const float particleVelocity,
+                                 const glm::vec2 &emiterPosition);
+  static void drawSprayParticle(const Particle &p);
+
   static const glm::mat4 getTransform(const glm::vec2 &position,
                                       const glm::vec2 &size,
                                       const float rotationRadians);
@@ -96,39 +112,52 @@ private:
                            const std::array<glm::vec2, 4> &textureCoordinate);
   static void allocateTri(const glm::mat4 &transform,
                           const glm::vec4 &tintColor);
+  static void allocateSprayParticles(const glm::vec2 &position,
+                                     const glm::vec2 &offset,
+                                     const glm::vec2 &normal,
+                                     const float startTime,
+                                     const float rotationSpeed);
 
   static void goBackToFirstVertex();
   static void drawBatches(const glm::mat4 &viewProjectionMatrix);
   static void sendAllDataToOpenGL();
 
-  constexpr static uint32_t MaxQuads = 10000;
+  constexpr static uint32_t MaxQuads = 1000;
   constexpr static uint32_t MaxQuadVertices = MaxQuads * 4;
   constexpr static uint32_t MaxQuadIndices = MaxQuads * 6;
+  static std::shared_ptr<VertexArray> m_quadVertexArray;
+  static std::shared_ptr<VertexBuffer> m_quadVertexBuffer;
+  static std::shared_ptr<Shader> m_quadTextureShader;
+  static QuadVertex *m_quadVertexBufferBase;
+  static QuadVertex *m_quadVertexBufferPtr;
+  static uint32_t m_quadIndexCount;
 
-  constexpr static uint32_t MaxTri = 10000;
+  constexpr static uint32_t MaxTri = 1000;
   constexpr static uint32_t MaxTriVertices = MaxTri * 3;
   constexpr static uint32_t MaxTriIndices = MaxTri * 3;
+  static std::shared_ptr<VertexArray> m_triVertexArray;
+  static std::shared_ptr<VertexBuffer> m_triVertexBuffer;
+  static std::shared_ptr<Shader> m_triShader;
+  static TriVertex *m_triVertexBufferBase;
+  static TriVertex *m_triVertexBufferPtr;
+  static uint32_t m_triIndexCount;
+
+  constexpr static uint32_t MaxSprayParticles = 1000;
+  constexpr static uint32_t MaxSprayVertices = MaxSprayParticles * 4;
+  constexpr static uint32_t MaxSprayIndices = MaxSprayParticles * 6;
+  static std::shared_ptr<VertexArray> m_sprayVertexArray;
+  static std::shared_ptr<VertexBuffer> m_sprayVertexBuffer;
+  static std::shared_ptr<Shader> m_sprayShader;
+  static ParticleVertex *m_sprayVertexBufferBase;
+  static ParticleVertex *m_sprayVertexBufferPtr;
+  static uint32_t m_sprayIndexCount;
 
   // TODO: search MaxTextureSlots dinamically (i.e TMU value on gpu)
   static const uint32_t MaxTextureSlots = 32;
 
-  static std::shared_ptr<VertexArray> m_quadVertexArray;
-  static std::shared_ptr<VertexBuffer> m_quadVertexBuffer;
-  static std::shared_ptr<Shader> m_quadTextureShader;
-
-  static std::shared_ptr<VertexArray> m_triVertexArray;
-  static std::shared_ptr<VertexBuffer> m_triVertexBuffer;
-  static std::shared_ptr<Shader> m_triShader;
-
   static std::shared_ptr<Texture> m_whiteTexture;
   static std::array<std::shared_ptr<Texture>, MaxTextureSlots> m_textureSlots;
 
-  static QuadVertex *m_quadVertexBufferBase;
-  static QuadVertex *m_quadVertexBufferPtr;
-  static TriVertex *m_triVertexBufferBase;
-  static TriVertex *m_triVertexBufferPtr;
-  static uint32_t m_quadIndexCount;
-  static uint32_t m_triIndexCount;
   static uint32_t m_textureSlotIndex;
   // clang-format off
   constexpr static glm::vec4 m_quadVertexPositions[4] = {
