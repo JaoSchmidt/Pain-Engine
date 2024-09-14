@@ -4,6 +4,8 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include <SDL2/SDL_version.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 namespace pain
 {
@@ -39,6 +41,9 @@ Application::Application(const char *title, int w, int h)
   PLOG_T("SDL version: {}.{}.{}", sdl_version.major, sdl_version.minor,
          sdl_version.patch);
 
+  // =========================================================================//
+  //
+  // =========================================================================//
   // =========================================================================//
   // OpenGL Initial setup
   // =========================================================================//

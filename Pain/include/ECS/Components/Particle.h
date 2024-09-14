@@ -1,9 +1,10 @@
 #pragma once
 
+#include "CoreFiles/LogWrapper.h"
 #include "pch.h"
 
 #include "glm/fwd.hpp"
-#include <queue>
+#include <cstdlib>
 #include <vector>
 
 namespace pain
@@ -26,24 +27,36 @@ struct ParticleSprayComponent {
   int MaxNumberOfParticles = 100;
   int m_numberOfParticles = 0;
 
-  ParticleSprayComponent() = default;
+  ParticleSprayComponent()
+  {
+    for (int i = 0; i < MaxNumberOfParticles; i++) {
+      Particle particle;
+      m_particles.push_back(particle);
+    }
+  };
   ParticleSprayComponent(float velocity, float lifeTime, const glm::vec4 &color)
       : m_velocity(velocity), m_lifeTime(lifeTime), m_color(color)
   {
     for (int i = 0; i < MaxNumberOfParticles; i++) {
       Particle particle;
       m_particles.push_back(particle);
+      const float rando = (float)rand() / RAND_MAX;
+      particle.m_rotationSpeed = rando;
+      particle.m_alive = false;
     }
   }
 
   void emitParticle(const float currentTime, const glm::vec2 &basePosition,
-                    const glm::vec2 &baseNormal)
+                    const glm::vec2 &baseNormal, float rotationSpeed = 0.f)
   {
     Particle &particle = m_particles[m_numberOfParticles];
-    m_numberOfParticles++;
+    m_numberOfParticles = (m_numberOfParticles + 1) % MaxNumberOfParticles;
 
-    particle.m_position = {0.f, 0.f};    // Move the particle
-    particle.m_startTime -= currentTime; // Decrease life time
+    particle.m_position = {0.f, 0.f};         // Move the particle
+    particle.m_normal = baseNormal;           // Move the particle
+    particle.m_offset = basePosition;         // Move the particle
+    particle.m_startTime = currentTime;       // Decrease life time
+    particle.m_rotationSpeed = rotationSpeed; // Speed of rotation
     particle.m_alive = true;
   }
 };

@@ -8,7 +8,7 @@
 Player::Player(pain::Scene *scene, std::shared_ptr<pain::Texture> &pTexture)
     : pain::GameObject(scene)
 {
-  addComponent<pain::TransformComponent>(glm::vec3(-1.0f, 0.0f, 0.0f));
+  addComponent<pain::TransformComponent>(glm::vec3(-0.6f, 0.0f, 0.0f));
   // TODO: remove m_rotationSpeed from MovementComponent
   addComponent<pain::MovementComponent>(glm::vec3(0.f, 0.0f, 0.0f), 1.0f, 0.0f);
   addComponent<pain::RotationComponent>(glm::vec3(0.f, 1.f, 0.f), 315.f);
@@ -30,27 +30,32 @@ void PlayerController::onCreate()
   m_dampingFactor = 50.f;
   m_maxVelY = 2.f;
   m_displayUpdates = false;
+  m_emissionInterval = 0.02f;
 }
 
 void PlayerController::onRender(double currentTime)
 {
-  // const pain::TransformComponent &tc =
-  // getComponent<pain::TransformComponent>(); const pain::RotationComponent &rc
-  // = getComponent<pain::RotationComponent>();
+  constexpr glm::mat3 rotate90{glm::vec3(0, -1, 0), glm::vec3(1, 0, 0),
+                               glm::vec3(0, 0, 1)};
+  const pain::TransformComponent &tc = getComponent<pain::TransformComponent>();
+  const pain::RotationComponent &rc = getComponent<pain::RotationComponent>();
 
-  // pain::ParticleSprayComponent &psc =
-  //     getComponent<pain::ParticleSprayComponent>();
-  // const Uint8 *state = SDL_GetKeyboardState(NULL);
-  // if (state[SDL_SCANCODE_SPACE]) {
-  //   m_jumpForce = m_jumpImpulse;
-  //   // particles
+  pain::ParticleSprayComponent &psc =
+      getComponent<pain::ParticleSprayComponent>();
+  const Uint8 *state = SDL_GetKeyboardState(NULL);
+  if (state[SDL_SCANCODE_SPACE]) {
 
-  //   // Check if it's time to emit a new particle
-  //   if (m_timeSinceLastEmission >= m_emissionInterval) {
-  //     psc.emitParticle(currentTime, tc.m_position, rc.m_rotation);
-  //     m_timeSinceLastEmission = 0.0f; // Reset the timer
-  //   }
-  // }
+    // particles
+    // Check if it's time to emit a new particle
+    psc.m_emiterPosition = rc.m_rotation + tc.m_position;
+    if (m_timeSinceLastEmission >= m_emissionInterval) {
+      const float rando = (float)rand() / RAND_MAX - 0.5;
+      psc.emitParticle(currentTime,
+                       tc.m_position + (rotate90 * rc.m_rotation * 0.05f),
+                       rc.m_rotation, rando);
+      m_timeSinceLastEmission = 0.0f; // Reset the timer
+    }
+  }
 }
 
 void PlayerController::onUpdate(double deltaTimeSec)
@@ -67,7 +72,6 @@ void PlayerController::onUpdate(double deltaTimeSec)
     m_jumpForce = 0.f;
 
   m_timeSinceLastEmission += deltaTimeSec;
-  psc.m_emiterPosition = rc.m_rotation * 0.2f + tc.m_position;
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   if (state[SDL_SCANCODE_SPACE])
     m_jumpForce = m_jumpImpulse;
@@ -116,18 +120,18 @@ const void PlayerController::resetPosition()
 
 const void PlayerController::onImGuiUpdate()
 {
-  ImGui::Begin("Player Controller");
-  ImGui::Text("General Settings");
-  ImGui::InputFloat("Gravity", &m_gravity, 0.01f, 1.0f, "%.3f");
-  ImGui::InputFloat("Jump Impulse", &m_jumpImpulse, 0.1f, 1.0f, "%.3f");
-  ImGui::InputFloat("Damping Effect", &m_dampingFactor, 0.01f, 1.0f, "%.5f");
-  ImGui::InputFloat("Pseudo Velocity X", &m_pseudoVelocityX, 0.1f, 1.0f,
-                    "%.3f");
-  ImGui::SeparatorText("Log");
-  ImGui::Checkbox("Log Updates", &m_displayUpdates);
-  if (ImGui::Button("Reset Components"))
-    resetPosition();
-  ImGui::End();
+  // ImGui::Begin("Player Controller");
+  // ImGui::Text("General Settings");
+  // ImGui::InputFloat("Gravity", &m_gravity, 0.01f, 1.0f, "%.3f");
+  // ImGui::InputFloat("Jump Impulse", &m_jumpImpulse, 0.1f, 1.0f, "%.3f");
+  // ImGui::InputFloat("Damping Effect", &m_dampingFactor, 0.01f, 1.0f, "%.5f");
+  // ImGui::InputFloat("Pseudo Velocity X", &m_pseudoVelocityX, 0.1f, 1.0f,
+  //                   "%.3f");
+  // ImGui::SeparatorText("Log");
+  // ImGui::Checkbox("Log Updates", &m_displayUpdates);
+  // if (ImGui::Button("Reset Components"))
+  //   resetPosition();
+  // ImGui::End();
 }
 
 // void PlayerController::onDestroy() { delete m_pIG; }

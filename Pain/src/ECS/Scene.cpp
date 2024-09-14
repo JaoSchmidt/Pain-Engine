@@ -102,6 +102,22 @@ void Scene::renderSystems(double currentTime)
     const TrianguleComponent &sc = it->second;
     Renderer2d::drawTri(tc.m_position, sc.m_height, sc.m_color);
   }
+
+  // =============================================================== //
+  // Render Native Script Components
+  // =============================================================== //
+  for (auto it = begin<NativeScriptComponent>();
+       it != end<NativeScriptComponent>(); ++it) {
+    auto &nsc = it->second;
+    // NOTE: If there is a future where Events runs before Updates, uncomment
+    // this instance check
+    P_ASSERT(
+        nsc.instance != nullptr,
+        "The nsc.instance should be instanciated before calling on render");
+    if (nsc.onRenderFunction)
+      nsc.onRenderFunction(nsc.instance, currentTime);
+  }
+
   // =============================================================== //
   // Render Particle Systems
   // =============================================================== //

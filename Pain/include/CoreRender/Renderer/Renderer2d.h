@@ -171,7 +171,12 @@ private:
       glm::vec4( 0.5f,-0.5f,0.f,1.f),
       glm::vec4(-0.5f,-0.5f,0.f,1.f),
   };
-
+  constexpr static glm::vec2 m_sprayVertexPositions[4] = {
+      glm::vec2(-0.5f,-0.5f),
+      glm::vec2( 0.5f,-0.5f),
+      glm::vec2( 0.5f, 0.5f),
+      glm::vec2(-0.5f, 0.5f),
+  };
 };
 
 } // namespace pain

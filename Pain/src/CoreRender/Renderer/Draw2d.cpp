@@ -38,7 +38,9 @@ uint32_t Renderer2d::m_textureSlotIndex =
 
 void Renderer2d::initBatches()
 {
-  // ====== Quads ================================================== //
+  // =============================================================== //
+  // Quads
+  // =============================================================== //
   m_quadVertexArray.reset(new VertexArray());
 
   m_quadVertexBuffer.reset(
@@ -82,7 +84,9 @@ void Renderer2d::initBatches()
                                              MaxTextureSlots);
   m_textureSlots[0] = m_whiteTexture;
 
-  // ====== Triangles ============================================== //
+  // =============================================================== //
+  // Triangles
+  // =============================================================== //
   m_triVertexArray.reset(new VertexArray());
 
   m_triVertexBuffer.reset(new VertexBuffer(MaxTriVertices * sizeof(TriVertex)));
@@ -105,7 +109,9 @@ void Renderer2d::initBatches()
 
   m_triShader.reset(new Shader("resources/shaders/Triangles.glsl"));
 
-  // ====== Spray Particles ============================================== //
+  // =============================================================== //
+  // Spray Particles
+  // =============================================================== //
   m_sprayVertexArray.reset(new VertexArray());
 
   m_sprayVertexBuffer.reset(
@@ -139,19 +145,9 @@ void Renderer2d::initBatches()
 
 void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
 {
-  if (m_triIndexCount) {
-    m_triVertexArray->bind();
-    const uint32_t triDataSize =
-        (uint8_t *)m_triVertexBufferPtr - (uint8_t *)m_triVertexBufferBase;
-    m_triVertexBuffer->setData((void *)m_triVertexBufferBase, triDataSize);
-
-    m_triShader->bind();
-    const uint32_t triCount =
-        m_triIndexCount ? m_triIndexCount
-                        : m_triVertexArray->getIndexBuffer()->getCount();
-    glDrawElements(GL_TRIANGLES, triCount, GL_UNSIGNED_INT, nullptr);
-    glBindTexture(GL_TEXTURE_2D, 0);
-  }
+  // =============================================================== //
+  // Quads
+  // =============================================================== //
   if (m_quadIndexCount) {
     m_quadVertexArray->bind();
     const uint32_t quadDataSize =
@@ -169,6 +165,9 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
     glDrawElements(GL_TRIANGLES, quadCount, GL_UNSIGNED_INT, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
+  // =============================================================== //
+  // Spray Particles
+  // =============================================================== //
   if (m_sprayIndexCount) {
     m_sprayVertexArray->bind();
     const uint32_t sprayDataSize =
@@ -187,6 +186,22 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
     glDrawElements(GL_TRIANGLES, sprayCount, GL_UNSIGNED_INT, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
+  // =============================================================== //
+  // Triangles
+  // =============================================================== //
+  if (m_triIndexCount) {
+    m_triVertexArray->bind();
+    const uint32_t triDataSize =
+        (uint8_t *)m_triVertexBufferPtr - (uint8_t *)m_triVertexBufferBase;
+    m_triVertexBuffer->setData((void *)m_triVertexBufferBase, triDataSize);
+
+    m_triShader->bind();
+    const uint32_t triCount =
+        m_triIndexCount ? m_triIndexCount
+                        : m_triVertexArray->getIndexBuffer()->getCount();
+    glDrawElements(GL_TRIANGLES, triCount, GL_UNSIGNED_INT, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
 }
 
 void Renderer2d::bindTextures()
@@ -202,6 +217,9 @@ void Renderer2d::goBackToFirstVertex()
 
   m_triIndexCount = 0;
   m_triVertexBufferPtr = m_triVertexBufferBase;
+
+  m_sprayIndexCount = 0;
+  m_sprayVertexBufferPtr = m_sprayVertexBufferBase;
 }
 
 float Renderer2d::allocateTextures(const std::shared_ptr<Texture> &texture)
@@ -276,9 +294,7 @@ void Renderer2d::beginSprayParticle(const float globalTime,
   m_sprayShader->bind();
   m_sprayShader->uploadUniformFloat("u_Time", globalTime);
   m_sprayShader->uploadUniformFloat("u_ParticleVelocity", particleVelocity);
-  m_sprayShader->uploadUniformFloat2("u_EmiterPos", emiterPosition);
 }
-
 void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
                                         const glm::vec2 &offset,
                                         const glm::vec2 &normal,
@@ -286,7 +302,7 @@ void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
                                         const float rotationSpeed)
 {
   for (int i = 0; i < 4; i++) {
-    m_sprayVertexBufferPtr->position = m_quadVertexPositions[i];
+    m_sprayVertexBufferPtr->position = m_sprayVertexPositions[i];
     m_sprayVertexBufferPtr->offset = offset;
     m_sprayVertexBufferPtr->normal = normal;
     m_sprayVertexBufferPtr->time = startTime;

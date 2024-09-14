@@ -66,7 +66,7 @@ void Game::onUpdate(double deltaTime)
                        ->getComponent<pain::NativeScriptComponent>()
                        .instance;
       inst->changeColor(color);
-      LOG_I("intersect {}", checkIntersection(*m_pplayer, *obstacle, i));
+      // LOG_I("intersect {}", checkIntersection(*m_pplayer, *obstacle, i));
       // m_collision = checkIntersection(*m_pplayer, *obstacle, i);
     }
   }
