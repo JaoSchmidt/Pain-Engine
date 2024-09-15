@@ -4,8 +4,6 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include <SDL2/SDL_version.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
 
 namespace pain
 {
