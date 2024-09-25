@@ -31,16 +31,18 @@ add_subdirectory(Pain/external/spdlog)
 add_subdirectory(Pain/external/SDL)
 add_subdirectory(Pain/external/SDL_image)
 add_subdirectory(Pain/external/imgui)
+add_subdirectory(Pain/external/freetype)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
 	${OPENGL_LIBRARIES}
 	SDL2_image
-	SDL2::SDL2
+	SDL2::SDL2-static
 	glad
 	glm::glm
 	spdlog::spdlog_header_only
 	imgui
+	freetype
 )
 
 target_precompile_headers(${LIBRARY_NAME} PRIVATE
@@ -49,7 +51,7 @@ target_precompile_headers(${LIBRARY_NAME} PRIVATE
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/example2d")
+set(GAME_FOLDER "Example/twoBodyAnimation")
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources

@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "ECS/Entity.h"
 #include "ECS/Scene.h"
+#include <utility>
 
 namespace pain
 {
@@ -39,6 +40,11 @@ public:
   operator bool() const { return m_entity != -1; }
 
 protected:
+  template <typename arg> void initializeScript(arg &&nativeScriptComponent)
+  {
+    m_scene->initializeScripts(std::forward<arg>(nativeScriptComponent),
+                               m_entity);
+  }
   Entity m_entity = -1;
   Scene *m_scene;
   friend class Scene;

@@ -7,6 +7,9 @@ layout (location = 2) in vec2 u_Normal;          // Directional normal of the ro
 layout (location = 3) in float a_Time;     // Particle's birth time (for size growth and fading)
 layout (location = 4) in float a_RotationSpeed;  // Rotation speed of the particle
 
+uniform float u_SizeChangeSpeed;
+uniform float u_randomSizeFactor;
+uniform float u_LifeTime;
 uniform mat4 u_ViewProjection;  // Camera view-projection matrix
 uniform mat4 u_Transform;       // Camera transform
 uniform float u_Time;           // Global time
@@ -31,8 +34,8 @@ mat2 getRotationMatrix(float angle) {
 void main()
 {
     float age = u_Time - a_Time;
-		float rand = random(a_Offset);
-    float size = 0.07*rand + age * 0.15;
+		float rand = random(a_Offset)*0.07;
+    float size = 0.02 + rand * u_randomSizeFactor + age * u_SizeChangeSpeed;
 
     // Offset position based on velocity, normal, and time
 		float randNoise = random(u_Normal);
@@ -55,6 +58,7 @@ void main()
 in float v_Age;    // Particle lifetime for alpha fading
 in vec2 v_TexCoord;     // Texture coordinates
 
+uniform float u_LifeTime;             // Particle lifetime duration
 uniform sampler2D u_ParticleTexture;  // Texture for the particle (could be a smoke texture)
 
 out vec4 FragColor;
@@ -68,11 +72,12 @@ void main()
     vec4 texColor = texture(u_ParticleTexture, v_TexCoord);
     
     // Fade the particle by decreasing alpha based on lifetime
-    float fadeFactor = clamp(v_Age/0.7, 0.0, 1.0);
+    float fadeFactor = clamp(v_Age/(u_LifeTime), 0.0, 1.0);
     
     // Make the color grayer over time (fade from white to gray)
     vec3 color = mix(colorStart, colorEnd, fadeFactor);
     
     // Final particle color with fading alpha
-    FragColor = vec4(color, 1 - texColor.a * fadeFactor);
+    // FragColor = vec4(color, 1 - texColor.a * fadeFactor);
+    FragColor = vec4(color, texColor.a * (1.0 - fadeFactor));
 }

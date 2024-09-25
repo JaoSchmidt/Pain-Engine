@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Shader.h"
@@ -13,14 +13,14 @@ public:
   void operator=(const ShaderLibrary &) = delete;
   static ShaderLibrary *instance();
 
-  void Add(const std::string &name, const std::shared_ptr<Shader> &shader);
-  void Add(const std::shared_ptr<Shader> &shader);
-  std::shared_ptr<Shader> Load(const char *filepath);
-  std::shared_ptr<Shader> Load(const std::string &name, const char *filepath);
+  void add(const std::string &name, const std::shared_ptr<Shader> &shader);
+  void add(const std::shared_ptr<Shader> &shader);
+  std::shared_ptr<Shader> load(const char *filepath);
+  std::shared_ptr<Shader> load(const std::string &name, const char *filepath);
 
-  std::shared_ptr<Shader> Get(const std::string &name);
+  std::shared_ptr<Shader> get(const std::string &name);
 
-  bool Exists(const std::string &name) const;
+  bool exists(const std::string &name) const;
 
 private:
   ShaderLibrary() {}

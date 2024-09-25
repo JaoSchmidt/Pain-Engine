@@ -1,5 +1,7 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 
+#include "CoreRender/ShaderManager.h"
+#include "ECS/Components/Particle.h"
 #include "glm/ext/matrix_transform.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -141,6 +143,7 @@ void Renderer2d::initBatches()
   delete[] sprayIndices;
 
   m_sprayShader.reset(new Shader("resources/shaders/SprayParticles.glsl"));
+  ShaderLibrary::getInstance()->add(m_sprayShader);
 }
 
 void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
@@ -288,12 +291,14 @@ void Renderer2d::allocateTri(const glm::mat4 &transform,
 }
 
 void Renderer2d::beginSprayParticle(const float globalTime,
-                                    const float particleVelocity,
-                                    const glm::vec2 &emiterPosition)
+                                    const ParticleSprayComponent &psc)
 {
   m_sprayShader->bind();
   m_sprayShader->uploadUniformFloat("u_Time", globalTime);
-  m_sprayShader->uploadUniformFloat("u_ParticleVelocity", particleVelocity);
+  m_sprayShader->uploadUniformFloat("u_ParticleVelocity", psc.m_velocity);
+  m_sprayShader->uploadUniformFloat("u_LifeTime", psc.m_lifeTime);
+  m_sprayShader->uploadUniformFloat("u_SizeChangeSpeed", psc.m_sizeChangeSpeed);
+  m_sprayShader->uploadUniformFloat("u_randomSizeFactor", psc.m_randSizeFactor);
 }
 void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
                                         const glm::vec2 &offset,

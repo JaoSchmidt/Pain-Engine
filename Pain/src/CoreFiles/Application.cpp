@@ -94,13 +94,13 @@ void Application::run()
     uint64_t start = SDL_GetPerformanceCounter();
     deltaTime = start - lastFrameTime;
     lastFrameTime = start;
-
     // unsigned int buttons;
     // buttons = SDL_GetMouseState(&m_mouseX, &m_mouseY);
 
-    // if (elapsedTime < m_maxFrameRate) {
-    //   SDL_Delay(m_maxFrameRate - elapsedTime);
-    // }
+    if (deltaTime < m_maxFrameRate) {
+      SDL_Delay((m_maxFrameRate - deltaTime).GetMiliseconds());
+    }
+
     // =============================================================== //
     // Handle Updates
     // =============================================================== //

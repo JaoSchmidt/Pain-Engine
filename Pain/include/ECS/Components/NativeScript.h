@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ECS/Scriptable.h"
+#include <SDL2/SDL_events.h>
 
 template <typename T>
 concept has_onCreate_method = requires(T &&t) {
@@ -24,7 +25,7 @@ concept has_onDestroy_method = requires(T &&t) {
 
 template <typename T>
 concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
-  { t.onEvent() };
+  { t.onEvent(e) };
 };
 
 namespace pain
@@ -87,8 +88,8 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onEvent_method<T>) {
-      onEventFunction = [](ScriptableEntity *instance, const SDL_Event &e) {
-        static_cast<T *>(instance)->onEvent(e);
+      onEventFunction = [](ScriptableEntity *instance, const SDL_Event &event) {
+        static_cast<T *>(instance)->onEvent(event);
       };
     } else {
       onEventFunction = nullptr;

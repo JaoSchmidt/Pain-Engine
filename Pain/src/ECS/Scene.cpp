@@ -1,5 +1,6 @@
 #include "ECS/Scene.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "CoreRender/ShaderManager.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Particle.h"
 #include "ECS/Registry.h"
@@ -8,6 +9,7 @@
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "SDL_events.h"
+#include <memory>
 
 namespace pain
 {
@@ -62,6 +64,17 @@ void Scene::initializeScripts(NativeScriptComponent &nsc, const GameObject &go)
     nsc.instantiateFunction(nsc.instance);
     nsc.instance->m_scene = this;
     nsc.instance->m_entity = go.m_entity;
+
+    if (nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
+  }
+}
+void Scene::initializeScripts(NativeScriptComponent &nsc, Entity e)
+{
+  if (!nsc.instance) {
+    nsc.instantiateFunction(nsc.instance);
+    nsc.instance->m_scene = this;
+    nsc.instance->m_entity = e;
 
     if (nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
@@ -124,10 +137,10 @@ void Scene::renderSystems(double currentTime)
   for (auto it = begin<ParticleSprayComponent>();
        it != end<ParticleSprayComponent>(); ++it) {
     ParticleSprayComponent &psc = it->second;
-    Renderer2d::beginSprayParticle(currentTime, psc.m_velocity,
-                                   psc.m_emiterPosition);
+    Renderer2d::beginSprayParticle(currentTime, psc);
     for (Particle &pa : psc.m_particles) {
-      Renderer2d::drawSprayParticle(pa);
+      if (pa.m_alive)
+        Renderer2d::drawSprayParticle(pa);
       // Remove dead particles
       if (currentTime - pa.m_startTime >= psc.m_lifeTime) {
         pa.m_alive = false;
@@ -154,8 +167,8 @@ void Scene::updateSystems(double deltaTime)
        ++it) {
     const MovementComponent &mc = it->second;
     TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const float moveAmount = (float)(deltaTime * mc.m_translationSpeed);
-    tc.m_position = tc.m_position + mc.m_velocityDir * moveAmount;
+    const float moveAmount = (float)(mc.m_translationSpeed * deltaTime);
+    tc.m_position += mc.m_velocityDir * moveAmount;
   }
 
   // =============================================================== //

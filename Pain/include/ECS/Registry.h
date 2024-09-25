@@ -57,8 +57,9 @@ class Registry
   {
     std::type_index typeIndex = std::type_index(typeid(T));
     P_ASSERT(componentMaps.find(typeIndex) != componentMaps.end(),
-             "Some component map is unitialized, did you create a new "
-             "component but forget to add to the scene?");
+             "Component map {} is unitialized, did you create a new "
+             "component but forget to add to the scene?",
+             typeid(T).name());
     return *static_cast<std::unordered_map<Entity, T> *>(
         componentMaps.at(typeIndex));
   }
@@ -67,8 +68,9 @@ class Registry
   {
     std::type_index typeIndex = std::type_index(typeid(T));
     P_ASSERT(componentMaps.find(typeIndex) != componentMaps.end(),
-             "Some component map is unitialized, did you create a new "
-             "component but forget to add to the scene?");
+             "Component map {} is unitialized, did you create a new "
+             "component but forget to add to the scene?",
+             typeid(T).name());
     return *static_cast<std::unordered_map<Entity, T> *>(
         componentMaps.at(typeIndex));
   }

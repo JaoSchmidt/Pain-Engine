@@ -28,8 +28,11 @@ private:
 
 } // namespace pain
 
+// Tell points from vec4
 #define TP_VEC4(vec) (vec).x, (vec).y, (vec).z, (vec).w
+// Tell points from vec3
 #define TP_VEC3(vec) (vec).x, (vec).y, (vec).z
+// Tell points from vec2
 #define TP_VEC2(vec) (vec).x, (vec).y
 // Core log macros
 #define PLOG_T(...) ::pain::LogWrapper::GetCoreLogger()->trace(__VA_ARGS__)

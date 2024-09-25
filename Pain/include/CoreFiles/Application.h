@@ -44,12 +44,15 @@ private:
   SDL_GLContext m_context = nullptr;
   bool m_isGameRunning = true;
   bool m_isMinimized;
+  DeltaTime m_maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
 
   SceneManager *m_sceneManager;
   std::unique_ptr<ImGuiController> m_imguiController;
 
+  // Pure Black
+  static constexpr glm::vec4 m_clearColor = glm::vec4(0.0,0.0,0.0,1);
   // Dark Grey
-  static constexpr glm::vec4 m_clearColor = glm::vec4(0.2,0.2,0.2,1);
+  // static constexpr glm::vec4 m_clearColor = glm::vec4(0.2,0.2,0.2,1);
   // Strong Pink
   //static constexpr glm::vec4 m_clearColor = glm::vec4(1.0, 0.2, 0.9, 1);
 

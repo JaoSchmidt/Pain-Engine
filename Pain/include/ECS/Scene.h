@@ -76,7 +76,10 @@ public:
 
   void updateSystems(double deltaTime);
   void updateSystems(const SDL_Event &event);
-  void initializeScripts(NativeScriptComponent &scene, const GameObject &go);
+  void initializeScripts(NativeScriptComponent &nativeScriptComponent,
+                         const GameObject &go);
+  void initializeScripts(NativeScriptComponent &nativeScriptComponent,
+                         Entity entity);
   void renderSystems(double currentTime);
 
 private:

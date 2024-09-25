@@ -20,7 +20,7 @@ void TextTextureGen::createSpecialGlyph()
   P_ASSERT_W(region.x >= 0, "Texture Atlas Full");
 
   setTextRegion(region.x, region.y, 4, 4, data, 0);
-  glyph->m_unicodePoint = -1;
+  glyph->m_codePoint = -1;
   glyph->m_textureCoord = {region.x + 2 / (float)m_textureSize.x,
                            region.y + 2 / (float)m_textureSize.y};
   glyph->m_textureSize = {region.x + 3 / (float)m_textureSize.x,

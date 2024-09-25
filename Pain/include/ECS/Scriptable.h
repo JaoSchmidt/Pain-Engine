@@ -2,11 +2,12 @@
 
 #include "Core.h"
 #include "ECS/Entity.h"
+#include "ECS/Scene.h"
 
 namespace pain
 {
 
-class EXPORT ScriptableEntity
+class ScriptableEntity
 {
 public:
   template <typename T> T &getComponent()
@@ -18,7 +19,7 @@ public:
     return m_scene->getComponent<T>(m_entity);
   }
 
-private:
+protected:
   Entity m_entity = 0;
   Scene *m_scene = nullptr;
   friend class Scene;

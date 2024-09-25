@@ -86,9 +86,9 @@ public:
                       const glm::vec4 &tintColor, const float rotationRadians);
 
   /** Draws a bunch of particles in a spray format */
-  static void beginSprayParticle(const float globalTime,
-                                 const float particleVelocity,
-                                 const glm::vec2 &emiterPosition);
+  static void
+  beginSprayParticle(const float globalTime,
+                     const ParticleSprayComponent &particleSprayComponent);
   static void drawSprayParticle(const Particle &p);
 
   static const glm::mat4 getTransform(const glm::vec2 &position,
@@ -122,7 +122,7 @@ private:
   static void drawBatches(const glm::mat4 &viewProjectionMatrix);
   static void sendAllDataToOpenGL();
 
-  constexpr static uint32_t MaxQuads = 1000;
+  constexpr static uint32_t MaxQuads = 200;
   constexpr static uint32_t MaxQuadVertices = MaxQuads * 4;
   constexpr static uint32_t MaxQuadIndices = MaxQuads * 6;
   static std::shared_ptr<VertexArray> m_quadVertexArray;
@@ -132,7 +132,7 @@ private:
   static QuadVertex *m_quadVertexBufferPtr;
   static uint32_t m_quadIndexCount;
 
-  constexpr static uint32_t MaxTri = 1000;
+  constexpr static uint32_t MaxTri = 200;
   constexpr static uint32_t MaxTriVertices = MaxTri * 3;
   constexpr static uint32_t MaxTriIndices = MaxTri * 3;
   static std::shared_ptr<VertexArray> m_triVertexArray;
@@ -142,7 +142,7 @@ private:
   static TriVertex *m_triVertexBufferPtr;
   static uint32_t m_triIndexCount;
 
-  constexpr static uint32_t MaxSprayParticles = 1000;
+  constexpr static uint32_t MaxSprayParticles = 10000;
   constexpr static uint32_t MaxSprayVertices = MaxSprayParticles * 4;
   constexpr static uint32_t MaxSprayIndices = MaxSprayParticles * 6;
   static std::shared_ptr<VertexArray> m_sprayVertexArray;
