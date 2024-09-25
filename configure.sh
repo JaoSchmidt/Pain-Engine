@@ -10,9 +10,8 @@ ARCH="x86_64"
 
 # Set the CMake generator for MinGW
 GENERATOR="'Unix Makefiles'"
-
-# Set the directory where you want to build
-BUILD_DIR="./build"
+BUILD_DIR="./linux_build"
+TYPE="Debug"
 
 # Check if the script is already in the build directory
 if [ "$(basename "$(pwd)")" != "build" ]; then
@@ -25,6 +24,7 @@ if [ "$1" == "mingw" ]; then
   COMPILER="$MINGW_PATH/bin/g++"
   # Run CMake with the MinGW toolchain file
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+				-DCMAKE_BUILD_TYPE="$TYPE" \
 				-DCMAKE_CXX_COMPILER="$COMPILER" \
 				-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
         -S . \
@@ -35,6 +35,7 @@ else
   COMPILER="$DEFAULT_COMPILER"
   # Run CMake with default compiler
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+				-DCMAKE_BUILD_TYPE="$TYPE" \
         -DCMAKE_CXX_COMPILER="$DEFAULT_COMPILER" \
 				-DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
 				-DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold" \
