@@ -9,6 +9,7 @@ TextureGlyph::TextureGlyph()
   m_size = {0, 0};
   /* Attributes that can have different images for the same codepoint */
   m_renderMode = RENDER_NORMAL;
+  m_fontMode = MODE_FREE_CLOSE;
   m_outlineThickness = 0.0;
   m_glyphMode = GLYPH_END;
 
@@ -20,12 +21,15 @@ TextureGlyph::TextureGlyph()
   m_textureSize = {0.f, 0.f};
   m_kerning = {};
 }
-
 void TextureGlyph::textureFontDefaultMode(FontMode fontMode)
 {
   // TODO: Read about __THREAD
+  m_fontMode = fontMode;
 }
 
+// ---------------------------------------------------- //
+// Kerning
+// ---------------------------------------------------- //
 float TextureGlyph::getKerning(const char *codepoint)
 {
   if (codepoint == nullptr)

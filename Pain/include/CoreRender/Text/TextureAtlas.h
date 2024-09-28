@@ -4,6 +4,9 @@
 #include <vector>
 /**
  * Will generate a giant texture with all possibe text characters
+ * There is a thousand ways to store all glyphs inside a single texture
+ * This will cover a reasonable approach for merging them,
+ * to render basic stuff
  */
 
 namespace pain
@@ -12,12 +15,12 @@ namespace pain
 /**
  * This class will merge several small regions into a single texture.
  */
-class TextTextureGen
+class TextureAtlas
 {
 public:
   // Creates a new texture of width x height with depth "depth"
-  TextTextureGen(const size_t width, const size_t height, const size_t depth);
-  ~TextTextureGen();
+  TextureAtlas(const size_t width, const size_t height, const size_t depth);
+  ~TextureAtlas();
   // Allocates a region of width x height
   glm::ivec4 getTextRegion(const size_t width, const size_t height);
   // Fill region with some data
@@ -26,6 +29,8 @@ public:
                      const unsigned char *uploadableData, const size_t stride);
   void clearAllRegions();
   void enlargeTexture(const size_t width_new, const size_t height_new);
+
+  void *m_specialGlyph;
 
 private:
   void createSpecialGlyph();
@@ -38,7 +43,6 @@ private:
   unsigned int m_charID;
   unsigned char *m_TextureData;
   bool m_isModified;
-  void *m_specialGlyph;
 };
 
 } // namespace pain

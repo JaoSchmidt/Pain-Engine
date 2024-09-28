@@ -6,7 +6,7 @@
 namespace pain
 {
 
-void TextTextureGen::createSpecialGlyph()
+void TextureAtlas::createSpecialGlyph()
 {
   glm::vec4 region = getTextRegion(5, 5);
   TextureGlyph *glyph = new TextureGlyph();
@@ -28,8 +28,8 @@ void TextTextureGen::createSpecialGlyph()
   m_specialGlyph = (void *)glyph;
 }
 
-TextTextureGen::TextTextureGen(const size_t width, const size_t height,
-                               const size_t depth)
+TextureAtlas::TextureAtlas(const size_t width, const size_t height,
+                           const size_t depth)
 {
   P_ASSERT_W(depth == 1 || depth == 3 || depth == 4,
              "Depth must be equal to 1,3 or 4. Current Depth: {}", depth);
@@ -42,12 +42,11 @@ TextTextureGen::TextTextureGen(const size_t width, const size_t height,
   m_TextureData = new unsigned char[width * height * depth];
 }
 
-TextTextureGen::~TextTextureGen() { delete m_TextureData; }
+TextureAtlas::~TextureAtlas() { delete m_TextureData; }
 
-void TextTextureGen::setTextRegion(const size_t x, const size_t y,
-                                   const size_t width, const size_t height,
-                                   const unsigned char *data,
-                                   const size_t stride)
+void TextureAtlas::setTextRegion(const size_t x, const size_t y,
+                                 const size_t width, const size_t height,
+                                 const unsigned char *data, const size_t stride)
 {
   P_ASSERT(x > 0 && y > 0 && x + width <= m_textureSize.x - 1 &&
                y + height <= m_textureSize.y - 1,
@@ -65,8 +64,8 @@ void TextTextureGen::setTextRegion(const size_t x, const size_t y,
   }
   m_isModified = true;
 }
-int TextTextureGen::fitTexture(const size_t index, const size_t width,
-                               const size_t height)
+int TextureAtlas::fitTexture(const size_t index, const size_t width,
+                             const size_t height)
 {
   glm::ivec3 &node = m_nodes[index];
   if ((node.x + width) > (m_textureSize.x - 1)) {
@@ -90,7 +89,7 @@ int TextTextureGen::fitTexture(const size_t index, const size_t width,
   return y;
 }
 
-void TextTextureGen::mergeTexture()
+void TextureAtlas::mergeTexture()
 {
   size_t i;
 
@@ -105,8 +104,7 @@ void TextTextureGen::mergeTexture()
   }
 }
 
-glm::ivec4 TextTextureGen::getTextRegion(const size_t width,
-                                         const size_t height)
+glm::ivec4 TextureAtlas::getTextRegion(const size_t width, const size_t height)
 {
   int y, best_index;
   size_t best_height, best_width;
@@ -171,7 +169,7 @@ glm::ivec4 TextTextureGen::getTextRegion(const size_t width,
   return region;
 }
 
-void TextTextureGen::clearAllRegions()
+void TextureAtlas::clearAllRegions()
 {
   glm::ivec3 node = {1, 1, 1};
   m_nodes.clear();
@@ -182,7 +180,7 @@ void TextTextureGen::clearAllRegions()
               m_textureSize.x * m_textureSize.y * m_textureDepth);
 }
 
-void TextTextureGen::enlargeTexture(size_t width_new, size_t height_new)
+void TextureAtlas::enlargeTexture(size_t width_new, size_t height_new)
 {
   // ensure size increased
   P_ASSERT(width_new >= m_textureSize.x,

@@ -37,34 +37,21 @@ struct TextureGlyph {
   glm::vec2 m_textureSize;
   float m_outlineThickness;
   RenderMode m_renderMode;
+  FontMode m_fontMode;
   GlyphMode m_glyphMode;
   std::vector<glm::vec3> m_kerning;
 
   void textureFontDefaultMode(FontMode fontMode);
   TextureGlyph();
-  // ~TextureGlyph();
-  // TextureGlyph(const TextureGlyph &TextureGlyph);
+  ~TextureGlyph() = default;
+  TextureGlyph(const TextureGlyph &TextureGlyph) =
+      default; // equivalent to clone() in original repo
 
-  // kerning (https://freetype.org/freetype2/docs/glyphs/glyphs-4.html)
+  // NOTE: kerning: The spacing between two letters
+  // (https://freetype.org/freetype2/docs/glyphs/glyphs-4.html)
   float getKerning(const char *codepoint);
-  void setKerning(uint32_t codepoint, float kerning); // eq to index kerning
+  // equivalent to index kerning
+  void setKerning(uint32_t otherLetterCodepoint, float kerning);
   void genKerning(FT_Library *library, FT_Face *face);
-
-  inline static float convertF26Dot6ToFloat(FT_F26Dot6 value)
-  {
-    return ((float)value) / 64.f;
-  }
-  inline static FT_F26Dot6 convertFloatToF26Dot6(float value)
-  {
-    return (FT_F26Dot6)(value * 64.f);
-  }
-  inline static uint32_t convertUtf8ToUtf32(const char *ptr)
-  {
-    // https://en.cppreference.com/w/cpp/string/multibyte/mbrtoc32
-    std::mbstate_t state{}; // zero-initialized to initial state
-    char32_t c32;
-    std::mbrtoc32(&c32, ptr, strlen(ptr), &state);
-    return c32;
-  }
 };
 } // namespace pain
