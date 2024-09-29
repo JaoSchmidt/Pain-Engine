@@ -10,7 +10,7 @@ ARCH="x86_64"
 
 # Set the CMake generator for MinGW
 GENERATOR="'Unix Makefiles'"
-BUILD_DIR="./linux_build"
+BUILD_DIR="./build"
 TYPE="Debug"
 
 # Check if the script is already in the build directory
