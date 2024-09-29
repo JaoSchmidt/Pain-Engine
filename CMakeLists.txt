@@ -13,10 +13,12 @@ add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
 )
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(BUILD_SHARED_LIBS OFF)
 remove_definitions("-DNDEBUG")
 
 target_compile_options(${LIBRARY_NAME} PRIVATE -std=c++20 -g -Wall -lGLU -lGL -lglm)
@@ -25,19 +27,28 @@ target_compile_options(${LIBRARY_NAME} PRIVATE -std=c++20 -g -Wall -lGLU -lGL -l
 # deactivate tests, examples, doc
 set(SPDLOG_BUILD_SHARED OFF)
 
+message("Bulding glm")
 add_subdirectory(Pain/external/glm)
+message("Bulding glad")
 add_subdirectory(Pain/external/glad)
+message("Bulding spdlog")
 add_subdirectory(Pain/external/spdlog)
+message("Bulding SDL")
 add_subdirectory(Pain/external/SDL)
+message("Bulding SDL_image")
 add_subdirectory(Pain/external/SDL_image)
+message("Bulding ImGui")
 add_subdirectory(Pain/external/imgui)
+message("Bulding FreeType")
 add_subdirectory(Pain/external/freetype)
+message("Bulding freetype-gl")
+add_subdirectory(Pain/external/freetype-gl)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
 	${OPENGL_LIBRARIES}
-	SDL2_image
 	SDL2::SDL2-static
+	SDL2_image
 	glad
 	glm::glm
 	spdlog::spdlog_header_only
