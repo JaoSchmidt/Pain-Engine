@@ -13,3 +13,9 @@
 [submodule "Pain/external/imgui"]
 	path = Pain/external/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "Pain/external/freetype"]
+	path = Pain/external/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "Pain/external/freetype-gl"]
+	path = Pain/external/freetype-gl
+	url = https://github.com/JaoSchmidt/freetype-gl.git
