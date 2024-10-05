@@ -3,10 +3,13 @@
 #include "Core.h"
 
 #include "CoreRender/Shader.h"
+#include "CoreRender/Text/texture-atlas.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 #include "ECS/Components/Particle.h"
 #include "Misc/BasicOrthoCamera.h"
+
+#include "external/freetype-gl/texture-font.h"
 
 namespace pain
 {
@@ -31,6 +34,14 @@ struct ParticleVertex {
   float rotationSpeed;
 };
 
+struct TextVertex {
+  glm::vec3 position;
+  glm::vec4 color;
+  glm::vec2 texCoord;
+  float shift;
+  float gamma;
+};
+
 class EXPORT Renderer2d
 {
 public:
@@ -53,6 +64,10 @@ public:
   // static OrthoCameraEntity *m_cameraEntity;
   static std::shared_ptr<OrthoCameraEntity> m_cameraEntity;
 
+  // ================================================================= //
+  // Draw Text
+  // ================================================================= //
+  static void drawText(ftgl::texture_font_t *f);
   // ================================================================= //
   // Draw Quads
   // ================================================================= //
@@ -121,7 +136,7 @@ private:
   static void goBackToFirstVertex();
   static void drawBatches(const glm::mat4 &viewProjectionMatrix);
   static void sendAllDataToOpenGL();
-
+  // TODO: Change shared_ptr for unique_ptr below
   constexpr static uint32_t MaxQuads = 200;
   constexpr static uint32_t MaxQuadVertices = MaxQuads * 4;
   constexpr static uint32_t MaxQuadIndices = MaxQuads * 6;
@@ -151,6 +166,18 @@ private:
   static ParticleVertex *m_sprayVertexBufferBase;
   static ParticleVertex *m_sprayVertexBufferPtr;
   static uint32_t m_sprayIndexCount;
+
+  constexpr static uint32_t MaxTextLetters = 10000;
+  constexpr static uint32_t MaxTextVertices = MaxTextLetters * 4;
+  constexpr static uint32_t MaxTextIndices = MaxTextLetters * 6;
+  static std::shared_ptr<VertexArray> m_textVertexArray;
+  static std::shared_ptr<VertexBuffer> m_textVertexBuffer;
+  static std::shared_ptr<Shader> m_textShader;
+  static std::unique_ptr<ftgl::texture_font_t> m_textureFont;
+  static std::unique_ptr<ftgl::texture_atlas_t> m_textureAtlas;
+  static TextVertex *m_textVertexBufferBase;
+  static TextVertex *m_textVertexBufferPtr;
+  static uint32_t m_textIndexCount;
 
   // TODO: search MaxTextureSlots dinamically (i.e TMU value on gpu)
   static const uint32_t MaxTextureSlots = 32;

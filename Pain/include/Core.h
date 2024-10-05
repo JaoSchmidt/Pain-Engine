@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 
+// TODO: Remove bc lib will be static from now on
 #ifdef IS_LIB_STATIC
 #define EXPORT
 #elif __linux__

@@ -1,6 +1,7 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 
 #include "CoreRender/ShaderManager.h"
+#include "CoreRender/Text/texture-atlas.h"
 #include "ECS/Components/Particle.h"
 #include "glm/ext/matrix_transform.hpp"
 #include <glm/gtc/matrix_transform.hpp>
@@ -144,6 +145,59 @@ void Renderer2d::initBatches()
 
   m_sprayShader.reset(new Shader("resources/shaders/SprayParticles.glsl"));
   ShaderLibrary::getInstance()->add(m_sprayShader);
+
+  // =============================================================== //
+  // Text Rendering
+  // =============================================================== //
+  // only one font for now
+  // m_textureFont
+  //     .reset(ftgl::texture_font_new_from_file(m_atlas, const float pt_size,
+  //                                             const char *filename))
+  m_textVertexArray.reset(new VertexArray());
+
+  m_textVertexBuffer.reset(
+      new VertexBuffer(MaxTextVertices * sizeof(TextVertex)));
+  m_textVertexBuffer->setLayout({{ShaderDataType::Float3, "a_position"}, //
+                                 {ShaderDataType::Float4, "a_color"},
+                                 {ShaderDataType::Float2, "a_texCoord"},
+                                 {ShaderDataType::Float, "a_shift"},
+                                 {ShaderDataType::Float, "a_gamma"}});
+  m_textVertexArray->addVertexBuffer(m_textVertexBuffer);
+  m_textVertexBufferBase = new TextVertex[MaxTextVertices];
+
+  // indices
+  uint32_t *textIndices = new uint32_t[MaxTextIndices];
+  for (uint32_t i = 0, offset = 0; i < MaxTextIndices; i += 6, offset += 4) {
+    textIndices[i + 0] = offset + 0;
+    textIndices[i + 1] = offset + 1;
+    textIndices[i + 2] = offset + 2;
+
+    textIndices[i + 3] = offset + 0;
+    textIndices[i + 4] = offset + 2;
+    textIndices[i + 5] = offset + 3;
+  }
+  std::shared_ptr<IndexBuffer> textIB;
+  textIB.reset(new IndexBuffer(textIndices, MaxTextIndices));
+  m_textVertexArray->setIndexBuffer(textIB);
+  delete[] textIndices;
+
+  m_textShader.reset(new Shader("resources/shaders/Text.glsl"));
+  m_textureAtlas.reset(
+      ftgl::texture_atlas_new(512, 512, 3)); // 3 for lcd on, 1 for lcd off
+  // m_whiteTexture.reset(new Texture(1, 1));
+  // const uint32_t whiteTextureData = 0xffffffff;
+  // m_whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
+
+  // int32_t samplers[MaxTextureSlots];
+  // for (uint32_t i = 0; i < MaxTextureSlots; i++) {
+  //   samplers[i] = i;
+  // }
+
+  // m_quadTextureShader.reset(new Shader("resources/shaders/Texture.glsl"));
+  // m_quadTextureShader->bind();
+  // m_quadTextureShader->uploadUniformIntArray("u_Textures", samplers,
+  //                                            MaxTextureSlots);
+  // m_textureSlots[0] = m_whiteTexture;
 }
 
 void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
