@@ -35,3 +35,7 @@
 #define NONCOPYABLE(c)                                                         \
   c(const c &) = delete;                                                       \
   c &operator=(const c &) = delete;
+
+#define COPIES(c)                                                              \
+  c(const c &);                                                                \
+  c &operator=(const c &);

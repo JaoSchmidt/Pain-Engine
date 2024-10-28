@@ -3,7 +3,6 @@
 #include "Core.h"
 
 #include "CoreRender/Shader.h"
-#include "CoreRender/Text/texture-atlas.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 #include "ECS/Components/Particle.h"

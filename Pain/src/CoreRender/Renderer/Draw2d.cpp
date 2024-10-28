@@ -1,7 +1,6 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 
 #include "CoreRender/ShaderManager.h"
-#include "CoreRender/Text/texture-atlas.h"
 #include "ECS/Components/Particle.h"
 #include "glm/ext/matrix_transform.hpp"
 #include <glm/gtc/matrix_transform.hpp>
