@@ -7,6 +7,7 @@
 #include "CoreFiles/Layer.h"
 #include "CoreFiles/LayerStack.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreFiles/RandNumberGenerator.h"
 // Renderer
 #include "CoreRender/AllBuffers.h"
 #include "CoreRender/BufferLayout.h"
@@ -40,7 +41,7 @@
 #define ASSERT(x, s, ...)                                                      \
   {                                                                            \
     if (!(x)) {                                                                \
-      LOG_E(std::string("Assertion Failed: ").append(s), __VA_ARGS__);         \
+      LOG_E("Assertion Failed: " s, ##__VA_ARGS__);                            \
       assert(x);                                                               \
     }                                                                          \
   }
