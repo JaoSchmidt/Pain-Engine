@@ -36,5 +36,9 @@
   c &operator=(const c &) = delete;
 
 #define COPIES(c)                                                              \
-  c(const c &);                                                                \
-  c &operator=(const c &);
+  c(const c &) = default;                                                      \
+  c &operator=(const c &) = default;
+
+#define MOVABLES(m)                                                            \
+  m(m &&) = default;                                                           \
+  m &operator=(m &&) = default;

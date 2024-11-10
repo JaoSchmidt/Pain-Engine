@@ -32,7 +32,8 @@ public:
   template <typename T, typename... Args>
   T &addComponent(Entity entity, Args &&...args)
   {
-    P_ASSERT_W(!hasComponent<T>(entity), "Entity already has component!");
+    P_ASSERT_W(!hasComponent<T>(entity), "Entity {} already has component!",
+               entity);
     return m_registry->add<T>(entity, std::forward<Args>(args)...);
   }
   template <typename T> T &getComponent(Entity entity)

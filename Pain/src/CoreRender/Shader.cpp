@@ -115,6 +115,9 @@ bool Shader::checkLinkProgram(uint32_t programID)
 
 std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
 {
+  P_ASSERT_W(std::filesystem::exists(std::filesystem::absolute(filepath)),
+             "Absolute file {} does not exist.",
+             std::filesystem::absolute(filepath).string());
   P_ASSERT(std::filesystem::exists(filepath), "File {} does not exist.",
            filepath);
 

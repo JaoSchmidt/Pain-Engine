@@ -1,6 +1,5 @@
 #include "ECS/Scene.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "CoreRender/ShaderManager.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Particle.h"
 #include "ECS/Registry.h"
@@ -9,7 +8,6 @@
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "SDL_events.h"
-#include <memory>
 
 namespace pain
 {

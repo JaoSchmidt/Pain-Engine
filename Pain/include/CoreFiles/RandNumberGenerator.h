@@ -1,4 +1,5 @@
 #include <random>
+#include <type_traits>
 
 namespace pain
 {
@@ -15,22 +16,52 @@ public:
   {
   }
 
-  // Method to generate a random number with a Gaussian distribution
-  const double gaussian() const
+  // Generate a random number with a Gaussian distribution
+  template <typename T> const T gaussian() const
   {
-    std::normal_distribution<double> distribution(m_mean, m_stddev);
+    std::normal_distribution<T> distribution(m_mean, m_stddev);
     return distribution(generator);
   }
-  const double gaussian(double mean, double stddev) const
+
+  // Generate a random number with a Gaussian distribution with specified mean
+  // and stddev
+  template <typename T> const T gaussian(T mean, T stddev) const
   {
-    std::normal_distribution<double> distribution(mean, stddev);
+    std::normal_distribution<T> distribution(mean, stddev);
+    return distribution(generator);
+  }
+
+  // Generate a random floating-point number with a uniform distribution between
+  // 0.0 and 1.0
+  template <typename T>
+  std::enable_if_t<std::is_floating_point_v<T>, T> uniform() const
+  {
+    std::uniform_real_distribution<T> distribution(0.0, 1.0);
+    return distribution(generator);
+  }
+
+  // Generate a random integer number with a uniform distribution in the
+  // specified range
+  template <typename T>
+  std::enable_if_t<std::is_integral_v<T>, T> uniform(T min, T max) const
+  {
+    std::uniform_int_distribution<T> distribution(min, max);
+    return distribution(generator);
+  }
+
+  // Generate a random floating-point number with a uniform distribution in the
+  // specified range
+  template <typename T>
+  std::enable_if_t<std::is_floating_point_v<T>, T> uniform(T min, T max) const
+  {
+    std::uniform_real_distribution<T> distribution(min, max);
     return distribution(generator);
   }
 
 private:
-  std::mt19937 generator; // Mersenne Twister random number generator
-  double m_mean;          // Mean of the Gaussian distribution
-  double m_stddev;        // Standard deviation of the Gaussian distribution
+  mutable std::mt19937 generator; // Mersenne Twister random number generator
+  double m_mean;                  // Mean of the Gaussian distribution
+  double m_stddev; // Standard deviation of the Gaussian distribution
 };
 
 } // namespace pain

@@ -24,6 +24,17 @@ public:
     m_imguiController->addImGuiMenu(imGuiInstance);
   }
 
+  void setInfiniteSimulation(bool isSimulation)
+  {
+    m_isSimulation = isSimulation;
+  };
+  void inline disableRendering() { m_isRendering = false; }
+  void inline enableRendering() { m_isRendering = true; }
+  void inline setTimeMultiplier(double time) { m_timeMultiplier = time; }
+  double inline *getTimeMultiplier() { return &m_timeMultiplier; }
+  bool inline *getIsSimulation() { return &m_isSimulation; }
+  const double inline getCurrentTPS() const { return m_currentTPS; }
+
   static void glErrorHandler(unsigned int source, unsigned int type,
                              unsigned int id, unsigned int severity, int lenght,
                              const char *message, const void *userParam);
@@ -43,7 +54,13 @@ private:
   SDL_Window *m_window = nullptr;
   SDL_GLContext m_context = nullptr;
   bool m_isGameRunning = true;
+  bool m_isRendering = true;
   bool m_isMinimized;
+  bool m_isSimulation = false;
+  double m_currentTPS = 60.0;
+  const double m_fixedUpdateTime = 1.0 / 60.0;
+  const double m_fixedFPS = 1.0 / 60.0;
+  double m_timeMultiplier = 1.0;
   DeltaTime m_maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
 
   SceneManager *m_sceneManager;
@@ -58,6 +75,14 @@ private:
 
   friend struct Pain;
   static Application* s_instance;
+
+  // FIX: temporary solution for lazy
+  bool m_fixMeLater = true;
+
+  // FPS Calculation
+  constexpr static int FPS_SAMPLE_COUNT = 64;
+  double fpsSamples[FPS_SAMPLE_COUNT] = {0};
+  int m_currentSample = 1; // begins in 1 to loop all the way to 0 before calculation
 };
 
 // To be defined in CLIENT

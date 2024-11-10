@@ -21,10 +21,10 @@ class Registry
   template <typename T, typename... Args> T &add(Entity entity, Args &&...args)
   {
     std::unordered_map<Entity, T> &componentMap = getComponentMap<T>();
+    P_ASSERT_W(!has<T>(entity), "Component already {} exists for the entity {}",
+               typeid(T).name(), entity);
     auto [it, inserted] =
         componentMap.emplace(entity, T(std::forward<Args>(args)...));
-    P_ASSERT(it != componentMap.end(),
-             "Component already exists for the entity");
     return it->second;
   }
 
@@ -33,7 +33,8 @@ class Registry
     std::unordered_map<Entity, T> &componentMap = getComponentMap<T>();
     auto it = componentMap.find(entity);
     P_ASSERT(it != componentMap.end(),
-             "Entity does not have the requested component");
+             "Entity {} does not have the requested component {}", entity,
+             typeid(T).name());
 
     return it->second;
   }
