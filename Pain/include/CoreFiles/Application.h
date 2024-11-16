@@ -76,9 +76,6 @@ private:
   friend struct Pain;
   static Application* s_instance;
 
-  // FIX: temporary solution for lazy
-  bool m_fixMeLater = true;
-
   // FPS Calculation
   constexpr static int FPS_SAMPLE_COUNT = 64;
   double fpsSamples[FPS_SAMPLE_COUNT] = {0};
