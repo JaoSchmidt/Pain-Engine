@@ -12,6 +12,7 @@ class ImGuiInstance
 {
 public:
   const virtual void onImGuiUpdate() = 0;
+  virtual ~ImGuiInstance(){};
 };
 
 class ImGuiController

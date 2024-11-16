@@ -21,7 +21,7 @@ cd Pain-Engine
 Clone all essential submodules:
 
 ```bash
-git submodule update --init \
+git submodule update --init --recursive \
     Pain/external/glm \
     Pain/external/spdlog \
     Pain/external/SDL_image \
