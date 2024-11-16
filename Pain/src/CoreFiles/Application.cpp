@@ -136,14 +136,13 @@ void Application::run()
     // renderAccumulator += deltaSeconds;
     // TODO: Need to fix lazy loading when updating, m_fixMeLater needs to go
     // eventually
-    while (accumulator >= m_fixedUpdateTime || m_fixMeLater) {
+    while (accumulator >= m_fixedUpdateTime) {
       for (auto pScene = m_sceneManager->begin();
            pScene != m_sceneManager->end(); ++pScene) {
         (*pScene)->onUpdate(m_fixedUpdateTime);
         (*pScene)->updateSystems(m_fixedUpdateTime);
       }
       accumulator -= m_fixedUpdateTime;
-      m_fixMeLater = false;
     }
 
     // =============================================================== //

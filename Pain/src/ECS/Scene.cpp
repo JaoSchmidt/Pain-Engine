@@ -120,11 +120,15 @@ void Scene::renderSystems(double currentTime)
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
     auto &nsc = it->second;
-    // NOTE: If there is a future where Events runs before Updates, uncomment
-    // this instance check
-    P_ASSERT(
-        nsc.instance != nullptr,
-        "The nsc.instance should be instanciated before calling on render");
+    if (!nsc.instance) {
+      nsc.instantiateFunction(nsc.instance);
+      nsc.instance->m_scene = this;
+      nsc.instance->m_entity = it->first;
+
+      if (nsc.onCreateFunction)
+        nsc.onCreateFunction(nsc.instance);
+    }
+
     if (nsc.onRenderFunction)
       nsc.onRenderFunction(nsc.instance, currentTime);
   }
@@ -194,18 +198,14 @@ void Scene::updateSystems(const SDL_Event &event)
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
     auto &nsc = it->second;
-    // NOTE: If there is a future where Events runs before Updates, uncomment
-    // this instance check
-    P_ASSERT(nsc.instance != nullptr,
-             "The nsc.instance should be instanciated before updating events");
-    // if (!nsc.instance) {
-    //   nsc.instantiateFunction(nsc.instance);
-    //   nsc.instance->m_scene = this;
-    //   nsc.instance->m_entity = it->first;
+    if (!nsc.instance) {
+      nsc.instantiateFunction(nsc.instance);
+      nsc.instance->m_scene = this;
+      nsc.instance->m_entity = it->first;
 
-    //   if (nsc.onCreateFunction)
-    //     nsc.onCreateFunction(nsc.instance);
-    // }
+      if (nsc.onCreateFunction)
+        nsc.onCreateFunction(nsc.instance);
+    }
     if (nsc.onEventFunction)
       nsc.onEventFunction(nsc.instance, event);
   }
