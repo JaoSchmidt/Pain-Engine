@@ -15,6 +15,14 @@ QuadVertex *Renderer2d::m_quadVertexBufferBase = nullptr;
 QuadVertex *Renderer2d::m_quadVertexBufferPtr = nullptr;
 uint32_t Renderer2d::m_quadIndexCount = 0; // at init, there are 0 quads
 
+// text vertex initializer
+std::shared_ptr<VertexArray> Renderer2d::m_textVertexArray = nullptr;
+std::shared_ptr<VertexBuffer> Renderer2d::m_textVertexBuffer = nullptr;
+std::shared_ptr<Shader> Renderer2d::m_textTextureShader = nullptr;
+TextQuadVertex *Renderer2d::m_textVertexBufferBase = nullptr;
+TextQuadVertex *Renderer2d::m_textVertexBufferPtr = nullptr;
+uint32_t Renderer2d::m_textIndexCount = 0; // at init, there are 0 texts
+
 // tri initializer
 std::shared_ptr<VertexArray> Renderer2d::m_triVertexArray = nullptr;
 std::shared_ptr<VertexBuffer> Renderer2d::m_triVertexBuffer = nullptr;
@@ -110,7 +118,25 @@ void Renderer2d::initBatches()
   delete[] triIndices;
 
   m_triShader.reset(new Shader("resources/shaders/Triangles.glsl"));
+  // =============================================================== //
+  // Text
+  // =============================================================== //
+  m_textVertexArray.reset(new VertexArray());
 
+  m_textVertexBuffer.reset(
+      new VertexBuffer(MaxQuadVertices * sizeof(TextQuadVertex)));
+  m_textVertexBuffer->setLayout({
+      {ShaderDataType::Float3, "a_Position"}, //
+      {ShaderDataType::Float4, "a_Color"},    //
+      {ShaderDataType::Float2, "a_TexCoord"}, //
+  });
+  m_textVertexArray->addVertexBuffer(m_textVertexBuffer);
+  m_textVertexBufferBase = new TextQuadVertex[MaxQuadVertices];
+  m_textVertexArray->setIndexBuffer(quadIB);
+
+  m_textTextureShader.reset(
+      new Shader("resources/shaders/Renderer2dText.glsl"));
+  m_textTextureShader->bind();
   // =============================================================== //
   // Spray Particles
   // =============================================================== //
@@ -169,6 +195,27 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
     glBindTexture(GL_TEXTURE_2D, 0);
   }
   // =============================================================== //
+  // Text
+  // =============================================================== //
+  if (m_textIndexCount) {
+    m_textVertexArray->bind();
+    const uint32_t textDataSize =
+        (uint8_t *)m_textVertexBufferPtr - (uint8_t *)m_textVertexBufferBase;
+    m_textVertexBuffer->setData((void *)m_textVertexBufferBase, textDataSize);
+
+    // bind textures
+    for (uint32_t i = 0; i < m_textureSlotIndex; i++)
+      m_textureSlots[i]->bind(i);
+
+    m_textTextureShader->bind();
+    const uint32_t textCount =
+        m_textIndexCount ? m_textIndexCount
+                         : m_textVertexArray->getIndexBuffer()->getCount();
+    glDrawElements(GL_TRIANGLES, textCount, GL_UNSIGNED_INT, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+
+  // =============================================================== //
   // Spray Particles
   // =============================================================== //
   if (m_sprayIndexCount) {
@@ -223,6 +270,9 @@ void Renderer2d::goBackToFirstVertex()
 
   m_sprayIndexCount = 0;
   m_sprayVertexBufferPtr = m_sprayVertexBufferBase;
+
+  m_textIndexCount = 0;
+  m_textVertexBufferPtr = m_textVertexBufferBase;
 }
 
 float Renderer2d::allocateTextures(const std::shared_ptr<Texture> &texture)
@@ -315,6 +365,20 @@ void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
     m_sprayVertexBufferPtr++;
   }
   m_sprayIndexCount += 6;
+}
+
+void Renderer2d::allocateCharacter(
+    const glm::mat4 &transform, const glm::vec4 &tintColor,
+    const std::array<glm::vec2, 4> &textureCoordinate,
+    const std::array<glm::vec4, 4> &textVertexPositions)
+{
+  for (int i = 0; i < 4; i++) {
+    m_textVertexBufferPtr->position = transform * textVertexPositions[i];
+    m_textVertexBufferPtr->color = tintColor;
+    m_textVertexBufferPtr->texCoord = textureCoordinate[i];
+    m_textVertexBufferPtr++;
+  }
+  m_textIndexCount += 6;
 }
 
 } // namespace pain

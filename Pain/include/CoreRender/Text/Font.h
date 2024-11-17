@@ -6,11 +6,19 @@
 
 namespace pain
 {
-class FontManager
+class Font
 {
 public:
-  FontManager(const char *fontFilename);
-  inline Texture &getAtlasTexture() { return m_atlasTexture; };
+  Font(const char *fontFilename);
+  const inline Texture &getAtlasTexture() const { return m_atlasTexture; };
+  const inline msdf_atlas::FontGeometry &getFontGeometry() const
+  {
+    return m_fontGeometry;
+  };
+  const inline std::vector<msdf_atlas::GlyphGeometry> &getGlyphGemoetry() const
+  {
+    return m_glyphs;
+  };
 
 private:
   // variables

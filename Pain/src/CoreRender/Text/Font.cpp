@@ -5,12 +5,12 @@
 
 namespace pain
 {
-FontManager::FontManager(const char *fontFilename)
+Font::Font(const char *fontFilename)
     : m_atlasTexture(generateAtlas(fontFilename))
 {
 }
 
-Texture FontManager::generateAtlas(const char *fontFilename)
+Texture Font::generateAtlas(const char *fontFilename)
 {
   // Initialize instance of FreeType library
   msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
@@ -71,11 +71,11 @@ Texture FontManager::generateAtlas(const char *fontFilename)
 }
 template <typename T, typename S, int N,
           msdf_atlas::GeneratorFunction<S, N> GenFunc>
-Texture FontManager::createAtlasTexture(
-    const char *fontName, float fontSize,
-    const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
-    const msdf_atlas::FontGeometry &fontGeometry, const float width,
-    const float height)
+Texture
+Font::createAtlasTexture(const char *fontName, float fontSize,
+                         const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
+                         const msdf_atlas::FontGeometry &fontGeometry,
+                         const float width, const float height)
 {
   msdf_atlas::GeneratorAttributes attributes;
   attributes.config.overlapSupport = true;
@@ -96,7 +96,7 @@ Texture FontManager::createAtlasTexture(
   return texture;
 }
 
-msdf_atlas::Charset FontManager::getLatinCharset()
+msdf_atlas::Charset Font::getLatinCharset()
 {
   struct CharsetRange {
     uint32_t Begin, End;

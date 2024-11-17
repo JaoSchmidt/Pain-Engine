@@ -14,8 +14,8 @@ public:
                  {512, 512}, {0, 1}, {1, 0});
     ImGui::End();
   }
-  ShapesController(pain::FontManager &font) : m_font(font) {}
-  pain::FontManager &m_font;
+  ShapesController(pain::Font &font) : m_font(font) {}
+  pain::Font &m_font;
 };
 
 class MainScene : public pain::Scene
@@ -38,11 +38,13 @@ public:
   {
     pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
                                {0.8f, 0.9f, 0.3f, 1.0f});
+    pain::Renderer2d::drawString({-0.5, -0.5}, "Hello World", m_font,
+                                 {0.7f, 0.2f, 0.8f, 1.f});
   }
   void onEvent(const SDL_Event &event) override {}
 
 private:
-  pain::FontManager m_font;
+  pain::Font m_font;
   ShapesController *m_sc;
   std::shared_ptr<pain::OrthoCameraEntity> m_orthocamera;
 };

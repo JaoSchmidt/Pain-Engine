@@ -1,6 +1,8 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Misc/BasicOrthoCamera.h"
 
+#include "glm/ext/matrix_transform.hpp"
+
 namespace pain
 {
 std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraEntity = nullptr;
@@ -145,6 +147,77 @@ void Renderer2d::drawSprayParticle(const Particle &p)
 {
   allocateSprayParticles(p.m_position, p.m_offset, p.m_normal, p.m_startTime,
                          p.m_rotationSpeed);
+}
+
+// ================================================================= //
+// Draw Text
+// ================================================================= //
+void Renderer2d::drawString(const glm::vec2 &position, const char *string,
+                            const Font &font, const glm::vec4 &color)
+{
+
+  PLOG_I("Hello");
+  const auto &fontGeometry = font.getFontGeometry();
+  const auto &metrics = fontGeometry.getMetrics();
+  const Texture &fontAtlas = font.getAtlasTexture();
+  const double &spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
+
+  double x = 0.0;
+  double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
+  double y = 0.0;
+  float lineHeightOffset = 0.0f;
+  for (const char *t = string; *t != '\0'; t++) {
+    switch (*t) {
+    case '\r':
+      continue;
+      break;
+    case '\n':
+      x = 0;
+      y -= fsScale * metrics.lineHeight + lineHeightOffset;
+      continue;
+      break;
+    case '\t':
+      // https://stackoverflow.com/questions/55594248/how-to-determine-tab-widthin-pixels-for-non-monospace-font
+      x += 4.0f * (fsScale * spaceGlyphAdvance);
+      break;
+    default:
+      auto glyph = fontGeometry.getGlyph(*t);
+      if (!glyph) {
+        drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f}, {1.f, 0.f, 0.f, 1.f});
+        PLOG_E("Glyph '{}' not available on font family", *t);
+      }
+
+      double atlasLeft, atlasBottom, atlasRight, atlasTop;
+      glyph->getQuadAtlasBounds(atlasLeft, atlasBottom, atlasRight, atlasTop);
+      glm::vec2 texCoordMin((float)atlasLeft, (float)atlasBottom);
+      glm::vec2 texCoordMax((float)atlasRight, (float)atlasTop);
+
+      double planeLeft, planeBottom, planeRight, planeTop;
+      glyph->getQuadPlaneBounds(planeLeft, planeBottom, planeRight, planeTop);
+      glm::vec2 quadMin((float)planeLeft, (float)planeBottom);
+      glm::vec2 quadMax((float)planeRight, (float)planeTop);
+
+      // scale
+      quadMin *= fsScale, quadMax *= fsScale;
+      // offset
+      quadMin += glm::vec2(x, y);
+      quadMax += glm::vec2(x, y);
+      float texelWidth = 1.0f / fontAtlas.getWidth();
+      float texelHeight = 1.0f / fontAtlas.getHeight();
+      texCoordMin *= glm::vec2(texelWidth, texelHeight);
+      texCoordMax *= glm::vec2(texelWidth, texelHeight);
+      allocateCharacter(glm::translate(glm::mat4(1.f), {position, 0.f}), color,
+                        // textureCoordinate
+                        {texCoordMin, glm::vec2(texCoordMin.x, texCoordMax.y),
+                         texCoordMax, glm::vec2(texCoordMax.x, texCoordMin.y)},
+                        // vertex positions
+                        {glm::vec4{quadMin, 0.f, 1.f},
+                         glm::vec4{quadMin.x, quadMax.y, 0.f, 1.f},
+                         glm::vec4{quadMax, 0.f, 1.f},
+                         glm::vec4{quadMax.x, quadMin.y, 0.f, 1.f}});
+      break;
+    }
+  }
 }
 
 } // namespace pain

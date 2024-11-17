@@ -3,6 +3,7 @@
 #include "Core.h"
 
 #include "CoreRender/Shader.h"
+#include "CoreRender/Text/Font.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 #include "ECS/Components/Particle.h"
@@ -10,6 +11,15 @@
 
 namespace pain
 {
+
+struct TextQuadVertex {
+  glm::vec3 position;
+  glm::vec4 color;
+  glm::vec2 texCoord;
+  // NOTE: (jao) you might want to implement `int texIndex` here but one texture
+  // is more than fine for now
+};
+
 struct QuadVertex {
   glm::vec3 position;
   glm::vec4 color;
@@ -91,6 +101,10 @@ public:
                      const ParticleSprayComponent &particleSprayComponent);
   static void drawSprayParticle(const Particle &p);
 
+  /** Draws a string of glyphs from a font atlas */
+  static void drawString(const glm::vec2 &position, const char *string,
+                         const Font &font, const glm::vec4 &color);
+
   static const glm::mat4 getTransform(const glm::vec2 &position,
                                       const glm::vec2 &size,
                                       const float rotationRadians);
@@ -117,12 +131,16 @@ private:
                                      const glm::vec2 &normal,
                                      const float startTime,
                                      const float rotationSpeed);
+  static void
+  allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
+                    const std::array<glm::vec2, 4> &textureCoordinate,
+                    const std::array<glm::vec4, 4> &textVertexPositions);
 
   static void goBackToFirstVertex();
   static void drawBatches(const glm::mat4 &viewProjectionMatrix);
   static void sendAllDataToOpenGL();
 
-  constexpr static uint32_t MaxQuads = 200;
+  constexpr static uint32_t MaxQuads = 2000;
   constexpr static uint32_t MaxQuadVertices = MaxQuads * 4;
   constexpr static uint32_t MaxQuadIndices = MaxQuads * 6;
   static std::shared_ptr<VertexArray> m_quadVertexArray;
@@ -132,7 +150,7 @@ private:
   static QuadVertex *m_quadVertexBufferPtr;
   static uint32_t m_quadIndexCount;
 
-  constexpr static uint32_t MaxTri = 200;
+  constexpr static uint32_t MaxTri = 2000;
   constexpr static uint32_t MaxTriVertices = MaxTri * 3;
   constexpr static uint32_t MaxTriIndices = MaxTri * 3;
   static std::shared_ptr<VertexArray> m_triVertexArray;
@@ -141,6 +159,13 @@ private:
   static TriVertex *m_triVertexBufferBase;
   static TriVertex *m_triVertexBufferPtr;
   static uint32_t m_triIndexCount;
+
+  static std::shared_ptr<VertexArray> m_textVertexArray;
+  static std::shared_ptr<VertexBuffer> m_textVertexBuffer;
+  static std::shared_ptr<Shader> m_textTextureShader;
+  static TextQuadVertex *m_textVertexBufferBase;
+  static TextQuadVertex *m_textVertexBufferPtr;
+  static uint32_t m_textIndexCount;
 
   constexpr static uint32_t MaxSprayParticles = 10000;
   constexpr static uint32_t MaxSprayVertices = MaxSprayParticles * 4;
