@@ -7,9 +7,15 @@
 #include "glm/fwd.hpp"
 #include <SDL2/SDL_version.h>
 #include <cmath>
+#include <thread>
 
 namespace pain
 {
+const unsigned Application::getProcessorCount()
+{
+  return std::thread::hardware_concurrency();
+}
+
 Application *Application::s_instance = nullptr;
 /* Creates window, opengl context and init glew*/
 Application::Application(const char *title, int w, int h)

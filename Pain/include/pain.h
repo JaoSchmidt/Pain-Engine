@@ -15,6 +15,7 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "CoreRender/Shader.h"
+#include "CoreRender/Text/Font.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 // ECS

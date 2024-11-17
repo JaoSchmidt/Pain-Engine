@@ -14,11 +14,11 @@ bool Texture::operator==(const Texture &other) const
 /*
  * Sets a dump texture
  */
-Texture::Texture(uint32_t width, uint32_t height)
+Texture::Texture(uint32_t width, uint32_t height, ImageFormat format)
     : m_width(width), m_height(height)
 {
-  m_internalFormat = GL_RGBA8;
-  m_dataFormat = GL_RGBA;
+  m_internalFormat = getInternalFormat(format);
+  m_dataFormat = getGLDataFormat(format);
 
   glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererId);
   glTextureStorage2D(m_rendererId, 1, m_internalFormat, m_width, m_height);

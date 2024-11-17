@@ -1,0 +1,6 @@
+SDL/
+SDL_image/
+freetype/
+glm/
+imgui/
+spdlog/

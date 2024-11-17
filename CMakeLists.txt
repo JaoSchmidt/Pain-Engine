@@ -41,8 +41,10 @@ message("Bulding ImGui")
 add_subdirectory(Pain/external/imgui)
 message("Bulding FreeType")
 add_subdirectory(Pain/external/freetype)
-message("Bulding freetype-gl")
-add_subdirectory(Pain/external/freetype-gl)
+message("Bulding msdf-atlas-gen")
+add_subdirectory(Pain/external/msdf-atlas-gen)
+# message("Bulding freetype-gl")
+# add_subdirectory(Pain/external/freetype-gl)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(${LIBRARY_NAME} PUBLIC
@@ -54,6 +56,7 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 	spdlog::spdlog_header_only
 	imgui
 	freetype
+	msdf-atlas-gen
 )
 
 target_precompile_headers(${LIBRARY_NAME} PRIVATE
@@ -62,7 +65,7 @@ target_precompile_headers(${LIBRARY_NAME} PRIVATE
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/twoBodyAnimation")
+set(GAME_FOLDER "Example/textRendering")
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources

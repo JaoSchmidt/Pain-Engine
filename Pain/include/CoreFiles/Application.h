@@ -28,6 +28,7 @@ public:
   {
     m_isSimulation = isSimulation;
   };
+  static const unsigned getProcessorCount();
   void inline disableRendering() { m_isRendering = false; }
   void inline enableRendering() { m_isRendering = true; }
   void inline setTimeMultiplier(double time) { m_timeMultiplier = time; }

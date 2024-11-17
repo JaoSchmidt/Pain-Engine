@@ -152,7 +152,7 @@ private:
   static ParticleVertex *m_sprayVertexBufferPtr;
   static uint32_t m_sprayIndexCount;
 
-  // TODO: search MaxTextureSlots dinamically (i.e TMU value on gpu)
+  // TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
   static const uint32_t MaxTextureSlots = 32;
 
   static std::shared_ptr<Texture> m_whiteTexture;

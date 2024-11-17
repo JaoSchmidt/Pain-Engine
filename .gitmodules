@@ -22,3 +22,6 @@
 [submodule "Example/flappybird"]
 	path = Example/flappybird
 	url = git@github.com:JaoSchmidt/NEAT-Flappybird.git
+[submodule "Pain/external/msdf-atlas-gen"]
+	path = Pain/external/msdf-atlas-gen
+	url = https://github.com/JaoSchmidt/msdf-atlas-gen.git
