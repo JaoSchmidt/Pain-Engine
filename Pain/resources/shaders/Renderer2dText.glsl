@@ -47,8 +47,10 @@ void main()
 
 	if (opacity == 0.0)
 		discard;
-	vec4 bgColor = vec4(0.0);
+	vec4 bgColor = vec4(0.2,0.2,0.2,1.0);
 	o_Color = mix(bgColor, v_Color, opacity);
 	if (o_Color.a == 0.0)
 		discard;
+
+	// o_Color = texture(u_FontAtlas, v_TexCoord) * v_Color;
 }

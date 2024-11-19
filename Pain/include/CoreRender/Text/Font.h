@@ -19,12 +19,14 @@ public:
   {
     return m_glyphs;
   };
+  static Font *getDefault();
 
 private:
   // variables
   msdf_atlas::FontGeometry m_fontGeometry;
   std::vector<msdf_atlas::GlyphGeometry> m_glyphs;
   Texture m_atlasTexture;
+  static Font *m_defaultFont;
 
   // consts
   const char *textureKey = "fontAltas";

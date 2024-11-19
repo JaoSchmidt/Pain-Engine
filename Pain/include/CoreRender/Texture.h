@@ -15,7 +15,8 @@ public:
           ImageFormat format = ImageFormat::RGBA8);
   Texture(Texture &t);
   ~Texture();
-  void bind(uint32_t slot = 0) const;
+  void bindToSlot(uint32_t slot = 0) const;
+  void bind() const;
   void setData(const void *data, uint32_t size);
   bool operator==(const Texture &other) const;
 
@@ -24,7 +25,8 @@ public:
   const uint32_t getHeight() const { return m_height; }
 
   MOVABLES(Texture);
-  NONCOPYABLE(Texture);
+  // NONCOPYABLE(Texture);
+  COPIES(Texture);
 
 private:
   std::string m_path;

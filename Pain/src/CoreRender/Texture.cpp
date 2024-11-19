@@ -21,10 +21,11 @@ Texture::Texture(uint32_t width, uint32_t height, ImageFormat format)
   m_dataFormat = getGLDataFormat(format);
 
   glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererId);
+  glBindTexture(GL_TEXTURE_2D, m_rendererId);
   glTextureStorage2D(m_rendererId, 1, m_internalFormat, m_width, m_height);
 
   glTextureParameteri(m_rendererId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTextureParameteri(m_rendererId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTextureParameteri(m_rendererId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   glTextureParameteri(m_rendererId, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTextureParameteri(m_rendererId, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -68,10 +69,13 @@ void Texture::setData(const void *data, uint32_t size)
   glTextureSubImage2D(m_rendererId, 0, 0, 0, m_width, m_height, m_dataFormat,
                       GL_UNSIGNED_BYTE, data);
 }
-void Texture::bind(uint32_t slot) const
+
+// bind texture unit i.e. has a slot in a sample array
+void Texture::bindToSlot(uint32_t slot) const
 {
   glBindTextureUnit(slot, m_rendererId);
 }
+void Texture::bind() const { glBindTexture(GL_TEXTURE_2D, m_rendererId); }
 Texture::~Texture() { glDeleteTextures(1, &m_rendererId); }
 
 } // namespace pain

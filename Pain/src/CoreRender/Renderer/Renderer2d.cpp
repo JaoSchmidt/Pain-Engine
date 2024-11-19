@@ -65,6 +65,12 @@ void Renderer2d::beginScene(float globalTime, const glm::mat4 &transform)
   m_sprayShader->uploadUniformMat4("u_Transform", transform);
   m_sprayShader->uploadUniformFloat("u_Time", globalTime);
 
+  m_textTextureShader->bind();
+  m_textTextureShader->uploadUniformMat4(
+      "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
+                              .m_camera->getViewProjectionMatrix());
+  m_textTextureShader->uploadUniformMat4("u_Transform", transform);
+
   goBackToFirstVertex();
 }
 
@@ -153,14 +159,15 @@ void Renderer2d::drawSprayParticle(const Particle &p)
 // Draw Text
 // ================================================================= //
 void Renderer2d::drawString(const glm::vec2 &position, const char *string,
-                            const Font &font, const glm::vec4 &color)
+                            const Font &font, const glm::vec4 &color,
+                            std::shared_ptr<Texture> &t)
 {
 
-  PLOG_I("Hello");
   const auto &fontGeometry = font.getFontGeometry();
   const auto &metrics = fontGeometry.getMetrics();
   const Texture &fontAtlas = font.getAtlasTexture();
   const double &spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
+  m_fontAtlasTexture = t.get();
 
   double x = 0.0;
   double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
@@ -206,6 +213,7 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
       float texelHeight = 1.0f / fontAtlas.getHeight();
       texCoordMin *= glm::vec2(texelWidth, texelHeight);
       texCoordMax *= glm::vec2(texelWidth, texelHeight);
+
       allocateCharacter(glm::translate(glm::mat4(1.f), {position, 0.f}), color,
                         // textureCoordinate
                         {texCoordMin, glm::vec2(texCoordMin.x, texCoordMax.y),
@@ -215,6 +223,14 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
                          glm::vec4{quadMin.x, quadMax.y, 0.f, 1.f},
                          glm::vec4{quadMax, 0.f, 1.f},
                          glm::vec4{quadMax.x, quadMin.y, 0.f, 1.f}});
+
+      if (*t != '\0') {
+        double advance = glyph->getAdvance();
+        char nextCharacter = *(t + 1);
+        fontGeometry.getAdvance(advance, *t, nextCharacter);
+        float kerningOffset = 0.0f;
+        x += fsScale * advance + kerningOffset;
+      }
       break;
     }
   }

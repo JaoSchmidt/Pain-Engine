@@ -86,12 +86,11 @@ Font::createAtlasTexture(const char *fontName, float fontSize,
   generator.setAttributes(attributes);
   generator.setThreadCount(Application::getProcessorCount() / 2);
   generator.generate(glyphs.data(), (int)glyphs.size());
-  msdfgen::savePng(generator.atlasStorage(), "output.png");
+  // msdfgen::savePng(generator.atlasStorage(), "output.png");
   msdfgen::BitmapConstRef<T, N> bitmap =
       (msdfgen::BitmapConstRef<T, N>)generator.atlasStorage();
 
   Texture texture = Texture(bitmap.width, bitmap.height, ImageFormat::RGB8);
-  PLOG_I("size ({},{})", bitmap.width, bitmap.height);
   texture.setData((void *)bitmap.pixels, bitmap.width * bitmap.height * 3);
   return texture;
 }
@@ -110,6 +109,12 @@ msdf_atlas::Charset Font::getLatinCharset()
       charset.add(c);
   }
   return charset;
+}
+
+Font *Font::getDefault()
+{
+  static Font m_defaultFont("resources/fonts/Arial.ttf");
+  return &m_defaultFont;
 }
 
 } // namespace pain

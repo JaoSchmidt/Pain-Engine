@@ -22,6 +22,7 @@ std::shared_ptr<Shader> Renderer2d::m_textTextureShader = nullptr;
 TextQuadVertex *Renderer2d::m_textVertexBufferBase = nullptr;
 TextQuadVertex *Renderer2d::m_textVertexBufferPtr = nullptr;
 uint32_t Renderer2d::m_textIndexCount = 0; // at init, there are 0 texts
+const Texture *Renderer2d::m_fontAtlasTexture = nullptr;
 
 // tri initializer
 std::shared_ptr<VertexArray> Renderer2d::m_triVertexArray = nullptr;
@@ -185,7 +186,7 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
 
     // bind textures
     for (uint32_t i = 0; i < m_textureSlotIndex; i++)
-      m_textureSlots[i]->bind(i);
+      m_textureSlots[i]->bindToSlot(i);
 
     m_quadTextureShader->bind();
     const uint32_t quadCount =
@@ -203,11 +204,10 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
         (uint8_t *)m_textVertexBufferPtr - (uint8_t *)m_textVertexBufferBase;
     m_textVertexBuffer->setData((void *)m_textVertexBufferBase, textDataSize);
 
-    // bind textures
-    for (uint32_t i = 0; i < m_textureSlotIndex; i++)
-      m_textureSlots[i]->bind(i);
-
+    m_fontAtlasTexture->bind();
     m_textTextureShader->bind();
+    m_textTextureShader->uploadUniformInt("u_FontAtlas", 0);
+
     const uint32_t textCount =
         m_textIndexCount ? m_textIndexCount
                          : m_textVertexArray->getIndexBuffer()->getCount();
@@ -227,7 +227,7 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
 
     // bind textures
     for (uint32_t i = 0; i < m_textureSlotIndex; i++)
-      m_textureSlots[i]->bind(i);
+      m_textureSlots[i]->bindToSlot(i);
 
     m_sprayShader->bind();
     const uint32_t sprayCount =
@@ -257,7 +257,7 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
 void Renderer2d::bindTextures()
 {
   for (uint32_t i = 0; i < m_textureSlotIndex; i++)
-    m_textureSlots[i]->bind(i);
+    m_textureSlots[i]->bindToSlot(i);
 }
 
 void Renderer2d::goBackToFirstVertex()

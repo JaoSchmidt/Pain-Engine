@@ -103,7 +103,8 @@ public:
 
   /** Draws a string of glyphs from a font atlas */
   static void drawString(const glm::vec2 &position, const char *string,
-                         const Font &font, const glm::vec4 &color);
+                         const Font &font, const glm::vec4 &color,
+                         std::shared_ptr<Texture> &t);
 
   static const glm::mat4 getTransform(const glm::vec2 &position,
                                       const glm::vec2 &size,
@@ -176,6 +177,7 @@ private:
   static ParticleVertex *m_sprayVertexBufferBase;
   static ParticleVertex *m_sprayVertexBufferPtr;
   static uint32_t m_sprayIndexCount;
+  const static Texture *m_fontAtlasTexture;
 
   // TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
   static const uint32_t MaxTextureSlots = 32;
