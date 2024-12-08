@@ -70,20 +70,33 @@ public:
   /** Draws a quad */
   static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                        const glm::vec4 &tintColor,
-                       const std::shared_ptr<Texture> &texture = nullptr,
+                       const Texture *texture = nullptr,
                        const float tilingFactor = 1.0f,
                        const std::array<glm::vec2, 4> &textureCoordinate = {
                            glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                            glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-  /** Draws a quad with rotation, new rotationRadians (angle)*/
   static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                       const glm::vec4 &tintColor, const float rotationRadians,
-                       const std::shared_ptr<Texture> &texture = nullptr,
+                       const glm::vec4 &tintColor, const Texture &texture,
                        const float tilingFactor = 1.0f,
                        const std::array<glm::vec2, 4> &textureCoordinate = {
                            glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                            glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
 
+  /** Draws a quad with rotation, new rotationRadians (angle)*/
+  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                       const glm::vec4 &tintColor, const float rotationRadians,
+                       const Texture *texture = nullptr,
+                       const float tilingFactor = 1.0f,
+                       const std::array<glm::vec2, 4> &textureCoordinate = {
+                           glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
+                           glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
+
+  static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                       const glm::vec4 &tintColor, const float rotationRadians,
+                       const Texture &texture, const float tilingFactor = 1.0f,
+                       const std::array<glm::vec2, 4> &textureCoordinate = {
+                           glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
+                           glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
   // ================================================================= //
   // Draw Tri
   // ================================================================= //
@@ -103,8 +116,7 @@ public:
 
   /** Draws a string of glyphs from a font atlas */
   static void drawString(const glm::vec2 &position, const char *string,
-                         const Font &font, const glm::vec4 &color,
-                         std::shared_ptr<Texture> &t);
+                         const Font &font, const glm::vec4 &color);
 
   static const glm::mat4 getTransform(const glm::vec2 &position,
                                       const glm::vec2 &size,
@@ -119,7 +131,7 @@ private:
   // ================================================================= //
   static void initBatches();
   static void bindTextures();
-  static float allocateTextures(const std::shared_ptr<Texture> &texture);
+  static float allocateTextures(const Texture &texture);
 
   static void allocateQuad(const glm::mat4 &transform,
                            const glm::vec4 &tintColor, const float tilingFactor,
@@ -183,7 +195,7 @@ private:
   static const uint32_t MaxTextureSlots = 32;
 
   static std::shared_ptr<Texture> m_whiteTexture;
-  static std::array<std::shared_ptr<Texture>, MaxTextureSlots> m_textureSlots;
+  static std::array<const Texture *, MaxTextureSlots> m_textureSlots;
 
   static uint32_t m_textureSlotIndex;
   // clang-format off

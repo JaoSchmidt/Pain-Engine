@@ -42,7 +42,7 @@ uint32_t Renderer2d::m_sprayIndexCount = 0;
 
 // texture initializer
 std::shared_ptr<Texture> Renderer2d::m_whiteTexture = nullptr;
-std::array<std::shared_ptr<Texture>, Renderer2d::MaxTextureSlots>
+std::array<const Texture *, Renderer2d::MaxTextureSlots>
     Renderer2d::m_textureSlots = {nullptr};
 uint32_t Renderer2d::m_textureSlotIndex =
     1; // at init, there is 1 white texture
@@ -93,7 +93,7 @@ void Renderer2d::initBatches()
   m_quadTextureShader->bind();
   m_quadTextureShader->uploadUniformIntArray("u_Textures", samplers,
                                              MaxTextureSlots);
-  m_textureSlots[0] = m_whiteTexture;
+  m_textureSlots[0] = m_whiteTexture.get();
 
   // =============================================================== //
   // Triangles
@@ -185,8 +185,10 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
     m_quadVertexBuffer->setData((void *)m_quadVertexBufferBase, quadDataSize);
 
     // bind textures
-    for (uint32_t i = 0; i < m_textureSlotIndex; i++)
+    for (uint32_t i = 0; i < m_textureSlotIndex; i++) {
+      PLOG_I("bind texture id = {}", m_textureSlots[i]->getRendererId());
       m_textureSlots[i]->bindToSlot(i);
+    }
 
     m_quadTextureShader->bind();
     const uint32_t quadCount =
@@ -275,13 +277,13 @@ void Renderer2d::goBackToFirstVertex()
   m_textVertexBufferPtr = m_textVertexBufferBase;
 }
 
-float Renderer2d::allocateTextures(const std::shared_ptr<Texture> &texture)
+float Renderer2d::allocateTextures(const Texture &texture)
 {
   // NOTE: this can be optimized later to avoid searching the texture
   float textureIndex = 0.0f;
   // tries to get texture from the m_textureSlots
   for (uint32_t i = 1; i < m_textureSlotIndex; i++) {
-    if (*m_textureSlots[i].get() == *texture.get()) {
+    if (*m_textureSlots[i] == texture) {
       textureIndex = (float)i;
       break;
     }
@@ -289,7 +291,7 @@ float Renderer2d::allocateTextures(const std::shared_ptr<Texture> &texture)
   // otherwise use it to allocate new texture
   if (textureIndex == 0.0f) {
     textureIndex = (float)m_textureSlotIndex;
-    m_textureSlots[m_textureSlotIndex] = texture;
+    m_textureSlots[m_textureSlotIndex] = &texture;
     m_textureSlotIndex++;
   }
   P_ASSERT_W(textureIndex != 0.0f,

@@ -31,6 +31,15 @@ Texture::Texture(uint32_t width, uint32_t height, ImageFormat format)
   glTextureParameteri(m_rendererId, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
+void Texture::setData(const void *data, uint32_t size)
+{
+  uint32_t bytesPerPixel = m_dataFormat == GL_RGBA ? 4 : 3;
+  P_ASSERT_W(size == m_width * m_height * bytesPerPixel,
+             "Data must be entire texture!");
+  glTextureSubImage2D(m_rendererId, 0, 0, 0, m_width, m_height, m_dataFormat,
+                      GL_UNSIGNED_BYTE, data);
+}
+
 /*
  * Sets a texture given a specific texture image path
  */
@@ -62,13 +71,6 @@ Texture::Texture(const std::string &path)
   glTexImage2D(GL_TEXTURE_2D, 0, m_dataFormat, surface->w, surface->h, 0,
                m_dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
 }
-void Texture::setData(const void *data, uint32_t size)
-{
-  uint32_t bpp = m_dataFormat == GL_RGBA ? 4 : 3;
-  P_ASSERT_W(size == m_width * m_height * bpp, "Data must be entire texture!");
-  glTextureSubImage2D(m_rendererId, 0, 0, 0, m_width, m_height, m_dataFormat,
-                      GL_UNSIGNED_BYTE, data);
-}
 
 // bind texture unit i.e. has a slot in a sample array
 void Texture::bindToSlot(uint32_t slot) const
@@ -76,6 +78,25 @@ void Texture::bindToSlot(uint32_t slot) const
   glBindTextureUnit(slot, m_rendererId);
 }
 void Texture::bind() const { glBindTexture(GL_TEXTURE_2D, m_rendererId); }
-Texture::~Texture() { glDeleteTextures(1, &m_rendererId); }
-
+Texture::~Texture()
+{
+  PLOG_I("Deleted id = {}", m_rendererId);
+  glDeleteTextures(1, &m_rendererId);
+}
+Texture Texture::clone()
+{
+  return Texture(m_path, m_width, m_height, m_dataFormat, m_internalFormat,
+                 m_rendererId);
+}
+Texture::Texture(std::string &path, uint32_t width, uint32_t height,
+                 uint32_t dataFormat, uint32_t internalFormat,
+                 uint32_t rendererId)
+{
+  m_path = path;
+  m_width = width;
+  m_height = height;
+  m_dataFormat = dataFormat;
+  m_internalFormat = internalFormat;
+  m_rendererId = rendererId;
+}
 } // namespace pain

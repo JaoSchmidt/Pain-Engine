@@ -2,22 +2,46 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
+#include "SDL_image.h"
+#include "SDL_surface.h"
 
 namespace pain
 {
-Font::Font(const char *fontFilename)
-    : m_atlasTexture(generateAtlas(fontFilename))
+
+Font *Font::create(const char *fontFilename)
+{
+  try {
+    return new Font(fontFilename, 40.0);
+  } catch (const std::exception &e) {
+    return getDefault();
+  }
+}
+Font *Font::create(const char *fontFilename, double emSize)
+{
+  try {
+    return new Font(fontFilename, emSize);
+  } catch (const std::exception &e) {
+    return getDefault();
+  }
+}
+
+Font::Font(const char *fontFilename, double emSize)
+    : m_atlasTexture(generateAtlas(fontFilename, emSize))
 {
 }
 
-Texture Font::generateAtlas(const char *fontFilename)
+Texture Font::generateAtlas(const char *fontFilename, double emSize)
 {
   // Initialize instance of FreeType library
   msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
   P_ASSERT(ft, "Could not load FreeType library");
   // Load font file
   msdfgen::FontHandle *font = msdfgen::loadFont(ft, fontFilename);
-  P_ASSERT(font, "Could not load font from \"{}\"", fontFilename);
+  if (!font) {
+    PLOG_W("Font file not found \"{}\"", fontFilename);
+    throw std::runtime_error(std::string("Font file not found \"") +
+                             std::string(fontFilename) + std::string("\""));
+  }
   // Storage for glyph geometry and their coordinates in the atlas
   // FontGeometry is a helper class that loads a set of glyphs from a single
   // font. It can also be used to get additional font metrics, kerning
@@ -35,7 +59,7 @@ Texture Font::generateAtlas(const char *fontFilename)
 
   PLOG_I("Loaded {} glyphs from font {}, out of {}", numOfLoadedGlyphs,
          fontFilename, charset.size());
-  double emSize = 40.0;
+  // double emSize = 40.0;
 
   // Apply MSDF edge coloring. See edge-coloring.h for other coloring
   // strategies.
@@ -53,7 +77,7 @@ Texture Font::generateAtlas(const char *fontFilename)
   // setPixelRange or setUnitRange
   packer.setPixelRange(2.0);
   packer.setMiterLimit(1.0);
-  packer.setScale(emSize);
+  // packer.setScale(emSize);
   // Compute atlas layout - pack glyphs
   packer.pack(m_glyphs.data(), m_glyphs.size());
   // Get final atlas dimensions
@@ -63,7 +87,7 @@ Texture Font::generateAtlas(const char *fontFilename)
   // atlas bitmap.
   Texture texture =
       createAtlasTexture<uint8_t, float, 3, msdf_atlas::msdfGenerator>(
-          textureKey, (float)emSize, m_glyphs, m_fontGeometry, width, height);
+          textureKey, m_glyphs, m_fontGeometry, width, height);
   // Cleanup
   msdfgen::destroyFont(font);
   msdfgen::deinitializeFreetype(ft);
@@ -72,7 +96,7 @@ Texture Font::generateAtlas(const char *fontFilename)
 template <typename T, typename S, int N,
           msdf_atlas::GeneratorFunction<S, N> GenFunc>
 Texture
-Font::createAtlasTexture(const char *fontName, float fontSize,
+Font::createAtlasTexture(const char *fontName,
                          const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
                          const msdf_atlas::FontGeometry &fontGeometry,
                          const float width, const float height)
@@ -80,18 +104,34 @@ Font::createAtlasTexture(const char *fontName, float fontSize,
   msdf_atlas::GeneratorAttributes attributes;
   attributes.config.overlapSupport = true;
   attributes.scanlinePass = true;
+
+  // config generator and generate
   msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc,
                                       msdf_atlas::BitmapAtlasStorage<T, N>>
       generator(width, height);
   generator.setAttributes(attributes);
   generator.setThreadCount(Application::getProcessorCount() / 2);
   generator.generate(glyphs.data(), (int)glyphs.size());
+  // TODO: savePng and IMG_SavePNG can correclty save atlas textures with png
+  // format. However, the Texture ojbect for most fonts isn't being generated
+  // correctly. That is there is probably some error with the setData texture
+  // function
+
   // msdfgen::savePng(generator.atlasStorage(), "output.png");
   msdfgen::BitmapConstRef<T, N> bitmap =
       (msdfgen::BitmapConstRef<T, N>)generator.atlasStorage();
 
+  // Tranform the msdfgen bitmap into a Texture
   Texture texture = Texture(bitmap.width, bitmap.height, ImageFormat::RGB8);
   texture.setData((void *)bitmap.pixels, bitmap.width * bitmap.height * 3);
+
+  // For tests only, transform into a SDL_Surface
+  // SDL_Surface *surf = SDL_CreateRGBSurfaceFrom(
+  //     (void *)bitmap.pixels, bitmap.width, bitmap.height, 24, bitmap.width *
+  //     3, 0x0000FF, 0x00FF00, 0xFF0000, 0x000000);
+  // IMG_SavePNG(surf, "surfaceOutput.png");
+  // SDL_FreeSurface(surf);
+
   return texture;
 }
 
@@ -113,7 +153,8 @@ msdf_atlas::Charset Font::getLatinCharset()
 
 Font *Font::getDefault()
 {
-  static Font m_defaultFont("resources/fonts/Arial.ttf");
+  static Font m_defaultFont("resources/default/fonts/OpenSans-Regular.ttf",
+                            40.0);
   return &m_defaultFont;
 }
 

@@ -104,25 +104,46 @@ void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
-                          const std::shared_ptr<Texture> &texture,
-                          float tilingFactor, // will prevent fancy tiling
+                          const Texture *texture, // Raw pointer version
+                          float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
   const float texIndex =
-      texture ? allocateTextures(texture) : 0.0f; // White Texture if nullptr
+      texture ? allocateTextures(*texture) : 0.0f; // White texture if nullptr
   const glm::mat4 transform = getTransform(position, size);
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
-                          const float rotationRadians,
-                          const std::shared_ptr<Texture> &texture,
+                          const Texture &texture, // Reference version
+                          float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
+{
+  const float texIndex = allocateTextures(texture);
+  const glm::mat4 transform = getTransform(position, size);
+  allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
+}
+
+void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor,
+                          const float rotationRadians, const Texture &texture,
+                          float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
+{
+  const float texIndex = allocateTextures(texture);
+  const glm::mat4 transform = getTransform(position, size, rotationRadians);
+  allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
+}
+
+void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor,
+                          const float rotationRadians, const Texture *texture,
                           float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
   const float texIndex =
-      texture ? allocateTextures(texture) : 0.0f; // White Texture if nullptr
+      texture ? allocateTextures(*texture) : 0.0f; // White Texture if nullptr
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
@@ -159,15 +180,13 @@ void Renderer2d::drawSprayParticle(const Particle &p)
 // Draw Text
 // ================================================================= //
 void Renderer2d::drawString(const glm::vec2 &position, const char *string,
-                            const Font &font, const glm::vec4 &color,
-                            std::shared_ptr<Texture> &t)
+                            const Font &font, const glm::vec4 &color)
 {
 
   const auto &fontGeometry = font.getFontGeometry();
   const auto &metrics = fontGeometry.getMetrics();
-  const Texture &fontAtlas = font.getAtlasTexture();
   const double &spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
-  m_fontAtlasTexture = t.get();
+  m_fontAtlasTexture = &font.getAtlasTexture();
 
   double x = 0.0;
   double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
@@ -209,8 +228,8 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
       // offset
       quadMin += glm::vec2(x, y);
       quadMax += glm::vec2(x, y);
-      float texelWidth = 1.0f / fontAtlas.getWidth();
-      float texelHeight = 1.0f / fontAtlas.getHeight();
+      float texelWidth = 1.0f / m_fontAtlasTexture->getWidth();
+      float texelHeight = 1.0f / m_fontAtlasTexture->getHeight();
       texCoordMin *= glm::vec2(texelWidth, texelHeight);
       texCoordMax *= glm::vec2(texelWidth, texelHeight);
 

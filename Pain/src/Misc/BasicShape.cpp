@@ -7,8 +7,7 @@ namespace pain
 
 RectangleSprite::RectangleSprite(Scene *scene, const glm::vec2 &position,
                                  const glm::vec2 &size, const glm::vec4 &color,
-                                 const std::shared_ptr<Texture> &ptexture,
-                                 float tilingFactor)
+                                 Texture *ptexture, float tilingFactor)
     : GameObject(scene)
 {
   addComponent<TransformComponent>(position);

@@ -9,8 +9,10 @@ namespace pain
 class Font
 {
 public:
-  Font(const char *fontFilename);
+  static Font *create(const char *fontFilename);
+  static Font *create(const char *fontFilename, double emSize);
   const inline Texture &getAtlasTexture() const { return m_atlasTexture; };
+  inline Texture &getAtlasTexture() { return m_atlasTexture; };
   const inline msdf_atlas::FontGeometry &getFontGeometry() const
   {
     return m_fontGeometry;
@@ -36,15 +38,17 @@ private:
   static constexpr double maxCornerAngle = 3.0;
 
   // methods
-  Texture generateAtlas(const char *fontFilename);
+  Texture generateAtlas(const char *fontFilename, double emSize);
   msdf_atlas::Charset getLatinCharset();
 
   template <typename T, typename S, int N,
             msdf_atlas::GeneratorFunction<S, N> GenFunc>
   Texture
-  createAtlasTexture(const char *fontName, float fontSize,
+  createAtlasTexture(const char *fontName,
                      const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
                      const msdf_atlas::FontGeometry &fontGeometry,
                      const float width, const float height);
+  Font(const char *fontFilename, double emSize);
 };
+
 } // namespace pain

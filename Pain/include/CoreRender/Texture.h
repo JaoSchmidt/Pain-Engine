@@ -19,14 +19,15 @@ public:
   void bind() const;
   void setData(const void *data, uint32_t size);
   bool operator==(const Texture &other) const;
+  Texture clone();
 
   const uint32_t getRendererId() const { return m_rendererId; }
   const uint32_t getWidth() const { return m_width; }
   const uint32_t getHeight() const { return m_height; }
 
   MOVABLES(Texture);
-  // NONCOPYABLE(Texture);
-  COPIES(Texture);
+  NONCOPYABLE(Texture);
+  // COPIES(Texture);
 
 private:
   std::string m_path;
@@ -81,6 +82,8 @@ private:
                   "Missing entry in types array");
     return types[static_cast<uint32_t>(format)];
   }
+  Texture(std::string &path, uint32_t width, uint32_t height,
+          uint32_t dataFormat, uint32_t internalFormat, uint32_t rendererId);
 };
 
 } // namespace pain
