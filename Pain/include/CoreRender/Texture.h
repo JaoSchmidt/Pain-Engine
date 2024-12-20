@@ -16,6 +16,7 @@ public:
   Texture(Texture &t);
   ~Texture();
   void bindToSlot(uint32_t slot = 0) const;
+  void bindAndClearSlot();
   void bind() const;
   void setData(const void *data, uint32_t size);
   bool operator==(const Texture &other) const;
@@ -28,6 +29,9 @@ public:
   MOVABLES(Texture);
   NONCOPYABLE(Texture);
   // COPIES(Texture);
+
+  // this variable should only be modified inside the renderer
+  uint32_t m_slot = 0;
 
 private:
   std::string m_path;

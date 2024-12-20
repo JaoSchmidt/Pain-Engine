@@ -2,6 +2,7 @@
 
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/ResourceManagerSing.h"
+#include "CoreRender/Renderer/Renderer2d.h"
 #include "glad/gl.h"
 
 namespace pain
@@ -72,16 +73,26 @@ Texture::Texture(const std::string &path)
                m_dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
 }
 
-// bind texture unit i.e. has a slot in a sample array
-void Texture::bindToSlot(uint32_t slot) const
+// bind texture unit i.e. has a slot in a sample array. In theory this is
+// depreciated because I'm caching the slots inside the Texture Object
+void Texture::bindToSlot(const uint32_t slot) const
 {
   glBindTextureUnit(slot, m_rendererId);
 }
+// bind texture to cached slot, clear the slot value
+void Texture::bindAndClearSlot()
+{
+  glBindTextureUnit(m_slot, m_rendererId);
+  m_slot = 0;
+}
 void Texture::bind() const { glBindTexture(GL_TEXTURE_2D, m_rendererId); }
+// Delete the texture, note that this doesn't modify the texture slot array
+// inside the Renderer. That task should be done elsewhere
 Texture::~Texture()
 {
-  PLOG_I("Deleted id = {}", m_rendererId);
+  // PLOG_I("Deleted id = {}", m_rendererId);
   glDeleteTextures(1, &m_rendererId);
+  Renderer2d::removeTexture(*this);
 }
 Texture Texture::clone()
 {

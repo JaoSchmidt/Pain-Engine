@@ -21,6 +21,7 @@ Font *Font::create(const char *fontFilename, double emSize)
   try {
     return new Font(fontFilename, emSize);
   } catch (const std::exception &e) {
+    PLOG_W("Defaulting to default texture");
     return getDefault();
   }
 }
@@ -59,7 +60,6 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
 
   PLOG_I("Loaded {} glyphs from font {}, out of {}", numOfLoadedGlyphs,
          fontFilename, charset.size());
-  // double emSize = 40.0;
 
   // Apply MSDF edge coloring. See edge-coloring.h for other coloring
   // strategies.
@@ -77,7 +77,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   // setPixelRange or setUnitRange
   packer.setPixelRange(2.0);
   packer.setMiterLimit(1.0);
-  // packer.setScale(emSize);
+  packer.setScale(emSize);
   // Compute atlas layout - pack glyphs
   packer.pack(m_glyphs.data(), m_glyphs.size());
   // Get final atlas dimensions

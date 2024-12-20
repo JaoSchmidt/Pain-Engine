@@ -15,12 +15,17 @@ std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraEntity = nullptr;
 void Renderer2d::init(std::shared_ptr<OrthoCameraEntity> cameraEntity)
 {
   P_ASSERT(cameraEntity != nullptr, "Camera Entity must be initialized");
-  // NOTE: This can be changed later in case we need some camera mechanic
+  // NOTE: This enable 3d and can be changed later in case we need some camera
+  // mechanic
   // glEnable(GL_DEPTH_TEST);
 
-  // transparency
+  // allow transparency
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  // HACK: allow textures with 3 channels to align properly, e.g. font textures.
+  // No idea why it works tho, perhaps I will find a proper doc later
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   // quadBatch = new VertexBatch();
   initBatches();
@@ -104,7 +109,7 @@ void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
-                          const Texture *texture, // Raw pointer version
+                          Texture *texture, // Raw pointer version
                           float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
@@ -116,7 +121,7 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
-                          const Texture &texture, // Reference version
+                          Texture &texture, // Reference version
                           float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
@@ -127,7 +132,7 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
-                          const float rotationRadians, const Texture &texture,
+                          const float rotationRadians, Texture &texture,
                           float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
@@ -138,7 +143,7 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
-                          const float rotationRadians, const Texture *texture,
+                          const float rotationRadians, Texture *texture,
                           float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {

@@ -69,14 +69,13 @@ public:
 
   /** Draws a quad */
   static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                       const glm::vec4 &tintColor,
-                       const Texture *texture = nullptr,
+                       const glm::vec4 &tintColor, Texture *texture = nullptr,
                        const float tilingFactor = 1.0f,
                        const std::array<glm::vec2, 4> &textureCoordinate = {
                            glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                            glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
   static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                       const glm::vec4 &tintColor, const Texture &texture,
+                       const glm::vec4 &tintColor, Texture &texture,
                        const float tilingFactor = 1.0f,
                        const std::array<glm::vec2, 4> &textureCoordinate = {
                            glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
@@ -85,7 +84,7 @@ public:
   /** Draws a quad with rotation, new rotationRadians (angle)*/
   static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                        const glm::vec4 &tintColor, const float rotationRadians,
-                       const Texture *texture = nullptr,
+                       Texture *texture = nullptr,
                        const float tilingFactor = 1.0f,
                        const std::array<glm::vec2, 4> &textureCoordinate = {
                            glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
@@ -93,7 +92,7 @@ public:
 
   static void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                        const glm::vec4 &tintColor, const float rotationRadians,
-                       const Texture &texture, const float tilingFactor = 1.0f,
+                       Texture &texture, const float tilingFactor = 1.0f,
                        const std::array<glm::vec2, 4> &textureCoordinate = {
                            glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                            glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
@@ -124,15 +123,19 @@ public:
   static const glm::mat4 getTransform(const glm::vec2 &position,
                                       const glm::vec2 &size);
 
+  static void removeTexture(const Texture &texture);
+
 private:
   static void flush();
   // ================================================================= //
-  // Data for Renderer
+  // Texture Data
   // ================================================================= //
   static void initBatches();
   static void bindTextures();
-  static float allocateTextures(const Texture &texture);
-
+  static float allocateTextures(Texture &texture);
+  // ================================================================= //
+  // Data for Renderer
+  // ================================================================= //
   static void allocateQuad(const glm::mat4 &transform,
                            const glm::vec4 &tintColor, const float tilingFactor,
                            const float textureIndex,
@@ -195,7 +198,7 @@ private:
   static const uint32_t MaxTextureSlots = 32;
 
   static std::shared_ptr<Texture> m_whiteTexture;
-  static std::array<const Texture *, MaxTextureSlots> m_textureSlots;
+  static std::array<Texture *, MaxTextureSlots> m_textureSlots;
 
   static uint32_t m_textureSlotIndex;
   // clang-format off

@@ -42,8 +42,8 @@ uint32_t Renderer2d::m_sprayIndexCount = 0;
 
 // texture initializer
 std::shared_ptr<Texture> Renderer2d::m_whiteTexture = nullptr;
-std::array<const Texture *, Renderer2d::MaxTextureSlots>
-    Renderer2d::m_textureSlots = {nullptr};
+std::array<Texture *, Renderer2d::MaxTextureSlots> Renderer2d::m_textureSlots =
+    {nullptr};
 uint32_t Renderer2d::m_textureSlotIndex =
     1; // at init, there is 1 white texture
 
@@ -178,6 +178,8 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
   // =============================================================== //
   // Quads
   // =============================================================== //
+  // PLOG_I("bind texture id = {}", m_textureSlots[i]->getRendererId());
+
   if (m_quadIndexCount) {
     m_quadVertexArray->bind();
     const uint32_t quadDataSize =
@@ -186,7 +188,6 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
 
     // bind textures
     for (uint32_t i = 0; i < m_textureSlotIndex; i++) {
-      PLOG_I("bind texture id = {}", m_textureSlots[i]->getRendererId());
       m_textureSlots[i]->bindToSlot(i);
     }
 
@@ -227,9 +228,10 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
     m_sprayVertexBuffer->setData((void *)m_sprayVertexBufferBase,
                                  sprayDataSize);
 
-    // bind textures
+    // FIX: I don't really need to bind textures here, right?
+    // TODO: make it possible to bind textures for spray particles
     for (uint32_t i = 0; i < m_textureSlotIndex; i++)
-      m_textureSlots[i]->bindToSlot(i);
+      m_textureSlots[i]->bindAndClearSlot();
 
     m_sprayShader->bind();
     const uint32_t sprayCount =
@@ -275,28 +277,45 @@ void Renderer2d::goBackToFirstVertex()
 
   m_textIndexCount = 0;
   m_textVertexBufferPtr = m_textVertexBufferBase;
+
+  m_textureSlotIndex = 1; // 1, because 0 is for default 1x1 white texture
 }
 
-float Renderer2d::allocateTextures(const Texture &texture)
+// TODO: allow the possibility of removing the texture (tho you could just reset
+// everything after first delete)
+float Renderer2d::allocateTextures(Texture &texture)
 {
   // NOTE: this can be optimized later to avoid searching the texture
   float textureIndex = 0.0f;
-  // tries to get texture from the m_textureSlots
-  for (uint32_t i = 1; i < m_textureSlotIndex; i++) {
-    if (*m_textureSlots[i] == texture) {
-      textureIndex = (float)i;
-      break;
-    }
-  }
-  // otherwise use it to allocate new texture
-  if (textureIndex == 0.0f) {
+  // use it to allocate new texture
+  if (texture.m_slot == 0) {
     textureIndex = (float)m_textureSlotIndex;
     m_textureSlots[m_textureSlotIndex] = &texture;
+    texture.m_slot = m_textureSlotIndex;
     m_textureSlotIndex++;
+  } else {
+    textureIndex = (float)texture.m_slot;
   }
+  // TODO: check if m_textureSlotIndex is bigger than 32, then flush
+
   P_ASSERT_W(textureIndex != 0.0f,
              "Missing texture inside a drawQuad that requires textures");
   return textureIndex;
+}
+void Renderer2d::removeTexture(const Texture &texture)
+{
+  if (texture.m_slot == 0) // m_textureSlots doesn't have the texture
+    return;
+  P_ASSERT_W(*m_textureSlots[texture.m_slot] == texture,
+             "Attempted to remove a texture that wasn't allocated.");
+  for (uint32_t i = texture.m_slot; i < m_textureSlotIndex; i++) {
+    m_textureSlots[i] = m_textureSlots[i + 1];
+    m_textureSlots[i]->m_slot = i; // Update the slot value in the Texture
+  }
+
+  m_textureSlots[m_textureSlotIndex] = nullptr; // Clear last slot
+  m_textureSlotIndex--;
+  return;
 }
 const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
                                          const glm::vec2 &size)
