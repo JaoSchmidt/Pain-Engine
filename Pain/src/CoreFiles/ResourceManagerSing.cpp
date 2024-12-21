@@ -7,24 +7,25 @@
 namespace pain
 {
 
-Resources *Resources::m_instance = nullptr;
-Resources *Resources::getInstance()
+namespace resources
 {
-  if (m_instance == nullptr) {
-    m_instance = new Resources();
-  }
-  return m_instance;
-}
-SDL_Surface *Resources::getSurface(const std::string filepath)
+// NOTE: remember folks, surfaceMap is in the static/global memory but its
+// content are in the heap
+static std::unordered_map<const char *, SDL_Surface *> m_surfacesMap = {};
+
+SDL_Surface *getSurface(const char *filepath)
 {
   auto search = m_surfacesMap.find(filepath);
   if (search != m_surfacesMap.end()) {
-    return m_surfacesMap[filepath];
-  } else {
-    SDL_Surface *surface = IMG_Load(filepath.c_str());
-    m_surfacesMap.insert(std::make_pair(filepath, surface));
-    return m_surfacesMap[filepath];
+    return search->second;
   }
+  SDL_Surface *surface = IMG_Load(filepath);
+  if (surface) {
+    m_surfacesMap[filepath] = surface;
+  }
+  return surface;
 }
+
+} // namespace resources
 
 } // namespace pain

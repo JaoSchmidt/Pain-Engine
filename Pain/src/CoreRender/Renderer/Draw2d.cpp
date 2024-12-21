@@ -1,53 +1,106 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 
-#include "CoreRender/ShaderManager.h"
 #include "ECS/Components/Particle.h"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace pain
 {
+namespace
+{
+constexpr glm::vec4 m_quadVertexPositions[4] = {
+    glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
+    glm::vec4(0.5f, -0.5f, 0.f, 1.f),
+    glm::vec4(0.5f, 0.5f, 0.f, 1.f),
+    glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
+};
+constexpr glm::vec4 m_triVertexPositions[3] = {
+    glm::vec4(0.0f, 0.5f, 0.f, 1.f),
+    glm::vec4(0.5f, -0.5f, 0.f, 1.f),
+    glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
+};
+constexpr glm::vec2 m_sprayVertexPositions[4] = {
+    glm::vec2(-0.5f, -0.5f),
+    glm::vec2(0.5f, -0.5f),
+    glm::vec2(0.5f, 0.5f),
+    glm::vec2(-0.5f, 0.5f),
+};
+constexpr uint32_t MaxQuads = 2000;
+constexpr uint32_t MaxQuadVertices = MaxQuads * 4;
+constexpr uint32_t MaxQuadIndices = MaxQuads * 6;
+constexpr uint32_t MaxTri = 2000;
+constexpr uint32_t MaxTriVertices = MaxTri * 3;
+constexpr uint32_t MaxTriIndices = MaxTri * 3;
+constexpr uint32_t MaxSprayParticles = 10000;
+constexpr uint32_t MaxSprayVertices = MaxSprayParticles * 4;
+constexpr uint32_t MaxSprayIndices = MaxSprayParticles * 6;
 // quads initializer
-std::shared_ptr<VertexArray> Renderer2d::m_quadVertexArray = nullptr;
-std::shared_ptr<VertexBuffer> Renderer2d::m_quadVertexBuffer = nullptr;
-std::shared_ptr<Shader> Renderer2d::m_quadTextureShader = nullptr;
-QuadVertex *Renderer2d::m_quadVertexBufferBase = nullptr;
-QuadVertex *Renderer2d::m_quadVertexBufferPtr = nullptr;
-uint32_t Renderer2d::m_quadIndexCount = 0; // at init, there are 0 quads
+std::shared_ptr<VertexArray> m_quadVertexArray = nullptr;
+std::shared_ptr<VertexBuffer> m_quadVertexBuffer = nullptr;
+std::shared_ptr<Shader> m_quadTextureShader = nullptr;
+QuadVertex *m_quadVertexBufferBase = nullptr;
+QuadVertex *m_quadVertexBufferPtr = nullptr;
+uint32_t m_quadIndexCount = 0; // at init, there are 0 quads
 
 // text vertex initializer
-std::shared_ptr<VertexArray> Renderer2d::m_textVertexArray = nullptr;
-std::shared_ptr<VertexBuffer> Renderer2d::m_textVertexBuffer = nullptr;
-std::shared_ptr<Shader> Renderer2d::m_textTextureShader = nullptr;
-TextQuadVertex *Renderer2d::m_textVertexBufferBase = nullptr;
-TextQuadVertex *Renderer2d::m_textVertexBufferPtr = nullptr;
-uint32_t Renderer2d::m_textIndexCount = 0; // at init, there are 0 texts
-const Texture *Renderer2d::m_fontAtlasTexture = nullptr;
+std::shared_ptr<VertexArray> m_textVertexArray = nullptr;
+std::shared_ptr<VertexBuffer> m_textVertexBuffer = nullptr;
+std::shared_ptr<Shader> m_textTextureShader = nullptr;
+TextQuadVertex *m_textVertexBufferBase = nullptr;
+TextQuadVertex *m_textVertexBufferPtr = nullptr;
+uint32_t m_textIndexCount = 0; // at init, there are 0 texts
 
 // tri initializer
-std::shared_ptr<VertexArray> Renderer2d::m_triVertexArray = nullptr;
-std::shared_ptr<VertexBuffer> Renderer2d::m_triVertexBuffer = nullptr;
-std::shared_ptr<Shader> Renderer2d::m_triShader = nullptr;
-TriVertex *Renderer2d::m_triVertexBufferBase = nullptr;
-TriVertex *Renderer2d::m_triVertexBufferPtr = nullptr;
-uint32_t Renderer2d::m_triIndexCount = 0; // at init, there are 0 tirangles
+std::shared_ptr<VertexArray> m_triVertexArray = nullptr;
+std::shared_ptr<VertexBuffer> m_triVertexBuffer = nullptr;
+std::shared_ptr<Shader> m_triShader = nullptr;
+TriVertex *m_triVertexBufferBase = nullptr;
+TriVertex *m_triVertexBufferPtr = nullptr;
+uint32_t m_triIndexCount = 0; // at init, there are 0 tirangles
 
 // spray particle initializer
-std::shared_ptr<VertexArray> Renderer2d::m_sprayVertexArray = nullptr;
-std::shared_ptr<VertexBuffer> Renderer2d::m_sprayVertexBuffer = nullptr;
-std::shared_ptr<Shader> Renderer2d::m_sprayShader = nullptr;
-ParticleVertex *Renderer2d::m_sprayVertexBufferBase = nullptr;
-ParticleVertex *Renderer2d::m_sprayVertexBufferPtr = nullptr;
-uint32_t Renderer2d::m_sprayIndexCount = 0;
+std::shared_ptr<VertexArray> m_sprayVertexArray = nullptr;
+std::shared_ptr<VertexBuffer> m_sprayVertexBuffer = nullptr;
+std::shared_ptr<Shader> m_sprayShader = nullptr;
+ParticleVertex *m_sprayVertexBufferBase = nullptr;
+ParticleVertex *m_sprayVertexBufferPtr = nullptr;
+uint32_t m_sprayIndexCount = 0;
 
 // texture initializer
-std::shared_ptr<Texture> Renderer2d::m_whiteTexture = nullptr;
-std::array<Texture *, Renderer2d::MaxTextureSlots> Renderer2d::m_textureSlots =
-    {nullptr};
-uint32_t Renderer2d::m_textureSlotIndex =
-    1; // at init, there is 1 white texture
+constexpr uint32_t MaxTextureSlots = 32;
+std::shared_ptr<Texture> m_whiteTexture = nullptr;
+std::array<Texture *, MaxTextureSlots> m_textureSlots = {nullptr};
+uint32_t m_textureSlotIndex = 1; // at init, there is 1 white texture
+} // namespace
 
-void Renderer2d::initBatches()
+namespace Renderer2d
+{
+const Texture *m_fontAtlasTexture = nullptr;
+
+void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
+                         float globalTime, const glm::mat4 &transform)
+{
+  m_quadTextureShader->bind();
+  m_quadTextureShader->uploadUniformMat4("u_ViewProjection",
+                                         viewProjectionMatrix);
+  m_quadTextureShader->uploadUniformMat4("u_Transform", transform);
+
+  m_triShader->bind();
+  m_triShader->uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
+  m_triShader->uploadUniformMat4("u_Transform", transform);
+
+  m_sprayShader->bind();
+  m_sprayShader->uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
+  m_sprayShader->uploadUniformMat4("u_Transform", transform);
+  m_sprayShader->uploadUniformFloat("u_Time", globalTime);
+
+  m_textTextureShader->bind();
+  m_textTextureShader->uploadUniformMat4("u_ViewProjection",
+                                         viewProjectionMatrix);
+  m_textTextureShader->uploadUniformMat4("u_Transform", transform);
+}
+void initBatches()
 {
   // =============================================================== //
   // Quads
@@ -89,7 +142,8 @@ void Renderer2d::initBatches()
     samplers[i] = i;
   }
 
-  m_quadTextureShader.reset(new Shader("resources/shaders/Texture.glsl"));
+  m_quadTextureShader.reset(
+      new Shader("resources/default/shaders/Texture.glsl"));
   m_quadTextureShader->bind();
   m_quadTextureShader->uploadUniformIntArray("u_Textures", samplers,
                                              MaxTextureSlots);
@@ -118,7 +172,7 @@ void Renderer2d::initBatches()
   m_triVertexArray->setIndexBuffer(triIB);
   delete[] triIndices;
 
-  m_triShader.reset(new Shader("resources/shaders/Triangles.glsl"));
+  m_triShader.reset(new Shader("resources/default/shaders/Triangles.glsl"));
   // =============================================================== //
   // Text
   // =============================================================== //
@@ -136,7 +190,7 @@ void Renderer2d::initBatches()
   m_textVertexArray->setIndexBuffer(quadIB);
 
   m_textTextureShader.reset(
-      new Shader("resources/shaders/Renderer2dText.glsl"));
+      new Shader("resources/default/shaders/Renderer2dText.glsl"));
   m_textTextureShader->bind();
   // =============================================================== //
   // Spray Particles
@@ -169,11 +223,11 @@ void Renderer2d::initBatches()
   m_sprayVertexArray->setIndexBuffer(sprayIB);
   delete[] sprayIndices;
 
-  m_sprayShader.reset(new Shader("resources/shaders/SprayParticles.glsl"));
-  ShaderLibrary::getInstance()->add(m_sprayShader);
+  m_sprayShader.reset(
+      new Shader("resources/default/shaders/SprayParticles.glsl"));
 }
 
-void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
+void drawBatches(const glm::mat4 &viewProjectionMatrix)
 {
   // =============================================================== //
   // Quads
@@ -258,13 +312,13 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
   }
 }
 
-void Renderer2d::bindTextures()
+void bindTextures()
 {
   for (uint32_t i = 0; i < m_textureSlotIndex; i++)
     m_textureSlots[i]->bindToSlot(i);
 }
 
-void Renderer2d::goBackToFirstVertex()
+void goBackToFirstVertex()
 {
   m_quadIndexCount = 0;
   m_quadVertexBufferPtr = m_quadVertexBufferBase;
@@ -283,7 +337,7 @@ void Renderer2d::goBackToFirstVertex()
 
 // TODO: allow the possibility of removing the texture (tho you could just reset
 // everything after first delete)
-float Renderer2d::allocateTextures(Texture &texture)
+float allocateTextures(Texture &texture)
 {
   // NOTE: this can be optimized later to avoid searching the texture
   float textureIndex = 0.0f;
@@ -302,7 +356,7 @@ float Renderer2d::allocateTextures(Texture &texture)
              "Missing texture inside a drawQuad that requires textures");
   return textureIndex;
 }
-void Renderer2d::removeTexture(const Texture &texture)
+void removeTexture(const Texture &texture)
 {
   if (texture.m_slot == 0) // m_textureSlots doesn't have the texture
     return;
@@ -317,15 +371,13 @@ void Renderer2d::removeTexture(const Texture &texture)
   m_textureSlotIndex--;
   return;
 }
-const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
-                                         const glm::vec2 &size)
+const glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size)
 {
   return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
          glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 }
-const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
-                                         const glm::vec2 &size,
-                                         const float rotationAngleRadians)
+const glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size,
+                             const float rotationAngleRadians)
 {
   return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
          glm::rotate(glm::mat4(1.0f), rotationAngleRadians,
@@ -333,11 +385,9 @@ const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
          glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 }
 
-void Renderer2d::allocateQuad(const glm::mat4 &transform,
-                              const glm::vec4 &tintColor,
-                              const float tilingFactor,
-                              const float textureIndex,
-                              const std::array<glm::vec2, 4> &textureCoordinate)
+void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
+                  const float tilingFactor, const float textureIndex,
+                  const std::array<glm::vec2, 4> &textureCoordinate)
 {
   for (int i = 0; i < 4; i++) {
     m_quadVertexBufferPtr->position = transform * m_quadVertexPositions[i];
@@ -350,8 +400,7 @@ void Renderer2d::allocateQuad(const glm::mat4 &transform,
   m_quadIndexCount += 6;
 }
 
-void Renderer2d::allocateTri(const glm::mat4 &transform,
-                             const glm::vec4 &tintColor)
+void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor)
 {
   for (int i = 0; i < 3; i++) {
     m_triVertexBufferPtr->position = transform * m_triVertexPositions[i];
@@ -361,8 +410,8 @@ void Renderer2d::allocateTri(const glm::mat4 &transform,
   m_triIndexCount += 3;
 }
 
-void Renderer2d::beginSprayParticle(const float globalTime,
-                                    const ParticleSprayComponent &psc)
+void beginSprayParticle(const float globalTime,
+                        const ParticleSprayComponent &psc)
 {
   m_sprayShader->bind();
   m_sprayShader->uploadUniformFloat("u_Time", globalTime);
@@ -371,11 +420,9 @@ void Renderer2d::beginSprayParticle(const float globalTime,
   m_sprayShader->uploadUniformFloat("u_SizeChangeSpeed", psc.m_sizeChangeSpeed);
   m_sprayShader->uploadUniformFloat("u_randomSizeFactor", psc.m_randSizeFactor);
 }
-void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
-                                        const glm::vec2 &offset,
-                                        const glm::vec2 &normal,
-                                        const float startTime,
-                                        const float rotationSpeed)
+void allocateSprayParticles(const glm::vec2 &position, const glm::vec2 &offset,
+                            const glm::vec2 &normal, const float startTime,
+                            const float rotationSpeed)
 {
   for (int i = 0; i < 4; i++) {
     m_sprayVertexBufferPtr->position = m_sprayVertexPositions[i];
@@ -388,10 +435,9 @@ void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
   m_sprayIndexCount += 6;
 }
 
-void Renderer2d::allocateCharacter(
-    const glm::mat4 &transform, const glm::vec4 &tintColor,
-    const std::array<glm::vec2, 4> &textureCoordinate,
-    const std::array<glm::vec4, 4> &textVertexPositions)
+void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
+                       const std::array<glm::vec2, 4> &textureCoordinate,
+                       const std::array<glm::vec4, 4> &textVertexPositions)
 {
   for (int i = 0; i < 4; i++) {
     m_textVertexBufferPtr->position = transform * textVertexPositions[i];
@@ -401,5 +447,6 @@ void Renderer2d::allocateCharacter(
   }
   m_textIndexCount += 6;
 }
+} // namespace Renderer2d
 
 } // namespace pain

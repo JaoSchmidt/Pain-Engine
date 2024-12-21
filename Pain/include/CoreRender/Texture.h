@@ -10,7 +10,7 @@ enum class ImageFormat { None = 0, R8, RGB8, RGBA8, RGBA32F };
 class Texture
 {
 public:
-  Texture(const std::string &path);
+  Texture(const char *path);
   Texture(uint32_t width, uint32_t height,
           ImageFormat format = ImageFormat::RGBA8);
   Texture(Texture &t);

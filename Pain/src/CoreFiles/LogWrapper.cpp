@@ -1,4 +1,4 @@
-﻿#include <spdlog/spdlog.h>
+#include <spdlog/spdlog.h>
 
 #include "CoreFiles/LogWrapper.h"
 
@@ -7,10 +7,16 @@
 namespace pain
 {
 
-std::shared_ptr<spdlog::logger> LogWrapper::s_CoreLogger;
-std::shared_ptr<spdlog::logger> LogWrapper::s_ClientLogger;
+namespace
+{
+std::shared_ptr<spdlog::logger> s_CoreLogger;
+std::shared_ptr<spdlog::logger> s_ClientLogger;
+} // namespace
 
-void LogWrapper::Init()
+namespace logWrapper
+{
+// using shared for now
+void Init()
 {
   spdlog::set_pattern("%^[%T] %n: %v%$");
   s_CoreLogger = spdlog::stdout_color_mt("PAIN");
@@ -19,5 +25,10 @@ void LogWrapper::Init()
   s_ClientLogger = spdlog::stdout_color_mt("APP");
   s_ClientLogger->set_level(spdlog::level::trace);
 }
+
+std::shared_ptr<spdlog::logger> &GetClientLogger() { return s_ClientLogger; }
+std::shared_ptr<spdlog::logger> &GetCoreLogger() { return s_CoreLogger; }
+
+} // namespace logWrapper
 
 } // namespace pain

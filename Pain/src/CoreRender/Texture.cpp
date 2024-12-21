@@ -44,9 +44,9 @@ void Texture::setData(const void *data, uint32_t size)
 /*
  * Sets a texture given a specific texture image path
  */
-Texture::Texture(const std::string &path)
+Texture::Texture(const char *path)
 {
-  SDL_Surface *surface = Resources::getInstance()->getSurface(path);
+  SDL_Surface *surface = resources::getSurface(path);
   P_ASSERT(surface != nullptr, "Texture path \"{}\" was not found!", path);
   surface = flipVertical(surface);
   m_path = path;

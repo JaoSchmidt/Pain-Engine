@@ -13,10 +13,9 @@ class EXPORT Application
 {
 public:
   Application(const char *title, int w, int h);
+  ~Application();
 
   // virtual because the real Application will be the game
-  virtual ~Application();
-  static Application &Get() { return *s_instance; }
 
   // TODO: define those in the source file later
   void addImGuiInstance(ImGuiInstance *imGuiInstance)
@@ -75,7 +74,6 @@ private:
   //static constexpr glm::vec4 m_clearColor = glm::vec4(1.0, 0.2, 0.9, 1);
 
   friend struct Pain;
-  static Application* s_instance;
 
   // FPS Calculation
   constexpr static int FPS_SAMPLE_COUNT = 64;

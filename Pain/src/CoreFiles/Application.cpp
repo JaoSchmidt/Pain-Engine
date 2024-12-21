@@ -16,7 +16,6 @@ const unsigned Application::getProcessorCount()
   return std::thread::hardware_concurrency();
 }
 
-Application *Application::s_instance = nullptr;
 /* Creates window, opengl context and init glew*/
 Application::Application(const char *title, int w, int h)
 {
@@ -84,7 +83,6 @@ Application::Application(const char *title, int w, int h)
   // =========================================================================//
   // Application Initial setup
   // =========================================================================//
-  s_instance = this;
   m_imguiController = std::make_unique<ImGuiController>();
   m_isMinimized = false;
   m_sceneManager = new pain::SceneManager();

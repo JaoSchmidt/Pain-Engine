@@ -7,24 +7,12 @@
 namespace pain
 {
 
-class EXPORT LogWrapper
+namespace logWrapper
 {
-public:
-  inline static std::shared_ptr<spdlog::logger> &GetClientLogger()
-  {
-    return s_ClientLogger;
-  }
-
-  inline static std::shared_ptr<spdlog::logger> &GetCoreLogger()
-  {
-    return s_CoreLogger;
-  }
-  static void Init();
-
-private:
-  static std::shared_ptr<spdlog::logger> s_CoreLogger;
-  static std::shared_ptr<spdlog::logger> s_ClientLogger;
-};
+std::shared_ptr<spdlog::logger> &GetCoreLogger();
+std::shared_ptr<spdlog::logger> &GetClientLogger();
+void Init();
+} // namespace logWrapper
 
 } // namespace pain
 
@@ -35,8 +23,8 @@ private:
 // Tell points from vec2
 #define TP_VEC2(vec) (vec).x, (vec).y
 // Core log macros
-#define PLOG_T(...) ::pain::LogWrapper::GetCoreLogger()->trace(__VA_ARGS__)
-#define PLOG_I(...) ::pain::LogWrapper::GetCoreLogger()->info(__VA_ARGS__)
-#define PLOG_W(...) ::pain::LogWrapper::GetCoreLogger()->warn(__VA_ARGS__)
-#define PLOG_E(...) ::pain::LogWrapper::GetCoreLogger()->error(__VA_ARGS__)
-#define PLOG_F(...) ::pain::LogWrapper::GetCoreLogger()->critical(__VA_ARGS__)
+#define PLOG_T(...) ::pain::logWrapper::GetCoreLogger()->trace(__VA_ARGS__)
+#define PLOG_I(...) ::pain::logWrapper::GetCoreLogger()->info(__VA_ARGS__)
+#define PLOG_W(...) ::pain::logWrapper::GetCoreLogger()->warn(__VA_ARGS__)
+#define PLOG_E(...) ::pain::logWrapper::GetCoreLogger()->error(__VA_ARGS__)
+#define PLOG_F(...) ::pain::logWrapper::GetCoreLogger()->critical(__VA_ARGS__)

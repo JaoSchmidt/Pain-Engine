@@ -38,6 +38,12 @@
 
 #include "imgui.h"
 
+#define LOG_T(...) ::pain::logWrapper::GetClientLogger()->trace(__VA_ARGS__)
+#define LOG_I(...) ::pain::logWrapper::GetClientLogger()->info(__VA_ARGS__)
+#define LOG_W(...) ::pain::logWrapper::GetClientLogger()->warn(__VA_ARGS__)
+#define LOG_E(...) ::pain::logWrapper::GetClientLogger()->error(__VA_ARGS__)
+#define LOG_F(...) ::pain::logWrapper::GetClientLogger()->critical(__VA_ARGS__)
+
 #ifndef NDEBUG
 #define ASSERT(x, s, ...)                                                      \
   {                                                                            \
@@ -57,9 +63,3 @@ struct Pain {
   static void runApplication(Application *app);
 };
 } // namespace pain
-
-#define LOG_T(...) ::pain::LogWrapper::GetClientLogger()->trace(__VA_ARGS__)
-#define LOG_I(...) ::pain::LogWrapper::GetClientLogger()->info(__VA_ARGS__)
-#define LOG_W(...) ::pain::LogWrapper::GetClientLogger()->warn(__VA_ARGS__)
-#define LOG_E(...) ::pain::LogWrapper::GetClientLogger()->error(__VA_ARGS__)
-#define LOG_F(...) ::pain::LogWrapper::GetClientLogger()->critical(__VA_ARGS__)

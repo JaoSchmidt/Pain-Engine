@@ -5,6 +5,8 @@
 
 namespace pain
 {
+// NOTE: this is untoched at the moment because every shader is being loaded
+// directly inside the renderer
 class ShaderLibrary
 {
 public:

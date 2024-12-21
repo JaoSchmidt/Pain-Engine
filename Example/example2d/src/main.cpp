@@ -40,16 +40,17 @@ class MainScene : public pain::Scene
 {
 public:
   MainScene() : pain::Scene() {}
-  void init(std::shared_ptr<pain::OrthoCameraEntity> pCamera)
+  void init(pain::Application &app, Scene *scene, float aspectRatio, float zoom)
   {
-    m_orthocamera = pCamera;
-    pain::Renderer2d::init(m_orthocamera);
+    m_orthocamera =
+        std::make_unique<pain::OrthoCameraEntity>(scene, aspectRatio, zoom);
+    pain::Renderer2d::init(*m_orthocamera);
     auto &a = m_orthocamera->addComponent<pain::NativeScriptComponent>();
     a.bind<pain::OrthoCameraController>();
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
 
     ShapesController *sc = new ShapesController();
-    pain::Application::Get().addImGuiInstance(sc);
+    app.addImGuiInstance(sc);
     m_sc = sc;
     // m_rect1.reset(new pain::RectangleSprite(this, {0.0f, 0.0f}, {0.4f, 0.4f},
     //                                         {1.0f, 1.0f, 1.0f, 1.0f},
@@ -63,7 +64,7 @@ public:
     // m_rect4.reset(new pain::Rectangle(this, {-0.5f, 0.0f}, {0.3f, 0.3f},
     //                                   {0.8f, 0.9f, 0.3f, 1.0f}));
   }
-  void onRender() override
+  void onRender(double currentTime) override
   {
     // m_ImGuiTest->onUpdateImGui();
     const auto &pos = m_sc->m_vecPos;
@@ -90,11 +91,10 @@ public:
     pain::Renderer2d::drawTri(
         {triPos[0], triPos[1]}, {triSize[0], triSize[1]},
         {triColor[0], triColor[1], triColor[2], triColor[3]});
-    pain::Renderer2d::drawRotQuad({-0.6f, 0.8f}, {0.4f, 0.4f},
-                                  {1.0f, 1.0f, 1.0f, 1.0f}, m_texture, 1.0f,
-                                  m_radians);
-    pain::Renderer2d::drawRotQuad({0.7f, 0.7f}, {0.3f, 0.3f},
-                                  {0.8f, 0.9f, 0.3f, 1.0f}, m_radians);
+    pain::Renderer2d::drawQuad({-0.6f, 0.8f}, {0.8f, 0.8f},
+                               {1.0f, 1.0f, 1.0f, 1.0f}, m_texture.get(), 2.f);
+    pain::Renderer2d::drawQuad({0.7f, 0.7f}, {0.3f, 0.3f},
+                               {0.8f, 0.9f, 0.3f, 1.0f}, m_radians);
   }
   void onUpdate(double deltaTimeSec) override
   {
@@ -118,33 +118,21 @@ private:
   std::shared_ptr<pain::Texture> m_spriteSheet;
 };
 
-class Sandbox : public pain::Application
-{
-public:
-  Sandbox(const char *title, int w, int h) : Application(title, w, h)
-  {
-    pain::Scene *scene = new MainScene();
-
-    std::shared_ptr<pain::OrthoCameraEntity> pCamera;
-    pCamera.reset(new pain::OrthoCameraEntity(scene, (float)w / h, 1.0f));
-    ((MainScene *)scene)->init(pCamera);
-
-    pushScene("main", scene);
-    attachScene("main");
-  }
-
-  ~Sandbox() {}
-};
-
 pain::Application *pain::CreateApplication()
 {
   LOG_T("Creating app");
   const char *title = "Developing Pain - Example 2d";
-  const int width = 800;
-  const int height = 600;
-  // const int width = 1280;
-  // const int height = 720;
-  return new Sandbox(title, width, height);
+  const int width = 1280;
+  const int height = 768;
+  Application *app = new Application(title, width, height);
+
+  Scene *scene = new MainScene();
+  ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
+
+  app->pushScene("main", scene);
+  app->attachScene("main");
+
+  return app;
 }
 
 #ifdef _WIN64

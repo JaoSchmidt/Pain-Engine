@@ -3,7 +3,7 @@
 
 void pain::Pain::initiate()
 {
-  pain::LogWrapper::Init();
+  pain::logWrapper::Init();
   PLOG_T("Initialized Log!");
 }
 

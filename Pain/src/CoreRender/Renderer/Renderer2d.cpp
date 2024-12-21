@@ -5,16 +5,35 @@
 
 namespace pain
 {
-std::shared_ptr<OrthoCameraEntity> Renderer2d::m_cameraEntity = nullptr;
-// OrthoCameraEntity *Renderer2d::m_cameraEntity = nullptr;
+namespace Renderer2d
+{
+void goBackToFirstVertex();
+float allocateTextures(Texture &texture);
+void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
+                  const float tilingFactor, const float textureIndex,
+                  const std::array<glm::vec2, 4> &textureCoordinate);
+void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor);
+void allocateSprayParticles(const glm::vec2 &position, const glm::vec2 &offset,
+                            const glm::vec2 &normal, const float startTime,
+                            const float rotationSpeed);
+void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
+                       const std::array<glm::vec2, 4> &textureCoordinate,
+                       const std::array<glm::vec4, 4> &textVertexPositions);
+void initBatches();
+void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
+                         float globalTime, const glm::mat4 &transform);
+void drawBatches(const glm::mat4 &viewProjectionMatrix);
+extern const Texture *m_fontAtlasTexture;
 
+// OrthoCameraEntity *m_cameraEntity = nullptr;
+
+static const OrthoCameraEntity *m_cameraEntity = nullptr;
 // ================================================================= //
 // Render initialization and destruction
 // ================================================================= //
 
-void Renderer2d::init(std::shared_ptr<OrthoCameraEntity> cameraEntity)
+void init(const OrthoCameraEntity &cameraEntity)
 {
-  P_ASSERT(cameraEntity != nullptr, "Camera Entity must be initialized");
   // NOTE: This enable 3d and can be changed later in case we need some camera
   // mechanic
   // glEnable(GL_DEPTH_TEST);
@@ -29,57 +48,42 @@ void Renderer2d::init(std::shared_ptr<OrthoCameraEntity> cameraEntity)
 
   // quadBatch = new VertexBatch();
   initBatches();
-  m_cameraEntity = cameraEntity;
+  m_cameraEntity = &cameraEntity;
 }
 
 // ================================================================= //
 // Renderer: basic wrapper around opengl
 // ================================================================= //
-void Renderer2d::shutdown() {}
+void shutdown() {}
 
-void Renderer2d::setViewport(int x, int y, int width, int height)
+void setViewport(int x, int y, int width, int height)
 {
   glViewport(x, y, width, height);
 }
 
-void Renderer2d::clear() { glClear(GL_COLOR_BUFFER_BIT); }
+void clear() { glClear(GL_COLOR_BUFFER_BIT); }
 
-void Renderer2d::setClearColor(const glm::vec4 &color)
+void setClearColor(const glm::vec4 &color)
 {
   glClearColor(color.r, color.g, color.b, color.a);
 }
 
-void Renderer2d::beginScene(float globalTime, const glm::mat4 &transform)
+void beginScene(float globalTime, const glm::mat4 &transform)
 {
-  m_quadTextureShader->bind();
-  m_quadTextureShader->uploadUniformMat4(
-      "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
-                              .m_camera->getViewProjectionMatrix());
-  m_quadTextureShader->uploadUniformMat4("u_Transform", transform);
-
-  m_triShader->bind();
-  m_triShader->uploadUniformMat4(
-      "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
-                              .m_camera->getViewProjectionMatrix());
-  m_triShader->uploadUniformMat4("u_Transform", transform);
-
-  m_sprayShader->bind();
-  m_sprayShader->uploadUniformMat4(
-      "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
-                              .m_camera->getViewProjectionMatrix());
-  m_sprayShader->uploadUniformMat4("u_Transform", transform);
-  m_sprayShader->uploadUniformFloat("u_Time", globalTime);
-
-  m_textTextureShader->bind();
-  m_textTextureShader->uploadUniformMat4(
-      "u_ViewProjection", m_cameraEntity->getComponent<OrthoCameraComponent>()
-                              .m_camera->getViewProjectionMatrix());
-  m_textTextureShader->uploadUniformMat4("u_Transform", transform);
-
+  uploadBasicUniforms(m_cameraEntity->getComponent<OrthoCameraComponent>()
+                          .m_camera->getViewProjectionMatrix(),
+                      globalTime, transform);
   goBackToFirstVertex();
 }
 
-void Renderer2d::endScene()
+void flush()
+{
+  // bindTextures();
+  drawBatches(m_cameraEntity->getComponent<OrthoCameraComponent>()
+                  .m_camera->getViewProjectionMatrix());
+}
+
+void endScene()
 {
   // quadBatch->sendAllDataToOpenGL();
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
@@ -87,15 +91,8 @@ void Renderer2d::endScene()
   flush();
 }
 
-void Renderer2d::flush()
-{
-  // bindTextures();
-  drawBatches(m_cameraEntity->getComponent<OrthoCameraComponent>()
-                  .m_camera->getViewProjectionMatrix());
-}
-
-void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
-                             uint32_t indexCount)
+void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
+                 uint32_t indexCount)
 {
   uint32_t count =
       indexCount ? indexCount : vertexArray->getIndexBuffer()->getCount();
@@ -107,11 +104,11 @@ void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 // Draw Quads
 // ================================================================= //
 
-void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor,
-                          Texture *texture, // Raw pointer version
-                          float tilingFactor,
-                          const std::array<glm::vec2, 4> &textureCoordinate)
+void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+              const glm::vec4 &tintColor,
+              Texture *texture, // Raw pointer version
+              float tilingFactor,
+              const std::array<glm::vec2, 4> &textureCoordinate)
 {
   const float texIndex =
       texture ? allocateTextures(*texture) : 0.0f; // White texture if nullptr
@@ -119,33 +116,31 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
 
-void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor,
-                          Texture &texture, // Reference version
-                          float tilingFactor,
-                          const std::array<glm::vec2, 4> &textureCoordinate)
+void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+              const glm::vec4 &tintColor,
+              Texture &texture, // Reference version
+              float tilingFactor,
+              const std::array<glm::vec2, 4> &textureCoordinate)
 {
   const float texIndex = allocateTextures(texture);
   const glm::mat4 transform = getTransform(position, size);
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
 
-void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor,
-                          const float rotationRadians, Texture &texture,
-                          float tilingFactor,
-                          const std::array<glm::vec2, 4> &textureCoordinate)
+void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+              const glm::vec4 &tintColor, const float rotationRadians,
+              Texture &texture, float tilingFactor,
+              const std::array<glm::vec2, 4> &textureCoordinate)
 {
   const float texIndex = allocateTextures(texture);
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
 
-void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor,
-                          const float rotationRadians, Texture *texture,
-                          float tilingFactor,
-                          const std::array<glm::vec2, 4> &textureCoordinate)
+void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+              const glm::vec4 &tintColor, const float rotationRadians,
+              Texture *texture, float tilingFactor,
+              const std::array<glm::vec2, 4> &textureCoordinate)
 {
   const float texIndex =
       texture ? allocateTextures(*texture) : 0.0f; // White Texture if nullptr
@@ -157,15 +152,14 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 // Draw Tri
 // ================================================================= //
 
-void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
-                         const glm::vec4 &tintColor)
+void drawTri(const glm::vec2 &position, const glm::vec2 &size,
+             const glm::vec4 &tintColor)
 {
   const glm::mat4 transform = getTransform(position, size);
   allocateTri(transform, tintColor);
 }
-void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
-                         const glm::vec4 &tintColor,
-                         const float rotationRadians)
+void drawTri(const glm::vec2 &position, const glm::vec2 &size,
+             const glm::vec4 &tintColor, const float rotationRadians)
 {
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   allocateTri(transform, tintColor);
@@ -175,7 +169,7 @@ void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
 // Draw Spray Particles
 // ================================================================= //
 
-void Renderer2d::drawSprayParticle(const Particle &p)
+void drawSprayParticle(const Particle &p)
 {
   allocateSprayParticles(p.m_position, p.m_offset, p.m_normal, p.m_startTime,
                          p.m_rotationSpeed);
@@ -184,8 +178,8 @@ void Renderer2d::drawSprayParticle(const Particle &p)
 // ================================================================= //
 // Draw Text
 // ================================================================= //
-void Renderer2d::drawString(const glm::vec2 &position, const char *string,
-                            const Font &font, const glm::vec4 &color)
+void drawString(const glm::vec2 &position, const char *string, const Font &font,
+                const glm::vec4 &color)
 {
 
   const auto &fontGeometry = font.getFontGeometry();
@@ -259,5 +253,6 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
     }
   }
 }
+} // namespace Renderer2d
 
 } // namespace pain
