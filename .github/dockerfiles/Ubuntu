@@ -11,9 +11,11 @@ RUN apt-get update && apt-get install -y \
     ccache \
     git \
     make \
+		cmake \
     && apt-get clean
 
-
+# To quick see current versions, uncomment this
+# RUN g++ --version && rsync --version && ccache --version && git --version && make --version && cmake --version
 
 # Default command
 CMD ["/bin/bash"]

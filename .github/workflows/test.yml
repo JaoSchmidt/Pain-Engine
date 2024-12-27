@@ -14,6 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Build from Docker Image
-        run: docker build -t pain-ubuntu . < ./.github/dockerfiles/Ubuntu
+        run: docker build -f ./.github/dockerfiles/Ubuntu -t pain-ubuntu . 
       - name: Run in Docker Container
         run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace pain-ubuntu:latest bash -c "./configure.sh &&  cd build && cmake --build . --config Debug"
