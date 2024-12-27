@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Build from Docker Image
         run: docker build -f ./.github/dockerfiles/Ubuntu -t pain-ubuntu . 
       - name: Run in Docker Container
