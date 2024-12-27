@@ -1,0 +1,19 @@
+# Base image
+FROM ubuntu:22.04
+
+# Set non-interactive frontend
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    g++ \
+    rsync \
+    ccache \
+    git \
+    make \
+    && apt-get clean
+
+
+
+# Default command
+CMD ["/bin/bash"]

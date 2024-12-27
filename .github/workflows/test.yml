@@ -1,0 +1,29 @@
+name: Build (Ubuntu)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    name: Build on Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build from Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          image: 'Dockerfile'
+          context: .
+          file: .github/dockerfiles/Ubuntu
+          push: false
+          labels: "pain-engine"
+
+      - name: Run in Docker Container
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace pain-engine:latest bash -c "./configure.sh &&  cd build && cmake --build . --config Debug"
