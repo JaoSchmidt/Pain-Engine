@@ -13,16 +13,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
       - name: Build from Docker Image
-        uses: docker/build-push-action@v4
-        with:
-          image: 'Dockerfile'
-          context: .
-          file: .github/dockerfiles/Ubuntu
-          push: false
-          labels: "pain-engine"
-
+        run: docker build -t pain-ubuntu < .github/dockerfiles/Ubuntu
       - name: Run in Docker Container
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace pain-engine:latest bash -c "./configure.sh &&  cd build && cmake --build . --config Debug"
+        run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace pain-ubuntu:latest bash -c "./configure.sh &&  cd build && cmake --build . --config Debug"
