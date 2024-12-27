@@ -27,7 +27,8 @@ git submodule update --init --recursive \
     Pain/external/SDL_image \
     Pain/external/SDL \
     Pain/external/imgui \
-    Pain/external/freetype
+    Pain/external/freetype \
+    Pain/external/msdf-atlas-gen
 ```
 
 Choose the correct game you want to compile, or create a custom path for your game/simulation.
@@ -41,6 +42,6 @@ set(GAME_FOLDER "your/game/folder/here")
 Then, create the `build` folder and compile:
 
 ``` bash
-cmake -S ./ -B build/
+./configure.sh
 cd build && nice make -j6
 ```

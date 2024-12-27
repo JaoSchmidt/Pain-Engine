@@ -9,7 +9,7 @@
 namespace pain
 {
 
-class EXPORT PerspectiveCameraController
+class  PerspectiveCameraController
 {
 public:
   PerspectiveCameraController(float windowWidth, float windowHeight,

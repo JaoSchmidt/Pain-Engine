@@ -16,7 +16,7 @@ struct CubeVertex {
   glm::vec2 TexCoord;
 };
 
-class EXPORT CubeVertexBatch
+class  CubeVertexBatch
 {
 public:
   CubeVertexBatch();

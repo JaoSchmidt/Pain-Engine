@@ -12,7 +12,7 @@
 namespace pain
 {
 
-class EXPORT Renderer3d
+class  Renderer3d
 {
 public:
   static void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);

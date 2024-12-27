@@ -8,7 +8,7 @@
 namespace pain
 {
 
-class EXPORT GameObject
+class  GameObject
 {
 public:
   GameObject(Scene *scene);

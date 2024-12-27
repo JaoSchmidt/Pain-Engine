@@ -17,7 +17,7 @@
 
 namespace pain
 {
-class EXPORT SimpleShape
+class  SimpleShape
 {
 public:
   // clang-format off
@@ -41,20 +41,20 @@ protected:
   std::shared_ptr<VertexArray> m_vertexArray;
 };
 
-class EXPORT Rectangle : public SimpleShape
+class  Rectangle : public SimpleShape
 {
 public:
   Rectangle(float x, float y, float w, float h);
   Rectangle();
 };
-class EXPORT TextureRectangle : public SimpleShape
+class  TextureRectangle : public SimpleShape
 {
 public:
   TextureRectangle(float x, float y, float w, float h);
   TextureRectangle();
 };
 
-class EXPORT IsocelesTriangle : public SimpleShape
+class  IsocelesTriangle : public SimpleShape
 {
 public:
   IsocelesTriangle(float w, float h);

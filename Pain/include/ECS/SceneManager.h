@@ -7,7 +7,7 @@
 namespace pain
 {
 
-class EXPORT SceneManager
+class  SceneManager
 {
 public:
   NONCOPYABLE(SceneManager)

@@ -18,7 +18,7 @@ public:
   void onEvent(const SDL_Event &e) {};
 };
 
-class EXPORT Rectangle : public GameObject
+class  Rectangle : public GameObject
 {
 public:
   Rectangle(Scene *scene, const glm::vec2 &position, const glm::vec2 &size,

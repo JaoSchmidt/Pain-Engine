@@ -5,7 +5,7 @@
 
 namespace pain
 {
-class EXPORT Shader
+class  Shader
 {
 public:
   Shader(const char *filepath);

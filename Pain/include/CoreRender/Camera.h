@@ -22,7 +22,7 @@ protected:
   glm::mat4 m_ViewProjectionCacheMatrix;
 };
 
-class EXPORT OrthographicCamera : public Camera
+class  OrthographicCamera : public Camera
 {
 public:
   OrthographicCamera(float left, float right, float bottom, float top);
@@ -31,7 +31,7 @@ public:
   void SetProjection(float left, float right, float bottom, float top);
 };
 
-class EXPORT PerspectiveCamera : public Camera
+class  PerspectiveCamera : public Camera
 {
 public:
   PerspectiveCamera(float aspectRatio, float fieldOfViewDegrees);

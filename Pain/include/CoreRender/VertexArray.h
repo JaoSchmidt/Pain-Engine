@@ -7,7 +7,7 @@
 
 namespace pain
 {
-class EXPORT VertexArray
+class  VertexArray
 {
 public:
   // NONCOPYABLE(VertexArray)

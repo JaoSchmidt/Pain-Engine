@@ -8,7 +8,7 @@
 namespace pain
 {
 
-class EXPORT VertexBuffer
+class  VertexBuffer
 {
 public:
   VertexBuffer(uint32_t size);

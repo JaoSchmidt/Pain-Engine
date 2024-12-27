@@ -8,7 +8,7 @@
 namespace pain
 {
 
-class EXPORT OrthoCameraController : public ScriptableEntity
+class  OrthoCameraController : public ScriptableEntity
 {
 public:
   void onUpdate(double deltaTimeSec);
@@ -23,7 +23,7 @@ private:
   bool onWindowResized(const SDL_Event &e, OrthoCameraComponent &cc);
 };
 
-class EXPORT OrthoCameraEntity : public GameObject
+class  OrthoCameraEntity : public GameObject
 {
 public:
   OrthoCameraEntity(Scene *scene, float aspectRatio, float zoomLevel);

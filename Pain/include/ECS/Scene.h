@@ -13,7 +13,7 @@ namespace pain
 class GameObject;
 struct NativeScriptComponent;
 
-class EXPORT Scene
+class  Scene
 {
 public:
   Scene();

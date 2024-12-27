@@ -6,7 +6,7 @@
 
 namespace pain
 {
-class EXPORT Layer
+class  Layer
 {
 public:
   Layer(const std::string id);
