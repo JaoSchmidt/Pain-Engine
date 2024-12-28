@@ -4,7 +4,7 @@ FROM ubuntu:22.04
 # Set non-interactive frontend
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
+# Install dependencies that can be found by default on ubuntu
 RUN apt-get update && apt-get install -y \
     g++ \
     rsync \
@@ -12,7 +12,29 @@ RUN apt-get update && apt-get install -y \
     git \
     make \
 		cmake \
+		pkg-config \
+		zlib1g \
+		bzip2 \
+		gzip \
     && apt-get clean
+
+# These dependencies are not installed by default on ubuntu
+RUN apt-get install -y \
+		libpng-dev \
+		libbz2-dev \
+		libharfbuzz-dev \
+		libbrotli-dev
+
+# Stuff for the sound and the framework (OpenGL, Vulkan, directx, metal, etc.)
+RUN apt-get install -y \
+		mesa-utils \
+		libglu1-mesa-dev \
+		mesa-common-dev \
+		libasound2-dev \
+		libxext-dev
+
+# https://askubuntu.com/questions/692223/apt-method-bzip2-doesnt-exist
+RUN ln -s /usr/lib/apt/methods/gzip /usr/lib/apt/methods/bzip2
 
 # To quick see current versions, uncomment this
 # RUN g++ --version && rsync --version && ccache --version && git --version && make --version && cmake --version
