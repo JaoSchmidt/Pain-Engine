@@ -32,22 +32,65 @@ target_compile_options(
 # deactivate tests, examples, doc
 set(SPDLOG_BUILD_SHARED OFF)
 
-message("Bulding glm")
-add_subdirectory(Pain/external/glm)
+include(FetchContent)
+
+# GLM
+message("Fetching glm")
+FetchContent_Declare(
+  glm
+  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  GIT_TAG 1.0.1
+)
+FetchContent_MakeAvailable(glm)
+
 message("Bulding glad")
 add_subdirectory(Pain/external/glad)
-message("Bulding spdlog")
-add_subdirectory(Pain/external/spdlog)
-message("Bulding SDL")
-add_subdirectory(Pain/external/SDL)
-message("Bulding SDL_image")
-add_subdirectory(Pain/external/SDL_image)
-message("Bulding ImGui")
-add_subdirectory(Pain/external/imgui)
-message("Bulding FreeType")
-add_subdirectory(Pain/external/freetype)
-message("Bulding msdf-atlas-gen")
-add_subdirectory(Pain/external/msdf-atlas-gen)
+
+# SPDLOG
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.14.1
+)
+FetchContent_MakeAvailable(spdlog)
+
+message("Fetching SDL")
+FetchContent_Declare(
+  SDL
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+  GIT_TAG release-2.30.1
+)
+FetchContent_MakeAvailable(SDL)
+
+message("Fetching SDL_image")
+FetchContent_Declare(
+  SDL_image
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+  GIT_TAG release-2.8.2
+)
+FetchContent_MakeAvailable(SDL_image)
+
+message("Fetching Imgui")
+FetchContent_Declare(
+  imgui
+  GIT_REPOSITORY https://github.com/jaoschmidt/imgui.git
+)
+FetchContent_MakeAvailable(imgui)
+
+# FreeType
+FetchContent_Declare(
+  freetype
+  GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
+  GIT_TAG VER-2-13-3
+)
+FetchContent_MakeAvailable(freetype)
+
+# msdf-atlas-gen
+FetchContent_Declare(
+  msdf-atlas-gen
+  GIT_REPOSITORY https://github.com/jaoschmidt/msdf-atlas-gen.git
+)
+FetchContent_MakeAvailable(msdf-atlas-gen)
 
 find_package(OpenGL REQUIRED)
 
