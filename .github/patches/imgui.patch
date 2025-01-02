@@ -1,0 +1,67 @@
+From 007c874b74e597a613e399aaf40850a186a0bde7 Mon Sep 17 00:00:00 2001
+From: JaoSchmidt <jhsc98@gmail.com>
+Date: Mon, 19 Aug 2024 02:27:04 -0300
+Subject: [PATCH] add CMakeLists.txt
+
+---
+ CMakeLists.txt | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+ create mode 100644 CMakeLists.txt
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 00000000..d83ddd31
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,48 @@
++cmake_minimum_required(VERSION 3.6)
++
++set(LIB_NAME "imgui")
++project(${LIB_NAME})
++
++set(CMAKE_CXX_STANDARD 11)
++set(CMAKE_CXX_STANDARD_REQUIRED ON)
++set(CMAKE_CXX_EXTENSIONS OFF)
++
++message(${CMAKE_CURRENT_SOURCE_DIR})
++
++add_library(${LIB_NAME} STATIC
++  ${CMAKE_CURRENT_SOURCE_DIR}/imgui.cpp
++  ${CMAKE_CURRENT_SOURCE_DIR}/imgui_demo.cpp
++  ${CMAKE_CURRENT_SOURCE_DIR}/imgui_draw.cpp
++  ${CMAKE_CURRENT_SOURCE_DIR}/imgui_tables.cpp
++  ${CMAKE_CURRENT_SOURCE_DIR}/imgui_widgets.cpp
++  ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
++  ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
++)
++
++# set(CMAKE_SHARED_LINKER_FLAGS
++#   "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate"
++# )
++
++# target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
++#   IMGUI_IMPL_OPENGL_ES3
++# )
++
++target_include_directories(${LIB_NAME} PUBLIC
++  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/>
++)
++
++target_link_libraries(${LIB_NAME} PRIVATE
++  SDL2::SDL2
++)
++
++
++# set(EXEC_NAME "test")
++# project(${EXEC_NAME})
++
++# add_executable(${EXEC_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
++
++# target_link_libraries(${EXEC_NAME} PRIVATE
++#   glad
++#   SDL2::SDL2
++#   imgui
++# )
+-- 
+2.47.1
+

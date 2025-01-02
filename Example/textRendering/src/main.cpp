@@ -47,10 +47,10 @@ public:
   void onUpdate(double deltaTimeSec) override {}
   void onRender(double currentTime) override
   {
-    pain::Renderer2d::drawQuad({0.5f, 0.5f}, {0.3f, 0.3f}, {1.f, 1.f, 1.f, 1.f},
-                               m_sc->m_font->getAtlasTexture(), 1.f);
-    // pain::Renderer2d::drawString({-0.8f, 0.f}, "Hello World", *m_font.get(),
-    //                              {1.f, 1.f, 1.f, 1.f});
+    // pain::Renderer2d::drawQuad({0.5f, 0.5f}, {0.3f, 0.3f}, {1.f, 1.f, 1.f, 1.f},
+    //                            m_sc->m_font->getAtlasTexture(), 1.f);
+    pain::Renderer2d::drawString({-0.8f, 0.f}, "Hello World", *m_sc->m_font.get(),
+                                 {1.f, 1.f, 1.f, 1.f});
   }
   void onEvent(const SDL_Event &event) override {}
 

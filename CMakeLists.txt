@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.25)
+﻿cmake_minimum_required(VERSION 3.22)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
@@ -32,22 +32,60 @@ target_compile_options(
 # deactivate tests, examples, doc
 set(SPDLOG_BUILD_SHARED OFF)
 
-message("Bulding glm")
-add_subdirectory(Pain/external/glm)
+include(FetchContent)
+
+# GLM
+message("Fetching glm")
+FetchContent_Declare(
+  glm
+  GIT_REPOSITORY https://github.com/g-truc/glm.git
+	GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e
+)
+FetchContent_MakeAvailable(glm)
+
 message("Bulding glad")
 add_subdirectory(Pain/external/glad)
-message("Bulding spdlog")
-add_subdirectory(Pain/external/spdlog)
-message("Bulding SDL")
-add_subdirectory(Pain/external/SDL)
-message("Bulding SDL_image")
-add_subdirectory(Pain/external/SDL_image)
-message("Bulding ImGui")
-add_subdirectory(Pain/external/imgui)
-message("Bulding FreeType")
-add_subdirectory(Pain/external/freetype)
-message("Bulding msdf-atlas-gen")
-add_subdirectory(Pain/external/msdf-atlas-gen)
+
+# SPDLOG
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.14.1
+)
+FetchContent_MakeAvailable(spdlog)
+
+message("Fetching SDL")
+FetchContent_Declare(
+  SDL
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+  GIT_TAG release-2.30.1
+)
+FetchContent_MakeAvailable(SDL)
+
+message("Fetching SDL_image")
+FetchContent_Declare(
+  SDL_image
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+  GIT_TAG release-2.8.2
+)
+FetchContent_MakeAvailable(SDL_image)
+
+message("Fetching Imgui")
+FetchContent_Declare(
+  imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui
+	PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
+	GIT_TAG v1.91.6-docking
+	UPDATE_DISCONNECTED 1
+)
+FetchContent_MakeAvailable(imgui)
+
+# msdf-atlas-gen
+FetchContent_Declare(
+  msdf-atlas-gen
+  GIT_REPOSITORY https://github.com/jaoschmidt/msdf-atlas-gen.git
+)
+FetchContent_MakeAvailable(msdf-atlas-gen)
 
 find_package(OpenGL REQUIRED)
 
@@ -61,7 +99,6 @@ target_link_libraries(
     glm::glm
     spdlog::spdlog_header_only
     imgui
-    freetype
     msdf-atlas-gen
 )
 

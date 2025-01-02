@@ -10,8 +10,13 @@ ARCH="x86_64"
 
 # Set the CMake generator for MinGW
 GENERATOR="'Unix Makefiles'"
-BUILD_DIR="./build"
 TYPE="Debug"
+
+if [ "$#" -ne 1 ]; then
+	BUILD_DIR="./build"
+else
+	BUILD_DIR="$1"
+fi
 
 # Check if the script is already in the build directory
 if [ "$(basename "$(pwd)")" != "build" ]; then
