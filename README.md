@@ -18,17 +18,19 @@ git clone https://github.com/JaoSchmidt/Pain-Engine
 cd Pain-Engine
 ```
 
-Clone all essential submodules:
-
+Install dependencies:
 ```bash
-git submodule update --init --recursive \
-    Pain/external/glm \
-    Pain/external/spdlog \
-    Pain/external/SDL_image \
-    Pain/external/SDL \
-    Pain/external/imgui \
-    Pain/external/freetype \
-    Pain/external/msdf-atlas-gen
+# text, graphics driver, sound, etc
+sudo apt-get install -y \
+    libpng-dev \ 
+    libbz2-dev \
+    libharfbuzz-dev \
+    libbrotli-dev \
+    mesa-utils \
+    libglu1-mesa-dev \
+    mesa-common-dev \
+    libasound2-dev \
+    libxext-dev
 ```
 
 Choose the correct game you want to compile, or create a custom path for your game/simulation.
