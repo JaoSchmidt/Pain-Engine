@@ -1,0 +1,21 @@
+name: Build (Ubuntu)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build from Docker Image
+        run: docker build -f ./.github/dockerfiles/Ubuntu -t pain-ubuntu . 
+      - name: Run in Docker Container
+        run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace pain-ubuntu:latest bash -c "./configure.sh dkr_build &&  cd dkr_build && cmake --build . --config Debug -j4"
