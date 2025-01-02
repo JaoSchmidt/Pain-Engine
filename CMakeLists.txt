@@ -39,7 +39,7 @@ message("Fetching glm")
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
-  GIT_TAG 1.0.1
+	GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e
 )
 FetchContent_MakeAvailable(glm)
 
@@ -73,7 +73,10 @@ FetchContent_MakeAvailable(SDL_image)
 message("Fetching Imgui")
 FetchContent_Declare(
   imgui
-  GIT_REPOSITORY https://github.com/jaoschmidt/imgui.git
+  GIT_REPOSITORY https://github.com/ocornut/imgui
+	PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
+	GIT_TAG v1.91.6-docking
+	UPDATE_DISCONNECTED 1
 )
 FetchContent_MakeAvailable(imgui)
 
@@ -85,11 +88,25 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(freetype)
 
+FetchContent_Declare(
+  msdfgen
+  GIT_REPOSITORY https://github.com/Chlumsky/msdfgen.git
+  GIT_TAG v1.12
+)
+set(MSDFGEN_USE_VCPKG OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_USE_SKIA OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(msdfgen)
+
 # msdf-atlas-gen
 FetchContent_Declare(
   msdf-atlas-gen
-  GIT_REPOSITORY https://github.com/jaoschmidt/msdf-atlas-gen.git
+  GIT_REPOSITORY https://github.com/Chlumsky/msdf-atlas-gen.git
+	GIT_TAG v1.3
+	# UPDATE_DISCONNECTED 1
+	# PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/msdf-altas-gen.patch
 )
+set(MSDF_ATLAS_USE_VCPKG OFF CACHE BOOL "" FORCE)
+set(MSDF_ATLAS_USE_SKIA OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(msdf-atlas-gen)
 
 find_package(OpenGL REQUIRED)
