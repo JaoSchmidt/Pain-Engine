@@ -5,15 +5,16 @@
 #include <queue>
 
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Registry/ArcheRegistry.h"
+#include "ECS/Registry/Registry.h"
 #include "Entity.h"
-#include "Registry.h"
 
 namespace pain
 {
 class GameObject;
 struct NativeScriptComponent;
 
-class  Scene
+class Scene
 {
 public:
   Scene();
@@ -26,6 +27,18 @@ public:
   virtual void onUpdate(double deltaTime) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
 
+  // ---------------------------------------------------- //
+  // Component Archetype stuff
+  // ---------------------------------------------------- //
+  // template <typename... Components, typename... Args>
+  // void addComponents(Entity entity, Args &&...args)
+  // {
+  //   // P_ASSERT_W(!hasComponent<Components>(entity), "Entity {} already has
+  //   // component!",
+  //   //            entity);
+  //   return m_registry->add<Components...>(entity,
+  //   std::forward<Args>(args)...);
+  // }
   // ---------------------------------------------------- //
   // Component Stuff
   // ---------------------------------------------------- //

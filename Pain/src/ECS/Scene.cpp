@@ -2,7 +2,7 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Particle.h"
-#include "ECS/Registry.h"
+#include "ECS/Registry/Registry.h"
 
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Rotation.h"
