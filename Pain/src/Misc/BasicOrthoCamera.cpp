@@ -12,7 +12,7 @@ OrthoCameraEntity::OrthoCameraEntity(Scene *scene, float aspectRatio,
                                      float zoomLevel)
     : GameObject(scene)
 {
-  addComponent<MovementComponent>();
+  addComponents<MovementComponent>();
   addComponent<RotationComponent>();
   addComponent<TransformComponent>();
   addComponent<OrthoCameraComponent>(aspectRatio, zoomLevel);

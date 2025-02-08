@@ -1,9 +1,12 @@
 #include "pch.h"
 
+#include "ECS/Registry/Macros.h"
+
 namespace pain
 {
 
 struct RotationComponent {
+  static constexpr int m_componentID = bitMaskUnit(5);
   glm::vec3 m_rotation = {0.0f, 1.0f, 0.0f};
   float m_rotationAngle = 0.0f;
   RotationComponent() = default;

@@ -12,17 +12,17 @@
 namespace pain
 {
 
-Scene::Scene() : m_registry(new Registry())
+Scene::Scene() : m_registry(new ArcheRegistry())
 {
-  m_registry->addComponentMap<OrthoCameraComponent>();
-  m_registry->addComponentMap<TransformComponent>();
-  m_registry->addComponentMap<MovementComponent>();
-  m_registry->addComponentMap<RotationComponent>();
-  m_registry->addComponentMap<SpriteComponent>();
-  m_registry->addComponentMap<SpritelessComponent>();
-  m_registry->addComponentMap<TrianguleComponent>();
-  m_registry->addComponentMap<NativeScriptComponent>();
-  m_registry->addComponentMap<ParticleSprayComponent>();
+  // m_registry->addComponentMap<OrthoCameraComponent>();
+  // m_registry->addComponentMap<TransformComponent>();
+  // m_registry->addComponentMap<MovementComponent>();
+  // m_registry->addComponentMap<RotationComponent>();
+  // m_registry->addComponentMap<SpriteComponent>();
+  // m_registry->addComponentMap<SpritelessComponent>();
+  // m_registry->addComponentMap<TrianguleComponent>();
+  // m_registry->addComponentMap<NativeScriptComponent>();
+  // m_registry->addComponentMap<ParticleSprayComponent>();
 }
 // TODO: Create way to move and copy components to another scene
 
@@ -79,39 +79,53 @@ void Scene::initializeScripts(NativeScriptComponent &nsc, Entity e)
   }
 }
 
+// =============================================================== //
+// Render Components
+// =============================================================== //
+
+// This function is responsible for iterating and rendering all components that
+// need to be rendered, such as Sprites and Spriteless components
 void Scene::renderSystems(double currentTime)
 {
-  // and finally all sprites are rendered in this render method
-  // to their appropriate position on the screen
-  for (auto it = begin<SpriteComponent>(); it != end<SpriteComponent>(); ++it) {
-    const TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const SpriteComponent &sc = it->second;
-    if (hasComponent<RotationComponent>(it->first)) {
-      const RotationComponent &rc = getComponent<RotationComponent>(it->first);
-      Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color,
-                           rc.m_rotationAngle, sc.m_ptexture,
-                           sc.m_tilingFactor);
-      // TODO: Remove m_rotation of rc... should only
-      // have angle, in the case of the camera
-      // inclune rot direction in its script
-    } else {
+  {
+    auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
+    const auto &[tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
+
+    for (; tIt != tItEnd; ++tIt, ++sIt) {
+      const TransformComponent &tc = *tIt;
+      const SpriteComponent &sc = *sIt;
       Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
                            sc.m_tilingFactor);
     }
   }
+  {
+    auto [tIt, sIt, rIt] =
+        begin<TransformComponent, SpriteComponent, RotationComponent>();
+    const auto &[tItEnd, sItEnd2, rItEnd] =
+        end<TransformComponent, SpriteComponent, RotationComponent>();
 
-  for (auto it = begin<SpritelessComponent>(); it != end<SpritelessComponent>();
-       ++it) {
-    const TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const SpritelessComponent &sc = it->second;
-    Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color);
+    for (; tIt != tItEnd; ++tIt, ++rIt, ++sIt) {
+      Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                           rIt->m_rotationAngle, sIt->m_ptexture,
+                           sIt->m_tilingFactor);
+      // TODO: Remove m_rotation of rc... should only
+      // have angle, in the case of the camera
+      // inclune rot direction in its script
+    }
   }
-
-  for (auto it = begin<TrianguleComponent>(); it != end<TrianguleComponent>();
-       ++it) {
-    const TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const TrianguleComponent &sc = it->second;
-    Renderer2d::drawTri(tc.m_position, sc.m_height, sc.m_color);
+  {
+    auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
+    auto [tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
+    for (; tIt != tItEnd; ++tIt, ++sIt) {
+      Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color);
+    }
+  }
+  {
+    auto [tIt, triIt] = begin<TransformComponent, TrianguleComponent>();
+    auto [tItEnd, triItEnd] = end<TransformComponent, TrianguleComponent>();
+    for (; tIt != tItEnd; ++tIt, ++triIt) {
+      Renderer2d::drawTri(tIt->m_position, triIt->m_height, triIt->m_color);
+    }
   }
 
   // =============================================================== //
@@ -119,7 +133,7 @@ void Scene::renderSystems(double currentTime)
   // =============================================================== //
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
-    auto &nsc = it->second;
+    auto &nsc = *it;
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
       nsc.instance->m_scene = this;

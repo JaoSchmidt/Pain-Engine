@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ECS/Registry/Macros.h"
 #include "ECS/Scriptable.h"
 #include <SDL2/SDL_events.h>
 
@@ -33,6 +34,7 @@ namespace pain
 
 struct NativeScriptComponent {
   ScriptableEntity *instance = nullptr;
+  static constexpr int m_componentID = bitMaskUnit(3);
 
   void (*instantiateFunction)(ScriptableEntity *&) = nullptr;
   void (*destroyInstanceFunction)(ScriptableEntity *&) = nullptr;

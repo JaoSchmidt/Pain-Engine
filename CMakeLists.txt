@@ -39,7 +39,7 @@ message("Fetching glm")
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
-	GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e
+  GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e
 )
 FetchContent_MakeAvailable(glm)
 
@@ -74,9 +74,9 @@ message("Fetching Imgui")
 FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui
-	PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
-	GIT_TAG v1.91.6-docking
-	UPDATE_DISCONNECTED 1
+  PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
+  GIT_TAG v1.91.6-docking
+  UPDATE_DISCONNECTED 1
 )
 FetchContent_MakeAvailable(imgui)
 
@@ -109,7 +109,7 @@ target_precompile_headers(
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/textRendering")
+set(GAME_FOLDER "Example/ecsTest")
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources

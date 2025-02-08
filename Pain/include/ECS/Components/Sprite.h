@@ -1,10 +1,12 @@
 #pragma once
 
 #include "CoreRender/Texture.h"
+#include "ECS/Registry/Macros.h"
 
 namespace pain
 {
 struct SpriteComponent {
+  static constexpr int m_componentID = bitMaskUnit(6);
   glm::vec2 m_size{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   Texture *m_ptexture;
@@ -18,6 +20,7 @@ struct SpriteComponent {
 };
 
 struct SpritelessComponent {
+  static constexpr int m_componentID = bitMaskUnit(7);
   glm::vec2 m_size{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   SpritelessComponent() = default;
@@ -28,6 +31,7 @@ struct SpritelessComponent {
 };
 
 struct TrianguleComponent {
+  static constexpr int m_componentID = bitMaskUnit(8);
   glm::vec2 m_height{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   TrianguleComponent() = default;

@@ -70,8 +70,10 @@ void setClearColor(const glm::vec4 &color)
 
 void beginScene(float globalTime, const glm::mat4 &transform)
 {
-  uploadBasicUniforms(m_cameraEntity->getComponent<OrthoCameraComponent>()
-                          .m_camera->getViewProjectionMatrix(),
+  const OrthoCameraComponent &cameraComponent =
+      m_cameraEntity->getComponent<OrthoCameraComponent>();
+
+  uploadBasicUniforms(cameraComponent.m_camera->getViewProjectionMatrix(),
                       globalTime, transform);
   goBackToFirstVertex();
 }
@@ -79,8 +81,9 @@ void beginScene(float globalTime, const glm::mat4 &transform)
 void flush()
 {
   // bindTextures();
-  drawBatches(m_cameraEntity->getComponent<OrthoCameraComponent>()
-                  .m_camera->getViewProjectionMatrix());
+  const OrthoCameraComponent &cameraComponent =
+      m_cameraEntity->getComponent<OrthoCameraComponent>();
+  drawBatches(cameraComponent.m_camera->getViewProjectionMatrix());
 }
 
 void endScene()

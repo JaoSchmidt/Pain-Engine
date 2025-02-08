@@ -1,10 +1,10 @@
 #pragma once
 
+#include "ECS/Registry/Macros.h"
 #include "pch.h"
 
 namespace pain
 {
-int constexpr bitMaskUnit(int bit) { return 1 << bit; }
 
 struct TransformComponent {
   static constexpr int m_componentID = bitMaskUnit(0);

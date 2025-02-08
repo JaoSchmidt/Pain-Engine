@@ -1,3 +1,4 @@
+#include "ECS/Entity.h"
 
 namespace reg
 {
@@ -6,13 +7,17 @@ template <typename T> struct Iterator {
   // https://internalpointers.com/post/writing-custom-iterators-modern-cpp
   using iterator_category = std::forward_iterator_tag;
 
-  Iterator(const std::vector<std::vector<T>> &vectors, size_t outerIndex,
-           size_t innerIndex)
-      : m_vectors(vectors), m_outerIndex(outerIndex), m_innerIndex(innerIndex)
+  Iterator(const std::vector<std::vector<T> *> &vectors, size_t outerIndex,
+           size_t innerIndex,
+           const std::vector<const std::vector<pain::Entity> *> &entities)
+      : m_vectors(vectors), m_outerIndex(outerIndex), m_innerIndex(innerIndex),
+        m_entities(entities)
   {
   }
 
-  T &operator*() const { return m_vectors[m_outerIndex][m_innerIndex]; }
+  const T &operator*() const { return m_vectors[m_outerIndex][m_innerIndex]; }
+  T &operator*() { return m_vectors[m_outerIndex][m_innerIndex]; }
+  const T *operator->() const { return m_vectors[m_outerIndex][m_innerIndex]; }
   T *operator->() { return m_vectors[m_outerIndex][m_innerIndex]; }
 
   // Prefix increment i.e.: ++it
@@ -32,11 +37,14 @@ template <typename T> struct Iterator {
   };
   bool operator!=(const Iterator &o) { return !(*this == o); };
 
+  // get the entity index inside the archetype
+  inline const size_t getEntityIndex() const { return m_innerIndex; }
+
 private:
-  const std::vector<std::vector<T>> &m_vectors;
+  const std::vector<std::vector<T> *> &m_vectors;
+  const std::vector<const std::vector<pain::Entity> *> &m_entities;
   size_t m_outerIndex;
   size_t m_innerIndex;
-  T *m_ptr;
 };
 
 } // namespace reg

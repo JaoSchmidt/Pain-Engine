@@ -4,6 +4,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Entity.h"
+#include "ECS/Registry/Tuple.h"
 #include <tuple>
 #include <typeindex>
 
@@ -24,6 +25,15 @@ class Archetype
       ++componentID;
     }
   }
+
+  bool has(Entity entity) const
+  {
+    auto it = std::find(m_entities.begin(), m_entities.end(), entity);
+    if (it == m_entities.end())
+      return false;
+    return true;
+  }
+
   void addEntity(Entity entity) { m_entities.push_back(entity); }
 
   template <typename C, typename... Args> void pushComponent(Args &&...args)
@@ -60,22 +70,41 @@ class Archetype
 
   // Extract a column of an archetype. I.e. the components of an entity
   template <typename... Components>
-  std::tuple<Components *...> extractColumn(Entity entity, int bitMask) const
+  Tuple<const Components *...> extractColumn(Entity entity) const
   {
     auto it = std::find(m_entities.begin(), m_entities.end(), entity);
     int index = it - m_entities.begin();
-    return std::make_tuple(fetchComponent<Components>(index, bitMask)...);
+    return std::make_tuple(fetchComponent<Components>(index)...);
   };
+  template <typename... Components>
+  Tuple<Components *...> extractColumn(Entity entity)
+  {
+    auto it = std::find(m_entities.begin(), m_entities.end(), entity);
+    int index = it - m_entities.begin();
+    return std::make_tuple(fetchComponent<Components>(index)...);
+  };
+
+  template <typename T> T &extractComponent(Entity entity)
+  {
+    auto it = std::find(m_entities.begin(), m_entities.end(), entity);
+    int index = it - m_entities.begin();
+    return fetchComponent<T>(index);
+  }
+  template <typename T> const T &extractComponent(Entity entity) const
+  {
+    auto it = std::find(m_entities.begin(), m_entities.end(), entity);
+    int index = it - m_entities.begin();
+    return fetchComponent<T>(index);
+  }
 
   template <typename C> std::vector<void *> &componentVector()
   {
     return m_components.at(C::ComponentID);
   }
 
-  template <typename Component>
-  Component *fetchComponent(int entityIndex, int bitMask) const
+  template <typename Component> Component *fetchComponent(int entityIndex) const
   {
-    auto it = m_components.find(bitMask);
+    auto it = m_components.find(Component::ComponentID);
     P_ASSERT(it == m_components.end(), "Component type {} not found",
              entityIndex);
 
