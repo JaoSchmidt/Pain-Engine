@@ -2,17 +2,14 @@
 
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/Movement.h"
 #include "ECS/Entity.h"
 #include "ECS/Registry/Tuple.h"
 #include <tuple>
-#include <typeindex>
 
 namespace pain
 {
 
-// template <typename ...Components >
-class Archetype
+template <typename... Components> class Archetype
 {
   friend class ArcheRegistry;
   Archetype(int bitmask)
@@ -70,14 +67,12 @@ class Archetype
   }
 
   // Extract a column of an archetype. I.e. the components of an entity
-  template <typename... Components>
   Tuple<const Components &...> extractColumn(Entity entity) const
   {
     auto it = std::find(m_entities.begin(), m_entities.end(), entity);
     int index = it - m_entities.begin();
     return std::make_tuple(fetchComponent<Components>(index)...);
   };
-  template <typename... Components>
   Tuple<Components &...> extractColumn(Entity entity)
   {
     auto it = std::find(m_entities.begin(), m_entities.end(), entity);
@@ -99,43 +94,32 @@ class Archetype
     return fetchComponent<T>(index);
   }
 
-  template <typename C> std::vector<void *> &componentVector()
+  template <typename T> std::vector<void *> &componentVector()
   {
-    return m_components.at(C::componentID);
+    return m_components.at(T::componentID);
   }
 
-  template <typename Component>
-  const Component &fetchComponent(int entityIndex) const
+  template <typename T> const T &fetchComponent(int entityIndex) const
   {
-    auto it = m_components.find(Component::componentID);
-    P_ASSERT(it == m_components.end(), "Component type {} not found",
-             entityIndex);
-
-    auto &componentVector = it->second;
+    std::vector<T> componentVector = std::get<T>(m_components);
     P_ASSERT((unsigned)entityIndex >= componentVector.size(),
              "Entity index {} out of range", entityIndex);
 
-    const Component &c = static_cast<Component>(componentVector[entityIndex]);
-    return c;
+    return componentVector[entityIndex];
   }
 
-  template <typename Component> Component &fetchComponent(int entityIndex)
+  template <typename T> T &fetchComponent(int entityIndex)
   {
-    auto it = m_components.find(Component::componentID);
-    P_ASSERT(it == m_components.end(), "Component type {} not found",
-             entityIndex);
-
-    auto &componentVector = it->second;
+    std::vector<T> componentVector = std::get<T>(m_components);
     P_ASSERT((unsigned)entityIndex >= componentVector.size(),
              "Entity index {} out of range", entityIndex);
 
-    Component &c = static_cast<Component &>(componentVector[entityIndex]);
-    return c;
+    return componentVector[entityIndex];
   }
 
   std::vector<Entity> m_entities;
   // "SoA", more like map of vectors
-  std::map<int, std::vector<void *>> m_components;
+  std::tuple<std::vector<Components>...> m_components;
 };
 
 } // namespace pain

@@ -33,9 +33,10 @@ class ArcheRegistry
   {
     static_assert(sizeof...(Components) == sizeof...(Args),
                   "Number of components and arguments must match.");
-    Archetype &archetype = getOrCreateArchetype<Components...>();
-    (archetype.pushComponent<Components>(std::forward<Args>(args)), ...);
-    return archetype.extractColumn<Components...>(entity);
+    Archetype<Components...> &archetype = getOrCreateArchetype<Components...>();
+    (archetype.template pushComponent<Components>(std::forward<Args>(args)),
+     ...);
+    return archetype.template extractColumn<Components...>(entity);
   }
   // TODO: Add component should move entity to different archetype
   template <typename T, typename... Args>
