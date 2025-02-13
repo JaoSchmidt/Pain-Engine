@@ -46,7 +46,7 @@ public:
         entity, std::forward<Args>(args)...);
   }
   template <typename T, typename... Args>
-  T addComponent(Entity entity, Args &&...args)
+  T &addComponent(Entity entity, Args &&...args)
   {
     return m_registry->addComponent<T>(entity, std::forward<Args>(args)...);
   }
@@ -177,11 +177,5 @@ private:
   ArcheRegistry *m_registry;
   inline static std::queue<Entity> m_availableEntities = {};
   inline static Entity numberOfEntities = 0;
-
-  template <typename... Components>
-  Entity getEntity(reg::Iterator<Components...> it)
-  {
-    return m_registry->getEntityFromEntityIndex(it.getEntityIndex());
-  }
 };
 } // namespace pain

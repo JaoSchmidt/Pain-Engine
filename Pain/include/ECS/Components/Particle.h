@@ -22,7 +22,7 @@ struct Particle {
 };
 
 struct ParticleSprayComponent {
-  static constexpr int m_componentID = bitMaskUnit(4);
+  static constexpr int componentID = bitMaskUnit(4);
   float m_velocity = 1.f;
   float m_lifeTime = 1.f;
   float m_sizeChangeSpeed = 0.f;

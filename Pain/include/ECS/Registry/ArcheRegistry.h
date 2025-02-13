@@ -39,7 +39,7 @@ class ArcheRegistry
   }
   // TODO: Add component should move entity to different archetype
   template <typename T, typename... Args>
-  T addComponent(Entity entity, Args &&...args)
+  T &addComponent(Entity entity, Args &&...args)
   {
     Archetype &archetype = getOrCreateArchetype<T>();
     archetype.pushComponent<T>(std::forward<Args>(args)...);
@@ -67,7 +67,7 @@ class ArcheRegistry
     return archetype.extractColumn<Components...>(entity);
   }
   // A component of an entity
-  template <typename T> T getComponent(Entity entity)
+  template <typename T> T &getComponent(Entity entity)
   {
     Archetype &archetype = getOrCreateArchetype<T>();
     return archetype.extractComponent<T>(entity);
@@ -191,11 +191,11 @@ class ArcheRegistry
   template <typename... Components> constexpr int getBitMask()
   {
     // https://en.cppreference.com/w/cpp/language/fold
-    return (getComponentID<Components> | ...);
+    return (getComponentID<Components>() | ...);
   }
   template <typename C> constexpr int getComponentID()
   {
-    return C::ComponentID;
+    return C::componentID;
   }
 
   template <typename... Components> Archetype &getOrCreateArchetype()

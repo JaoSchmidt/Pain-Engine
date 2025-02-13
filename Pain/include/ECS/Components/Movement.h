@@ -7,7 +7,7 @@ namespace pain
 {
 
 struct TransformComponent {
-  static constexpr int m_componentID = bitMaskUnit(0);
+  static constexpr int componentID = bitMaskUnit(0);
   glm::vec3 m_position = {0.0f, 0.0f, 0.0f};
   TransformComponent() = default;
   TransformComponent(const glm::vec3 &position) : m_position(position) {}
@@ -20,7 +20,7 @@ struct TransformComponent {
 };
 
 struct MovementComponent {
-  static constexpr int m_componentID = bitMaskUnit(1);
+  static constexpr int componentID = bitMaskUnit(1);
   glm::vec3 m_velocityDir = {0.0f, 0.0f, 0.0f};
   float m_translationSpeed = 1.0f;
   float m_rotationSpeed = 0.0f;

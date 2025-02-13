@@ -34,7 +34,7 @@ namespace pain
 
 struct NativeScriptComponent {
   ScriptableEntity *instance = nullptr;
-  static constexpr int m_componentID = bitMaskUnit(3);
+  static constexpr int componentID = bitMaskUnit(3);
 
   void (*instantiateFunction)(ScriptableEntity *&) = nullptr;
   void (*destroyInstanceFunction)(ScriptableEntity *&) = nullptr;

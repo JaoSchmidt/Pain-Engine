@@ -133,11 +133,11 @@ void Scene::renderSystems(double currentTime)
   // =============================================================== //
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
-    auto &nsc = *it;
+    NativeScriptComponent &nsc = *it;
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
       nsc.instance->m_scene = this;
-      nsc.instance->m_entity = it->first;
+      nsc.instance->m_entity = it.getEntity();
 
       if (nsc.onCreateFunction)
         nsc.onCreateFunction(nsc.instance);
@@ -152,7 +152,7 @@ void Scene::renderSystems(double currentTime)
   // =============================================================== //
   for (auto it = begin<ParticleSprayComponent>();
        it != end<ParticleSprayComponent>(); ++it) {
-    ParticleSprayComponent &psc = it->second;
+    ParticleSprayComponent &psc = *it;
     Renderer2d::beginSprayParticle(currentTime, psc);
     for (Particle &pa : psc.m_particles) {
       if (pa.m_alive)
@@ -172,19 +172,20 @@ void Scene::updateSystems(double deltaTime)
   // =============================================================== //
   for (auto it = begin<RotationComponent>(); it != end<RotationComponent>();
        ++it) {
-    RotationComponent &rc = it->second;
+    RotationComponent &rc = *it;
     rc.m_rotation = {cos(rc.m_rotationAngle), sin(rc.m_rotationAngle), 0};
   }
 
   // =============================================================== //
   // Update Movement Components
   // =============================================================== //
-  for (auto it = begin<MovementComponent>(); it != end<MovementComponent>();
-       ++it) {
-    const MovementComponent &mc = it->second;
-    TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const float moveAmount = (float)(mc.m_translationSpeed * deltaTime);
-    tc.m_position += mc.m_velocityDir * moveAmount;
+  {
+    auto [tIt, mIt] = begin<TransformComponent, MovementComponent>();
+    auto [tItEnd, mItEnd] = end<TransformComponent, MovementComponent>();
+    for (; tIt != tItEnd; ++tIt, ++mIt) {
+      const float moveAmount = (float)(mIt->m_translationSpeed * deltaTime);
+      tIt->m_position += mIt->m_velocityDir * moveAmount;
+    }
   }
 
   // =============================================================== //
@@ -192,11 +193,11 @@ void Scene::updateSystems(double deltaTime)
   // =============================================================== //
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
-    auto &nsc = it->second;
+    auto &nsc = *it;
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
       nsc.instance->m_scene = this;
-      nsc.instance->m_entity = it->first;
+      nsc.instance->m_entity = it.getEntity();
 
       if (nsc.onCreateFunction)
         nsc.onCreateFunction(nsc.instance);
@@ -211,11 +212,11 @@ void Scene::updateSystems(const SDL_Event &event)
 {
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
-    auto &nsc = it->second;
+    auto &nsc = *it;
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
       nsc.instance->m_scene = this;
-      nsc.instance->m_entity = it->first;
+      nsc.instance->m_entity = it.getEntity();
 
       if (nsc.onCreateFunction)
         nsc.onCreateFunction(nsc.instance);

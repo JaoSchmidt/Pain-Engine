@@ -19,16 +19,16 @@ public:
     return m_scene->addComponents<Components...>(m_entity,
                                                  std::forward<Args>(args)...);
   }
-  template <typename T, typename... Args> T addComponent(Args &&...args)
+  template <typename T, typename... Args> T &addComponent(Args &&...args)
   {
     return m_scene->addComponent<T>(m_entity, std::forward<Args>(args)...);
   }
-  template <typename... Components> Tuple<Components &...> &getComponents()
+  template <typename... Components> Tuple<Components &...> getComponents()
   {
     return m_scene->getComponents<Components...>(m_entity);
   }
   template <typename... Components>
-  const Tuple<Components &...> &getComponents() const
+  const Tuple<Components &...> getComponents() const
   {
     return m_scene->getComponents<Components...>(m_entity);
   }
