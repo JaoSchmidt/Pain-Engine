@@ -6,6 +6,7 @@
 
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Registry/ArcheRegistry.h"
+#include "ECS/Registry/Archetype.h"
 #include "ECS/Registry/Registry.h"
 #include "Entity.h"
 
@@ -22,6 +23,10 @@ concept IsMultipleTypes = (sizeof...(Ts) > 1);
 
 class Scene
 {
+private:
+  ArcheRegistry<Archetype<MovementComponent, TransformComponent>> *m_registry =
+      {};
+
 public:
   Scene();
   ~Scene() { delete m_registry; };
@@ -174,7 +179,6 @@ public:
   void renderSystems(double currentTime);
 
 private:
-  ArcheRegistry *m_registry;
   inline static std::queue<Entity> m_availableEntities = {};
   inline static Entity numberOfEntities = 0;
 };

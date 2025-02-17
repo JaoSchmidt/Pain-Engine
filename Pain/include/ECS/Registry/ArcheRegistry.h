@@ -9,18 +9,29 @@
 
 #include "ECS/Entity.h"
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 namespace pain
 {
 
-template <typename T>
-concept Component = requires {
-  { T::ComponentID } -> std::convertible_to<int>;
+// https://stackoverflow.com/questions/25958259/how-do-i-find-out-if-a-tuple-contains-a-type/25958302#25958302
+template <typename T, typename Tup> struct has_type;
+
+template <typename T> struct has_type<T, std::tuple<>> : std::false_type {
 };
 
-class ArcheRegistry
+template <typename T, typename U, typename... Ts>
+struct has_type<T, std::tuple<U, Ts...>> : has_type<T, std::tuple<Ts...>> {
+};
+
+template <typename T, typename... Ts>
+struct has_type<T, std::tuple<T, Ts...>> : std::true_type {
+};
+
+template <class... Arch> class ArcheRegistry
 {
+  static constexpr std::tuple<Arch...> m_archetypes;
   friend class Scene;
   ArcheRegistry() = default;
   // ---------------------------------------------------- //
@@ -31,9 +42,10 @@ class ArcheRegistry
   template <typename... Components, typename... Args>
   Tuple<Components &...> addComponents(Entity entity, Args &&...args)
   {
+    // https://en.cppreference.com/w/cpp/language/fold
     static_assert(sizeof...(Components) == sizeof...(Args),
                   "Number of components and arguments must match.");
-    Archetype<Components...> &archetype = getOrCreateArchetype<Components...>();
+    UnsortedArchetype<Components...> &archetype = getArchetype<Components...>();
     (archetype.template pushComponent<Components>(std::forward<Args>(args)),
      ...);
     return archetype.template extractColumn<Components...>(entity);
@@ -42,9 +54,9 @@ class ArcheRegistry
   template <typename T, typename... Args>
   T &addComponent(Entity entity, Args &&...args)
   {
-    Archetype &archetype = getOrCreateArchetype<T>();
-    archetype.pushComponent<T>(std::forward<Args>(args)...);
-    return archetype.extractComponent<T>(entity);
+    UnsortedArchetype<T> &archetype = getArchetype<T>();
+    archetype.template pushComponent<T>(std::forward<Args>(args)...);
+    return archetype.template extractComponent<T>(entity);
   }
 
   // ---------------------------------------------------- //
@@ -56,38 +68,34 @@ class ArcheRegistry
   template <typename... Components>
   Tuple<Components &...> &getComponents(Entity entity)
   {
-    Archetype &archetype = getOrCreateArchetype<Components...>();
-    return archetype.extractColumn<Components...>(entity);
+    UnsortedArchetype<Components...> &archetype = getArchetype<Components...>();
+    return archetype.template extractColumn<Components...>(entity);
   }
   // Get a single column of an archetype as a tuple, which represents the
   // components of an entity.
   template <typename... Components>
   const Tuple<Components &...> &getComponents(Entity entity) const
   {
-    Archetype &archetype = getOrCreateArchetype<Components...>();
-    return archetype.extractColumn<Components...>(entity);
+    UnsortedArchetype<Components...> &archetype = getArchetype<Components...>();
+    return archetype.template extractColumn<Components...>(entity);
   }
   // A component of an entity
   template <typename T> T &getComponent(Entity entity)
   {
-    Archetype &archetype = getOrCreateArchetype<T>();
-    return archetype.extractComponent<T>(entity);
+    UnsortedArchetype<T> &archetype = getArchetype<T>();
+    return archetype.template extractComponent<T>(entity);
   }
   // A component of an entity
   template <typename T> const T &getComponent(Entity entity) const
   {
-    Archetype &archetype = getOrCreateArchetype<T>();
-    return archetype.extractComponent<T>(entity);
+    UnsortedArchetype<T> &archetype = getArchetype<T>();
+    return archetype.template extractComponent<T>(entity);
   }
 
   template <typename... Components> bool has(Entity entity) const
   {
-
-    int bitMask = getBitMask<Components...>();
-    auto it = archetypes.find(bitMask);
-    if (it == archetypes.end())
-      return false;
-    return it->second.has(entity);
+    UnsortedArchetype<Components...> &arch = getArchetype<Components...>();
+    return arch.has(entity);
   }
 
   /* Remove a single column of an archetype, which represents the components
@@ -97,7 +105,7 @@ class ArcheRegistry
   returned, otherwise 0 is returned*/
   template <typename... Components> void remove(Entity entity)
   {
-    Archetype &archetype = getOrCreateArchetype<Components...>();
+    UnsortedArchetype<Components...> &archetype = getArchetype<Components...>();
     archetype.remove(entity);
   }
 
@@ -120,145 +128,94 @@ class ArcheRegistry
   // return tuple of iterators
   template <typename... Components> Tuple<reg::Iterator<Components>...> begin()
   {
-    int bitMask = getBitMask<Components...>();
-    // filter archetypes
-    std::vector<Archetype *> archetypes = filterArchetype(bitMask);
     // for each component, extract all vectors of that component in each
     // Archetype (SoA)
     // return into a tuple of components
-    return std::make_tuple(
-        extractComponentFromArchetypes<Components>(archetypes)...);
+    return std::make_tuple(createIteratorFromComponentBegin<Components>()...);
   }
   // return tuple of iterators
   template <typename... Components>
   const Tuple<reg::Iterator<Components>...> end() const
   {
-    int bitMask = getBitMask<Components...>();
-    // filter archetypes
-    std::vector<const Archetype *> archetypes = filterArchetype(bitMask);
     // for each component, extract all vectors of that component in each
     // Archetype (SoA)
     // return into a tuple of components
     return std::make_tuple(
-        extractComponentFromArchetypes<Components>(archetypes)...);
+        createIteratorFromComponentEnd<Components..., Components>()...);
   }
 
   // Extract all vectors of that particular component from the archetypes
-  template <typename C>
-  reg::Iterator<C>
-  createIterateFromComponentBegin(std::vector<Archetype *> archetypes) const
+  template <typename... Components, typename ParticularComponent>
+  reg::Iterator<ParticularComponent> createIteratorFromComponentBegin() const
   {
-    std::vector<std::vector<void *> *> vectors;
-    vectors.reserve(archetypes.size());
-    for (const Archetype *archetype : archetypes) {
-      std::vector<void *> componentVector =
-          archetype->componentVector(getComponentID<C>());
-      vectors.push_back(static_cast<std::vector<C> *>(componentVector));
-    }
+    std::vector<std::vector<ParticularComponent> *> vectors;
+    vectors.reserve(m_archetypes.size());
 
     std::vector<const std::vector<Entity> *> entities;
-    entities.reserve(archetypes.size());
-    for (const Archetype *archetype : archetypes) {
-      entities.push_back(&(archetype->m_entities));
-    }
+    entities.reserve(m_archetypes.size());
+
+    // https://stackoverflow.com/questions/54640419/iterating-over-tuple-in-c17-20
+    std::apply(
+        [&](const auto &...archetype) {
+          (vectors.push_back(archetype.getComponent()), ...);
+          (entities.push_back(archetype.m_entities), ...);
+        },
+        m_archetypes);
+
     return reg::Iterator(vectors, 0, 0, entities);
   }
 
-  template <typename C>
-  const reg::Iterator<C>
-  createIterateFromComponentEnd(std::vector<Archetype *> archetypes) const
+  template <typename... Components, typename ParticularComponent>
+  reg::Iterator<ParticularComponent> createIterateFromComponentEnd() const
   {
-    std::vector<std::vector<void *> *> vectors;
-    vectors.reserve(archetypes.size());
-    for (const Archetype *archetype : archetypes) {
-      std::vector<void *> componentVector =
-          archetype->componentVector(getComponentID<C>());
-      vectors.push_back(static_cast<std::vector<C> *>(componentVector));
-    }
+    std::vector<std::vector<ParticularComponent> *> vectors;
+    vectors.reserve(m_archetypes.size());
 
     std::vector<const std::vector<Entity> *> entities;
-    entities.reserve(archetypes.size());
-    for (const Archetype *archetype : archetypes) {
-      entities.push_back(&(archetype->m_entities));
-    }
-    return reg::Iterator(vectors, 0, 0, entities);
+    entities.reserve(m_archetypes.size());
+
+    // https://stackoverflow.com/questions/54640419/iterating-over-tuple-in-c17-20
+    std::apply(
+        [&](const auto &...archetype) {
+          (vectors.push_back(archetype.getComponent()), ...);
+          (entities.push_back(archetype.m_entities), ...);
+        },
+        m_archetypes);
+
+    return reg::Iterator(vectors, vectors.size(), 0, entities);
   }
 
   // ---------------------------------------------------- //
-  // Maps
+  // get Maps
   // ---------------------------------------------------- //
 
-  // get bit mask corresponding to that set of arrays
-  template <typename... Components> constexpr int getBitMask()
+  template <typename... Components>
+  UnsortedArchetype<Components...> &getArchetype()
   {
-    // https://en.cppreference.com/w/cpp/language/fold
-    return (getComponentID<Components>() | ...);
-  }
-  template <typename C> constexpr int getComponentID()
-  {
-    return C::componentID;
+    static_assert(has_type<Archetype<Components...>, std::tuple<Arch...>>::type,
+                  "The registry doesn't have this type of archetype, are you "
+                  "sure you initialize the Registry with all Archetypes");
+    return std::get<UnsortedArchetype<Components...>>(m_archetypes);
   }
 
-  template <typename... Components> Archetype &getOrCreateArchetype()
+  template <typename... Cs, typename... Ts>
+  constexpr bool hasAllComponents(std::tuple<Ts...>)
   {
-    int bitMask = getBitMask<Components...>();
-    auto it = archetypes.find(bitMask);
-    if (it == archetypes.end()) {
-      auto pair = archetypes.emplace(bitMask, Archetype(bitMask));
-      P_ASSERT(pair.second,
-               "It wasn't possible to create archetype with bitmask {}",
-               bitMask);
-      return pair.first->second;
-    }
-    return it->second;
+    return (contains<Cs>(std::declval<std::tuple<Ts...>>()) && ...);
   }
 
-  // Create archetype and return its number
-  Archetype &createArchetype(int bitMask)
+  template <typename U, typename... T> constexpr bool contains(std::tuple<T...>)
   {
-    auto it = archetypes.find(bitMask);
-    if (it == archetypes.end()) {
-      auto pair = archetypes.emplace(bitMask, Archetype(bitMask));
-      P_ASSERT(pair.second,
-               "It wasn't possible to create archetype with bitmask {}",
-               bitMask);
-      return pair.first->second;
-    }
-    return it->second;
+    return (std::is_same_v<U, T> || ...);
   }
-
-  Archetype &getOrCreateArchetype(int bitMask)
-  {
-    auto it = archetypes.find(bitMask);
-    if (it != archetypes.end()) {
-      return it->second;
-    }
-    return createArchetype(bitMask);
-  }
-
-  // Filter archetypes to find those that have at least the components in the
-  // bitmask
-  const std::vector<const Archetype *> filterArchetype(int bitNumber) const
-  {
-    std::vector<const Archetype *> matchingArchetypes;
-    for (const auto &[mask, archetype] : archetypes) {
-      if ((mask & bitNumber) == bitNumber) {
-        matchingArchetypes.push_back(&archetype);
-      }
-    }
-    return matchingArchetypes;
-  }
-  std::vector<Archetype *> filterArchetype(int bitNumber)
-  {
-    std::vector<Archetype *> matchingArchetypes;
-    for (auto &[mask, archetype] : archetypes) {
-      if ((mask & bitNumber) == bitNumber) {
-        matchingArchetypes.push_back(&archetype);
-      }
-    }
-    return matchingArchetypes;
-  }
-
-  std::unordered_map<int, Archetype> archetypes;
+  // // Filter archetypes to find those that have at least the components in the
+  // // bitmask
+  // template <typename FilterTuple, typename... A>
+  // constexpr std::tuple<A...> filterArchetypes(std::tuple<A...> archetypes)
+  // {
+  //   return std::tuple_cat((hasAllComponents<FilterTuple>(archetypes)
+  //                              ? std::tuple<A>{}
+  //                              : std::tuple<>{})...);
+  // }
 };
 } // namespace pain
