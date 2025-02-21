@@ -15,25 +15,36 @@
 namespace pain
 {
 
-// https://stackoverflow.com/questions/25958259/how-do-i-find-out-if-a-tuple-contains-a-type/25958302#25958302
-template <typename T, typename Tup> struct has_type;
-
-template <typename T> struct has_type<T, std::tuple<>> : std::false_type {
-};
-
-template <typename T, typename U, typename... Ts>
-struct has_type<T, std::tuple<U, Ts...>> : has_type<T, std::tuple<Ts...>> {
-};
-
-template <typename T, typename... Ts>
-struct has_type<T, std::tuple<T, Ts...>> : std::true_type {
-};
-
-template <class... Arch> class ArcheRegistry
+class ArcheRegistry
 {
-  static constexpr std::tuple<Arch...> m_archetypes;
+  using TypeId = std::size_t;
+  std::map<TypeId, void *> m_archetypes;
+  // std::vector<void *> m_archetypes;
   friend class Scene;
   ArcheRegistry() = default;
+  // ---------------------------------------------------- //
+  // get Maps
+  // ---------------------------------------------------- //
+  template <typename... Cs, typename... Ts>
+  constexpr bool hasAllComponents(UnsortedArchetype<Ts...>)
+  {
+    return (contains<Cs>(std::declval<UnsortedArchetype<Ts...>>()) && ...);
+  }
+  template <typename U, typename... T>
+  constexpr bool contains(UnsortedArchetype<T...>)
+  {
+    return (std::is_same_v<U, T> || ...);
+  }
+
+  template <typename... Components> constexpr TypeId getArchetypeId()
+  {
+    return typeid(Archetype<Components...>).hash_code();
+  }
+  template <typename... Components> Archetype<Components...> &getArchetype()
+  {
+    return m_archetypes.at(getArchetypeId<Components...>());
+  }
+
   // ---------------------------------------------------- //
   // add and remove
   // ---------------------------------------------------- //
@@ -131,7 +142,8 @@ template <class... Arch> class ArcheRegistry
     // for each component, extract all vectors of that component in each
     // Archetype (SoA)
     // return into a tuple of components
-    return std::make_tuple(createIteratorFromComponentBegin<Components>()...);
+    return std::make_tuple(
+        createIteratorFromComponentBegin<Components..., Components>()...);
   }
   // return tuple of iterators
   template <typename... Components>
@@ -164,6 +176,17 @@ template <class... Arch> class ArcheRegistry
 
     return reg::Iterator(vectors, 0, 0, entities);
   }
+  template <typename... Components, typename ParticularComponent,
+            typename... Ts>
+  void test(Archetype<Ts...> &arch,
+            std::vector<std::vector<ParticularComponent> *> &vectors,
+            std::vector<const std::vector<Entity> *> &entities)
+  {
+    if (hasAllComponents<Components...>(std::declval<Archetype<Ts...>>)) {
+      vectors.push_back(arch.getComponent());
+      entities.push_back(arch.m_entities);
+    }
+  }
 
   template <typename... Components, typename ParticularComponent>
   reg::Iterator<ParticularComponent> createIterateFromComponentEnd() const
@@ -174,48 +197,13 @@ template <class... Arch> class ArcheRegistry
     std::vector<const std::vector<Entity> *> entities;
     entities.reserve(m_archetypes.size());
 
-    // https://stackoverflow.com/questions/54640419/iterating-over-tuple-in-c17-20
-    std::apply(
-        [&](const auto &...archetype) {
-          (vectors.push_back(archetype.getComponent()), ...);
-          (entities.push_back(archetype.m_entities), ...);
-        },
-        m_archetypes);
-
+    for (const auto &archetype : m_archetypes) {
+      test<Components..., ParticularComponent>(archetype.second, vectors,
+                                               entities);
+      // vectors.push_back(archetype.second->getComponent());
+      // entities.push_back(archetype.second->m_entities);
+    }
     return reg::Iterator(vectors, vectors.size(), 0, entities);
   }
-
-  // ---------------------------------------------------- //
-  // get Maps
-  // ---------------------------------------------------- //
-
-  template <typename... Components>
-  UnsortedArchetype<Components...> &getArchetype()
-  {
-    static_assert(has_type<Archetype<Components...>, std::tuple<Arch...>>::type,
-                  "The registry doesn't have this type of archetype, are you "
-                  "sure you initialize the Registry with all Archetypes");
-    return std::get<UnsortedArchetype<Components...>>(m_archetypes);
-  }
-
-  template <typename... Cs, typename... Ts>
-  constexpr bool hasAllComponents(std::tuple<Ts...>)
-  {
-    return (contains<Cs>(std::declval<std::tuple<Ts...>>()) && ...);
-  }
-
-  template <typename U, typename... T> constexpr bool contains(std::tuple<T...>)
-  {
-    return (std::is_same_v<U, T> || ...);
-  }
-  // // Filter archetypes to find those that have at least the components in the
-  // // bitmask
-  // template <typename FilterTuple, typename... A>
-  // constexpr std::tuple<A...> filterArchetypes(std::tuple<A...> archetypes)
-  // {
-  //   return std::tuple_cat((hasAllComponents<FilterTuple>(archetypes)
-  //                              ? std::tuple<A>{}
-  //                              : std::tuple<>{})...);
-  // }
 };
 } // namespace pain
