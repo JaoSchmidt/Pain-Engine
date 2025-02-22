@@ -172,8 +172,16 @@ template <class... Types> struct sort_list<temp_list<Types...>> {
 // ---------------------------------------------------- //
 // Container definition
 // ---------------------------------------------------- //
+struct IUnsortedArchetype {
+  virtual ~IUnsortedArchetype() = default;
+  template <typename C> std::vector<C> *getComponent()
+  {
+    return nullptr; // Default behavior: returns null if incorrect type
+  }
+};
 
-template <typename... Components> struct UnsortedArchetype {
+template <typename... Components>
+struct UnsortedArchetype : IUnsortedArchetype {
   std::vector<Entity> m_entities;
   // "SoA", more like map of vectors
   std::tuple<std::vector<Components>...> m_components;
@@ -272,13 +280,25 @@ template <typename... Components> struct UnsortedArchetype {
 
     return componentVector[entityIndex];
   }
+  // template <typename C> std::vector<C> &getComponent()
+  // {
+  //   return std::get<std::vector<C>>(m_components);
+  // }
+  // template <typename C> const std::vector<C> &getComponent() const
+  // {
+  //   return std::get<std::vector<C>>(m_components);
+  // }
   template <typename C> std::vector<C> &getComponent()
   {
-    return std::get<C>(m_components);
+    return std::get<std::vector<C>>(m_components);
   }
-  template <typename C> const std::vector<C> &getComponent() const
+
+  template <typename C> std::vector<C> *getComponent()
   {
-    return std::get<C>(m_components);
+    if constexpr ((std::is_same_v<C, Components> || ...)) {
+      return &std::get<std::vector<C>>(m_components);
+    }
+    return nullptr;
   }
 };
 

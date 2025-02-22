@@ -18,7 +18,7 @@ namespace pain
 
 class ArcheRegistry
 {
-  std::map<int, void *> m_archetypes;
+  std::map<int, IUnsortedArchetype *> m_archetypes;
   std::map<std::type_index, int> m_componentIDs;
   std::map<int, std::type_index> m_archetypesIDs;
   // std::vector<void *> m_archetypes;
@@ -105,8 +105,9 @@ class ArcheRegistry
     }
   }
 
-  template <typename... Components, typename ParticularComponent>
-  reg::Iterator<ParticularComponent> createIterateFromComponentEnd() const
+  template <typename ParticularComponent>
+  reg::Iterator<ParticularComponent>
+  createIterateFromComponentEnd(int bitMask) const
   {
     std::vector<std::vector<ParticularComponent> *> vectors;
     vectors.reserve(m_archetypes.size());
@@ -114,14 +115,13 @@ class ArcheRegistry
     std::vector<const std::vector<Entity> *> entities;
     entities.reserve(m_archetypes.size());
 
-    int bitMask = getBitMask<Components...>();
-
-    for (const auto &archetype : m_archetypes) {
-      if ((archetype.first & bitMask) == bitMask) {
-        test<Components..., ParticularComponent>(archetype.second, vectors,
-                                                 entities);
-        // vectors.push_back(archetype.second->getComponent());
-        // entities.push_back(archetype.second->m_entities);
+    for (const auto &iArchetype : m_archetypes) {
+      if ((iArchetype.first & bitMask) == bitMask) {
+        if (auto *compVec =
+                iArchetype.second->getComponent<ParticularComponent>()) {
+          vectors.push_back(compVec);
+          entities.push_back(&iArchetype.second->m_entities);
+        }
       }
     }
     return reg::Iterator(vectors, vectors.size(), 0, entities);
@@ -145,11 +145,12 @@ class ArcheRegistry
   // return tuple of iterators
   template <typename... Components> Tuple<reg::Iterator<Components>...> begin()
   {
+    int bitMask = getBitMask<Components...>();
     // for each component, extract all vectors of that component in each
     // Archetype (SoA)
     // return into a tuple of components
     return std::make_tuple(
-        createIteratorFromComponentBegin<Components..., Components>()...);
+        createIteratorFromComponentBegin<Components>(bitMask)...);
   }
   // return tuple of iterators
   template <typename... Components>
