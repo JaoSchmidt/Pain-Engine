@@ -7,6 +7,7 @@
 #include "ECS/Registry/Tuple.h"
 #include <tuple>
 #include <type_traits>
+#include <typeindex>
 
 /*
  * The Archetype desgin can be better understood by searching online or by
@@ -176,6 +177,11 @@ template <typename... Components> struct UnsortedArchetype {
   std::vector<Entity> m_entities;
   // "SoA", more like map of vectors
   std::tuple<std::vector<Components>...> m_components;
+
+  static std::type_index type()
+  {
+    return std::type_index(typeid(UnsortedArchetype<Components...>));
+  }
 
   bool has(Entity entity) const
   {
