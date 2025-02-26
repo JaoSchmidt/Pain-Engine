@@ -13,34 +13,43 @@ class GameObject
 public:
   GameObject(Scene *scene);
   ~GameObject();
-  template <typename... Components, typename... Args>
-  Tuple<Components &...> addComponents(Args &&...args)
+  template <typename... Components>
+  std::tuple<Components &...> addComponents(Components &&...args)
   {
-    return m_scene->addComponents<Components...>(m_entity,
-                                                 std::forward<Args>(args)...);
+    return m_scene->addComponents<Components...>(
+        m_entity, std::forward<Components>(args)...);
   }
   template <typename T, typename... Args> T &addComponent(Args &&...args)
   {
     return m_scene->addComponent<T>(m_entity, std::forward<Args>(args)...);
   }
-  template <typename... Components> Tuple<Components &...> getComponents()
+
+  // ---------------------------------------------------- //
+  // Get components from archetypes
+  // ---------------------------------------------------- //
+  template <typename... Components>
+  std::tuple<Components &...> getAllComponents()
   {
-    return m_scene->getComponents<Components...>(m_entity);
+    return m_scene->getAllComponents<Components...>(m_entity);
   }
   template <typename... Components>
-  const Tuple<Components &...> getComponents() const
+  const std::tuple<Components &...> getAllComponents() const
   {
-    return m_scene->getComponents<Components...>(m_entity);
+    return static_cast<const Scene *>(m_scene)->getAllComponents<Components...>(
+        m_entity);
   }
-  template <typename T> T &getComponent()
+  template <typename T, typename... Components> T &getComponent()
   {
     return m_scene->getComponent<T>(m_entity);
   }
-  template <typename T> const T &getComponent() const
+  template <typename T, typename... Components> const T &getComponent() const
   {
-    return m_scene->getComponent<T>(m_entity);
+    return static_cast<const Scene *>(m_scene)->getComponent<T>(m_entity);
   }
 
+  // ---------------------------------------------------- //
+  // Does archetype has components?
+  // ---------------------------------------------------- //
   template <typename... Components> bool hasComponent(Entity entity) const
   {
     return m_scene->hasComponent<Components...>(entity);

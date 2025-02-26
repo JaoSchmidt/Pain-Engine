@@ -1,5 +1,5 @@
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "Misc/BasicOrthoCamera.h"
+#include "ECS/Components/Camera.h"
 
 #include "glm/ext/matrix_transform.hpp"
 
@@ -71,7 +71,7 @@ void setClearColor(const glm::vec4 &color)
 void beginScene(float globalTime, const glm::mat4 &transform)
 {
   const OrthoCameraComponent &cameraComponent =
-      m_cameraEntity->getComponent<OrthoCameraComponent>();
+      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
 
   uploadBasicUniforms(cameraComponent.m_camera->getViewProjectionMatrix(),
                       globalTime, transform);
@@ -82,7 +82,7 @@ void flush()
 {
   // bindTextures();
   const OrthoCameraComponent &cameraComponent =
-      m_cameraEntity->getComponent<OrthoCameraComponent>();
+      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
   drawBatches(cameraComponent.m_camera->getViewProjectionMatrix());
 }
 

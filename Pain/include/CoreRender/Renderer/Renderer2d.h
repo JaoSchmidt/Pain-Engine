@@ -7,7 +7,7 @@
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 #include "ECS/Components/Particle.h"
-#include "Misc/BasicOrthoCamera.h"
+#include "Misc/BasicOrthoCameraObj.h"
 
 namespace pain
 {

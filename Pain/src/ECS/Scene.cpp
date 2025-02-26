@@ -2,7 +2,6 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Particle.h"
-#include "ECS/Registry/Registry.h"
 
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Rotation.h"
@@ -12,18 +11,7 @@
 namespace pain
 {
 
-Scene::Scene() : m_registry(new ArcheRegistry())
-{
-  // m_registry->addComponentMap<OrthoCameraComponent>();
-  // m_registry->addComponentMap<TransformComponent>();
-  // m_registry->addComponentMap<MovementComponent>();
-  // m_registry->addComponentMap<RotationComponent>();
-  // m_registry->addComponentMap<SpriteComponent>();
-  // m_registry->addComponentMap<SpritelessComponent>();
-  // m_registry->addComponentMap<TrianguleComponent>();
-  // m_registry->addComponentMap<NativeScriptComponent>();
-  // m_registry->addComponentMap<ParticleSprayComponent>();
-}
+Scene::Scene() : m_registry(new ArcheRegistry()) {}
 // TODO: Create way to move and copy components to another scene
 
 Entity Scene::createEntity()
@@ -38,20 +26,8 @@ Entity Scene::createEntity()
   return id;
 }
 
-void Scene::destroyEntity(Entity entity)
-{
-  // m_registry->removeAll(entity);
-  m_registry->remove<OrthoCameraComponent>(entity);
-  m_registry->remove<MovementComponent>(entity);
-  m_registry->remove<RotationComponent>(entity);
-  m_registry->remove<TransformComponent>(entity);
-  m_registry->remove<SpriteComponent>(entity);
-  m_registry->remove<SpritelessComponent>(entity);
-  m_registry->remove<TrianguleComponent>(entity);
-  m_registry->remove<NativeScriptComponent>(entity);
-  m_registry->remove<ParticleSprayComponent>(entity);
-  m_availableEntities.push(entity);
-}
+// TODO: I may need to fix this
+void Scene::destroyEntity(Entity entity) { m_availableEntities.push(entity); }
 
 // =============================================================== //
 // Systems

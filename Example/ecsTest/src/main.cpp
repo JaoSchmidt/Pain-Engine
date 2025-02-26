@@ -35,10 +35,10 @@ public:
     m_orthocamera =
         std::make_unique<pain::OrthoCameraEntity>(scene, aspectRatio, zoom);
     pain::Renderer2d::init(*m_orthocamera);
-    std::tuple<pain::NativeScriptComponent> a =
-        m_orthocamera->addComponent<pain::NativeScriptComponent>();
-    std::get<pain::NativeScriptComponent>(a)
-        .bind<pain::OrthoCameraController>();
+    pain::NativeScriptComponent a =
+        m_orthocamera->addComponent<pain::NativeScriptComponent>(
+            pain::NativeScriptComponent{});
+    a.bind<pain::OrthoCameraController>();
     ShapesController *sc = new ShapesController(
         pain::Font::create("resources/default/fonts/Epilogue-Black.ttf", 40.0));
     app.addImGuiInstance(sc);

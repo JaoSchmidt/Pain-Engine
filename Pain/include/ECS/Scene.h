@@ -3,11 +3,10 @@
 #include "Core.h"
 
 #include <queue>
+#include <utility>
 
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Registry/ArcheRegistry.h"
-#include "ECS/Registry/Archetype.h"
-#include "ECS/Registry/Registry.h"
 #include "Entity.h"
 
 namespace pain
@@ -15,17 +14,10 @@ namespace pain
 class GameObject;
 struct NativeScriptComponent;
 
-template <typename... Ts>
-concept IsSingleType = (sizeof...(Ts) == 1);
-
-template <typename... Ts>
-concept IsMultipleTypes = (sizeof...(Ts) > 1);
-
 class Scene
 {
 private:
-  ArcheRegistry<Archetype<MovementComponent, TransformComponent>> *m_registry =
-      {};
+  ArcheRegistry *m_registry;
 
 public:
   Scene();
@@ -42,7 +34,7 @@ public:
   // Component Archetype stuff
   // ---------------------------------------------------- //
   template <typename... Components, typename... Args>
-  Tuple<Components &...> addComponents(Entity entity, Args &&...args)
+  std::tuple<Components &...> addComponents(Entity entity, Args &&...args)
   {
     // P_ASSERT_W(!hasComponent<Components>(entity), "Entity {} already has
     // component!",
@@ -61,26 +53,29 @@ public:
   // ---------------------------------------------------- //
   // get multiple components together as a tuple
   template <typename... Components>
-  Tuple<Components &...> &getComponents(Entity entity)
+  std::tuple<Components &...> getAllComponents(Entity entity)
   {
-    return m_registry->getComponents<Components...>(entity);
+    return m_registry->getAllComponents<Components...>(entity);
   }
   // get multiple components together as a tuple
   template <typename... Components>
-  const Tuple<const Components &...> &getComponents(Entity entity) const
+  const std::tuple<const Components &...> getAllComponents(Entity entity) const
   {
-    return m_registry->getComponents<Components...>(entity);
+    return static_cast<const ArcheRegistry *>(m_registry)
+        ->getAllComponents<Components...>(entity);
   }
 
   // get a single component
-  template <typename T> T &getComponent(Entity entity)
+  template <typename T, typename... Components> T &getComponent(Entity entity)
   {
-    return m_registry->getComponent<T>(entity);
+    return m_registry->getComponent<T, Components...>(entity);
   }
   // get a single component
-  template <typename T> const T &getComponent(Entity entity) const
+  template <typename T, typename... Components>
+  const T &getComponent(Entity entity) const
   {
-    return m_registry->getComponent<T>(entity);
+    return static_cast<const ArcheRegistry *>(m_registry)
+        ->getComponent<T, Components...>(entity);
   }
 
   template <typename... Components> bool hasComponent(Entity entity) const
@@ -98,7 +93,7 @@ public:
 
   template <typename T>
     requires IsSingleType<T>
-  const reg::Iterator<T> end() const
+  reg::Iterator<T> end()
   {
     return m_registry->end<T>();
   }
@@ -110,13 +105,13 @@ public:
   }
   template <typename... Components>
     requires IsMultipleTypes<Components...>
-  Tuple<reg::Iterator<Components>...> begin()
+  std::tuple<reg::Iterator<Components>...> begin()
   {
     return m_registry->begin<Components...>();
   }
   template <typename... Components>
     requires IsMultipleTypes<Components...>
-  Tuple<const reg::Iterator<Components>...> end() const
+  std::tuple<reg::Iterator<Components>...> end()
   {
     return m_registry->end<Components...>();
   }

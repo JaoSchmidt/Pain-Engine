@@ -10,32 +10,46 @@ namespace pain
 class ScriptableEntity
 {
 public:
+  Entity m_entity = 0;
+  Scene *m_scene = nullptr;
+};
+
+// Extended ScriptableEntity, meaning that it has additional functions to more
+// easily get components
+template <typename... Components>
+class ExtendedScriptableEntity : public ScriptableEntity
+{
+public:
   // return the components of an entity, as a tuple
-  template <typename... Components> Tuple<Components &...> &getComponents()
+  std::tuple<Components &...> getAllComponents()
   {
-    return m_scene->getComponents<Components...>(m_entity);
+    return m_scene->getAllComponents<Components...>(m_entity);
   }
   // return the components of an entity, as a tuple
-  template <typename... Components>
-  const Tuple<Components &...> &getComponents() const
+  std::tuple<Components &...> getAllComponents() const
   {
-    return m_scene->getComponents<Components...>(m_entity);
+    return m_scene->getAllComponents<Components...>(m_entity);
   }
 
   // return a single component of an entity
   template <typename T> T &getComponent()
   {
-    return m_scene->getComponent<T>(m_entity);
+    return m_scene->getComponent<T, Components...>(m_entity);
   }
   // return a single component of an entity
   template <typename T> const T &getComponent() const
   {
-    return m_scene->getComponent<T>(m_entity);
+    return m_scene->getComponent<T, Components...>(m_entity);
   }
 
-protected:
-  Entity m_entity = 0;
-  Scene *m_scene = nullptr;
+  // TODO: In theory, it is possible to create the function "getSomeComponents",
+  // maybe using passing the target components as argument by reference:
+  // /*
+  // template <typename... Components, typename... Args> void
+  // getSomeComponents(Args &... args)
+  // */
+  // However, I'm not 100% sure so I'll do it later
+
   friend class Scene;
 };
 } // namespace pain

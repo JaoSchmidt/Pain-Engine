@@ -2,13 +2,17 @@
 
 #include "Core.h"
 #include "ECS/Components/Camera.h"
-#include "ECS/GameObject.h"
+#include "ECS/Components/Movement.h"
+#include "ECS/Components/Rotation.h"
 #include "ECS/Scriptable.h"
+#include "pain.h"
 
 namespace pain
 {
 
-class  OrthoCameraController : public ScriptableEntity
+class OrthoCameraController
+    : public ExtendedScriptableEntity<MovementComponent, TransformComponent,
+                                      OrthoCameraComponent, RotationComponent>
 {
 public:
   void onUpdate(double deltaTimeSec);
@@ -23,9 +27,4 @@ private:
   bool onWindowResized(const SDL_Event &e, OrthoCameraComponent &cc);
 };
 
-class  OrthoCameraEntity : public GameObject
-{
-public:
-  OrthoCameraEntity(Scene *scene, float aspectRatio, float zoomLevel);
-};
 } // namespace pain

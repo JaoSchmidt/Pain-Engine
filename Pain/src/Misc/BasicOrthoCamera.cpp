@@ -1,22 +1,10 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "CoreRender/Camera.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Rotation.h"
-#include "ECS/GameObject.h"
 #include "glm/fwd.hpp"
 
 namespace pain
 {
-OrthoCameraEntity::OrthoCameraEntity(Scene *scene, float aspectRatio,
-                                     float zoomLevel)
-    : GameObject(scene)
-{
-  addComponents<MovementComponent>();
-  addComponent<RotationComponent>();
-  addComponent<TransformComponent>();
-  addComponent<OrthoCameraComponent>(aspectRatio, zoomLevel);
-};
 
 inline void
 OrthoCameraController::recalculatePosition(const glm::vec3 &position,
@@ -29,10 +17,7 @@ OrthoCameraController::recalculatePosition(const glm::vec3 &position,
 void OrthoCameraController::onUpdate(double deltaTimeSec)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-  MovementComponent &mc = getComponent<MovementComponent>();
-  RotationComponent &rc = getComponent<RotationComponent>();
-  const TransformComponent &tc = getComponent<TransformComponent>();
-  const OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
+  auto [mc, tc, cc, rc] = getAllComponents();
 
   mc.m_velocityDir =
       (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
