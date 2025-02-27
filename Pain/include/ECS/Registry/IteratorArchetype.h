@@ -1,3 +1,4 @@
+#include "CoreFiles/LogWrapper.h"
 #include "ECS/Entity.h"
 
 namespace reg
@@ -19,7 +20,16 @@ template <typename T> struct Iterator {
     return static_cast<const std::vector<T> *>(m_vectors.at(m_outerIndex))
         ->at(m_innerIndex);
   }
-  T &operator*() { return m_vectors.at(m_outerIndex)->at(m_innerIndex); }
+  T &operator*()
+  {
+
+    PLOG_I("m_outer {}", m_outerIndex);
+    PLOG_I("m_inner {}", m_innerIndex);
+    PLOG_I("m_vectors size {}", m_vectors.size());
+    PLOG_I("m_vectors outerIndex {}", (*m_vectors.at(m_outerIndex)).size());
+
+    return m_vectors.at(m_outerIndex)->at(m_innerIndex);
+  }
   const T *operator->() const
   {
     return &static_cast<const std::vector<T> *>(m_vectors.at(m_outerIndex))

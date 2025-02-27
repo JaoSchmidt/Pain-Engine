@@ -36,13 +36,13 @@ class ArcheRegistry
   {
     auto it = m_componentBitMasks.find(std::type_index(typeid(Component)));
     if (it != m_componentBitMasks.end()) {
-      return m_componentBitMasks.at(std::type_index(typeid(Component)));
+      return it->second;
     } else {
-      auto it = m_componentBitMasks.emplace(std::type_index(typeid(Component)),
-                                            createBitMaskId());
-      P_ASSERT(it.second, "Could not create new component bitMask");
-      PLOG_I("New component bitmask added {}", it.first->second);
-      return it.first->second;
+      auto [newIt, isInserted] = m_componentBitMasks.emplace(
+          std::type_index(typeid(Component)), createBitMaskId());
+      P_ASSERT(isInserted, "Could not create new component bitMask");
+      PLOG_I("New component bitmask added {}", newIt->second);
+      return newIt->second;
     }
   }
   template <typename... Components> int createBitMasks()
@@ -58,6 +58,48 @@ class ArcheRegistry
   template <typename... Components> int getBitMask() const
   {
     return (0 | ... | getComponentBitMask<Components>());
+  }
+  // ---------------------------------------------------- //
+  // add
+  // ---------------------------------------------------- //
+
+  // Add an entity with N different components, passing N arguments
+  // return a tuple with its components
+  template <typename... Components>
+  std::tuple<Components &...> addComponents(Entity entity, Components &&...args)
+  {
+    int bitMask = createBitMasks<Components...>();
+    auto it = m_archetypes.find(bitMask);
+    if (it == m_archetypes.end()) {
+      std::bitset<8> x(bitMask);
+      std::cout << "New bitmask added " << x << std::endl;
+    }
+    Archetype &archetype = m_archetypes[bitMask];
+    // for iterate every component
+    (archetype.pushComponent<Components>(std::forward<Components>(args)), ...);
+    archetype.addEntity(entity);
+
+    return archetype.extractColumn<Components...>(entity);
+  }
+  // TODO: Add component should move entity to different archetype
+
+  // Add an entity with 1 component
+  // return the component
+  template <typename Component>
+  Component &addComponent(Entity entity, Component &&args)
+  {
+    int bitMask = createBitMask<Component>();
+    auto it = m_archetypes.find(bitMask);
+    if (it == m_archetypes.end()) {
+      std::bitset<8> x(bitMask);
+      std::cout << "New bitmask added " << x << std::endl;
+    }
+    Archetype &archetype = m_archetypes[bitMask];
+    // for iterate every component
+    archetype.pushComponent<Component>(std::forward<Component>(args));
+    archetype.addEntity(entity);
+
+    return archetype.extractComponent<Component>(entity);
   }
 
   // ---------------------------------------------------- //
@@ -152,49 +194,6 @@ class ArcheRegistry
     // return into a tuple of components
     return std::make_tuple(
         createIteratorFromComponentEnd<Components>(bitMask)...);
-  }
-
-  // ---------------------------------------------------- //
-  // add
-  // ---------------------------------------------------- //
-
-  // Add an entity with N different components, passing N arguments
-  // return a tuple with its components
-  template <typename... Components>
-  std::tuple<Components &...> addComponents(Entity entity, Components &&...args)
-  {
-    int bitMask = createBitMasks<Components...>();
-    auto it = m_archetypes.find(bitMask);
-    if (it == m_archetypes.end()) {
-      std::bitset<8> x(bitMask);
-      std::cout << "New bitmask added " << x << std::endl;
-    }
-    Archetype &archetype = m_archetypes[bitMask];
-    // for iterate every component
-    (archetype.pushComponent<Components>(std::forward<Components>(args)), ...);
-    archetype.addEntity(entity);
-
-    return archetype.extractColumn<Components...>(entity);
-  }
-  // TODO: Add component should move entity to different archetype
-
-  // Add an entity with 1 component
-  // return the component
-  template <typename Component>
-  Component &addComponent(Entity entity, Component &&args)
-  {
-    int bitMask = createBitMask<Component>();
-    auto it = m_archetypes.find(bitMask);
-    if (it == m_archetypes.end()) {
-      std::bitset<8> x(bitMask);
-      std::cout << "New bitmask added " << x << std::endl;
-    }
-    Archetype &archetype = m_archetypes[bitMask];
-    // for iterate every component
-    archetype.pushComponent<Component>(std::forward<Component>(args));
-    archetype.addEntity(entity);
-
-    return archetype.extractComponent<Component>(entity);
   }
 
   // ---------------------------------------------------- //

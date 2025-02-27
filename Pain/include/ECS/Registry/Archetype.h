@@ -52,7 +52,7 @@ public:
   // entity, with N being the entity's number of components
   template <typename C, typename... Args> void pushComponent(Args &&...args)
   {
-    std::vector<C> &componentArray = getComponent<C>();
+    std::vector<C> &componentArray = createComponent<C>();
     componentArray.emplace_back(std::forward<Args>(args)...);
   }
 
@@ -93,18 +93,15 @@ public:
   {
     auto it = std::find(m_entities.begin(), m_entities.end(), entity);
     int index = it - m_entities.begin();
-    std::tuple<const Components &...> t =
-        std::tie<const Components &...>(fetchComponent<Components>(index)...);
-    return t;
+    return std::tie<const Components &...>(
+        fetchComponent<Components>(index)...);
   };
   template <typename... Components>
   std::tuple<Components &...> extractColumn(Entity entity)
   {
     auto it = std::find(m_entities.begin(), m_entities.end(), entity);
     int index = it - m_entities.begin();
-    std::tuple<Components &...> t =
-        std::tie<Components &...>(fetchComponent<Components>(index)...);
-    return t;
+    return std::tie<Components &...>(fetchComponent<Components>(index)...);
   };
 
   // Same as extractColumn but with extract a single component of the entity
@@ -124,16 +121,18 @@ public:
   template <typename T> const T &fetchComponent(int entityIndex) const
   {
     const std::vector<T> &componentArray = getComponent<T>();
-    P_ASSERT((unsigned)entityIndex >= componentArray.size(),
-             "Entity index {} out of range", entityIndex);
+    P_ASSERT((unsigned)entityIndex <= componentArray.size(),
+             "Entity index {} out of range on array of size {}", entityIndex,
+             componentArray.size());
     return componentArray[entityIndex];
   }
 
   template <typename T> T &fetchComponent(int entityIndex)
   {
     std::vector<T> &componentArray = getComponent<T>();
-    P_ASSERT((unsigned)entityIndex >= componentArray.size(),
-             "Entity index {} out of range", entityIndex);
+    P_ASSERT((unsigned)entityIndex <= componentArray.size(),
+             "Entity index {} out of range on array of size {}", entityIndex,
+             componentArray.size());
     return componentArray[entityIndex];
   }
 
@@ -147,6 +146,20 @@ public:
   {
     return *static_cast<std::vector<C> *>(
         m_componentMap.at(std::type_index(typeid(C))).get());
+  }
+  template <typename C> std::vector<C> &createComponent()
+  {
+    auto it = m_componentMap.find(std::type_index(typeid(C)));
+    if (it != m_componentMap.end()) {
+      return *static_cast<std::vector<C> *>(it->second.get());
+    } else {
+      auto [newIt, isInserted] = m_componentMap.emplace(
+          std::type_index(typeid(C)),
+          std::unique_ptr<void, Deleter>(new std::vector<C>(), Deleter()));
+      P_ASSERT(isInserted, "Could not create new component vector");
+      PLOG_I("New component bitmask added {}", typeid(C).name());
+      return *static_cast<std::vector<C> *>(newIt->second.get());
+    }
   }
 };
 
