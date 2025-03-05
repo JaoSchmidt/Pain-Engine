@@ -35,7 +35,7 @@ public:
     m_orthocamera =
         std::make_unique<pain::OrthoCameraEntity>(scene, aspectRatio, zoom);
     pain::Renderer2d::init(*m_orthocamera);
-    pain::NativeScriptComponent a =
+    pain::NativeScriptComponent &a =
         m_orthocamera->addComponent<pain::NativeScriptComponent>(
             pain::NativeScriptComponent{});
     a.bind<pain::OrthoCameraController>();

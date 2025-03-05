@@ -4,12 +4,13 @@
 #include "ECS/Registry/Archetype.h"
 #include "ECS/Registry/IteratorArchetype.h"
 
-#include <bitset>
-#include <iostream>
 #include <typeindex>
 
 namespace pain
 {
+
+template <typename... Ts>
+concept IsNoneType = (sizeof...(Ts) == 0);
 
 template <typename... Ts>
 concept IsSingleType = (sizeof...(Ts) == 1);
@@ -29,7 +30,7 @@ class ArcheRegistry
   // manipulation of maps
   // ---------------------------------------------------- //
 
-  int createBitMaskId() { return 1 << ++count; }
+  inline int createBitMaskId() { return 1 << ++count; }
 
   // will check if component has associated bitmask, otherwise will create
   template <typename Component> int createBitMask()
@@ -41,7 +42,6 @@ class ArcheRegistry
       auto [newIt, isInserted] = m_componentBitMasks.emplace(
           std::type_index(typeid(Component)), createBitMaskId());
       P_ASSERT(isInserted, "Could not create new component bitMask");
-      PLOG_I("New component bitmask added {}", newIt->second);
       return newIt->second;
     }
   }
@@ -50,12 +50,12 @@ class ArcheRegistry
     return (0 | ... | createBitMask<Components>());
   }
 
-  template <typename Component> int getComponentBitMask() const
+  template <typename Component> const int getComponentBitMask() const
   {
     return m_componentBitMasks.at(std::type_index(typeid(Component)));
   }
   // Get the correct bitmask corresponding to the archetype components
-  template <typename... Components> int getBitMask() const
+  template <typename... Components> const int getBitMask() const
   {
     return (0 | ... | getComponentBitMask<Components>());
   }
@@ -69,11 +69,6 @@ class ArcheRegistry
   std::tuple<Components &...> addComponents(Entity entity, Components &&...args)
   {
     int bitMask = createBitMasks<Components...>();
-    auto it = m_archetypes.find(bitMask);
-    if (it == m_archetypes.end()) {
-      std::bitset<8> x(bitMask);
-      std::cout << "New bitmask added " << x << std::endl;
-    }
     Archetype &archetype = m_archetypes[bitMask];
     // for iterate every component
     (archetype.pushComponent<Components>(std::forward<Components>(args)), ...);
@@ -89,11 +84,6 @@ class ArcheRegistry
   Component &addComponent(Entity entity, Component &&args)
   {
     int bitMask = createBitMask<Component>();
-    auto it = m_archetypes.find(bitMask);
-    if (it == m_archetypes.end()) {
-      std::bitset<8> x(bitMask);
-      std::cout << "New bitmask added " << x << std::endl;
-    }
     Archetype &archetype = m_archetypes[bitMask];
     // for iterate every component
     archetype.pushComponent<Component>(std::forward<Component>(args));
@@ -127,7 +117,8 @@ class ArcheRegistry
         entities.push_back(&archetype.m_entities);
       }
     }
-    return reg::Iterator<ParticularComponent>(vectors, 0, 0, entities);
+    return reg::Iterator<ParticularComponent>(std::move(vectors), 0, 0,
+                                              std::move(entities));
   }
 
   template <typename ParticularComponent>
@@ -139,6 +130,8 @@ class ArcheRegistry
     std::vector<std::vector<Entity> *> entities;
     entities.reserve(m_archetypes.size());
 
+    // TODO: It is possible to cache this result so it doesn't have to be made
+    // every time
     for (auto &pair : m_archetypes) {
       if ((pair.first & bitMask) == bitMask) {
         Archetype &archetype = pair.second;
@@ -148,8 +141,8 @@ class ArcheRegistry
         entities.push_back(&archetype.m_entities);
       }
     }
-    return reg::Iterator<ParticularComponent>(vectors, vectors.size(), 0,
-                                              entities);
+    return reg::Iterator<ParticularComponent>(
+        std::move(vectors), vectors.size(), 0, std::move(entities));
   }
 
   // return iterator of component
@@ -222,7 +215,10 @@ class ArcheRegistry
   // A single component of an entity
   template <typename T, typename... Components> T &getComponent(Entity entity)
   {
-    int bitMask = getBitMask<Components...>();
+    const int bitMask = getBitMask<Components...>();
+    static_assert(sizeof...(Components) > 0,
+                  "You must provide the entity components in the template, "
+                  "perhaps you only provided the target component?");
     Archetype &archetype = m_archetypes.at(bitMask);
     return archetype.extractComponent<T>(entity);
   }
@@ -230,7 +226,10 @@ class ArcheRegistry
   template <typename T, typename... Components>
   const T &getComponent(Entity entity) const
   {
-    int bitMask = getBitMask<Components...>();
+    static_assert(sizeof...(Components) > 0,
+                  "You must provide the entity components in the template, "
+                  "perhaps you only provided the target component?");
+    const int bitMask = getBitMask<Components...>();
     const Archetype &archetype = m_archetypes.at(bitMask);
     return archetype.extractComponent<T>(entity);
   }

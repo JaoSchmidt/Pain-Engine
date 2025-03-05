@@ -1,6 +1,7 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/Camera.h"
 
+#include "ECS/Components/Rotation.h"
 #include "glm/ext/matrix_transform.hpp"
 
 namespace pain
@@ -71,7 +72,10 @@ void setClearColor(const glm::vec4 &color)
 void beginScene(float globalTime, const glm::mat4 &transform)
 {
   const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
+      std::as_const(m_cameraEntity)
+          ->getComponent<OrthoCameraComponent, OrthoCameraComponent,
+                         MovementComponent, TransformComponent,
+                         RotationComponent>();
 
   uploadBasicUniforms(cameraComponent.m_camera->getViewProjectionMatrix(),
                       globalTime, transform);
@@ -82,7 +86,10 @@ void flush()
 {
   // bindTextures();
   const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
+      std::as_const(m_cameraEntity)
+          ->getComponent<OrthoCameraComponent, OrthoCameraComponent,
+                         MovementComponent, TransformComponent,
+                         RotationComponent>();
   drawBatches(cameraComponent.m_camera->getViewProjectionMatrix());
 }
 

@@ -4,11 +4,16 @@
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Rotation.h"
+#include "ECS/GameObject.h"
 #include "ECS/Scriptable.h"
-#include "pain.h"
 
 namespace pain
 {
+class OrthoCameraEntity : public GameObject
+{
+public:
+  OrthoCameraEntity(Scene *scene, float aspectRatio, float zoomLevel);
+};
 
 class OrthoCameraController
     : public ExtendedScriptableEntity<MovementComponent, TransformComponent,

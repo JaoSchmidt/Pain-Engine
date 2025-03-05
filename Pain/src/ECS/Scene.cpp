@@ -1,5 +1,6 @@
 #include "ECS/Scene.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "ECS/Components/Camera.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Particle.h"
 
@@ -11,7 +12,13 @@
 namespace pain
 {
 
-Scene::Scene() : m_registry(new ArcheRegistry()) {}
+Scene::Scene() : m_registry(new ArcheRegistry())
+{
+  m_registry->createBitMasks<
+      MovementComponent, RotationComponent, TransformComponent,
+      ParticleSprayComponent, NativeScriptComponent, SpriteComponent,
+      SpritelessComponent, TrianguleComponent, OrthoCameraComponent>();
+}
 // TODO: Create way to move and copy components to another scene
 
 Entity Scene::createEntity()

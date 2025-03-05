@@ -11,17 +11,13 @@
 namespace pain
 {
 
-struct Deleter {
-  void operator()(void *data) const noexcept { std::free(data); }
-};
-
 // ---------------------------------------------------- //
 // Container definition
 // ---------------------------------------------------- //
 class Archetype
 {
 private:
-  std::map<std::type_index, std::unique_ptr<void, Deleter>> m_componentMap;
+  std::map<std::type_index, void *> m_componentMap;
 
 public:
   std::vector<Entity> m_entities;
@@ -139,26 +135,25 @@ public:
   template <typename C> const std::vector<C> &getComponent() const
   {
     return *static_cast<const std::vector<C> *>(
-        m_componentMap.at(std::type_index(typeid(C))).get());
+        m_componentMap.at(std::type_index(typeid(C))));
   }
 
   template <typename C> std::vector<C> &getComponent()
   {
     return *static_cast<std::vector<C> *>(
-        m_componentMap.at(std::type_index(typeid(C))).get());
+        m_componentMap.at(std::type_index(typeid(C))));
   }
   template <typename C> std::vector<C> &createComponent()
   {
     auto it = m_componentMap.find(std::type_index(typeid(C)));
     if (it != m_componentMap.end()) {
-      return *static_cast<std::vector<C> *>(it->second.get());
+      return *static_cast<std::vector<C> *>(it->second);
     } else {
       auto [newIt, isInserted] = m_componentMap.emplace(
-          std::type_index(typeid(C)),
-          std::unique_ptr<void, Deleter>(new std::vector<C>(), Deleter()));
+          std::type_index(typeid(C)), new std::vector<C>());
       P_ASSERT(isInserted, "Could not create new component vector");
       PLOG_I("New component bitmask added {}", typeid(C).name());
-      return *static_cast<std::vector<C> *>(newIt->second.get());
+      return *static_cast<std::vector<C> *>(newIt->second);
     }
   }
 };

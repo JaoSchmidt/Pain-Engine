@@ -2,6 +2,7 @@
 
 #include "Core.h"
 #include "ECS/Entity.h"
+#include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Scene.h"
 #include <utility>
 
@@ -38,13 +39,30 @@ public:
     return static_cast<const Scene *>(m_scene)->getAllComponents<Components...>(
         m_entity);
   }
-  template <typename T, typename... Components> T &getComponent()
+  template <typename T, typename... Components>
+    requires IsNoneType<Components...>
+  T &getComponent()
   {
-    return m_scene->getComponent<T>(m_entity);
+    return m_scene->getComponent<T, T>(m_entity);
   }
-  template <typename T, typename... Components> const T &getComponent() const
+  template <typename T, typename... Components>
+    requires IsNoneType<Components...>
+  const T &getComponent() const
   {
-    return static_cast<const Scene *>(m_scene)->getComponent<T>(m_entity);
+    return static_cast<const Scene *>(m_scene)->getComponent<T, T>(m_entity);
+  }
+  template <typename T, typename... Components>
+    requires(!IsNoneType<Components...>)
+  T &getComponent()
+  {
+    return m_scene->getComponent<T, Components...>(m_entity);
+  }
+  template <typename T, typename... Components>
+    requires(!IsNoneType<Components...>)
+  const T &getComponent() const
+  {
+    return static_cast<const Scene *>(m_scene)->getComponent<T, Components...>(
+        m_entity);
   }
 
   // ---------------------------------------------------- //
