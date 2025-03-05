@@ -1,8 +1,8 @@
 #include "ECS/Scene.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "ECS/Components/Camera.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Particle.h"
-#include "ECS/Registry.h"
 
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Rotation.h"
@@ -12,17 +12,12 @@
 namespace pain
 {
 
-Scene::Scene() : m_registry(new Registry())
+Scene::Scene() : m_registry(new ArcheRegistry())
 {
-  m_registry->addComponentMap<OrthoCameraComponent>();
-  m_registry->addComponentMap<TransformComponent>();
-  m_registry->addComponentMap<MovementComponent>();
-  m_registry->addComponentMap<RotationComponent>();
-  m_registry->addComponentMap<SpriteComponent>();
-  m_registry->addComponentMap<SpritelessComponent>();
-  m_registry->addComponentMap<TrianguleComponent>();
-  m_registry->addComponentMap<NativeScriptComponent>();
-  m_registry->addComponentMap<ParticleSprayComponent>();
+  m_registry->createBitMasks<
+      MovementComponent, RotationComponent, TransformComponent,
+      ParticleSprayComponent, NativeScriptComponent, SpriteComponent,
+      SpritelessComponent, TrianguleComponent, OrthoCameraComponent>();
 }
 // TODO: Create way to move and copy components to another scene
 
@@ -38,20 +33,8 @@ Entity Scene::createEntity()
   return id;
 }
 
-void Scene::destroyEntity(Entity entity)
-{
-  // m_registry->removeAll(entity);
-  m_registry->remove<OrthoCameraComponent>(entity);
-  m_registry->remove<MovementComponent>(entity);
-  m_registry->remove<RotationComponent>(entity);
-  m_registry->remove<TransformComponent>(entity);
-  m_registry->remove<SpriteComponent>(entity);
-  m_registry->remove<SpritelessComponent>(entity);
-  m_registry->remove<TrianguleComponent>(entity);
-  m_registry->remove<NativeScriptComponent>(entity);
-  m_registry->remove<ParticleSprayComponent>(entity);
-  m_availableEntities.push(entity);
-}
+// TODO: I may need to fix this
+void Scene::destroyEntity(Entity entity) { m_availableEntities.push(entity); }
 
 // =============================================================== //
 // Systems
@@ -79,39 +62,53 @@ void Scene::initializeScripts(NativeScriptComponent &nsc, Entity e)
   }
 }
 
+// =============================================================== //
+// Render Components
+// =============================================================== //
+
+// This function is responsible for iterating and rendering all components that
+// need to be rendered, such as Sprites and Spriteless components
 void Scene::renderSystems(double currentTime)
 {
-  // and finally all sprites are rendered in this render method
-  // to their appropriate position on the screen
-  for (auto it = begin<SpriteComponent>(); it != end<SpriteComponent>(); ++it) {
-    const TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const SpriteComponent &sc = it->second;
-    if (hasComponent<RotationComponent>(it->first)) {
-      const RotationComponent &rc = getComponent<RotationComponent>(it->first);
-      Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color,
-                           rc.m_rotationAngle, sc.m_ptexture,
-                           sc.m_tilingFactor);
-      // TODO: Remove m_rotation of rc... should only
-      // have angle, in the case of the camera
-      // inclune rot direction in its script
-    } else {
+  {
+    auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
+    const auto &[tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
+
+    for (; tIt != tItEnd; ++tIt, ++sIt) {
+      const TransformComponent &tc = *tIt;
+      const SpriteComponent &sc = *sIt;
       Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
                            sc.m_tilingFactor);
     }
   }
+  {
+    auto [tIt, sIt, rIt] =
+        begin<TransformComponent, SpriteComponent, RotationComponent>();
+    const auto &[tItEnd, sItEnd2, rItEnd] =
+        end<TransformComponent, SpriteComponent, RotationComponent>();
 
-  for (auto it = begin<SpritelessComponent>(); it != end<SpritelessComponent>();
-       ++it) {
-    const TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const SpritelessComponent &sc = it->second;
-    Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color);
+    for (; tIt != tItEnd; ++tIt, ++rIt, ++sIt) {
+      Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                           rIt->m_rotationAngle, sIt->m_ptexture,
+                           sIt->m_tilingFactor);
+      // TODO: Remove m_rotation of rc... should only
+      // have angle, in the case of the camera
+      // inclune rot direction in its script
+    }
   }
-
-  for (auto it = begin<TrianguleComponent>(); it != end<TrianguleComponent>();
-       ++it) {
-    const TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const TrianguleComponent &sc = it->second;
-    Renderer2d::drawTri(tc.m_position, sc.m_height, sc.m_color);
+  {
+    auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
+    auto [tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
+    for (; tIt != tItEnd; ++tIt, ++sIt) {
+      Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color);
+    }
+  }
+  {
+    auto [tIt, triIt] = begin<TransformComponent, TrianguleComponent>();
+    auto [tItEnd, triItEnd] = end<TransformComponent, TrianguleComponent>();
+    for (; tIt != tItEnd; ++tIt, ++triIt) {
+      Renderer2d::drawTri(tIt->m_position, triIt->m_height, triIt->m_color);
+    }
   }
 
   // =============================================================== //
@@ -119,11 +116,11 @@ void Scene::renderSystems(double currentTime)
   // =============================================================== //
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
-    auto &nsc = it->second;
+    NativeScriptComponent &nsc = *it;
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
       nsc.instance->m_scene = this;
-      nsc.instance->m_entity = it->first;
+      nsc.instance->m_entity = it.getEntity();
 
       if (nsc.onCreateFunction)
         nsc.onCreateFunction(nsc.instance);
@@ -138,7 +135,7 @@ void Scene::renderSystems(double currentTime)
   // =============================================================== //
   for (auto it = begin<ParticleSprayComponent>();
        it != end<ParticleSprayComponent>(); ++it) {
-    ParticleSprayComponent &psc = it->second;
+    ParticleSprayComponent &psc = *it;
     Renderer2d::beginSprayParticle(currentTime, psc);
     for (Particle &pa : psc.m_particles) {
       if (pa.m_alive)
@@ -158,19 +155,20 @@ void Scene::updateSystems(double deltaTime)
   // =============================================================== //
   for (auto it = begin<RotationComponent>(); it != end<RotationComponent>();
        ++it) {
-    RotationComponent &rc = it->second;
+    RotationComponent &rc = *it;
     rc.m_rotation = {cos(rc.m_rotationAngle), sin(rc.m_rotationAngle), 0};
   }
 
   // =============================================================== //
   // Update Movement Components
   // =============================================================== //
-  for (auto it = begin<MovementComponent>(); it != end<MovementComponent>();
-       ++it) {
-    const MovementComponent &mc = it->second;
-    TransformComponent &tc = getComponent<TransformComponent>(it->first);
-    const float moveAmount = (float)(mc.m_translationSpeed * deltaTime);
-    tc.m_position += mc.m_velocityDir * moveAmount;
+  {
+    auto [tIt, mIt] = begin<TransformComponent, MovementComponent>();
+    auto [tItEnd, mItEnd] = end<TransformComponent, MovementComponent>();
+    for (; tIt != tItEnd; ++tIt, ++mIt) {
+      const float moveAmount = (float)(mIt->m_translationSpeed * deltaTime);
+      tIt->m_position += mIt->m_velocityDir * moveAmount;
+    }
   }
 
   // =============================================================== //
@@ -178,11 +176,11 @@ void Scene::updateSystems(double deltaTime)
   // =============================================================== //
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
-    auto &nsc = it->second;
+    auto &nsc = *it;
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
       nsc.instance->m_scene = this;
-      nsc.instance->m_entity = it->first;
+      nsc.instance->m_entity = it.getEntity();
 
       if (nsc.onCreateFunction)
         nsc.onCreateFunction(nsc.instance);
@@ -197,11 +195,11 @@ void Scene::updateSystems(const SDL_Event &event)
 {
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
-    auto &nsc = it->second;
+    auto &nsc = *it;
     if (!nsc.instance) {
       nsc.instantiateFunction(nsc.instance);
       nsc.instance->m_scene = this;
-      nsc.instance->m_entity = it->first;
+      nsc.instance->m_entity = it.getEntity();
 
       if (nsc.onCreateFunction)
         nsc.onCreateFunction(nsc.instance);
