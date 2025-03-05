@@ -7,11 +7,8 @@
 #include <cstdlib>
 #include <vector>
 
-#include "ECS/Registry/Macros.h"
-
 namespace pain
 {
-int constexpr bitMaskUnit(int bit) { return 1 << bit; }
 struct Particle {
   glm::vec2 m_position;
   glm::vec2 m_offset;
@@ -22,7 +19,6 @@ struct Particle {
 };
 
 struct ParticleSprayComponent {
-  static constexpr int componentID = bitMaskUnit(4);
   float m_velocity = 1.f;
   float m_lifeTime = 1.f;
   float m_sizeChangeSpeed = 0.f;

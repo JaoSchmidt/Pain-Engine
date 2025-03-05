@@ -8,7 +8,6 @@ namespace pain
 {
 
 struct RotationComponent {
-  static constexpr int componentID = bitMaskUnit(5);
   glm::vec3 m_rotation = {0.0f, 1.0f, 0.0f};
   float m_rotationAngle = 0.0f;
   RotationComponent() = default;

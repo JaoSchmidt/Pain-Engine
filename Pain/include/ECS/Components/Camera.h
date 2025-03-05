@@ -8,7 +8,6 @@ namespace pain
 {
 
 struct OrthoCameraComponent {
-  static constexpr int componentID = bitMaskUnit(2);
   float m_aspectRatio = 800.0 / 600.0;
   float m_zoomLevel = 1.0f;
   OrthographicCamera *m_camera = nullptr;
