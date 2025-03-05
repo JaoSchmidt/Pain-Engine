@@ -2,8 +2,6 @@
 
 #include "pch.h"
 
-#include "ECS/Registry/Macros.h"
-
 namespace pain
 {
 

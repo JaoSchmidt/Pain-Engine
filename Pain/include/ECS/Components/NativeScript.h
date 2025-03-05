@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ECS/Registry/Macros.h"
 #include "ECS/Scriptable.h"
 #include <SDL2/SDL_events.h>
 

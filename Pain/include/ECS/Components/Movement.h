@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ECS/Registry/Macros.h"
 #include "pch.h"
 
 namespace pain

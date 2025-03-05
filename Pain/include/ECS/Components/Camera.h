@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreRender/Camera.h"
-#include "ECS/Registry/Macros.h"
 #include "pch.h"
 
 namespace pain

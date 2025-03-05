@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreRender/Texture.h"
-#include "ECS/Registry/Macros.h"
 
 namespace pain
 {
