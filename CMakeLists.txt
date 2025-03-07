@@ -109,7 +109,7 @@ target_precompile_headers(
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/ecsTest")
+set(GAME_FOLDER "Example/spriteGame")
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources

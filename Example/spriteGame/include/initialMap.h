@@ -19,10 +19,7 @@ public:
   };
   const float getSpriteWidth() const { return m_spriteSize.x; }
   const float getSpriteHeight() const { return m_spriteSize.y; }
-  const std::shared_ptr<pain::Texture> getTexture() const
-  {
-    return m_spriteSheet;
-  }
+  pain::Texture &getTexture() const { return *m_spriteSheet.get(); }
 
 private:
   std::array<glm::vec2, 4> createVecFromCoord(int x, int y);
@@ -30,7 +27,7 @@ private:
   std::vector<std::vector<int>> m_sceneryMap;
   void createVecFromMap();
   glm::vec2 m_spriteSize = {0.0f, 0.0f};
-  std::shared_ptr<pain::Texture> m_spriteSheet;
+  std::unique_ptr<pain::Texture> m_spriteSheet;
   std::vector<std::array<glm::vec2, 4>> m_texturesIds = {};
   std::vector<std::vector<glm::vec2[4]>> m_texturesCoord = {};
 };

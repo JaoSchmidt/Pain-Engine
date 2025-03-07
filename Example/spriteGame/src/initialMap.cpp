@@ -1,11 +1,11 @@
 #include "initialMap.h"
 
 MainMap::MainMap(float spriteWidth, float spriteHeight)
-    : m_spriteSize({spriteWidth, spriteHeight})
+    : m_spriteSize({spriteWidth, spriteHeight}),
+      m_spriteSheet(
+          new pain::Texture("resources/textures/kenney_roguelike/Spritesheet/"
+                            "roguelikeSheet_transparent.png"))
 {
-  m_spriteSheet.reset(
-      new pain::Texture("resources/textures/kenney_roguelike/Spritesheet/"
-                        "roguelikeSheet_transparent.png"));
   // clang-format off
   // lake
   m_texturesIds.push_back(createVecFromCoord(0, 6)); // 0. transparent alpha
@@ -82,21 +82,31 @@ MainMap::MainMap(float spriteWidth, float spriteHeight)
   };
   // clang-format on
 }
+// given the index x and y, return the four corners
 std::array<glm::vec2, 4> MainMap::createVecFromCoord(int x, int y)
 {
   float m_spriteMargin = 1.0f;
-  glm::vec2 min = {
-      x * (m_spriteSize.x + m_spriteMargin) / m_spriteSheet->getWidth(),
-      y * (m_spriteSize.y + m_spriteMargin) / m_spriteSheet->getHeight()};
-  glm::vec2 max = {((x + 1) * m_spriteSize.x + x * m_spriteMargin) /
-                       m_spriteSheet->getWidth(),
-                   ((y + 1) * m_spriteSize.y + y * m_spriteMargin) /
-                       m_spriteSheet->getHeight()};
+  float texW = m_spriteSheet->getWidth();
+  float texH = m_spriteSheet->getHeight();
+
+  float spriteW = m_spriteSize.x;
+  float spriteH = m_spriteSize.y;
+
+  // Compute base UVs (STs)
+  float uMin = (x * (spriteW + m_spriteMargin)) / texW;
+  float vMin = (y * (spriteH + m_spriteMargin)) / texH;
+  float uMax = ((x + 1) * spriteW + x * m_spriteMargin) / texW;
+  float vMax = ((y + 1) * spriteH + y * m_spriteMargin) / texH;
+
+  // Small padding inward (half a texel)
+  float texelX = 0.5f / texW;
+  float texelY = 0.5f / texH;
+
   return {
-      glm::vec2(min.x, min.y),
-      glm::vec2(max.x, min.y),
-      glm::vec2(max.x, max.y),
-      glm::vec2(min.x, max.y),
+      glm::vec2(uMin + texelX, vMin + texelY), // Bottom-left
+      glm::vec2(uMax - texelX, vMin + texelY), // Bottom-right
+      glm::vec2(uMax - texelX, vMax - texelY), // Top-right
+      glm::vec2(uMin + texelX, vMax - texelY)  // Top-left
   };
 }
 
