@@ -68,13 +68,13 @@ public:
   // ---------------------------------------------------- //
   // Does archetype has components?
   // ---------------------------------------------------- //
-  template <typename... Components> bool hasComponent(Entity entity) const
+  template <typename... Components> bool hasComponent() const
   {
-    return m_scene->hasComponent<Components...>(entity);
+    return m_scene->hasComponent<Components...>(m_entity);
   }
-  template <typename... Components> void rmComponent(Entity entity)
+  template <typename... Components> void rmComponent()
   {
-    m_scene->rmComponent<Components...>(entity);
+    m_scene->rmComponent<Components...>(m_entity);
   }
 
   operator bool() const { return m_entity != -1; }

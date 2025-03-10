@@ -1,8 +1,14 @@
+#include <iostream>
 #include <pain.h>
 
+#include "ECS/Components/Camera.h"
+#include "ECS/Components/Movement.h"
+#include "ECS/Components/Rotation.h"
+#include "PerlinNoise.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
+#include <vector>
 
 #include "initialMap.h"
 
@@ -19,7 +25,7 @@ public:
 class MainScene : public pain::Scene
 {
 public:
-  MainScene() : pain::Scene(), m_mainMap(16.0f, 16.0f) {}
+  MainScene() : pain::Scene() {}
   void init(pain::Application &app, Scene *scene, float aspectRatio, float zoom)
   {
     m_orthocamera =
@@ -35,29 +41,41 @@ public:
 
     m_texture.reset(
         new pain::Texture("resources/textures/Checkerboard.png", true));
+
+    pain::TransformComponent &tc =
+        m_orthocamera
+            ->getComponent<pain::TransformComponent, pain::MovementComponent,
+                           pain::OrthoCameraComponent, pain::RotationComponent,
+                           pain::TransformComponent>();
+    m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
   }
-  void onUpdate(double deltaTime) override {}
+
+  void onUpdate(double deltaTime) override
+  {
+    pain::TransformComponent &tc =
+        m_orthocamera
+            ->getComponent<pain::TransformComponent, pain::MovementComponent,
+                           pain::OrthoCameraComponent, pain::RotationComponent,
+                           pain::TransformComponent>();
+    m_mainMap->updateSurroundingChunks(tc.m_position, this);
+  }
   void onRender(double currentTime) override
   {
     // m_orthocamera->onUpdate(deltaTime);
-    const std::vector<std::vector<int>> mdm = m_mainMap.getDefaultMap();
-    const std::vector<std::vector<int>> msm = m_mainMap.getSceneryMap();
+    // const std::vector<std::vector<int>> mdm =
+    //     m_mainMap.generateTerrainMatrix(); // lowest (background) layer
+    // const std::vector<std::vector<int>> msm =
+    //     generateTerrainMatrix(offset); // upper layer
 
-    for (unsigned int i = 0; i < mdm[0].size(); i++) {
-      for (unsigned int j = 0; j < mdm.size(); j++) {
-        pain::Renderer2d::drawQuad(
-            {1.f * i, -1.f * j}, {1.f, 1.f}, {1.0f, 1.0f, 1.0f, 1.0f},
-            m_mainMap.getTexture(), 1.0f, m_mainMap.getTexCoord(mdm[j][i]));
-      }
-    }
-    for (unsigned int i = 0; i < msm[0].size(); i++) {
-      for (unsigned int j = 0; j < msm.size(); j++) {
-        if (msm[j][i] != 00)
-          pain::Renderer2d::drawQuad(
-              {1.f * i, -1.f * j}, {1.f, 1.f}, {1.0f, 1.0f, 1.0f, 1.0f},
-              m_mainMap.getTexture(), 1.0f, m_mainMap.getTexCoord(msm[j][i]));
-      }
-    }
+    // for (unsigned int i = 0; i < mdm[0].size(); i++) {
+    //   for (unsigned int j = 0; j < mdm.size(); j++) {
+    //     if (mdm[j][i] != 00)
+    //       pain::Renderer2d::drawQuad(
+    //           {1.f * i, -1.f * j}, {1.f, 1.f}, {1.0f, 1.0f, 1.0f, 1.0f},
+    //           m_mainMap.getTexture(), 1.0f,
+    //           m_mainMap.getTexCoord(mdm[j][i]));
+    //   }
+    // }
     // pain::Renderer2d::drawQuad({0.0f, -0.8f}, {0.3f, 0.3f},
     //                            {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
@@ -70,11 +88,12 @@ public:
   void onEvent(const SDL_Event &event) override {}
 
 private:
+  std::vector<std::vector<int>> m_backgroundMap;
   std::unique_ptr<pain::OrthoCameraEntity> m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::shared_ptr<pain::Texture> m_texture;
   ShapesController *m_sc;
-  MainMap m_mainMap;
+  std::unique_ptr<MainMap> m_mainMap;
 };
 
 pain::Application *pain::CreateApplication()
@@ -82,11 +101,11 @@ pain::Application *pain::CreateApplication()
   LOG_T("Creating app");
   const char *title = "Developing Pain - Example 2d";
   const int width = 1280;
-  const int height = 768;
+  const int height = 1000;
   Application *app = new Application(title, width, height);
 
   Scene *scene = new MainScene();
-  ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
+  ((MainScene *)scene)->init(*app, scene, (float)width / height, 20.0f);
 
   app->pushScene("main", scene);
   app->attachScene("main");

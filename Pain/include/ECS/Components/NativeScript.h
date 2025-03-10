@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CoreFiles/LogWrapper.h"
 #include "ECS/Scriptable.h"
 #include <SDL2/SDL_events.h>
 
@@ -32,11 +33,16 @@ namespace pain
 {
 
 struct NativeScriptComponent {
+  ~NativeScriptComponent()
+  {
+    PLOG_I("Calling NativeScriptComponent destructor");
+    // if (instance != nullptr)
+    //   destroyInstanceFunction(instance);
+  }
   ScriptableEntity *instance = nullptr;
 
   void (*instantiateFunction)(ScriptableEntity *&) = nullptr;
   void (*destroyInstanceFunction)(ScriptableEntity *&) = nullptr;
-
   void (*onCreateFunction)(ScriptableEntity *) = nullptr;
   void (*onDestroyFunction)(ScriptableEntity *) = nullptr;
   void (*onRenderFunction)(ScriptableEntity *, double) = nullptr;

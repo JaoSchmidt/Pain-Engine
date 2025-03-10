@@ -22,3 +22,6 @@
 [submodule "Pain/external/msdf-atlas-gen"]
 	path = Pain/external/msdf-atlas-gen
 	url = https://github.com/JaoSchmidt/msdf-atlas-gen.git
+[submodule "Pain/external/PerlinNoise"]
+	path = Pain/external/PerlinNoise
+	url = https://github.com/Reputeless/PerlinNoise.git

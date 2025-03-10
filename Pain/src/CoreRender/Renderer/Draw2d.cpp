@@ -26,7 +26,7 @@ constexpr glm::vec2 m_sprayVertexPositions[4] = {
     glm::vec2(0.5f, 0.5f),
     glm::vec2(-0.5f, 0.5f),
 };
-constexpr uint32_t MaxQuads = 2000;
+constexpr uint32_t MaxQuads = 40000;
 constexpr uint32_t MaxQuadVertices = MaxQuads * 4;
 constexpr uint32_t MaxQuadIndices = MaxQuads * 6;
 constexpr uint32_t MaxTri = 2000;

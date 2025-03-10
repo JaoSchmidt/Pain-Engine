@@ -6,9 +6,11 @@
 #include "ECS/Components/Rotation.h"
 #include "ECS/GameObject.h"
 #include "ECS/Scriptable.h"
+#include <type_traits>
 
 namespace pain
 {
+
 class OrthoCameraEntity : public GameObject
 {
 public:
@@ -23,7 +25,6 @@ public:
   void onUpdate(double deltaTimeSec);
   void onRender(double currentTime) {};
   void onEvent(const SDL_Event &e);
-
   inline void recalculatePosition(const glm::vec3 &position, float rotation);
 
 private:
