@@ -37,32 +37,6 @@ Entity Scene::createEntity()
 void Scene::destroyEntity(Entity entity) { m_availableEntities.push(entity); }
 
 // =============================================================== //
-// Systems
-// =============================================================== //
-void Scene::initializeScripts(NativeScriptComponent &nsc, const GameObject &go)
-{
-  if (!nsc.instance) {
-    nsc.instantiateFunction(nsc.instance);
-    nsc.instance->m_scene = this;
-    nsc.instance->m_entity = go.m_entity;
-
-    if (nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-  }
-}
-void Scene::initializeScripts(NativeScriptComponent &nsc, Entity e)
-{
-  if (!nsc.instance) {
-    nsc.instantiateFunction(nsc.instance);
-    nsc.instance->m_scene = this;
-    nsc.instance->m_entity = e;
-
-    if (nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-  }
-}
-
-// =============================================================== //
 // Render Components
 // =============================================================== //
 

@@ -1,6 +1,7 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "CoreRender/Camera.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "ECS/Components/NativeScript.h"
 #include "glm/fwd.hpp"
 
 #include "ECS/Components/Camera.h"
@@ -13,8 +14,15 @@ OrthoCameraEntity::OrthoCameraEntity(Scene *scene, float aspectRatio,
                                      float zoomLevel)
     : GameObject(scene)
 {
-  addComponents(MovementComponent{}, RotationComponent{}, TransformComponent{},
-                OrthoCameraComponent{aspectRatio, zoomLevel});
+  // clang-format off
+  createComponents(
+      MovementComponent{},
+      RotationComponent{},
+      TransformComponent{},
+      OrthoCameraComponent{aspectRatio, zoomLevel},
+      NativeScriptComponent{"Camera nsc"}
+  );
+  // clang-format off
 };
 
 inline void
@@ -28,7 +36,7 @@ OrthoCameraController::recalculatePosition(const glm::vec3 &position,
 void OrthoCameraController::onUpdate(double deltaTimeSec)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-  auto [mc, tc, cc, rc] = getAllComponents();
+  auto [mc, tc, cc, rc, _] = getAllComponents();
 
   mc.m_velocityDir =
       (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})

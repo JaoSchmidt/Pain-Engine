@@ -45,7 +45,7 @@ template <typename T> struct Iterator {
   bool operator!=(const Iterator &o) { return !(*this == o); };
 
   // get the entity index inside the archetype
-  inline const pain::Entity getEntity() const
+  inline pain::Entity getEntity() const
   {
     P_ASSERT(m_entities.size() == m_vectors.size(),
              "Number of entities is different from the number of components, "

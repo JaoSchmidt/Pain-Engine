@@ -27,7 +27,7 @@ public:
   pain::Texture &getTexture() const { return *m_spriteSheet.get(); }
 
 private:
-  int m_radius = 2;
+  int m_radius = 1;
   int m_chunkSize = 32;
   glm::ivec2 m_chunkAt;
   std::unordered_map<std::pair<int, int>, ChunkEntity, ChunkHash> m_chunks;

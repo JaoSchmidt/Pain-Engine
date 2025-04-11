@@ -28,12 +28,12 @@ public:
   MainScene() : pain::Scene() {}
   void init(pain::Application &app, Scene *scene, float aspectRatio, float zoom)
   {
-    m_orthocamera =
-        std::make_unique<pain::OrthoCameraEntity>(scene, aspectRatio, zoom);
+    // m_orthocamera =
+    //     std::make_unique<pain::OrthoCameraEntity>(scene, aspectRatio, zoom);
+    m_orthocamera = new pain::OrthoCameraEntity(scene, aspectRatio, zoom);
     pain::Renderer2d::init(*m_orthocamera);
     pain::NativeScriptComponent &a =
-        m_orthocamera->addComponent<pain::NativeScriptComponent>(
-            pain::NativeScriptComponent{});
+        m_orthocamera->getComponent<pain::NativeScriptComponent>();
     a.bind<pain::OrthoCameraController>();
     ShapesController *sc = new ShapesController();
     app.addImGuiInstance(sc);
@@ -43,20 +43,14 @@ public:
         new pain::Texture("resources/textures/Checkerboard.png", true));
 
     pain::TransformComponent &tc =
-        m_orthocamera
-            ->getComponent<pain::TransformComponent, pain::MovementComponent,
-                           pain::OrthoCameraComponent, pain::RotationComponent,
-                           pain::TransformComponent>();
+        m_orthocamera->getComponent<pain::TransformComponent>();
     m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
   }
 
   void onUpdate(double deltaTime) override
   {
     pain::TransformComponent &tc =
-        m_orthocamera
-            ->getComponent<pain::TransformComponent, pain::MovementComponent,
-                           pain::OrthoCameraComponent, pain::RotationComponent,
-                           pain::TransformComponent>();
+        m_orthocamera->getComponent<pain::TransformComponent>();
     m_mainMap->updateSurroundingChunks(tc.m_position, this);
   }
   void onRender(double currentTime) override
@@ -89,7 +83,8 @@ public:
 
 private:
   std::vector<std::vector<int>> m_backgroundMap;
-  std::unique_ptr<pain::OrthoCameraEntity> m_orthocamera;
+  // std::unique_ptr<pain::OrthoCameraEntity> m_orthocamera;
+  pain::OrthoCameraEntity *m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::shared_ptr<pain::Texture> m_texture;
   ShapesController *m_sc;
@@ -105,7 +100,7 @@ pain::Application *pain::CreateApplication()
   Application *app = new Application(title, width, height);
 
   Scene *scene = new MainScene();
-  ((MainScene *)scene)->init(*app, scene, (float)width / height, 20.0f);
+  ((MainScene *)scene)->init(*app, scene, (float)width / height, 70.0f);
 
   app->pushScene("main", scene);
   app->attachScene("main");

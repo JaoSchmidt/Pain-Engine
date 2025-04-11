@@ -1,13 +1,16 @@
 #include "Chunk.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/Movement.h"
+#include "ECS/Components/NativeScript.h"
 #include "initialMap.h"
 #include "pain.h"
 #include <PerlinNoise.hpp>
+#include <string>
 
 ChunkEntity::ChunkEntity(pain::Scene *scene) : GameObject(scene)
 {
-  addComponents(pain::TransformComponent{});
+  createComponents(pain::TransformComponent{},
+                   pain::NativeScriptComponent("chunk nsc"));
 }
 
 bool ChunkController::isOutsideRadius(glm::ivec2 &playerChunkCoord, int radius)
@@ -19,8 +22,13 @@ bool ChunkController::isOutsideRadius(glm::ivec2 &playerChunkCoord, int radius)
 }
 void ChunkController::init(glm::ivec2 offSet, int chunkSize, MainMap *mainMap)
 {
+  pain::NativeScriptComponent &nsc =
+      getComponent<pain::NativeScriptComponent>();
   m_offsetX = offSet.x;
   m_offsetY = offSet.y;
+  // nsc.m_name = "chunk (" + std::to_string(offSet.x) + ", " +
+  //              std::to_string(offSet.y) + ")";
+  nsc.m_name = "chunk ()";
   m_mainMap = mainMap;
   m_chunkSize = chunkSize;
   m_data = generateTerrainMatrix(m_offsetX, m_offsetY);

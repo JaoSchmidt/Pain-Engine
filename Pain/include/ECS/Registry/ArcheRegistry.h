@@ -50,38 +50,41 @@ class ArcheRegistry
     return (0 | ... | createBitMask<Components>());
   }
 
-  template <typename Component> const int getComponentBitMask() const
+  template <typename Component> int getComponentBitMask() const
   {
     return m_componentBitMasks.at(std::type_index(typeid(Component)));
   }
   // Get the correct bitmask corresponding to the archetype components
-  template <typename... Components> const int getBitMask() const
+  template <typename... Components> int getBitMask() const
   {
     return (0 | ... | getComponentBitMask<Components>());
   }
   // ---------------------------------------------------- //
   // add
   // ---------------------------------------------------- //
+  // TODO: (maybe?) Make possible to add new components to aleardy existing
+  // entities. Therefore, any added component should move the entity a
+  // different archetype
 
   // Add an entity with N different components, passing N arguments
   // return a tuple with its components
   template <typename... Components>
-  std::tuple<Components &...> addComponents(Entity entity, Components &&...args)
+  std::tuple<Components &...> createComponents(Entity entity,
+                                               Components &&...comps)
   {
     int bitMask = createBitMasks<Components...>();
     Archetype &archetype = m_archetypes[bitMask];
     // for iterate every component
-    (archetype.pushComponent<Components>(std::forward<Components>(args)), ...);
+    (archetype.pushComponent<Components>(std::forward<Components>(comps)), ...);
     archetype.addEntity(entity);
 
     return archetype.extractColumn<Components...>(entity);
   }
-  // TODO: Add component should move entity to different archetype
 
   // Add an entity with 1 component
   // return the component
   template <typename Component>
-  Component &addComponent(Entity entity, Component &&args)
+  Component &createComponent(Entity entity, Component &&args)
   {
     int bitMask = createBitMask<Component>();
     Archetype &archetype = m_archetypes[bitMask];
@@ -92,6 +95,52 @@ class ArcheRegistry
     return archetype.extractComponent<Component>(entity);
   }
 
+  /* TODO: In theory, we can call createComponents with "ArgTuples" instead of
+     the above, this will be it possible to, instead of calling this:
+     createComponents(
+        MovementComponent{},
+        RotationComponent{},
+        TransformComponent{},
+        OrthoCameraComponent{aspectRatio, zoomLevel},
+        NativeScriptComponent{"Camera nsc"}
+      );
+     // We can call this:
+     createComponents(
+          std::make_tuple(),
+          std::make_tuple(),
+          std::make_tuple(),
+          std::make_tuple(aspectRatio, zoomLevel),
+          std::make_tuple("Camera nsc")
+      );
+      In theory, this can be done to make it a little more cheaper to insert
+     components, as they will be emplaced direclty inside the vector instead of
+     being moved to
+  */
+
+  // template <typename... Components, typename... ArgTuples>
+  // std::tuple<Components &...> createComponents(Entity entity,
+  //                                              ArgTuples &&...args)
+  // {
+  //   static_assert(sizeof...(Components) == sizeof...(ArgTuples),
+  //                 "Mismatch in components and constructor arguments");
+
+  //   int bitMask = createBitMasks<Components...>();
+  //   Archetype &archetype = m_archetypes[bitMask];
+
+  //   // for iterate every component
+  //   (archetype.pushComponent<Components>(std::forward<ArgTuples>(args)),
+  //   ...); return archetype.extractColumn<Components...>(entity);
+  // }
+  // template <typename Component, typename Tuple>
+  // void pushComponentHelper(Archetype &archetype, Tuple &&args)
+  // {
+  //   std::apply(
+  //       [&](auto &&...unpackedArgs) {
+  //         archetype.pushComponent<Component>(
+  //             std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
+  //       },
+  //       std::forward<Tuple>(args));
+  // }
   // ---------------------------------------------------- //
   // iterate
   // ---------------------------------------------------- //
@@ -239,11 +288,12 @@ class ArcheRegistry
   // ---------------------------------------------------- //
 
   // Targeted has function for a specific archetype
-  template <typename... Components> bool has(Entity entity) const
+  template <typename... TargetComponents, typename... ObjectComponents>
+  bool has(Entity entity) const
   {
-    int bitMask = getBitMask<Components...>();
-    const Archetype &archetype = m_archetypes.at(bitMask);
-    return archetype.has(entity);
+    int objectBitMask = getBitMask<ObjectComponents...>();
+    int targetBitMask = getBitMask<TargetComponents...>();
+    return (targetBitMask | objectBitMask) == objectBitMask;
   }
   // Slightly slower "has" function, because it will look on every known
   // archetype
@@ -260,12 +310,23 @@ class ArcheRegistry
   // remove
   // ---------------------------------------------------- //
 
-  // Remove the entity, alongside its components, to the archetype
-  template <typename... Components> bool remove(Entity entity)
+  // Remove the entity, alongside its components from it's archetype
+  template <typename... ObjectComponents> bool remove(Entity entity)
   {
-    int bitMask = getBitMask<Components...>();
+    int bitMask = getBitMask<ObjectComponents...>();
     Archetype &archetype = m_archetypes.at(bitMask);
-    return archetype.remove<Components...>(entity);
+    return archetype.remove<ObjectComponents...>(entity);
   }
+  // Remove the components from an entity
+  // template <typename... TargetComponents, typename... ObjectComponents>
+  // bool remove(Entity entity)
+  // {
+  //   int bitMask = getBitMask<ObjectComponents...>();
+  //   Archetype &archetype = m_archetypes.at(bitMask);
+  //   int targetBitMask = createBitMask<TargetComponents...>();
+  //   Archetype &targetArchetype = m_archetypes.at(targetBitMask);
+  //   return archetype.removeComponents<TargetComponents...>(entity,
+  //                                                          targetArchetype);
+  // }
 };
 } // namespace pain

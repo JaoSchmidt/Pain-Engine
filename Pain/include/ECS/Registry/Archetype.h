@@ -2,10 +2,7 @@
 
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/Movement.h"
 #include "ECS/Entity.h"
-#include <memory>
-#include <type_traits>
 #include <typeindex>
 
 namespace pain
@@ -50,6 +47,21 @@ public:
   {
     std::vector<C> &componentArray = createComponent<C>();
     componentArray.emplace_back(std::forward<Args>(args)...);
+  }
+  template <typename... TargetComponents>
+  bool removeComponents(Entity entity, int targetBitMask)
+  {
+    auto it = std::find(m_entities.begin(), m_entities.end(), entity);
+    if (it == m_entities.end())
+      return false;
+
+    // remove entity
+    int index = it - m_entities.begin();
+    m_entities.erase(m_entities.begin() + index);
+
+    // remove components
+    (removeFromComponent<TargetComponents>(index), ...);
+    return true;
   }
 
   // Remove an entity from the archetype

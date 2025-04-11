@@ -4,6 +4,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Entity.h"
 #include "ECS/Scene.h"
+class Scene;
 
 namespace pain
 {
@@ -11,7 +12,6 @@ namespace pain
 class ScriptableEntity
 {
 public:
-  ~ScriptableEntity() { PLOG_I("Calling ScriptableEntity destructor"); }
   Entity m_entity = 0;
   Scene *m_scene = nullptr;
 };
@@ -22,10 +22,6 @@ template <typename... Components>
 class ExtendedScriptableEntity : public ScriptableEntity
 {
 public:
-  ~ExtendedScriptableEntity()
-  {
-    PLOG_I("Calling ExtendedScriptableEntity destructor");
-  }
   // return the components of an entity, as a tuple
   std::tuple<Components &...> getAllComponents()
   {

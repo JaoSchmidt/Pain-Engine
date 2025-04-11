@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/Movement.h"
+#include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Rotation.h"
 #include "ECS/GameObject.h"
 #include "ECS/Scriptable.h"
@@ -11,7 +12,10 @@
 namespace pain
 {
 
-class OrthoCameraEntity : public GameObject
+class OrthoCameraEntity
+    : public GameObject<MovementComponent, TransformComponent,
+                        OrthoCameraComponent, RotationComponent,
+                        NativeScriptComponent>
 {
 public:
   OrthoCameraEntity(Scene *scene, float aspectRatio, float zoomLevel);
@@ -19,7 +23,8 @@ public:
 
 class OrthoCameraController
     : public ExtendedScriptableEntity<MovementComponent, TransformComponent,
-                                      OrthoCameraComponent, RotationComponent>
+                                      OrthoCameraComponent, RotationComponent,
+                                      NativeScriptComponent>
 {
 public:
   void onUpdate(double deltaTimeSec);

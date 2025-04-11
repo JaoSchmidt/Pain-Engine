@@ -22,9 +22,9 @@ public:
   bool operator==(const Texture &other) const;
   Texture clone();
 
-  const uint32_t getRendererId() const { return m_rendererId; }
-  const uint32_t getWidth() const { return m_width; }
-  const uint32_t getHeight() const { return m_height; }
+  uint32_t getRendererId() const { return m_rendererId; }
+  uint32_t getWidth() const { return m_width; }
+  uint32_t getHeight() const { return m_height; }
 
   MOVABLES(Texture);
   NONCOPYABLE(Texture);

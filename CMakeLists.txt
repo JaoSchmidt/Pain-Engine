@@ -24,10 +24,54 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BUILD_SHARED_LIBS OFF)
 remove_definitions("-DNDEBUG")
 
-target_compile_options(
-  ${LIBRARY_NAME}
-  PRIVATE -std=c++20 -g -Wall -lGLU -lGL -lglm
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_options(
+    ${LIBRARY_NAME}
+    PRIVATE
+      -Wall
+      -g
+      -Wextra
+      -Wpedantic
+      -Wconversion
+      -Wno-unused-parameter
+      -Wmissing-field-initializers
+      -Wno-sign-conversion
+      -ftemplate-backtrace-limit=0
+      -fdiagnostics-color=always
+      -std=c++20
+      # specifc to gcc
+      -Wpessimizing-move
+  )
+elseif(
+  CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+  AND CMAKE_BUILD_TYPE STREQUAL "Debug"
 )
+  target_compile_options(
+    ${LIBRARY_NAME}
+    PRIVATE
+      -Wall
+      -g
+      -Wextra
+      -Wpedantic
+      -Wconversion
+      -Wno-unused-parameter
+      -Wmissing-field-initializers
+      -Wno-sign-conversion
+      -ftemplate-backtrace-limit=0
+      -fcolor-diagnostics
+      -std=c++20
+      # specific to clang
+      -Wreturn-std-move
+      -Wself-move
+  )
+else()
+  target_compile_options(
+    ${LIBRARY_NAME}
+    PRIVATE -std=c++20 -Wall
+    # -lGLU -lGL -lglm -lm
+    # -fdiagnostics-all-candidates
+  )
+endif()
 
 # =========== Adding Libraries ==================================
 # deactivate tests, examples, doc
@@ -59,7 +103,8 @@ message("Fetching SDL")
 FetchContent_Declare(
   SDL
   GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-  GIT_TAG release-2.30.1
+  GIT_TAG
+    6be87ceb33a9aad3bf5204bb13b3a5e8b498fd26 # release-2.32.2 fixed
 )
 FetchContent_MakeAvailable(SDL)
 
@@ -93,6 +138,7 @@ find_package(OpenGL REQUIRED)
 target_link_libraries(
   ${LIBRARY_NAME}
   PUBLIC
+    ${CMAKE_DL_LIBS}
     ${OPENGL_LIBRARIES}
     SDL2::SDL2-static
     SDL2_image

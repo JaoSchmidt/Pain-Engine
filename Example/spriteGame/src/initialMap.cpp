@@ -71,13 +71,10 @@ MainMap::MainMap(float spriteWidth, float spriteHeight, glm::vec3 &playerPos,
       ChunkEntity &chunk =
           m_chunks.emplace(std::make_pair(x, y), scene).first->second;
       pain::NativeScriptComponent &nsc =
-          chunk.addComponent<pain::NativeScriptComponent>(
-              pain::NativeScriptComponent{});
+          chunk.getComponent<pain::NativeScriptComponent>();
       nsc.bind<ChunkController>();
-      scene->initializeScripts(nsc, chunk);
-      ChunkController *cc =
-          (ChunkController *)chunk.getComponent<pain::NativeScriptComponent>()
-              .instance;
+      pain::initializeScript(scene, nsc, chunk.getEntity());
+      ChunkController *cc = (ChunkController *)nsc.instance;
       cc->init({x, y}, m_chunkSize, this);
     }
   }
@@ -120,15 +117,11 @@ void MainMap::updateSurroundingChunks(glm::vec3 &playerPos, pain::Scene *scene)
   if (m_chunkAt != getChunkCoordinate(playerPos)) {
     glm::ivec2 dif = getChunkCoordinate(playerPos) - m_chunkAt;
     m_chunkAt = getChunkCoordinate(playerPos);
-    LOG_I("new player coord at {},{}", TP_VEC2(m_chunkAt));
-
     for (auto it = m_chunks.begin(); it != m_chunks.end();) {
       ChunkController *cc = ((ChunkController *)(it->second)
                                  .getComponent<pain::NativeScriptComponent>()
                                  .instance);
       if (cc->isOutsideRadius(m_chunkAt, m_radius + 1)) {
-        LOG_I("To delete chunk {} at ({},{})", cc->m_offsetX, cc->m_offsetY,
-              cc->m_entity);
         it = m_chunks.erase(it);
       } else {
         ++it;
@@ -141,16 +134,12 @@ void MainMap::updateSurroundingChunks(glm::vec3 &playerPos, pain::Scene *scene)
       for (int y = m_chunkAt.y - m_radius; y < m_chunkAt.y + m_radius; ++y) {
         auto [pair, isInserted] = m_chunks.emplace(std::make_pair(x, y), scene);
         if (isInserted) {
-          LOG_I("New chunks inserterd at ({},{})", x, y);
           ChunkEntity &chunk = pair->second;
           pain::NativeScriptComponent &nsc =
-              chunk.addComponent<pain::NativeScriptComponent>(
-                  pain::NativeScriptComponent{});
+              chunk.getComponent<pain::NativeScriptComponent>();
           nsc.bind<ChunkController>();
-          scene->initializeScripts(nsc, chunk);
-          ChunkController *cc = (ChunkController *)chunk
-                                    .getComponent<pain::NativeScriptComponent>()
-                                    .instance;
+          pain::initializeScript(scene, nsc, chunk.getEntity());
+          ChunkController *cc = (ChunkController *)nsc.instance;
           cc->init({x, y}, m_chunkSize, this);
         }
       }

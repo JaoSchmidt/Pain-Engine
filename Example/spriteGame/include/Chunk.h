@@ -11,31 +11,21 @@ struct ChunkHash {
   }
 };
 
-class ChunkEntity : public pain::GameObject
+class ChunkEntity : public pain::GameObject<pain::TransformComponent,
+                                            pain::NativeScriptComponent>
 {
 public:
   ChunkEntity(pain::Scene *scene);
-  ~ChunkEntity()
-  {
-    LOG_I("chunk entity {} destructor called", m_entity);
-    // auto &nsc = getComponent<pain::NativeScriptComponent>();
-    // nsc.destroyInstanceFunction(nsc.instance);
-    rmComponent<pain::NativeScriptComponent>();
-  }
 };
 
 class ChunkController
-    : public pain::ExtendedScriptableEntity<pain::TransformComponent>
+    : public pain::ExtendedScriptableEntity<pain::TransformComponent,
+                                            pain::NativeScriptComponent>
 {
 public:
   void init(glm::ivec2 offSet, int chunkSize, MainMap *mainMap);
   void onRender(double currentTime);
   bool isOutsideRadius(glm::ivec2 &chunkAt, int radius);
-  ~ChunkController()
-  {
-    LOG_I("chunk controller destructor called");
-    m_mainMap = nullptr;
-  }
 
   // TODO: Implement chunk file saving
   // - checkChunkOnFile
