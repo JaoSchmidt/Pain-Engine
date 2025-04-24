@@ -1,5 +1,6 @@
 #include "Chunk.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "Debugging/Profiling.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
 #include "initialMap.h"
@@ -15,6 +16,7 @@ ChunkEntity::ChunkEntity(pain::Scene *scene) : GameObject(scene)
 
 bool ChunkController::isOutsideRadius(glm::ivec2 &playerChunkCoord, int radius)
 {
+  PROFILE_FUNCTION();
   return m_offsetX < playerChunkCoord.x - radius ||
          m_offsetX >= playerChunkCoord.x + radius ||
          m_offsetY < playerChunkCoord.y - radius ||
@@ -39,6 +41,7 @@ void ChunkController::init(glm::ivec2 offSet, int chunkSize, MainMap *mainMap)
 }
 void ChunkController::onRender(double currentTime)
 {
+  PROFILE_FUNCTION();
   for (int x = 0; x < m_chunkSize; x++) {
     for (int y = 0; y < m_chunkSize; y++) {
       int index = y * 32 + x;

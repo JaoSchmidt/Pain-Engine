@@ -4,10 +4,9 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreFiles/ImGuiController.h"
-#include "CoreFiles/Layer.h"
-#include "CoreFiles/LayerStack.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/RandNumberGenerator.h"
+#include "Debugging/Profiling.h"
 // Misc
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/BasicShape.h"

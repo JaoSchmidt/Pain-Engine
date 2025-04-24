@@ -47,9 +47,9 @@ void OrthoCameraController::onUpdate(double deltaTimeSec)
       (state[SDL_SCANCODE_D] ? rc.m_rotation : glm::vec3(0.0));
 
   if (state[SDL_SCANCODE_Q])
-    rc.m_rotationAngle += mc.m_rotationSpeed * deltaTimeSec;
+    rc.m_rotationAngle += mc.m_rotationSpeed * (float) deltaTimeSec;
   if (state[SDL_SCANCODE_E])
-    rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTimeSec;
+    rc.m_rotationAngle -= mc.m_rotationSpeed * (float) deltaTimeSec;
   // PLOG_I("({},{},{})", tc.m_position.x, tc.m_position.y, tc.m_position.z);
 
   mc.m_translationSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
@@ -71,7 +71,7 @@ void OrthoCameraController::onEvent(const SDL_Event &event)
 bool OrthoCameraController::onMouseScrolled(const SDL_Event &event,
                                             OrthoCameraComponent &cc)
 {
-  cc.m_zoomLevel -= event.wheel.y * 0.25f;
+  cc.m_zoomLevel -= (float) event.wheel.y * 0.25f;
   cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
   cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
                              cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,

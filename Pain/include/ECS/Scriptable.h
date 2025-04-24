@@ -14,6 +14,7 @@ class ScriptableEntity
 public:
   Entity m_entity = 0;
   Scene *m_scene = nullptr;
+  // const double deltaTimeSec = 1.0 / 60.0;
 };
 
 // Extended ScriptableEntity, meaning that it has additional functions to more

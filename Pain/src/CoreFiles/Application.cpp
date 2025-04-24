@@ -11,7 +11,7 @@
 
 namespace pain
 {
-const unsigned Application::getProcessorCount()
+unsigned Application::getProcessorCount()
 {
   return std::thread::hardware_concurrency();
 }
@@ -86,6 +86,8 @@ Application::Application(const char *title, int w, int h)
   m_imguiController = std::make_unique<ImGuiController>();
   m_isMinimized = false;
   m_sceneManager = new pain::SceneManager();
+  m_defaultImGuiInstance = new EngineController();
+  m_imguiController->addImGuiMenu(m_defaultImGuiInstance);
   // SDL_SetWindowGrab(m_window, SDL_TRUE);
   // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
 }
@@ -106,18 +108,20 @@ void Application::run()
     lastFrameTime = start;
 
     // =============================================================== //
-    // Calculate FPS
+    // Calculate FPS sample
     // =============================================================== //
-    fpsSamples[m_currentSample] =
-        SDL_GetPerformanceFrequency() / deltaTime.GetNanoSeconds();
-    // PLOG_T("Current fps = {}", fpsSamples[m_currentSample]);
+
+    // The purpose of this is to calculate the fps inside as an average of the
+    // previous "FPS_SAMPLE_COUNT" measurements
+    m_fpsSamples[m_currentSample] =
+        SDL_GetPerformanceFrequency() / deltaTime.GetNanoseconds();
     m_currentSample = (m_currentSample + 1) % FPS_SAMPLE_COUNT;
-    if (m_currentSample % 64 == 0) {
-      m_currentTPS = 0.0;
-      for (const double fpsSample : fpsSamples) {
-        m_currentTPS += fpsSample;
+    if (m_currentSample % 64 == 0) { // update displayed fps
+      m_defaultImGuiInstance->m_currentTPS = 0.0;
+      for (const double fpsSample : m_fpsSamples) {
+        m_defaultImGuiInstance->m_currentTPS += fpsSample;
       }
-      m_currentTPS /= FPS_SAMPLE_COUNT;
+      m_defaultImGuiInstance->m_currentTPS /= FPS_SAMPLE_COUNT;
       hasAlteredMultiplier = false;
     }
     // =============================================================== //
@@ -126,88 +130,101 @@ void Application::run()
     // NOTE: Eventually render and update systems need to execute at different
     // rates...
 
-    double deltaSeconds = deltaTime.GetSeconds() * m_timeMultiplier;
-    if (m_isSimulation && !hasAlteredMultiplier) {
-      if (m_currentTPS > 60.0)
-        m_timeMultiplier *= 1.10;
-      else
-        m_timeMultiplier *= 0.90;
-      hasAlteredMultiplier = true;
-    }
-    // accumulator = fmod(accumulator + deltaSeconds, 15.0);
-    accumulator += deltaSeconds;
-
-    // renderAccumulator += deltaSeconds;
-    // TODO: Need to fix lazy loading when updating, m_fixMeLater needs to go
-    // eventually
-    while (accumulator >= m_fixedUpdateTime) {
-      for (auto pScene = m_sceneManager->begin();
-           pScene != m_sceneManager->end(); ++pScene) {
-        (*pScene)->onUpdate(m_fixedUpdateTime);
-        (*pScene)->updateSystems(m_fixedUpdateTime);
+    {
+      PROFILE_SCOPE("Application::run - Handle Updates");
+      double deltaSeconds = deltaTime.GetSeconds() * m_timeMultiplier;
+      if (m_isSimulation && !hasAlteredMultiplier) {
+        // the purpose of this is to only increase when there is spare tps
+        if (m_defaultImGuiInstance->m_currentTPS > 60.0)
+          m_timeMultiplier *= 1.10;
+        else
+          m_timeMultiplier *= 0.90;
+        hasAlteredMultiplier = true;
       }
-      accumulator -= m_fixedUpdateTime;
+      // Uncomment this to create an accumulator cap
+      // accumulator = fmod(accumulator + deltaSeconds, 15.0);
+      accumulator += deltaSeconds;
+
+      // renderAccumulator += deltaSeconds;
+      while (accumulator >= m_fixedUpdateTime) {
+        for (auto pScene = m_sceneManager->begin();
+             pScene != m_sceneManager->end(); ++pScene) {
+          (*pScene)->onUpdate(m_fixedUpdateTime);
+          (*pScene)->updateSystems(m_fixedUpdateTime);
+        }
+        accumulator -= m_fixedUpdateTime;
+      }
     }
 
     // =============================================================== //
     // Handle Events
     // =============================================================== //
-    SDL_Event event;
-    // Start our event loop (goes until the queue is free)
-    while (SDL_PollEvent(&event)) {
-      m_imguiController->onEvent(event);
-      switch (event.type) {
-      case SDL_QUIT:
-        stop();
-        break;
-      case SDL_WINDOWEVENT:
-        if (event.window.event == SDL_WINDOWEVENT_CLOSE &&
-            event.window.windowID == SDL_GetWindowID(m_window))
+    {
+      PROFILE_SCOPE("Application::run - Handle Events");
+      SDL_Event event;
+      // Start our event loop (goes until the queue is free)
+      while (SDL_PollEvent(&event)) {
+        m_imguiController->onEvent(event);
+        switch (event.type) {
+        case SDL_QUIT:
           stop();
-        else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-          m_isMinimized = true;
-        else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
-          m_isMinimized = false;
-        break;
-      default:
-        break;
+          break;
+        case SDL_WINDOWEVENT:
+          if (event.window.event == SDL_WINDOWEVENT_CLOSE &&
+              event.window.windowID == SDL_GetWindowID(m_window))
+            stop();
+          else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
+            m_isMinimized = true;
+          else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
+            m_isMinimized = false;
+          break;
+        default:
+          break;
+        }
+        // Handle each specific event
+        for (auto pScene = m_sceneManager->begin();
+             pScene != m_sceneManager->end(); ++pScene) {
+          (*pScene)->updateSystems(event);
+          (*pScene)->onEvent(event);
+        }
       }
-      // Handle each specific event
-      for (auto pScene = m_sceneManager->begin();
-           pScene != m_sceneManager->end(); ++pScene) {
-        (*pScene)->updateSystems(event);
-        (*pScene)->onEvent(event);
-      }
+      m_imguiController->onUpdate(m_isMinimized);
     }
-    m_imguiController->onUpdate(m_isMinimized);
     // =============================================================== //
     // Handle rendering
     // =============================================================== //
-    if ((!m_isMinimized) && m_isRendering) {
-      // int w, h;
-      // SDL_GetWindowSize(m_window, &w, &h);
-      // Renderer2d::setViewport(0, 0, w, h);
-      Renderer2d::setClearColor(m_clearColor);
-      Renderer2d::clear();
+    {
+      PROFILE_SCOPE("Application::run - Handle Rendering");
+      if ((!m_isMinimized) && m_isRendering) {
+        // int w, h;
+        // SDL_GetWindowSize(m_window, &w, &h);
+        // Renderer2d::setViewport(0, 0, w, h);
+        Renderer2d::setClearColor(m_clearColor);
+        Renderer2d::clear();
 
-      double globalTime = lastFrameTime.GetSeconds();
-      for (auto pScene = m_sceneManager->begin();
-           pScene != m_sceneManager->end(); ++pScene) {
-        Renderer2d::beginScene(globalTime);
-        (*pScene)->onRender(globalTime);
-        (*pScene)->renderSystems(globalTime);
-        Renderer2d::endScene();
+        double globalTime = lastFrameTime.GetSeconds();
+        for (auto pScene = m_sceneManager->begin();
+             pScene != m_sceneManager->end(); ++pScene) {
+          Renderer2d::beginScene(globalTime);
+          (*pScene)->onRender(globalTime);
+          (*pScene)->renderSystems(globalTime);
+          Renderer2d::endScene();
+        }
+        m_imguiController->onRender();
+        P_ASSERT(m_window != nullptr, "m_window is nullptr")
+        SDL_GL_SwapWindow(m_window);
+      } else {
+        P_ASSERT(m_window != nullptr, "m_window is nullptr")
+        Renderer2d::setClearColor(glm::vec4(0.f, 0.f, 0.f, 1.f));
+        Renderer2d::clear();
+        m_imguiController->onRender();
+        SDL_GL_SwapWindow(m_window);
       }
-      m_imguiController->onRender();
-      P_ASSERT(m_window != nullptr, "m_window is nullptr")
-      SDL_GL_SwapWindow(m_window);
-    } else {
-      P_ASSERT(m_window != nullptr, "m_window is nullptr")
-      Renderer2d::setClearColor(glm::vec4(0.f, 0.f, 0.f, 1.f));
-      Renderer2d::clear();
-      m_imguiController->onRender();
-      SDL_GL_SwapWindow(m_window);
     }
+
+    // =============================================================== //
+    // Fix clock if it's too ahead
+    // =============================================================== //
     uint64_t end = SDL_GetPerformanceCounter();
     double frameDuration =
         static_cast<double>(end - start) / SDL_GetPerformanceFrequency();

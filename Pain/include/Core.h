@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 
 #ifdef IS_LIB_STATIC
 #define
@@ -8,7 +7,7 @@
 #define EXPORT __attribute__((__visibility__("default")))
 #elif defined _WIN64
 #define PLATFORM_IS_WINDOWS
-#define EXPORT  __declspec(dllexport)
+#define EXPORT __declspec(dllexport)
 #else
 #error "Only Windows, Linux or MacOS support Pain"
 #endif
@@ -39,6 +38,10 @@
   c(const c &) = default;                                                      \
   c &operator=(const c &) = default;
 
-#define MOVABLES(m)                                                            \
+#define MOVABLE(m)                                                             \
+  m(m &&) = default;                                                           \
+  m &operator=(m &&) = default;
+
+#define NONMOVABLE(m)                                                          \
   m(m &&) = default;                                                           \
   m &operator=(m &&) = default;

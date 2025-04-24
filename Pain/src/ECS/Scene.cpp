@@ -1,5 +1,6 @@
 #include "ECS/Scene.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Particle.h"
@@ -23,6 +24,7 @@ Scene::Scene() : m_registry(new ArcheRegistry())
 
 Entity Scene::createEntity()
 {
+  PROFILE_FUNCTION();
   Entity id;
   if (m_availableEntities.empty()) {
     id = ++numberOfEntities;
@@ -44,7 +46,9 @@ void Scene::destroyEntity(Entity entity) { m_availableEntities.push(entity); }
 // need to be rendered, such as Sprites and Spriteless components
 void Scene::renderSystems(double currentTime)
 {
+  PROFILE_FUNCTION();
   {
+    PROFILE_SCOPE("Scene::renderSystems - texture quads");
     auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
     const auto &[tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
 
@@ -56,6 +60,7 @@ void Scene::renderSystems(double currentTime)
     }
   }
   {
+    PROFILE_SCOPE("Scene::renderSystems - rotation quads");
     auto [tIt, sIt, rIt] =
         begin<TransformComponent, SpriteComponent, RotationComponent>();
     const auto &[tItEnd, sItEnd2, rItEnd] =
@@ -71,13 +76,15 @@ void Scene::renderSystems(double currentTime)
     }
   }
   {
-    auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
-    auto [tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
+    PROFILE_SCOPE("Scene::renderSystems - spriteless quads");
+    auto [tIt, sIt] = begin<TransformComponent, SpritelessComponent>();
+    auto [tItEnd, sItEnd] = end<TransformComponent, SpritelessComponent>();
     for (; tIt != tItEnd; ++tIt, ++sIt) {
       Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color);
     }
   }
   {
+    PROFILE_SCOPE("Scene::renderSystems - triangles");
     auto [tIt, triIt] = begin<TransformComponent, TrianguleComponent>();
     auto [tItEnd, triItEnd] = end<TransformComponent, TrianguleComponent>();
     for (; tIt != tItEnd; ++tIt, ++triIt) {
@@ -88,35 +95,40 @@ void Scene::renderSystems(double currentTime)
   // =============================================================== //
   // Render Native Script Components
   // =============================================================== //
-  for (auto it = begin<NativeScriptComponent>();
-       it != end<NativeScriptComponent>(); ++it) {
-    NativeScriptComponent &nsc = *it;
-    if (!nsc.instance) {
-      nsc.instantiateFunction(nsc.instance);
-      nsc.instance->m_scene = this;
-      nsc.instance->m_entity = it.getEntity();
+  {
+    PROFILE_SCOPE("Scene::renderSystems - NativeScripts");
+    for (auto it = begin<NativeScriptComponent>();
+         it != end<NativeScriptComponent>(); ++it) {
+      NativeScriptComponent &nsc = *it;
+      if (!nsc.instance) {
+        nsc.instantiateFunction(nsc.instance);
+        nsc.instance->m_scene = this;
+        nsc.instance->m_entity = it.getEntity();
 
-      if (nsc.onCreateFunction)
-        nsc.onCreateFunction(nsc.instance);
+        if (nsc.onCreateFunction)
+          nsc.onCreateFunction(nsc.instance);
+      }
+
+      if (nsc.onRenderFunction)
+        nsc.onRenderFunction(nsc.instance, currentTime);
     }
-
-    if (nsc.onRenderFunction)
-      nsc.onRenderFunction(nsc.instance, currentTime);
   }
-
   // =============================================================== //
   // Render Particle Systems
   // =============================================================== //
-  for (auto it = begin<ParticleSprayComponent>();
-       it != end<ParticleSprayComponent>(); ++it) {
-    ParticleSprayComponent &psc = *it;
-    Renderer2d::beginSprayParticle(currentTime, psc);
-    for (Particle &pa : psc.m_particles) {
-      if (pa.m_alive)
-        Renderer2d::drawSprayParticle(pa);
-      // Remove dead particles
-      if (currentTime - pa.m_startTime >= psc.m_lifeTime) {
-        pa.m_alive = false;
+  {
+    PROFILE_SCOPE("Scene::renderSystems - Particles");
+    for (auto it = begin<ParticleSprayComponent>();
+         it != end<ParticleSprayComponent>(); ++it) {
+      ParticleSprayComponent &psc = *it;
+      Renderer2d::beginSprayParticle((float)currentTime, psc);
+      for (Particle &pa : psc.m_particles) {
+        if (pa.m_alive)
+          Renderer2d::drawSprayParticle(pa);
+        // Remove dead particles
+        if (currentTime - pa.m_startTime >= psc.m_lifeTime) {
+          pa.m_alive = false;
+        }
       }
     }
   }
@@ -124,19 +136,24 @@ void Scene::renderSystems(double currentTime)
 
 void Scene::updateSystems(double deltaTime)
 {
+  PROFILE_FUNCTION();
   // =============================================================== //
   // Update Rotation Components
   // =============================================================== //
-  for (auto it = begin<RotationComponent>(); it != end<RotationComponent>();
-       ++it) {
-    RotationComponent &rc = *it;
-    rc.m_rotation = {cos(rc.m_rotationAngle), sin(rc.m_rotationAngle), 0};
+  {
+    PROFILE_SCOPE("Scene::updateSystems - rotation");
+    for (auto it = begin<RotationComponent>(); it != end<RotationComponent>();
+         ++it) {
+      RotationComponent &rc = *it;
+      rc.m_rotation = {cos(rc.m_rotationAngle), sin(rc.m_rotationAngle), 0};
+    }
   }
 
   // =============================================================== //
   // Update Movement Components
   // =============================================================== //
   {
+    PROFILE_SCOPE("Scene::updateSystems - movement");
     auto [tIt, mIt] = begin<TransformComponent, MovementComponent>();
     auto [tItEnd, mItEnd] = end<TransformComponent, MovementComponent>();
     for (; tIt != tItEnd; ++tIt, ++mIt) {
@@ -148,25 +165,29 @@ void Scene::updateSystems(double deltaTime)
   // =============================================================== //
   // Update Native Script Components
   // =============================================================== //
-  for (auto it = begin<NativeScriptComponent>();
-       it != end<NativeScriptComponent>(); ++it) {
-    auto &nsc = *it;
-    if (!nsc.instance) {
-      nsc.instantiateFunction(nsc.instance);
-      nsc.instance->m_scene = this;
-      nsc.instance->m_entity = it.getEntity();
+  {
+    PROFILE_SCOPE("Scene::updateSystems - native scripts");
+    for (auto it = begin<NativeScriptComponent>();
+         it != end<NativeScriptComponent>(); ++it) {
+      auto &nsc = *it;
+      if (!nsc.instance) {
+        nsc.instantiateFunction(nsc.instance);
+        nsc.instance->m_scene = this;
+        nsc.instance->m_entity = it.getEntity();
 
-      if (nsc.onCreateFunction)
-        nsc.onCreateFunction(nsc.instance);
+        if (nsc.onCreateFunction)
+          nsc.onCreateFunction(nsc.instance);
+      }
+
+      if (nsc.onUpdateFunction)
+        nsc.onUpdateFunction(nsc.instance, deltaTime);
     }
-
-    if (nsc.onUpdateFunction)
-      nsc.onUpdateFunction(nsc.instance, deltaTime);
   }
 }
 
 void Scene::updateSystems(const SDL_Event &event)
 {
+  PROFILE_SCOPE("Scene::updateSystems - events for nsc");
   for (auto it = begin<NativeScriptComponent>();
        it != end<NativeScriptComponent>(); ++it) {
     auto &nsc = *it;

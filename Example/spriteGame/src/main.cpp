@@ -1,6 +1,7 @@
 #include <iostream>
 #include <pain.h>
 
+#include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Rotation.h"
@@ -15,7 +16,7 @@
 class ShapesController : public pain::ImGuiInstance
 {
 public:
-  const void onImGuiUpdate() override
+  void onImGuiUpdate() override
   {
     ImGui::Begin("Shapes Controller");
     ImGui::End();
@@ -28,16 +29,14 @@ public:
   MainScene() : pain::Scene() {}
   void init(pain::Application &app, Scene *scene, float aspectRatio, float zoom)
   {
-    // m_orthocamera =
-    //     std::make_unique<pain::OrthoCameraEntity>(scene, aspectRatio, zoom);
     m_orthocamera = new pain::OrthoCameraEntity(scene, aspectRatio, zoom);
     pain::Renderer2d::init(*m_orthocamera);
     pain::NativeScriptComponent &a =
         m_orthocamera->getComponent<pain::NativeScriptComponent>();
     a.bind<pain::OrthoCameraController>();
-    ShapesController *sc = new ShapesController();
-    app.addImGuiInstance(sc);
-    m_sc = sc;
+    // ShapesController *sc = new ShapesController();
+    // app.addImGuiInstance(sc);
+    // m_sc = sc;
 
     m_texture.reset(
         new pain::Texture("resources/textures/Checkerboard.png", true));
@@ -49,6 +48,7 @@ public:
 
   void onUpdate(double deltaTime) override
   {
+    PROFILE_FUNCTION()
     pain::TransformComponent &tc =
         m_orthocamera->getComponent<pain::TransformComponent>();
     m_mainMap->updateSurroundingChunks(tc.m_position, this);
@@ -70,8 +70,8 @@ public:
     //           m_mainMap.getTexCoord(mdm[j][i]));
     //   }
     // }
-    // pain::Renderer2d::drawQuad({0.0f, -0.8f}, {0.3f, 0.3f},
-    //                            {0.9f, 0.3f, 0.2f, 1.0f});
+    pain::Renderer2d::drawQuad({0.0f, -0.8f}, {0.3f, 0.3f},
+                               {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
     // pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, m_texture, 1.0f,
@@ -83,7 +83,6 @@ public:
 
 private:
   std::vector<std::vector<int>> m_backgroundMap;
-  // std::unique_ptr<pain::OrthoCameraEntity> m_orthocamera;
   pain::OrthoCameraEntity *m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::shared_ptr<pain::Texture> m_texture;

@@ -1,7 +1,6 @@
 #include "initialMap.h"
 #include "Chunk.h"
-#include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/NativeScript.h"
+#include "Debugging/Profiling.h"
 #include "glm/fwd.hpp"
 #include "pain.h"
 #include <cstdlib>
@@ -109,11 +108,13 @@ std::array<glm::vec2, 4> MainMap::createVecFromCoord(int x, int y)
 
 glm::ivec2 MainMap::getChunkCoordinate(glm::vec3 &playerCood)
 {
+  PROFILE_FUNCTION();
   return {playerCood.x / m_chunkSize, playerCood.y / m_chunkSize};
 }
 
 void MainMap::updateSurroundingChunks(glm::vec3 &playerPos, pain::Scene *scene)
 {
+  PROFILE_FUNCTION()
   if (m_chunkAt != getChunkCoordinate(playerPos)) {
     glm::ivec2 dif = getChunkCoordinate(playerPos) - m_chunkAt;
     m_chunkAt = getChunkCoordinate(playerPos);

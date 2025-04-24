@@ -1,4 +1,5 @@
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
 
 #include "ECS/Components/Rotation.h"
@@ -71,6 +72,7 @@ void setClearColor(const glm::vec4 &color)
 
 void beginScene(float globalTime, const glm::mat4 &transform)
 {
+  PROFILE_FUNCTION();
   const OrthoCameraComponent &cameraComponent =
       std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
 
@@ -81,6 +83,7 @@ void beginScene(float globalTime, const glm::mat4 &transform)
 
 void flush()
 {
+  PROFILE_FUNCTION();
   // bindTextures();
   const OrthoCameraComponent &cameraComponent =
       std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
@@ -98,6 +101,7 @@ void endScene()
 void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
                  uint32_t indexCount)
 {
+  PROFILE_FUNCTION();
   uint32_t count =
       indexCount ? indexCount : vertexArray->getIndexBuffer()->getCount();
   glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
@@ -114,6 +118,7 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
               float tilingFactor,
               const std::array<glm::vec2, 4> &textureCoordinate)
 {
+  PROFILE_FUNCTION();
   const float texIndex =
       texture ? allocateTextures(*texture) : 0.0f; // White texture if nullptr
   const glm::mat4 transform = getTransform(position, size);
@@ -126,6 +131,7 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
               float tilingFactor,
               const std::array<glm::vec2, 4> &textureCoordinate)
 {
+  PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
   const glm::mat4 transform = getTransform(position, size);
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
@@ -136,6 +142,7 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
               Texture &texture, float tilingFactor,
               const std::array<glm::vec2, 4> &textureCoordinate)
 {
+  PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
@@ -146,6 +153,7 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
               Texture *texture, float tilingFactor,
               const std::array<glm::vec2, 4> &textureCoordinate)
 {
+  PROFILE_FUNCTION();
   const float texIndex =
       texture ? allocateTextures(*texture) : 0.0f; // White Texture if nullptr
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
@@ -159,12 +167,14 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 void drawTri(const glm::vec2 &position, const glm::vec2 &size,
              const glm::vec4 &tintColor)
 {
+  PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size);
   allocateTri(transform, tintColor);
 }
 void drawTri(const glm::vec2 &position, const glm::vec2 &size,
              const glm::vec4 &tintColor, const float rotationRadians)
 {
+  PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   allocateTri(transform, tintColor);
 }
@@ -185,7 +195,7 @@ void drawSprayParticle(const Particle &p)
 void drawString(const glm::vec2 &position, const char *string, const Font &font,
                 const glm::vec4 &color)
 {
-
+  PROFILE_FUNCTION();
   const auto &fontGeometry = font.getFontGeometry();
   const auto &metrics = fontGeometry.getMetrics();
   const double &spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Debugging/Profiling.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Scene.h"
 #include <utility>
@@ -40,19 +41,23 @@ public:
   // ---------------------------------------------------- //
   std::tuple<ObjectComponents &...> getAllComponents()
   {
+    PROFILE_FUNCTION();
     return m_scene->getAllComponents<ObjectComponents...>(m_entity);
   }
   const std::tuple<ObjectComponents &...> getAllComponents() const
   {
+    PROFILE_FUNCTION();
     return static_cast<const Scene *>(m_scene)
         ->getAllComponents<ObjectComponents...>(m_entity);
   }
   template <typename T> T &getComponent()
   {
+    PROFILE_FUNCTION();
     return m_scene->getComponent<T, ObjectComponents...>(m_entity);
   }
   template <typename T> const T &getComponent() const
   {
+    PROFILE_FUNCTION();
     return static_cast<const Scene *>(m_scene)
         ->getComponent<T, ObjectComponents...>(m_entity);
   }
@@ -61,6 +66,7 @@ public:
   // ---------------------------------------------------- //
   template <typename... TargetComponents> bool hasComponents() const
   {
+    PROFILE_FUNCTION();
     return m_scene->hasComponent<TargetComponents..., ObjectComponents...>(
         m_entity);
   }
