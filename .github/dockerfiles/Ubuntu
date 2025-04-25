@@ -52,7 +52,7 @@ RUN apt-get install -y \
 RUN ln -s /usr/lib/apt/methods/gzip /usr/lib/apt/methods/bzip2
 
 # Cleaning cache
-rm -rf /var/lib/apt/lists/*
+RUN rm -rf /var/lib/apt/lists/*
 
 # To quick see current versions, uncomment this
 # RUN g++ --version && rsync --version && ccache --version && git --version && make --version && cmake --version
