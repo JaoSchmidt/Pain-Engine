@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 # Compile latest cmake
-RUN wget https://cmake.org/files/v3.31.7/cmake-3.31.7.tar.gz
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7.tar.gz
 RUN tar -xzvf cmake-3.31.7.tar.gz
 RUN cd cmake-3.31.7/ && ./bootstrap && make && make install
 
