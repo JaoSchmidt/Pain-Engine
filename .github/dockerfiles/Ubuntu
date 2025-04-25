@@ -28,7 +28,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7
     tar -xzvf cmake-3.31.7.tar.gz && \
     cd cmake-3.31.7 && \
     ./bootstrap && \
-    make -j$(nproc) && \
+    make && \
     make install && \
     cd .. && \
     rm -rf cmake-3.31.7 cmake-3.31.7.tar.gz
