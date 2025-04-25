@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.22)
+﻿cmake_minimum_required(VERSION 3.28)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
@@ -11,6 +11,18 @@ project(${LIBRARY_NAME} VERSION 0.1.0)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp")
 add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 
+# file(GLOB_RECURSE MODULES "Pain/include/*.ixx")
+# message("Finding the modules:")
+# foreach(source ${MODULES})
+#   message("  ${source}")
+# endforeach()
+# target_sources(
+#   ${LIBRARY_NAME}
+#   PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES ${MODULES}
+#   PRIVATE ${SOURCES}
+# )
+# set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+
 target_include_directories(
   ${LIBRARY_NAME}
   PUBLIC
@@ -19,8 +31,9 @@ target_include_directories(
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS OFF)
 remove_definitions("-DNDEBUG")
 
@@ -40,6 +53,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
       -fdiagnostics-color=always
       -std=c++20
       # specifc to gcc
+      # -fmodules-ts
       -Wpessimizing-move
   )
 elseif(

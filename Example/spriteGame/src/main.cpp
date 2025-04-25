@@ -70,8 +70,8 @@ public:
     //           m_mainMap.getTexCoord(mdm[j][i]));
     //   }
     // }
-    pain::Renderer2d::drawQuad({0.0f, -0.8f}, {0.3f, 0.3f},
-                               {0.9f, 0.3f, 0.2f, 1.0f});
+    // pain::Renderer2d::drawQuad({0.0f, -0.8f}, {0.3f, 0.3f},
+    //                            {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
     // pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, m_texture, 1.0f,
