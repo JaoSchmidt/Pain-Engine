@@ -25,14 +25,10 @@ RUN apt-get update && apt-get install -y \
 
 # Install latest cmake here
 # ...
-RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | \
-    gpg --dearmor - | \
-    tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null && \
-    echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy main' \
-    > /etc/apt/sources.list.d/kitware.list && \
-    apt-get update && \
-    apt-get install -y kitware-archive-keyring && \
-    apt-get install -y cmake
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7-linux-x86_64.sh
+RUN mkdir /opt/cmake
+RUN sh cmake-3.31.7-linux-x86_64.sh --prefix=/opt/cmake
+RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 
 # These dependencies are not installed by default on ubuntu
 RUN apt-get install -y \
