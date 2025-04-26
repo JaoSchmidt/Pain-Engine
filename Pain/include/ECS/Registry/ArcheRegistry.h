@@ -190,8 +190,10 @@ class ArcheRegistry
         entities.push_back(&archetype.m_entities);
       }
     }
-    return reg::Iterator<ParticularComponent>(
-        std::move(vectors), vectors.size(), 0, std::move(entities));
+    const int size =
+        vectors.size(); // attention to evaluation order, do not replace below
+    return reg::Iterator<ParticularComponent>(std::move(vectors), size, 0,
+                                              std::move(entities));
   }
 
   // return iterator of component
