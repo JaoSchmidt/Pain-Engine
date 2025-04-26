@@ -23,15 +23,16 @@ RUN apt-get update && apt-get install -y \
 		wget \
     && apt-get clean
 
-# Compile latest cmake
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7.tar.gz && \
-    tar -xzvf cmake-3.31.7.tar.gz && \
-    cd cmake-3.31.7 && \
-    ./bootstrap && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -rf cmake-3.31.7 cmake-3.31.7.tar.gz
+# Install latest cmake here
+# ...
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | \
+    gpg --dearmor - | \
+    tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null && \
+    echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy main' \
+    > /etc/apt/sources.list.d/kitware.list && \
+    apt-get update && \
+    apt-get install -y kitware-archive-keyring && \
+    apt-get install -y cmake
 
 # These dependencies are not installed by default on ubuntu
 RUN apt-get install -y \
