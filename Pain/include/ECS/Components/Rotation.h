@@ -1,3 +1,6 @@
+#pragma once
+
+#include "CoreFiles/LogWrapper.h"
 #include "pch.h"
 
 namespace pain

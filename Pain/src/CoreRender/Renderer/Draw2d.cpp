@@ -1,4 +1,5 @@
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "Debugging/Profiling.h"
 
 #include "ECS/Components/Particle.h"
 #include "glm/ext/matrix_transform.hpp"
@@ -26,7 +27,7 @@ constexpr glm::vec2 m_sprayVertexPositions[4] = {
     glm::vec2(0.5f, 0.5f),
     glm::vec2(-0.5f, 0.5f),
 };
-constexpr uint32_t MaxQuads = 2000;
+constexpr uint32_t MaxQuads = 40000;
 constexpr uint32_t MaxQuadVertices = MaxQuads * 4;
 constexpr uint32_t MaxQuadIndices = MaxQuads * 6;
 constexpr uint32_t MaxTri = 2000;
@@ -81,6 +82,7 @@ const Texture *m_fontAtlasTexture = nullptr;
 void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                          float globalTime, const glm::mat4 &transform)
 {
+  PROFILE_FUNCTION();
   m_quadTextureShader->bind();
   m_quadTextureShader->uploadUniformMat4("u_ViewProjection",
                                          viewProjectionMatrix);
@@ -102,6 +104,7 @@ void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
 }
 void initBatches()
 {
+  PROFILE_FUNCTION();
   // =============================================================== //
   // Quads
   // =============================================================== //
@@ -229,11 +232,11 @@ void initBatches()
 
 void drawBatches(const glm::mat4 &viewProjectionMatrix)
 {
+  PROFILE_FUNCTION();
   // =============================================================== //
   // Quads
   // =============================================================== //
   // PLOG_I("bind texture id = {}", m_textureSlots[i]->getRendererId());
-
   if (m_quadIndexCount) {
     m_quadVertexArray->bind();
     const uint32_t quadDataSize =
@@ -314,12 +317,14 @@ void drawBatches(const glm::mat4 &viewProjectionMatrix)
 
 void bindTextures()
 {
+  PROFILE_FUNCTION();
   for (uint32_t i = 0; i < m_textureSlotIndex; i++)
     m_textureSlots[i]->bindToSlot(i);
 }
 
 void goBackToFirstVertex()
 {
+  PROFILE_FUNCTION();
   m_quadIndexCount = 0;
   m_quadVertexBufferPtr = m_quadVertexBufferBase;
 
@@ -335,11 +340,9 @@ void goBackToFirstVertex()
   m_textureSlotIndex = 1; // 1, because 0 is for default 1x1 white texture
 }
 
-// TODO: allow the possibility of removing the texture (tho you could just reset
-// everything after first delete)
 float allocateTextures(Texture &texture)
 {
-  // NOTE: this can be optimized later to avoid searching the texture
+  PROFILE_FUNCTION();
   float textureIndex = 0.0f;
   // use it to allocate new texture
   if (texture.m_slot == 0) {
@@ -358,6 +361,7 @@ float allocateTextures(Texture &texture)
 }
 void removeTexture(const Texture &texture)
 {
+  PROFILE_FUNCTION();
   if (texture.m_slot == 0) // m_textureSlots doesn't have the texture
     return;
   P_ASSERT_W(*m_textureSlots[texture.m_slot] == texture,
@@ -373,12 +377,14 @@ void removeTexture(const Texture &texture)
 }
 const glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size)
 {
+  PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
          glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 }
 const glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size,
                              const float rotationAngleRadians)
 {
+  PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
          glm::rotate(glm::mat4(1.0f), rotationAngleRadians,
                      {0.0f, 0.0f, 1.0f}) *
@@ -389,6 +395,7 @@ void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
                   const float tilingFactor, const float textureIndex,
                   const std::array<glm::vec2, 4> &textureCoordinate)
 {
+  PROFILE_FUNCTION();
   for (int i = 0; i < 4; i++) {
     m_quadVertexBufferPtr->position = transform * m_quadVertexPositions[i];
     m_quadVertexBufferPtr->color = tintColor;
@@ -402,6 +409,7 @@ void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
 
 void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor)
 {
+  PROFILE_FUNCTION();
   for (int i = 0; i < 3; i++) {
     m_triVertexBufferPtr->position = transform * m_triVertexPositions[i];
     m_triVertexBufferPtr->color = tintColor;
@@ -413,6 +421,7 @@ void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor)
 void beginSprayParticle(const float globalTime,
                         const ParticleSprayComponent &psc)
 {
+  PROFILE_FUNCTION();
   m_sprayShader->bind();
   m_sprayShader->uploadUniformFloat("u_Time", globalTime);
   m_sprayShader->uploadUniformFloat("u_ParticleVelocity", psc.m_velocity);
@@ -424,6 +433,7 @@ void allocateSprayParticles(const glm::vec2 &position, const glm::vec2 &offset,
                             const glm::vec2 &normal, const float startTime,
                             const float rotationSpeed)
 {
+  PROFILE_FUNCTION();
   for (int i = 0; i < 4; i++) {
     m_sprayVertexBufferPtr->position = m_sprayVertexPositions[i];
     m_sprayVertexBufferPtr->offset = offset;
@@ -439,6 +449,7 @@ void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
                        const std::array<glm::vec2, 4> &textureCoordinate,
                        const std::array<glm::vec4, 4> &textVertexPositions)
 {
+  PROFILE_FUNCTION();
   for (int i = 0; i < 4; i++) {
     m_textVertexBufferPtr->position = transform * textVertexPositions[i];
     m_textVertexBufferPtr->color = tintColor;

@@ -1,46 +1,75 @@
+#include <iostream>
 #include <pain.h>
 
+#include "Debugging/Profiling.h"
+#include "ECS/Components/Camera.h"
+#include "ECS/Components/Movement.h"
+#include "ECS/Components/Rotation.h"
+#include "PerlinNoise.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
+#include <vector>
 
 #include "initialMap.h"
+
+class ShapesController : public pain::ImGuiInstance
+{
+public:
+  void onImGuiUpdate() override
+  {
+    ImGui::Begin("Shapes Controller");
+    ImGui::End();
+  }
+};
 
 class MainScene : public pain::Scene
 {
 public:
-  MainScene() : pain::Scene(), m_mainMap(16.0f, 16.0f) {}
-  void init(pain::OrthoCameraEntity *pCamera)
+  MainScene() : pain::Scene() {}
+  void init(pain::Application &app, Scene *scene, float aspectRatio, float zoom)
   {
-    m_orthocamera = pCamera;
-    pain::Renderer2d::init(m_orthocamera);
-    auto &a = m_orthocamera->addComponent<pain::NativeScriptComponent>();
+    m_orthocamera = new pain::OrthoCameraEntity(scene, aspectRatio, zoom);
+    pain::Renderer2d::init(*m_orthocamera);
+    pain::NativeScriptComponent &a =
+        m_orthocamera->getComponent<pain::NativeScriptComponent>();
     a.bind<pain::OrthoCameraController>();
-    m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
+    // ShapesController *sc = new ShapesController();
+    // app.addImGuiInstance(sc);
+    // m_sc = sc;
+
+    m_texture.reset(
+        new pain::Texture("resources/textures/Checkerboard.png", true));
+
+    pain::TransformComponent &tc =
+        m_orthocamera->getComponent<pain::TransformComponent>();
+    m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
   }
 
   void onUpdate(double deltaTime) override
   {
+    PROFILE_FUNCTION()
+    pain::TransformComponent &tc =
+        m_orthocamera->getComponent<pain::TransformComponent>();
+    m_mainMap->updateSurroundingChunks(tc.m_position, this);
+  }
+  void onRender(double currentTime) override
+  {
     // m_orthocamera->onUpdate(deltaTime);
-    const std::vector<std::vector<int>> mdm = m_mainMap.getDefaultMap();
-    const std::vector<std::vector<int>> msm = m_mainMap.getSceneryMap();
-    pain::Renderer2d::beginScene();
+    // const std::vector<std::vector<int>> mdm =
+    //     m_mainMap.generateTerrainMatrix(); // lowest (background) layer
+    // const std::vector<std::vector<int>> msm =
+    //     generateTerrainMatrix(offset); // upper layer
 
-    for (unsigned int i = 0; i < mdm[0].size(); i++) {
-      for (unsigned int j = 0; j < mdm.size(); j++) {
-        pain::Renderer2d::drawQuad(
-            {1.f * i, -1.f * j}, {1.f, 1.f}, m_mainMap.getTexture(), 1.0f,
-            {1.0f, 1.0f, 1.0f, 1.0f}, m_mainMap.getTexCoord(mdm[j][i]));
-      }
-    }
-    for (unsigned int i = 0; i < msm[0].size(); i++) {
-      for (unsigned int j = 0; j < msm.size(); j++) {
-        if (msm[j][i] != 00)
-          pain::Renderer2d::drawQuad(
-              {1.f * i, -1.f * j}, {1.f, 1.f}, m_mainMap.getTexture(), 1.0f,
-              {1.0f, 1.0f, 1.0f, 1.0f}, m_mainMap.getTexCoord(msm[j][i]));
-      }
-    }
+    // for (unsigned int i = 0; i < mdm[0].size(); i++) {
+    //   for (unsigned int j = 0; j < mdm.size(); j++) {
+    //     if (mdm[j][i] != 00)
+    //       pain::Renderer2d::drawQuad(
+    //           {1.f * i, -1.f * j}, {1.f, 1.f}, {1.0f, 1.0f, 1.0f, 1.0f},
+    //           m_mainMap.getTexture(), 1.0f,
+    //           m_mainMap.getTexCoord(mdm[j][i]));
+    //   }
+    // }
     // pain::Renderer2d::drawQuad({0.0f, -0.8f}, {0.3f, 0.3f},
     //                            {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
@@ -49,45 +78,32 @@ public:
     //                            {1.0f, 1.0f, 1.0f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f}, m_texture, 1.0f,
     //                            {1.0f, 1.0f, 1.0f, 1.0f});
-    pain::Renderer2d::endScene();
   }
-  void onEvent(const SDL_Event &event) override
-  {
-    // m_orthocamera->onEvent(event);
-  }
+  void onEvent(const SDL_Event &event) override {}
 
 private:
-  std::shared_ptr<pain::Shader> m_texture_shader;
+  std::vector<std::vector<int>> m_backgroundMap;
   pain::OrthoCameraEntity *m_orthocamera;
+  std::shared_ptr<pain::Shader> m_texture_shader;
   std::shared_ptr<pain::Texture> m_texture;
-  MainMap m_mainMap;
-};
-
-class Sandbox : public pain::Application
-{
-public:
-  Sandbox(const char *title, int w, int h) : Application(title, w, h)
-  {
-    pain::Scene *scene = new MainScene();
-
-    pain::OrthoCameraEntity *pCamera =
-        // new pain::OrthoCameraEntity(scene, (float)w / h, 40.0f);
-        new pain::OrthoCameraEntity(scene, (float)w / h, 10.0f);
-    ((MainScene *)scene)->init(pCamera);
-    pushScene("main", scene);
-    attachScene("main");
-  }
-
-  ~Sandbox() {}
+  ShapesController *m_sc;
+  std::unique_ptr<MainMap> m_mainMap;
 };
 
 pain::Application *pain::CreateApplication()
 {
   LOG_T("Creating app");
-  const char *title = "Developing Pain";
-  const int width = 800;
-  const int height = 600;
-  return new Sandbox(title, width, height);
+  const char *title = "Developing Pain - Example 2d";
+  const int width = 1280;
+  const int height = 1000;
+  Application *app = new Application(title, width, height);
+
+  Scene *scene = new MainScene();
+  ((MainScene *)scene)->init(*app, scene, (float)width / height, 70.0f);
+
+  app->pushScene("main", scene);
+  app->attachScene("main");
+  return app;
 }
 
 #ifdef _WIN64

@@ -10,7 +10,6 @@ struct OrthoCameraComponent {
   float m_aspectRatio = 800.0 / 600.0;
   float m_zoomLevel = 1.0f;
   OrthographicCamera *m_camera = nullptr;
-
   OrthoCameraComponent() = default;
   OrthoCameraComponent(float aspectRatio, float zoomLevel)
       : m_aspectRatio(aspectRatio), m_zoomLevel(zoomLevel)

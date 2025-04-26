@@ -3,18 +3,21 @@
 #include "Core.h"
 
 #include <queue>
+#include <utility>
 
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Registry/ArcheRegistry.h"
 #include "Entity.h"
-#include "Registry.h"
 
 namespace pain
 {
-class GameObject;
-struct NativeScriptComponent;
+template <typename... ObjectComponents> class GameObject;
 
-class  Scene
+class Scene
 {
+private:
+  ArcheRegistry *m_registry;
+
 public:
   Scene();
   ~Scene() { delete m_registry; };
@@ -27,48 +30,96 @@ public:
   virtual void onEvent(const SDL_Event &event) = 0;
 
   // ---------------------------------------------------- //
-  // Component Stuff
+  // Component Archetype stuff
   // ---------------------------------------------------- //
+  template <typename... Components, typename... Args>
+  std::tuple<Components &...> createComponents(Entity entity, Args &&...args)
+  {
+    return m_registry->createComponents<Components...>(
+        entity, std::forward<Args>(args)...);
+  }
   template <typename T, typename... Args>
-  T &addComponent(Entity entity, Args &&...args)
+  T &createComponent(Entity entity, Args &&...args)
   {
-    P_ASSERT_W(!hasComponent<T>(entity), "Entity {} already has component!",
+    P_ASSERT_W(!hasComponent<T>(entity), "Entity {} already has component !",
                entity);
-    return m_registry->add<T>(entity, std::forward<Args>(args)...);
+    return m_registry->createComponent<T>(entity, std::forward<Args>(args)...);
   }
-  template <typename T> T &getComponent(Entity entity)
+
+  // ---------------------------------------------------- //
+  // Get components from archetypes
+  // ---------------------------------------------------- //
+  // get multiple components together as a tuple
+  template <typename... Components>
+  std::tuple<Components &...> getAllComponents(Entity entity)
   {
-    return m_registry->get<T>(entity);
+    return m_registry->getAllComponents<Components...>(entity);
   }
-  template <typename T> const T &getComponent(Entity entity) const
+  // get multiple components together as a tuple
+  template <typename... Components>
+  const std::tuple<const Components &...> getAllComponents(Entity entity) const
   {
-    return m_registry->get<T>(entity);
+    return static_cast<const ArcheRegistry *>(m_registry)
+        ->getAllComponents<Components...>(entity);
   }
-  template <typename T> bool hasComponent(Entity entity)
+
+  // get a single component
+  template <typename T, typename... Components> T &getComponent(Entity entity)
   {
-    return m_registry->has<T>(entity);
+    return m_registry->getComponent<T, Components...>(entity);
   }
-  template <typename T> void rmComponent(Entity entity)
+  // get a single component
+  template <typename T, typename... Components>
+  const T &getComponent(Entity entity) const
   {
-    m_registry->remove<T>(entity);
+    return static_cast<const ArcheRegistry *>(m_registry)
+        ->getComponent<T, Components...>(entity);
   }
-  template <typename T> std::unordered_map<Entity, T>::iterator begin()
+
+  template <typename... TargetComponents, typename... ObjectComponents>
+  bool hasComponent(Entity entity) const
   {
-    return m_registry->getComponentMap<T>().begin();
+    return m_registry->has<TargetComponents..., ObjectComponents...>(entity);
   }
-  template <typename T> std::unordered_map<Entity, T>::iterator end()
+  // remove an entity, alongside its components from it's archetype
+  template <typename... ObjectComponents> bool removeEntity(Entity entity)
   {
-    return m_registry->getComponentMap<T>().end();
+    return m_registry->remove<ObjectComponents...>(entity);
+  }
+  // Remove components of an entity
+  // template <typename... TargetComponents, typename... ObjectComponents>
+  // void rmComponent(Entity entity)
+  // {
+  //   m_registry->remove<TargetComponents..., ObjectComponents...>(entity);
+  // }
+
+  // ---------------------------------------------------- //
+  // Iterate archetypes
+  // ---------------------------------------------------- //
+
+  template <typename T>
+    requires IsSingleType<T>
+  reg::Iterator<T> end()
+  {
+    return m_registry->end<T>();
   }
   template <typename T>
-  const std::unordered_map<Entity, T>::const_iterator begin() const
+    requires IsSingleType<T>
+  reg::Iterator<T> begin()
   {
-    return m_registry->getComponentMap<T>().begin();
+    return m_registry->begin<T>();
   }
-  template <typename T>
-  const std::unordered_map<Entity, T>::const_iterator end() const
+  template <typename... Components>
+    requires IsMultipleTypes<Components...>
+  std::tuple<reg::Iterator<Components>...> begin()
   {
-    return m_registry->getComponentMap<T>().end();
+    return m_registry->begin<Components...>();
+  }
+  template <typename... Components>
+    requires IsMultipleTypes<Components...>
+  std::tuple<reg::Iterator<Components>...> end()
+  {
+    return m_registry->end<Components...>();
   }
 
   // ---------------------------------------------------- //
@@ -77,14 +128,9 @@ public:
 
   void updateSystems(double deltaTime);
   void updateSystems(const SDL_Event &event);
-  void initializeScripts(NativeScriptComponent &nativeScriptComponent,
-                         const GameObject &go);
-  void initializeScripts(NativeScriptComponent &nativeScriptComponent,
-                         Entity entity);
   void renderSystems(double currentTime);
 
 private:
-  Registry *m_registry;
   inline static std::queue<Entity> m_availableEntities = {};
   inline static Entity numberOfEntities = 0;
 };

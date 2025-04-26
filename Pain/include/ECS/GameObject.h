@@ -1,49 +1,90 @@
 #pragma once
 
 #include "Core.h"
-#include "ECS/Entity.h"
+#include "Debugging/Profiling.h"
+#include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Scene.h"
 #include <utility>
 
 namespace pain
 {
 
-class  GameObject
+// Allows easy manipulation of a game object without writing long functions
+template <typename... ObjectComponents> class GameObject
 {
 public:
-  GameObject(Scene *scene);
-  ~GameObject();
-  template <typename T, typename... Args> T &addComponent(Args &&...args)
+  inline Entity getEntity() const { return m_entity; }
+  GameObject(Scene *scene) : m_scene(scene)
   {
-    return m_scene->addComponent<T, Args...>(m_entity,
-                                             std::forward<Args>(args)...);
+    m_entity = scene->createEntity();
+  }
+
+  // Remove the entity, alongside its components from it's archetype
+  ~GameObject()
+  {
+    m_scene->removeEntity<ObjectComponents...>(m_entity);
+    m_scene->destroyEntity(m_entity);
+  }
+  template <typename... Components>
+  std::tuple<Components &...> createComponents(Components &&...args)
+  {
+    return m_scene->createComponents<Components...>(
+        m_entity, std::forward<Components>(args)...);
+  }
+  template <typename T, typename... Args> T &createComponent(Args &&...args)
+  {
+    return m_scene->createComponent<T>(m_entity, std::forward<Args>(args)...);
+  }
+
+  // ---------------------------------------------------- //
+  // Get components from archetypes
+  // ---------------------------------------------------- //
+  std::tuple<ObjectComponents &...> getAllComponents()
+  {
+    PROFILE_FUNCTION();
+    return m_scene->getAllComponents<ObjectComponents...>(m_entity);
+  }
+  const std::tuple<ObjectComponents &...> getAllComponents() const
+  {
+    PROFILE_FUNCTION();
+    return static_cast<const Scene *>(m_scene)
+        ->getAllComponents<ObjectComponents...>(m_entity);
   }
   template <typename T> T &getComponent()
   {
-    return m_scene->getComponent<T>(m_entity);
+    PROFILE_FUNCTION();
+    return m_scene->getComponent<T, ObjectComponents...>(m_entity);
   }
   template <typename T> const T &getComponent() const
   {
-    return m_scene->getComponent<T>(m_entity);
+    PROFILE_FUNCTION();
+    return static_cast<const Scene *>(m_scene)
+        ->getComponent<T, ObjectComponents...>(m_entity);
   }
-
-  template <typename T> bool hasComponent()
+  // ---------------------------------------------------- //
+  // Does archetype has components?
+  // ---------------------------------------------------- //
+  template <typename... TargetComponents> bool hasComponents() const
   {
-    return m_scene->hasComponent<T>(m_entity);
+    PROFILE_FUNCTION();
+    return m_scene->hasComponent<TargetComponents..., ObjectComponents...>(
+        m_entity);
   }
 
-  template <typename T> void rmComponent()
-  {
-    m_scene->rmComponent<T>(m_entity);
-  }
+  // Remove components of an entity
+  // template <typename... TargetComponets, typename... Components>
+  // void rmComponents()
+  // {
+  //   m_scene->rmComponent<TargetComponets..., ObjectComponents...>(m_entity);
+  // }
 
-  operator bool() const { return m_entity != -1; }
+  explicit operator bool() const { return m_entity != -1; }
 
 protected:
   template <typename arg> void initializeScript(arg &&nativeScriptComponent)
   {
-    m_scene->initializeScripts(std::forward<arg>(nativeScriptComponent),
-                               m_entity);
+    initializeScripts(m_scene, std::forward<arg>(nativeScriptComponent),
+                      m_entity);
   }
   Entity m_entity = -1;
   Scene *m_scene;

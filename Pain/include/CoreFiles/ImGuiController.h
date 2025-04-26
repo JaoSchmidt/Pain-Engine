@@ -11,8 +11,8 @@ namespace pain
 class ImGuiInstance
 {
 public:
-  const virtual void onImGuiUpdate() = 0;
-  virtual ~ImGuiInstance(){};
+  virtual void onImGuiUpdate() = 0;
+  virtual ~ImGuiInstance() {};
 };
 
 class ImGuiController

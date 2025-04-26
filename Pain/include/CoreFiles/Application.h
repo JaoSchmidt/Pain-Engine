@@ -4,12 +4,13 @@
 #include "Core.h"
 #include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/ImGuiController.h"
+#include "Debugging/DefaultImGui.h"
 #include "ECS/SceneManager.h"
 
 namespace pain
 {
 
-class  Application
+class Application
 {
 public:
   Application(const char *title, int w, int h);
@@ -27,13 +28,12 @@ public:
   {
     m_isSimulation = isSimulation;
   };
-  static const unsigned getProcessorCount();
+  static unsigned getProcessorCount();
   void inline disableRendering() { m_isRendering = false; }
   void inline enableRendering() { m_isRendering = true; }
   void inline setTimeMultiplier(double time) { m_timeMultiplier = time; }
   double inline *getTimeMultiplier() { return &m_timeMultiplier; }
   bool inline *getIsSimulation() { return &m_isSimulation; }
-  const double inline getCurrentTPS() const { return m_currentTPS; }
 
   static void glErrorHandler(unsigned int source, unsigned int type,
                              unsigned int id, unsigned int severity, int lenght,
@@ -57,13 +57,13 @@ private:
   bool m_isRendering = true;
   bool m_isMinimized;
   bool m_isSimulation = false;
-  double m_currentTPS = 60.0;
   const double m_fixedUpdateTime = 1.0 / 60.0;
   const double m_fixedFPS = 1.0 / 60.0;
   double m_timeMultiplier = 1.0;
   DeltaTime m_maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
 
   SceneManager *m_sceneManager;
+  EngineController *m_defaultImGuiInstance;
   std::unique_ptr<ImGuiController> m_imguiController;
 
   // Pure Black
@@ -77,7 +77,7 @@ private:
 
   // FPS Calculation
   constexpr static int FPS_SAMPLE_COUNT = 64;
-  double fpsSamples[FPS_SAMPLE_COUNT] = {0};
+  double m_fpsSamples[FPS_SAMPLE_COUNT] = {0};
   int m_currentSample = 1; // begins in 1 to loop all the way to 0 before calculation
 };
 

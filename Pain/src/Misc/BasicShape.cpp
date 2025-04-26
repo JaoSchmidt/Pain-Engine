@@ -10,16 +10,16 @@ RectangleSprite::RectangleSprite(Scene *scene, const glm::vec2 &position,
                                  Texture *ptexture, float tilingFactor)
     : GameObject(scene)
 {
-  addComponent<TransformComponent>(position);
-  addComponent<SpriteComponent>(size, color, tilingFactor, ptexture);
+  createComponents(TransformComponent{position},
+                   SpriteComponent{size, color, tilingFactor, ptexture});
 }
 
 Rectangle::Rectangle(Scene *scene, const glm::vec2 &position,
                      const glm::vec2 &size, const glm::vec4 &color)
     : GameObject(scene)
 {
-  addComponent<TransformComponent>(position);
-  addComponent<SpritelessComponent>(size, color);
+  createComponents(TransformComponent{position},
+                   SpritelessComponent{size, color});
 }
 
 } // namespace pain

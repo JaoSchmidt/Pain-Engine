@@ -1,21 +1,28 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "CoreRender/Camera.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Rotation.h"
-#include "ECS/GameObject.h"
+#include "ECS/Components/NativeScript.h"
 #include "glm/fwd.hpp"
 
+#include "ECS/Components/Camera.h"
+#include "ECS/Components/Movement.h"
+#include "ECS/Components/Rotation.h"
 namespace pain
 {
+
 OrthoCameraEntity::OrthoCameraEntity(Scene *scene, float aspectRatio,
                                      float zoomLevel)
     : GameObject(scene)
 {
-  addComponent<MovementComponent>();
-  addComponent<RotationComponent>();
-  addComponent<TransformComponent>();
-  addComponent<OrthoCameraComponent>(aspectRatio, zoomLevel);
+  // clang-format off
+  createComponents(
+      MovementComponent{},
+      RotationComponent{},
+      TransformComponent{},
+      OrthoCameraComponent{aspectRatio, zoomLevel},
+      NativeScriptComponent{"Camera nsc"}
+  );
+  // clang-format off
 };
 
 inline void
@@ -29,10 +36,7 @@ OrthoCameraController::recalculatePosition(const glm::vec3 &position,
 void OrthoCameraController::onUpdate(double deltaTimeSec)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-  MovementComponent &mc = getComponent<MovementComponent>();
-  RotationComponent &rc = getComponent<RotationComponent>();
-  const TransformComponent &tc = getComponent<TransformComponent>();
-  const OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
+  auto [mc, tc, cc, rc, _] = getAllComponents();
 
   mc.m_velocityDir =
       (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
@@ -43,9 +47,9 @@ void OrthoCameraController::onUpdate(double deltaTimeSec)
       (state[SDL_SCANCODE_D] ? rc.m_rotation : glm::vec3(0.0));
 
   if (state[SDL_SCANCODE_Q])
-    rc.m_rotationAngle += mc.m_rotationSpeed * deltaTimeSec;
+    rc.m_rotationAngle += mc.m_rotationSpeed * (float) deltaTimeSec;
   if (state[SDL_SCANCODE_E])
-    rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTimeSec;
+    rc.m_rotationAngle -= mc.m_rotationSpeed * (float) deltaTimeSec;
   // PLOG_I("({},{},{})", tc.m_position.x, tc.m_position.y, tc.m_position.z);
 
   mc.m_translationSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
@@ -67,7 +71,7 @@ void OrthoCameraController::onEvent(const SDL_Event &event)
 bool OrthoCameraController::onMouseScrolled(const SDL_Event &event,
                                             OrthoCameraComponent &cc)
 {
-  cc.m_zoomLevel -= event.wheel.y * 0.25f;
+  cc.m_zoomLevel -= (float) event.wheel.y * 0.25f;
   cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
   cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
                              cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,

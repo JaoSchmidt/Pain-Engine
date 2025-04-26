@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.22)
+﻿cmake_minimum_required(VERSION 3.28)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
@@ -11,22 +11,81 @@ project(${LIBRARY_NAME} VERSION 0.1.0)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp")
 add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 
+# file(GLOB_RECURSE MODULES "Pain/include/*.ixx")
+# message("Finding the modules:")
+# foreach(source ${MODULES})
+#   message("  ${source}")
+# endforeach()
+# target_sources(
+#   ${LIBRARY_NAME}
+#   PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES ${MODULES}
+#   PRIVATE ${SOURCES}
+# )
+# set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+
 target_include_directories(
   ${LIBRARY_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS OFF)
 remove_definitions("-DNDEBUG")
 
-target_compile_options(
-  ${LIBRARY_NAME}
-  PRIVATE -std=c++20 -g -Wall -lGLU -lGL -lglm
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_options(
+    ${LIBRARY_NAME}
+    PRIVATE
+      -Wall
+      -g
+      -Wextra
+      -Wpedantic
+      -Wconversion
+      -Wno-unused-parameter
+      -Wmissing-field-initializers
+      -Wno-sign-conversion
+      -ftemplate-backtrace-limit=0
+      -fdiagnostics-color=always
+      -std=c++20
+      # specifc to gcc
+      # -fmodules-ts
+      -Wpessimizing-move
+  )
+elseif(
+  CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+  AND CMAKE_BUILD_TYPE STREQUAL "Debug"
 )
+  target_compile_options(
+    ${LIBRARY_NAME}
+    PRIVATE
+      -Wall
+      -g
+      -Wextra
+      -Wpedantic
+      -Wconversion
+      -Wno-unused-parameter
+      -Wmissing-field-initializers
+      -Wno-sign-conversion
+      -ftemplate-backtrace-limit=0
+      -fcolor-diagnostics
+      -std=c++20
+      # specific to clang
+      -Wreturn-std-move
+      -Wself-move
+  )
+else()
+  target_compile_options(
+    ${LIBRARY_NAME}
+    PRIVATE -std=c++20 -Wall
+    # -lGLU -lGL -lglm -lm
+    # -fdiagnostics-all-candidates
+  )
+endif()
 
 # =========== Adding Libraries ==================================
 # deactivate tests, examples, doc
@@ -39,7 +98,7 @@ message("Fetching glm")
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
-	GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e
+  GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e
 )
 FetchContent_MakeAvailable(glm)
 
@@ -58,7 +117,8 @@ message("Fetching SDL")
 FetchContent_Declare(
   SDL
   GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-  GIT_TAG release-2.30.1
+  GIT_TAG
+    6be87ceb33a9aad3bf5204bb13b3a5e8b498fd26 # release-2.32.2 fixed
 )
 FetchContent_MakeAvailable(SDL)
 
@@ -74,9 +134,9 @@ message("Fetching Imgui")
 FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui
-	PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
-	GIT_TAG v1.91.6-docking
-	UPDATE_DISCONNECTED 1
+  PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
+  GIT_TAG v1.91.6-docking
+  UPDATE_DISCONNECTED 1
 )
 FetchContent_MakeAvailable(imgui)
 
@@ -92,6 +152,7 @@ find_package(OpenGL REQUIRED)
 target_link_libraries(
   ${LIBRARY_NAME}
   PUBLIC
+    ${CMAKE_DL_LIBS}
     ${OPENGL_LIBRARIES}
     SDL2::SDL2-static
     SDL2_image
@@ -109,7 +170,7 @@ target_precompile_headers(
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/textRendering")
+set(GAME_FOLDER "Example/spriteGame")
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources

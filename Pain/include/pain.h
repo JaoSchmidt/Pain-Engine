@@ -4,10 +4,13 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreFiles/ImGuiController.h"
-#include "CoreFiles/Layer.h"
-#include "CoreFiles/LayerStack.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/RandNumberGenerator.h"
+#include "Debugging/Profiling.h"
+// Misc
+#include "Misc/BasicOrthoCamera.h"
+#include "Misc/BasicShape.h"
+#include "Misc/PerspCameraController.h"
 // Renderer
 #include "CoreRender/AllBuffers.h"
 #include "CoreRender/BufferLayout.h"
@@ -29,10 +32,6 @@
 #include "ECS/Scene.h"
 #include "ECS/SceneManager.h"
 #include "ECS/Scriptable.h"
-// Misc
-#include "Misc/BasicOrthoCamera.h"
-#include "Misc/BasicShape.h"
-#include "Misc/PerspCameraController.h"
 
 #include <SDL2/SDL_events.h>
 

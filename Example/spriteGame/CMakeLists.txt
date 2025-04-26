@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.22)
 
 set(PROJECT_NAME "Painful Sprite Game Example")
 project(${PROJECT_NAME})
