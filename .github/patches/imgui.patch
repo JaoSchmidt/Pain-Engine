@@ -14,7 +14,7 @@ index 00000000..d83ddd31
 --- /dev/null
 +++ b/CMakeLists.txt
 @@ -0,0 +1,48 @@
-+cmake_minimum_required(VERSION 3.6)
++cmake_minimum_required(VERSION 3.28)
 +
 +set(LIB_NAME "imgui")
 +project(${LIB_NAME})

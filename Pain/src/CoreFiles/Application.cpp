@@ -1,13 +1,15 @@
-#include "CoreFiles/Application.h"
+module;
 #include "Core.h"
-#include "CoreFiles/ImGuiController.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/Renderer2d.h"
+#include "Debugging/Profiling.h"
 #include "SDL_timer.h"
 #include "glm/fwd.hpp"
 #include <SDL2/SDL_version.h>
 #include <cmath>
 #include <thread>
+module pain.Application;
+import pain.ImGuiController;
+import pain.Renderer2d;
 
 namespace pain
 {

@@ -1,12 +1,12 @@
-﻿
-#include "CoreRender/Renderer/Renderer3d.h"
+module;
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/CubeVertex.h"
-#include "CoreRender/Texture.h"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <memory>
+module pain.Renderer3d;
+import pain.Texture;
+import pain.CubeVertex;
 
 namespace pain
 {

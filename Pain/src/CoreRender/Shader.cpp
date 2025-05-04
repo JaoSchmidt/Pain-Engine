@@ -1,10 +1,10 @@
-
-#include "CoreRender/Shader.h"
-
-#include <glm/gtc/type_ptr.hpp>
-
+module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include "glad/gl.h"
+#include <glm/gtc/type_ptr.hpp>
+
+module pain.Shader;
 
 namespace pain
 {

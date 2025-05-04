@@ -1,7 +1,7 @@
-#include "Misc/SimpleShapeClasses.h"
-#include "CoreRender/AllBuffers.h"
-#include "CoreRender/BufferLayout.h"
-#include "CoreRender/VertexArray.h"
+module pain.SimpleShapeClasses;
+import pain.AllBuffers;
+import pain.BufferLayout;
+import pain.VertexArray;
 
 namespace pain
 {

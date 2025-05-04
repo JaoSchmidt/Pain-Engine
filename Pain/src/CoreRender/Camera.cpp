@@ -1,9 +1,10 @@
-#include "CoreRender/Camera.h"
+module;
 #include "CoreFiles/LogWrapper.h"
 #include "glm/ext/matrix_transform.hpp"
-
 #include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+module pain.Camera;
 
 namespace pain
 {

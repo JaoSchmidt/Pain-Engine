@@ -1,5 +1,8 @@
-#include "CoreRender/VertexArray.h"
-#include "CoreRender/AllBuffers.h"
+module;
+#include "glad/gl.h" // Including OpenGL headers in global fragment
+
+module pain.VertexArray;
+import pain.AllBuffers;
 
 namespace pain
 {

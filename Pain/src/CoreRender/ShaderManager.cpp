@@ -1,7 +1,8 @@
-#include "CoreRender/ShaderManager.h"
-
+module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+module pain.ShaderManager;
+import pain.Shader;
 
 namespace pain
 {

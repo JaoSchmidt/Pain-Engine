@@ -1,14 +1,14 @@
-#include "ECS/Scene.h"
-#include "CoreRender/Renderer/Renderer2d.h"
+module;
 #include "Debugging/Profiling.h"
-#include "ECS/Components/Camera.h"
-#include "ECS/Components/NativeScript.h"
-#include "ECS/Components/Particle.h"
-
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Rotation.h"
-#include "ECS/Components/Sprite.h"
 #include "SDL_events.h"
+module pain.Scene;
+import pain.Movement;
+import pain.Rotation;
+import pain.Sprite;
+import pain.Particle;
+import pain.CameraComponent;
+import pain.NativeScript;
+import pain.Renderer2d;
 
 namespace pain
 {

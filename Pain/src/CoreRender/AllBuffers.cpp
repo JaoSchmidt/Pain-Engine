@@ -1,5 +1,9 @@
-#include "CoreRender/AllBuffers.h"
+module;
 #include "CoreFiles/LogWrapper.h"
+#include "glad/gl.h" // Including OpenGL headers in global fragment
+
+module pain.AllBuffers;
+import pain.BufferLayout;
 
 namespace pain
 {

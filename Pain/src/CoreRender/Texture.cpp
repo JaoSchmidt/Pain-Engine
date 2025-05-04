@@ -1,9 +1,10 @@
-#include "CoreRender/Texture.h"
-
+module;
 #include "CoreFiles/LogWrapper.h"
-#include "CoreFiles/ResourceManagerSing.h"
-#include "CoreRender/Renderer/Renderer2d.h"
 #include "glad/gl.h"
+
+module pain.Texture;
+import pain.Renderer2d;
+import pain.ResourceManager;
 
 namespace pain
 {

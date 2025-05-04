@@ -1,4 +1,5 @@
-﻿#include "CoreRender/Renderer/CubeVertex.h"
+module pain.CubeVertex;
+import pain.AllBuffers;
 
 namespace pain
 {

@@ -1,6 +1,6 @@
-#include "Misc/BasicShape.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Sprite.h"
+module pain.BasicShape;
+import pain.Movement;
+import pain.Sprite;
 
 namespace pain
 {

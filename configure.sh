@@ -1,6 +1,7 @@
 # #/bin/bash/
 # Set the default compiler
-DEFAULT_COMPILER="g++"
+# DEFAULT_COMPILER="g++"
+DEFAULT_COMPILER="/opt/clang/20.1.4/bin/clang++"
 
 # Set the path to your MinGW installation
 MINGW_PATH="/usr/x86_64-w64-mingw32"
@@ -9,12 +10,12 @@ MINGW_PATH="/usr/x86_64-w64-mingw32"
 ARCH="x86_64"
 
 # Set the CMake generator for MinGW
-GENERATOR='Unix Makefiles'
-# GENERATOR="Ninja"
+# GENERATOR='Unix Makefiles'
+GENERATOR="Ninja"
 TYPE="Debug"
 
 if [ "$#" -ne 1 ]; then
-	BUILD_DIR="./build"
+	BUILD_DIR="./buildLLVM"
 else
 	BUILD_DIR="$1"
 fi

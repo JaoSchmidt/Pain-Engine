@@ -1,9 +1,10 @@
-#include "CoreRender/Renderer/Renderer2d.h"
+module;
+#include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Components/Camera.h"
-
-#include "ECS/Components/Rotation.h"
 #include "glm/ext/matrix_transform.hpp"
+module pain.Renderer2d;
+import pain.CameraComponent;
+import pain.Rotation;
 
 namespace pain
 {
@@ -27,14 +28,17 @@ void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
 void drawBatches(const glm::mat4 &viewProjectionMatrix);
 extern const Texture *m_fontAtlasTexture;
 
-// OrthoCameraEntity *m_cameraEntity = nullptr;
+// OrthoCameraComponent *m_cameraComponent = nullptr;
 
-static const OrthoCameraEntity *m_cameraEntity = nullptr;
+// WARN:in theory, as soon as an object is moved from the ECS struct, the
+// component pointer will be null again, this need to be adressed when the
+// component system will be allowed to add/remove components from entities
+static const OrthoCameraComponent *m_cameraComponent = nullptr;
 // ================================================================= //
 // Render initialization and destruction
 // ================================================================= //
 
-void init(const OrthoCameraEntity &cameraEntity)
+void init(const OrthoCameraComponent &cameraComponent)
 {
   // NOTE: This enable 3d and can be changed later in case we need some camera
   // mechanic
@@ -50,7 +54,7 @@ void init(const OrthoCameraEntity &cameraEntity)
 
   // quadBatch = new VertexBatch();
   initBatches();
-  m_cameraEntity = &cameraEntity;
+  m_cameraComponent = &cameraComponent;
 }
 
 // ================================================================= //
@@ -73,10 +77,7 @@ void setClearColor(const glm::vec4 &color)
 void beginScene(float globalTime, const glm::mat4 &transform)
 {
   PROFILE_FUNCTION();
-  const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
-
-  uploadBasicUniforms(cameraComponent.m_camera->getViewProjectionMatrix(),
+  uploadBasicUniforms(m_cameraComponent->m_camera->getViewProjectionMatrix(),
                       globalTime, transform);
   goBackToFirstVertex();
 }
@@ -85,9 +86,7 @@ void flush()
 {
   PROFILE_FUNCTION();
   // bindTextures();
-  const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
-  drawBatches(cameraComponent.m_camera->getViewProjectionMatrix());
+  drawBatches(m_cameraComponent->m_camera->getViewProjectionMatrix());
 }
 
 void endScene()

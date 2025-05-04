@@ -1,9 +1,10 @@
-#include "CoreRender/Text/Font.h"
-
-#include "CoreFiles/Application.h"
+module;
 #include "CoreFiles/LogWrapper.h"
 #include "SDL_image.h"
 #include "SDL_surface.h"
+#include <msdf-atlas-gen/msdf-atlas-gen.h>
+module pain.Font;
+import pain.Application;
 
 namespace pain
 {

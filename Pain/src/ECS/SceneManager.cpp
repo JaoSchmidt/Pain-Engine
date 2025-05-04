@@ -1,8 +1,9 @@
-#include "ECS/SceneManager.h"
+module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Scene.h"
 #include <unordered_map>
+module pain.SceneManager;
+import pain.Scene;
 
 namespace pain
 {

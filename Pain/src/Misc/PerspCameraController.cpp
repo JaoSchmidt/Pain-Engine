@@ -1,9 +1,12 @@
-#include "CoreFiles/DeltaTime.h"
+module;
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/Renderer3d.h"
 #include "glm/geometric.hpp"
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
+module pain.PerspCameraController;
+import pain.DeltaTime;
+import pain.Camera;
+import pain.Renderer3d;
 
 namespace pain
 {

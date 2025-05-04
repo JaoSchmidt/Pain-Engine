@@ -1,12 +1,15 @@
-#include "Misc/BasicOrthoCamera.h"
-#include "CoreRender/Camera.h"
-#include "CoreRender/Renderer/Renderer2d.h"
-#include "ECS/Components/NativeScript.h"
+module;
 #include "glm/fwd.hpp"
+#include "glm/glm.hpp"
+module pain.BasicOrthoCamera;
+import pain.CameraComponent;
+import pain.Movement;
+import pain.NativeScript;
+import pain.Rotation;
+import pain.GameObject;
+import pain.Scriptable;
+import pain.Renderer2d;
 
-#include "ECS/Components/Camera.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Rotation.h"
 namespace pain
 {
 
@@ -25,7 +28,7 @@ OrthoCameraEntity::OrthoCameraEntity(Scene *scene, float aspectRatio,
   // clang-format off
 };
 
-inline void
+void
 OrthoCameraController::recalculatePosition(const glm::vec3 &position,
                                            const float rotation)
 {

@@ -1,9 +1,9 @@
-#include "CoreFiles/ResourceManagerSing.h"
-
+module;
 #include <SDL2/SDL_surface.h>
+#include <SDL_image.h>
+// #include "external/SDL_image/include/SDL_image.h"
+module pain.ResourceManager;
 
-// #include <SDL_image.h>
-#include "external/SDL_image/include/SDL_image.h"
 namespace pain
 {
 

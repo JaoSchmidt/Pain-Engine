@@ -11,17 +11,13 @@ project(${LIBRARY_NAME} VERSION 0.1.0)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp")
 add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 
-# file(GLOB_RECURSE MODULES "Pain/include/*.ixx")
-# message("Finding the modules:")
-# foreach(source ${MODULES})
-#   message("  ${source}")
-# endforeach()
-# target_sources(
-#   ${LIBRARY_NAME}
-#   PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES ${MODULES}
-#   PRIVATE ${SOURCES}
-# )
-# set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+file(GLOB_RECURSE MODULES "Pain/include/*.ixx")
+message("Finding the modules:")
+foreach(source ${MODULES})
+  message("  ${source}")
+endforeach()
+target_sources(${LIBRARY_NAME} PUBLIC FILE_SET CXX_MODULES FILES ${MODULES})
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 target_include_directories(
   ${LIBRARY_NAME}
@@ -43,6 +39,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     PRIVATE
       -Wall
       -g
+      -O0
       -Wextra
       -Wpedantic
       -Wconversion
@@ -65,12 +62,13 @@ elseif(
     PRIVATE
       -Wall
       -g
-      -Wextra
-      -Wpedantic
-      -Wconversion
-      -Wno-unused-parameter
-      -Wmissing-field-initializers
-      -Wno-sign-conversion
+      -O0
+      # -Wextra
+      # -Wpedantic
+      # -Wconversion
+      # -Wno-unused-parameter
+      # -Wmissing-field-initializers
+      # -Wno-sign-conversion
       -ftemplate-backtrace-limit=0
       -fcolor-diagnostics
       -std=c++20
@@ -109,7 +107,7 @@ add_subdirectory(Pain/external/glad)
 FetchContent_Declare(
   spdlog
   GIT_REPOSITORY https://github.com/gabime/spdlog.git
-  GIT_TAG v1.14.1
+  GIT_TAG v1.15.2
 )
 FetchContent_MakeAvailable(spdlog)
 
@@ -131,14 +129,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SDL_image)
 
 message("Fetching Imgui")
-FetchContent_Declare(
-  imgui
-  GIT_REPOSITORY https://github.com/ocornut/imgui
-  PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
-  GIT_TAG v1.91.6-docking
-  UPDATE_DISCONNECTED 1
-)
-FetchContent_MakeAvailable(imgui)
+# FetchContent_Declare(
+#   imgui
+#   GIT_REPOSITORY https://github.com/ocornut/imgui
+#   PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
+#   GIT_TAG v1.91.6-docking
+#   UPDATE_DISCONNECTED 1
+# )
+# FetchContent_MakeAvailable(imgui)
+add_subdirectory("Pain/external/imgui")
 
 # msdf-atlas-gen
 FetchContent_Declare(
@@ -170,34 +169,34 @@ target_precompile_headers(
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/spriteGame")
+# set(GAME_FOLDER "Example/spriteGame")
 
-# TODO: BUILD THIS FOR WINDOWS AND TEST IT
-# Define custom target to rsync resources
-if(UNIX OR APPLE)
-  add_custom_target(
-    sync_resources
-    COMMAND
-      rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
-      "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
-    # For debuging purposes
-    COMMAND
-      rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
-      "${PROJECT_SOURCE_DIR}/resources/"
-    COMMENT "Syncing resources folder"
-  )
-  # Add dependency to sync_resources target on make
-  add_dependencies(${LIBRARY_NAME} sync_resources)
-else()
-  add_custom_target(
-    sync_resources
-    COMMAND
-      Copy-Item -Path "${PROJECT_SOURCE_DIR}\\Pain\\resources\\*" -Destination
-      "${CMAKE_BINARY_DIR}\\${GAME_FOLDER}\\resources\\" -Recurse
-    COMMENT "Syncing resources folder"
-  )
+# # TODO: BUILD THIS FOR WINDOWS AND TEST IT
+# # Define custom target to rsync resources
+# if(UNIX OR APPLE)
+#   add_custom_target(
+#     sync_resources
+#     COMMAND
+#       rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
+#       "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
+#     # For debuging purposes
+#     COMMAND
+#       rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
+#       "${PROJECT_SOURCE_DIR}/resources/"
+#     COMMENT "Syncing resources folder"
+#   )
+#   # Add dependency to sync_resources target on make
+#   add_dependencies(${LIBRARY_NAME} sync_resources)
+# else()
+#   add_custom_target(
+#     sync_resources
+#     COMMAND
+#       Copy-Item -Path "${PROJECT_SOURCE_DIR}\\Pain\\resources\\*" -Destination
+#       "${CMAKE_BINARY_DIR}\\${GAME_FOLDER}\\resources\\" -Recurse
+#     COMMENT "Syncing resources folder"
+#   )
 
-  add_dependencies(${LIBRARY_NAME} sync_resources)
-endif()
+#   add_dependencies(${LIBRARY_NAME} sync_resources)
+# endif()
 
-add_subdirectory(${GAME_FOLDER})
+# add_subdirectory(${GAME_FOLDER})

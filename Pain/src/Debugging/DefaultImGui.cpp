@@ -1,7 +1,9 @@
-#include "Debugging/DefaultImGui.h"
+module;
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
+#include "imgui.h"
 #include <string>
+module pain.DefaultImGui;
 
 namespace pain
 {

@@ -1,10 +1,15 @@
-#include "CoreRender/Renderer/Renderer2d.h"
+module;
+// Global includes go here
+#include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
-
-#include "ECS/Components/Particle.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+
+module pain.Renderer2d;
+import pain.Particle;
+import pain.AllBuffers;
+import pain.BufferLayout;
 
 namespace pain
 {
