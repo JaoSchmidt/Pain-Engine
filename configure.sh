@@ -1,7 +1,7 @@
 # #/bin/bash/
 # Set the default compiler
 # DEFAULT_COMPILER="g++"
-DEFAULT_COMPILER="/opt/clang/20.1.4/bin/clang++"
+DEFAULT_COMPILER="clang++"
 
 # Set the path to your MinGW installation
 MINGW_PATH="/usr/x86_64-w64-mingw32"
@@ -15,7 +15,7 @@ GENERATOR="Ninja"
 TYPE="Debug"
 
 if [ "$#" -ne 1 ]; then
-	BUILD_DIR="./buildLLVM"
+	BUILD_DIR="./build2"
 else
 	BUILD_DIR="$1"
 fi
