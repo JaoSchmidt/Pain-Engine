@@ -4,6 +4,7 @@
 
 #include "Core.h"
 #include "CoreFiles/DeltaTime.h"
+#include <cstddef>
 
 namespace pain
 {

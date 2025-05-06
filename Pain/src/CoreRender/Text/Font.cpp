@@ -2,7 +2,10 @@ module;
 #include "CoreFiles/LogWrapper.h"
 #include "SDL_image.h"
 #include "SDL_surface.h"
+#include <exception>
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
+#include <string>
+#include <vector>
 module pain.Font;
 import pain.Application;
 

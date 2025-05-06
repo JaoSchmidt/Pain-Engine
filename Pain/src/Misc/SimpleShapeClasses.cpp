@@ -1,7 +1,10 @@
+module;
 module pain.SimpleShapeClasses;
 import pain.AllBuffers;
 import pain.BufferLayout;
 import pain.VertexArray;
+import <cstdint>;
+import <memory>;
 
 namespace pain
 {

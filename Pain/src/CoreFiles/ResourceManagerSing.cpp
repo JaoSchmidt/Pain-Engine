@@ -3,7 +3,7 @@ module;
 #include <SDL_image.h>
 // #include "external/SDL_image/include/SDL_image.h"
 module pain.ResourceManager;
-
+import <unordered_map>;
 namespace pain
 {
 

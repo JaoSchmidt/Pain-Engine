@@ -3,6 +3,8 @@ module;
 #include "Debugging/Profiling.h"
 #include "glm/ext/matrix_transform.hpp"
 module pain.Renderer2d;
+import <array>;
+import <memory>;
 import pain.CameraComponent;
 import pain.Rotation;
 

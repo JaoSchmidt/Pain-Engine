@@ -7,6 +7,8 @@ module;
 #include <glm/gtc/matrix_transform.hpp>
 
 module pain.Renderer2d;
+import <array>;
+import <memory>;
 import pain.Particle;
 import pain.AllBuffers;
 import pain.BufferLayout;

@@ -1,23 +1,24 @@
-﻿cmake_minimum_required(VERSION 3.28)
+﻿cmake_minimum_required(VERSION 3.30)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
 #set(CMAKE_VERBOSE_MAKEFILE ON)
-project(${LIBRARY_NAME} VERSION 0.1.0)
+project(${PROJECT_NAME} VERSION 0.1.0)
 
 # set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp")
 add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 
-file(GLOB_RECURSE MODULES "Pain/include/*.ixx")
+file(GLOB_RECURSE MODULES "Pain/include/*.cppm")
 message("Finding the modules:")
-foreach(source ${MODULES})
-  message("  ${source}")
-endforeach()
+
+# foreach(source ${MODULES})
+#   message("- ${source}")
+# endforeach()
 target_sources(${LIBRARY_NAME} PUBLIC FILE_SET CXX_MODULES FILES ${MODULES})
-set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+set(BUILD_SHARED_LIBS OFF)
 
 target_include_directories(
   ${LIBRARY_NAME}
@@ -26,11 +27,9 @@ target_include_directories(
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
 )
-
 set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
-set(BUILD_SHARED_LIBS OFF)
 remove_definitions("-DNDEBUG")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -69,9 +68,11 @@ elseif(
       # -Wno-unused-parameter
       # -Wmissing-field-initializers
       # -Wno-sign-conversion
+      -fmodules
       -ftemplate-backtrace-limit=0
       -fcolor-diagnostics
       -std=c++20
+      -stdlib=libc++
       # specific to clang
       -Wreturn-std-move
       -Wself-move
@@ -162,10 +163,10 @@ target_link_libraries(
     msdf-atlas-gen
 )
 
-target_precompile_headers(
-  ${LIBRARY_NAME}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h
-)
+# target_precompile_headers(
+#   ${LIBRARY_NAME}
+#   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h
+# )
 
 # =========== Resources/Assets Managment ==================================
 

@@ -3,6 +3,7 @@ module;
 
 module pain.VertexArray;
 import pain.AllBuffers;
+import <memory>;
 
 namespace pain
 {

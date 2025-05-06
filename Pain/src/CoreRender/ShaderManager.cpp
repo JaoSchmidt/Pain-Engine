@@ -3,6 +3,8 @@ module;
 #include "CoreFiles/LogWrapper.h"
 module pain.ShaderManager;
 import pain.Shader;
+import <string>;
+import <memory>;
 
 namespace pain
 {

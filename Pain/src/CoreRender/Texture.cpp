@@ -1,3 +1,4 @@
+// Texture.cpp
 module;
 #include "CoreFiles/LogWrapper.h"
 #include "glad/gl.h"
@@ -5,6 +6,7 @@ module;
 module pain.Texture;
 import pain.Renderer2d;
 import pain.ResourceManager;
+import <cstdint>;
 
 namespace pain
 {

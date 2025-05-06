@@ -1,7 +1,8 @@
-#pragma once
-#include <cstdint>
+module;
+export module pain.DeltaTime;
+import <cstdint>;
 
-namespace pain
+export namespace pain
 {
 class DeltaTime
 {

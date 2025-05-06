@@ -5,11 +5,12 @@ module;
 #include "SDL_timer.h"
 #include "glm/fwd.hpp"
 #include <SDL2/SDL_version.h>
-#include <cmath>
-#include <thread>
 module pain.Application;
 import pain.ImGuiController;
 import pain.Renderer2d;
+import <memory>;
+import <string>;
+import <thread>;
 
 namespace pain
 {

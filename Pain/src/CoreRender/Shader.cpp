@@ -5,6 +5,10 @@ module;
 #include <glm/gtc/type_ptr.hpp>
 
 module pain.Shader;
+import <filesystem>;
+import <string>;
+import <utility>;
+import <functional>;
 
 namespace pain
 {
