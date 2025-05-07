@@ -1,6 +1,6 @@
 module;
+#include <cstdint>
 export module pain.DeltaTime;
-import <cstdint>;
 
 export namespace pain
 {

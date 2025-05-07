@@ -1,10 +1,10 @@
 module;
 #include "Core.h"
 #include "Debugging/Profiling.h"
+#include <tuple>
 export module pain.GameObject;
 import pain.ArcheRegistry;
 import pain.Scene;
-import <tuple>;
 import pain.Entity;
 
 export namespace pain

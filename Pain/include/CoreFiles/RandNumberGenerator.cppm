@@ -1,5 +1,6 @@
+module;
+#include <random>
 export module pain.RNG;
-import <random>;
 
 export namespace pain
 {

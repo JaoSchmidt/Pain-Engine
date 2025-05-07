@@ -1,9 +1,10 @@
 module;
 #include "CoreFiles/LogWrapper.h"
 #include "glm/fwd.hpp"
+#include "glm/glm.hpp"
+#include <vector>
 
 export module pain.Particle;
-import <vector>;
 export namespace pain
 {
 struct Particle {

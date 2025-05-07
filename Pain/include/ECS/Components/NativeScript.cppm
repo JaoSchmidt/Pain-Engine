@@ -2,9 +2,9 @@ module;
 #include "CoreFiles/LogWrapper.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
+#include <string>
 
 export module pain.NativeScript;
-import <string>;
 import pain.Scriptable;
 
 // no need to export those concepts

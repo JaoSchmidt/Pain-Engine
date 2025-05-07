@@ -1,13 +1,15 @@
 module;
 #include "Core.h"
 #include <SDL2/SDL.h>
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <string>
 export module pain.Application;
 import pain.SceneManager;
 import pain.DefaultImGui;
 import pain.ImGuiController;
 import pain.DeltaTime;
 import pain.Scene;
-import <string>;
 
 export namespace pain
 {

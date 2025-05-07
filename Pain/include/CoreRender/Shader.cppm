@@ -1,12 +1,12 @@
 module;
 #include "Core.h"
+#include <functional>
 #include <glad/gl.h>
 #include <glm/glm.hpp>
-
+#include <string>
+#include <utility>
+// #include "pch.h"
 export module pain.Shader;
-import <string>;
-import <utility>;
-import <functional>;
 
 export namespace pain
 {

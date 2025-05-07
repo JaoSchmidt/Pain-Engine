@@ -2,8 +2,11 @@ module;
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "imgui.h"
+#include <filesystem>
+#include <iomanip>
+#include <sstream>
+#include <string>
 module pain.DefaultImGui;
-import <string>;
 namespace pain
 {
 

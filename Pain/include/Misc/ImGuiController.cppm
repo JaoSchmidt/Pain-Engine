@@ -1,8 +1,8 @@
 module;
 #include "imgui.h"
 #include <SDL2/SDL.h>
+#include <vector>
 export module pain.ImGuiController;
-import <vector>;
 
 export namespace pain
 {

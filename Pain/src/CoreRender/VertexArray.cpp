@@ -1,9 +1,9 @@
 module;
 #include "glad/gl.h" // Including OpenGL headers in global fragment
+#include <memory>
 
 module pain.VertexArray;
 import pain.AllBuffers;
-import <memory>;
 
 namespace pain
 {

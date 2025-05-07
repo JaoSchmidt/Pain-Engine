@@ -1,9 +1,9 @@
 module;
 #include "CoreFiles/LogWrapper.h"
+#include <iterator>
+#include <vector>
 export module pain.IteratorArchetype;
 import pain.Entity;
-import <iterator>;
-import <vector>;
 
 export namespace reg
 {

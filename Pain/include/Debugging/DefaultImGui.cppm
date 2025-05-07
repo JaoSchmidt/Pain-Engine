@@ -1,8 +1,9 @@
 module;
 #include "Core.h"
+#include <memory>
+#include <string>
 export module pain.DefaultImGui;
 import pain.ImGuiController;
-import <memory>;
 
 // the purpose of this is to make a default ImGui controler for engine only
 // processes

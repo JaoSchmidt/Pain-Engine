@@ -1,10 +1,10 @@
 module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include <memory>
+#include <string>
 module pain.ShaderManager;
 import pain.Shader;
-import <string>;
-import <memory>;
 
 namespace pain
 {

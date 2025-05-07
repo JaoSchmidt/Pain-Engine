@@ -1,7 +1,7 @@
 module;
 module pain.CubeVertex;
+#include <memory>
 import pain.AllBuffers;
-import <memory>;
 
 namespace pain
 {

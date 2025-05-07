@@ -2,9 +2,9 @@ module;
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "glm/ext/matrix_transform.hpp"
+#include <array>
+#include <memory>
 module pain.Renderer2d;
-import <array>;
-import <memory>;
 import pain.CameraComponent;
 import pain.Rotation;
 

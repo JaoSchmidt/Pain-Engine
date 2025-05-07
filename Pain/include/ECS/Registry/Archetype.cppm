@@ -1,12 +1,14 @@
 module;
-#include "Core.h"
-#include "CoreFiles/LogWrapper.h"
+// #include "Core.h"
+// #include "CoreFiles/LogWrapper.h"
+#include <algorithm>
+#include <map>
+#include <tuple>
+#include <typeindex>
+#include <utility>
+#include <vector>
 export module pain.Archetype;
 import pain.Entity;
-import <algorithm>;
-import <map>;
-import <typeindex>;
-import <vector>;
 
 export namespace pain
 {
@@ -132,18 +134,18 @@ public:
   template <typename T> const T &fetchComponent(int entityIndex) const
   {
     const std::vector<T> &componentArray = getComponent<T>();
-    P_ASSERT((unsigned)entityIndex <= componentArray.size(),
-             "Entity index {} out of range on array of size {}", entityIndex,
-             componentArray.size());
+    // P_ASSERT((unsigned)entityIndex <= componentArray.size(),
+    // "Entity index {} out of range on array of size {}", entityIndex,
+    // componentArray.size());
     return componentArray[entityIndex];
   }
 
   template <typename T> T &fetchComponent(int entityIndex)
   {
     std::vector<T> &componentArray = getComponent<T>();
-    P_ASSERT((unsigned)entityIndex <= componentArray.size(),
-             "Entity index {} out of range on array of size {}", entityIndex,
-             componentArray.size());
+    // P_ASSERT((unsigned)entityIndex <= componentArray.size(),
+    //          "Entity index {} out of range on array of size {}", entityIndex,
+    //          componentArray.size());
     return componentArray[entityIndex];
   }
 
@@ -166,8 +168,8 @@ public:
     } else {
       auto [newIt, isInserted] = m_componentMap.emplace(
           std::type_index(typeid(C)), new std::vector<C>());
-      P_ASSERT(isInserted, "Could not create new component vector");
-      PLOG_I("New component bitmask added {}", typeid(C).name());
+      // P_ASSERT(isInserted, "Could not create new component vector");
+      // PLOG_I("New component bitmask added {}", typeid(C).name());
       return *static_cast<std::vector<C> *>(newIt->second);
     }
   }

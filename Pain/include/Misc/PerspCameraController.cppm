@@ -1,5 +1,6 @@
 module;
 #include "CoreFiles/LogWrapper.h"
+#include <SDL_events.h>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 export module pain.PerspCameraController;

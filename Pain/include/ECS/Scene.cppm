@@ -1,11 +1,12 @@
 module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include <SDL_events.h>
+#include <tuple>
 export module pain.Scene;
 import pain.Entity;
 import pain.ArcheRegistry;
 import pain.IteratorArchetype;
-import <tuple>;
 
 export namespace pain
 {

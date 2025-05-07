@@ -1,12 +1,12 @@
 // Texture.cppm
 module;
-#include "Core.h"
-#include "glad/gl.h"
-#include <SDL2/SDL_surface.h>
+#include "pch.h"
 
+#include "Core.h"
+#include <SDL2/SDL_surface.h>
+#include <cstdint>
+#include <string>
 export module pain.Texture;
-import <cstdint>;
-import <string>;
 
 export namespace pain
 {

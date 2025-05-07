@@ -1,9 +1,9 @@
 module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include <tuple>
 export module pain.Scriptable;
 import pain.Entity;
-import <tuple>;
 import pain.Scene;
 
 export namespace pain

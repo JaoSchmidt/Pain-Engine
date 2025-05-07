@@ -1,8 +1,9 @@
 module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include <string>
+#include <unordered_set>
 module pain.SceneManager;
-import <string>;
 import pain.Scene;
 
 namespace pain

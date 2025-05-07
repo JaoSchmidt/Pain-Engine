@@ -4,11 +4,11 @@ module;
 #include "Debugging/Profiling.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
+#include <array>
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
 
 module pain.Renderer2d;
-import <array>;
-import <memory>;
 import pain.Particle;
 import pain.AllBuffers;
 import pain.BufferLayout;

@@ -1,5 +1,8 @@
 module;
 #include "Core.h"
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 export module pain.SceneManager;
 import pain.Scene;
 

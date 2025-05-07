@@ -1,8 +1,8 @@
 module;
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
+#include <vector>;
 export module pain.Font;
 import pain.Texture;
-import <vector>;
 
 export namespace pain
 {

@@ -1,11 +1,16 @@
 module;
 #include "CoreFiles/LogWrapper.h"
+#include <iterator>
+#include <map>
+#include <tuple>
+#include <typeindex>
+#include <utility>
+#include <vector>
+// #include "pch.h"
 export module pain.ArcheRegistry;
 import pain.Archetype;
 import pain.IteratorArchetype;
 import pain.Entity;
-import <map>;
-import <typeindex>;
 
 export namespace pain
 {

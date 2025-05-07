@@ -1,8 +1,9 @@
 module;
 #include "CoreFiles/LogWrapper.h"
 #include "glm/geometric.hpp"
-#include <SDL2/SDL_events.h>
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
+#include <SDL_events.h>
 module pain.PerspCameraController;
 import pain.DeltaTime;
 import pain.Camera;

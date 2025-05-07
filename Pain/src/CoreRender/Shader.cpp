@@ -1,14 +1,16 @@
 module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "glad/gl.h"
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <glad/gl.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <sstream>
+#include <string>
+#include <utility>
 
 module pain.Shader;
-import <filesystem>;
-import <string>;
-import <utility>;
-import <functional>;
 
 namespace pain
 {

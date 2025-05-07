@@ -2,11 +2,11 @@
 module;
 #include "CoreFiles/LogWrapper.h"
 #include "glad/gl.h"
+#include <cstdint>
 
 module pain.Texture;
 import pain.Renderer2d;
 import pain.ResourceManager;
-import <cstdint>;
 
 namespace pain
 {

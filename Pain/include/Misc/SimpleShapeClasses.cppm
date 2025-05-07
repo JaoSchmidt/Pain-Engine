@@ -1,12 +1,12 @@
 module;
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
+#include <memory>
 export module pain.SimpleShapeClasses;
 import pain.VertexArray;
 import pain.Shader;
 import pain.BufferLayout;
 import pain.AllBuffers;
-import <memory>;
 
 // ======================================== //
 // ATTENTION

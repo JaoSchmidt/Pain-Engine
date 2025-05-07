@@ -1,10 +1,10 @@
 module;
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
+#include <utility>
 
 export module pain.Sprite;
 import pain.Texture;
-import <utility>;
 
 export namespace pain
 {

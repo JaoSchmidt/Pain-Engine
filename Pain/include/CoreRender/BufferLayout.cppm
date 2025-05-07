@@ -1,9 +1,12 @@
 module;
-#include <cstdint>
+#include "Core.h"
 #include <glad/gl.h>
+
+#include <cstdint>
+#include <initializer_list>
+#include <string>
+#include <vector>
 export module pain.BufferLayout;
-import <string>;
-import <vector>;
 
 export namespace pain
 {
@@ -135,6 +138,7 @@ public:
   {
     return m_Elements.end();
   }
+  BufferLayout &operator=(const BufferLayout &) = default;
 
 private:
   void CalculateOffsetsAndStride()

@@ -1,8 +1,8 @@
 module;
 #include "Core.h"
+#include <memory>
+#include <vector>
 export module pain.VertexArray;
-import <memory>;
-import <vector>;
 
 import pain.AllBuffers;
 

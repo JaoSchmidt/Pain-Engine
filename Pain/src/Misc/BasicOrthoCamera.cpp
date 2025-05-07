@@ -1,8 +1,8 @@
 module;
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
+#include <algorithm>
 module pain.BasicOrthoCamera;
-import <algorithm>;
 import pain.CameraComponent;
 import pain.Movement;
 import pain.NativeScript;

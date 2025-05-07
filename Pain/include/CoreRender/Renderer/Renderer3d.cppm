@@ -1,13 +1,13 @@
 module;
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
+#include <memory>
 export module pain.Renderer3d;
 import pain.VertexArray;
 import pain.Shader;
 import pain.Camera;
 import pain.CubeVertex;
 import pain.PerspCameraController;
-import <memory>;
 
 export namespace pain
 {

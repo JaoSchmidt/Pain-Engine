@@ -1,3 +1,7 @@
+module;
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <tuple>
 module pain.BasicShape;
 import pain.Movement;
 import pain.Sprite;

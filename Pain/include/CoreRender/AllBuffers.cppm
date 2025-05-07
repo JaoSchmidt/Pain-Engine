@@ -1,8 +1,8 @@
 module;
+#include <cstdint>
 
 #include "Core.h"
 export module pain.AllBuffers;
-import <cstdint>;
 import pain.BufferLayout;
 
 export namespace pain

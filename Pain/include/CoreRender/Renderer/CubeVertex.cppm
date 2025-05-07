@@ -1,12 +1,12 @@
 module;
 #include <glm/glm.hpp>
+#include <memory>
 export module pain.CubeVertex;
 import pain.Texture;
 import pain.Shader;
 import pain.VertexArray;
 import pain.AllBuffers;
 import pain.BufferLayout;
-import <memory>;
 
 export namespace pain
 {

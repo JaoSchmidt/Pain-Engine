@@ -1,5 +1,6 @@
 module;
 #include <memory>
+#include <string>
 #include <unordered_map>
 export module pain.ShaderManager;
 

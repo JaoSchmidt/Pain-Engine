@@ -1,10 +1,10 @@
 module;
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include <typeindex>
+#include <unordered_map>
 export module pain.Registry;
 import pain.Entity;
-import <typeindex>;
-import <unordered_map>;
 
 export namespace pain
 {

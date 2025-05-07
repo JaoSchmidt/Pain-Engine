@@ -17,7 +17,11 @@ message("Finding the modules:")
 # foreach(source ${MODULES})
 #   message("- ${source}")
 # endforeach()
-target_sources(${LIBRARY_NAME} PUBLIC FILE_SET CXX_MODULES FILES ${MODULES})
+target_sources(
+  ${LIBRARY_NAME}
+  PUBLIC FILE_SET CXX_MODULES FILES ${MODULES}
+  PRIVATE ${SOURCES}
+)
 set(BUILD_SHARED_LIBS OFF)
 
 target_include_directories(
@@ -27,8 +31,11 @@ target_include_directories(
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
 )
-set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set_target_properties(
+  ${LIBRARY_NAME}
+  PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON
+)
+target_compile_features(${LIBRARY_NAME} PRIVATE cxx_std_20)
 set(CMAKE_CXX_STANDARD 20)
 remove_definitions("-DNDEBUG")
 
@@ -93,59 +100,89 @@ set(SPDLOG_BUILD_SHARED OFF)
 include(FetchContent)
 
 # GLM
-message("Fetching glm")
-FetchContent_Declare(
-  glm
-  GIT_REPOSITORY https://github.com/g-truc/glm.git
-  GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e
-)
-FetchContent_MakeAvailable(glm)
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/glm/CMakeLists.txt")
+  message("Fetching glm")
+  FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e
+  )
+  FetchContent_MakeAvailable(glm)
+else()
+  message("Using submodule for glm")
+  add_subdirectory(Pain/external/glm)
+endif()
 
 message("Bulding glad")
 add_subdirectory(Pain/external/glad)
 
 # SPDLOG
-FetchContent_Declare(
-  spdlog
-  GIT_REPOSITORY https://github.com/gabime/spdlog.git
-  GIT_TAG v1.15.2
-)
-FetchContent_MakeAvailable(spdlog)
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/spdlog/CMakeLists.txt")
+  FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.15.2
+  )
+  FetchContent_MakeAvailable(spdlog)
+else()
+  message("Using submodule for spdlog")
+  add_subdirectory(Pain/external/spdlog)
+endif()
 
-message("Fetching SDL")
-FetchContent_Declare(
-  SDL
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-  GIT_TAG
-    6be87ceb33a9aad3bf5204bb13b3a5e8b498fd26 # release-2.32.2 fixed
-)
-FetchContent_MakeAvailable(SDL)
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/SDL/CMakeLists.txt")
+  message("Fetching SDL")
+  FetchContent_Declare(
+    SDL
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG
+      6be87ceb33a9aad3bf5204bb13b3a5e8b498fd26 # release-2.32.2 fixed
+  )
+  FetchContent_MakeAvailable(SDL)
+else()
+  message("Using submodule for SDL")
+  add_subdirectory(Pain/external/SDL)
+endif()
 
-message("Fetching SDL_image")
-FetchContent_Declare(
-  SDL_image
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-  GIT_TAG release-2.8.2
-)
-FetchContent_MakeAvailable(SDL_image)
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/SDL_image/CMakeLists.txt")
+  message("Fetching SDL_image")
+  FetchContent_Declare(
+    SDL_image
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+    GIT_TAG release-2.8.2
+  )
+  FetchContent_MakeAvailable(SDL_image)
+else()
+  message("Using submodule for SDL_image")
+  add_subdirectory(Pain/external/SDL_image)
+endif()
 
-message("Fetching Imgui")
-# FetchContent_Declare(
-#   imgui
-#   GIT_REPOSITORY https://github.com/ocornut/imgui
-#   PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
-#   GIT_TAG v1.91.6-docking
-#   UPDATE_DISCONNECTED 1
-# )
-# FetchContent_MakeAvailable(imgui)
-add_subdirectory("Pain/external/imgui")
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/CMakeLists.txt")
+  message("Fetching Imgui")
+  FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui
+    PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
+    GIT_TAG v1.91.6-docking
+    UPDATE_DISCONNECTED 1
+  )
+  FetchContent_MakeAvailable(imgui)
+else()
+  message("Using submodule for imgui")
+  add_subdirectory("Pain/external/imgui")
+endif()
 
 # msdf-atlas-gen
-FetchContent_Declare(
-  msdf-atlas-gen
-  GIT_REPOSITORY https://github.com/jaoschmidt/msdf-atlas-gen.git
-)
-FetchContent_MakeAvailable(msdf-atlas-gen)
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/CMakeLists.txt")
+  message("Fetching msdf-atlas-gen")
+  FetchContent_Declare(
+    msdf-atlas-gen
+    GIT_REPOSITORY https://github.com/jaoschmidt/msdf-atlas-gen.git
+  )
+  FetchContent_MakeAvailable(msdf-atlas-gen)
+else()
+  message("Using submodule for msdf-atlas-gen")
+  add_subdirectory("Pain/external/msdf-atlas-gen")
+endif()
 
 find_package(OpenGL REQUIRED)
 
@@ -163,10 +200,10 @@ target_link_libraries(
     msdf-atlas-gen
 )
 
-# target_precompile_headers(
-#   ${LIBRARY_NAME}
-#   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h
-# )
+target_precompile_headers(
+  ${LIBRARY_NAME}
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h
+)
 
 # =========== Resources/Assets Managment ==================================
 
