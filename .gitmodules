@@ -25,3 +25,6 @@
 [submodule "Pain/external/PerlinNoise"]
 	path = Pain/external/PerlinNoise
 	url = https://github.com/Reputeless/PerlinNoise.git
+[submodule "Pain/external/Lua"]
+	path = Pain/external/Lua
+	url = https://github.com/walterschell/Lua.git
