@@ -25,10 +25,9 @@ RUN apt-get update && apt-get install -y \
 
 # Install latest cmake here
 # ...
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7-linux-x86_64.sh
-RUN mkdir /opt/cmake
-RUN yes | sh cmake-3.31.7-linux-x86_64.sh --prefix=/opt/cmake
-RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7-linux-x86_64.tar.gz
+RUN tar -xvzf cmake-3.31.7-linux-x86_64.tar.gz
+RUN sudo cp -r cmake-3.31.7-linux-x86_64/* /usr/local
 
 # These dependencies are not installed by default on ubuntu
 RUN apt-get install -y \
