@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
 # Install latest cmake here
 # ...
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7-linux-x86_64.sh
-RUN mkdir /opt/cmake
+RUN yes | mkdir /opt/cmake
 RUN sh cmake-3.31.7-linux-x86_64.sh --prefix=/opt/cmake
 RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 
