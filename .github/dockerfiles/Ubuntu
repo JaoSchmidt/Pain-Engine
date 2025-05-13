@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y \
 # ...
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7-linux-x86_64.tar.gz
 RUN tar -xvzf cmake-3.31.7-linux-x86_64.tar.gz
-RUN sudo cp -r cmake-3.31.7-linux-x86_64/* /usr/local
+RUN cp -r cmake-3.31.7-linux-x86_64/* /usr/local
 
 # These dependencies are not installed by default on ubuntu
 RUN apt-get install -y \
