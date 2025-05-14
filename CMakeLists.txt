@@ -199,9 +199,6 @@ endif()
 
 find_package(OpenGL REQUIRED)
 
-message("Using submodule for lua")
-add_subdirectory("Pain/external/lua")
-
 target_link_libraries(
   ${LIBRARY_NAME}
   PUBLIC
