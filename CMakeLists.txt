@@ -11,8 +11,8 @@ project(${PROJECT_NAME} VERSION 0.1.0)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp")
 add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 
-file(GLOB_RECURSE MODULES "Pain/include/*.cppm")
-message("Finding the modules:")
+# file(GLOB_RECURSE MODULES "Pain/include/*.cppm")
+# message("Finding the modules:")
 
 # foreach(source ${MODULES})
 #   message("- ${source}")
@@ -75,11 +75,11 @@ elseif(
       # -Wno-unused-parameter
       # -Wmissing-field-initializers
       # -Wno-sign-conversion
-      -fmodules
+      # -fmodules
+      # -fmodules-cache-path=./module-cache
       -ftemplate-backtrace-limit=0
       -fcolor-diagnostics
       -std=c++20
-      -stdlib=libc++
       # specific to clang
       -Wreturn-std-move
       -Wself-move

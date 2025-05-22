@@ -2,8 +2,7 @@
 
 #include <SDL2/SDL_surface.h>
 
-// #include <SDL_image.h>
-#include "external/SDL_image/include/SDL_image.h"
+#include <SDL_image.h>
 namespace pain
 {
 
