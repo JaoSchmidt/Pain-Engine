@@ -1,7 +1,6 @@
 # #/bin/bash/
 # Set the default compiler
-# DEFAULT_COMPILER="clang++"
-DEFAULT_COMPILER="/opt/clang/latest/bin/clang++"
+DEFAULT_COMPILER="clang++"
 
 # Set the path to your MinGW installation
 MINGW_PATH="/usr/x86_64-w64-mingw32"

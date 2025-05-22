@@ -3,8 +3,8 @@
 #include "CoreFiles/ImGuiController.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "SDL_timer.h"
 #include "glm/fwd.hpp"
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_version.h>
 #include <cmath>
 #include <thread>

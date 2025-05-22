@@ -98,6 +98,33 @@ endif()
 set(SPDLOG_BUILD_SHARED OFF)
 
 include(FetchContent)
+# the function purpose is on its name
+function(apply_git_patch patch_file work_dir)
+	# First check if patch can be ENTIRELY applied
+  execute_process(
+    COMMAND git apply --check "${patch_file}"
+    WORKING_DIRECTORY "${work_dir}"
+    RESULT_VARIABLE PATCH_CHECK_RESULT
+    OUTPUT_QUIET
+    ERROR_QUIET
+  )
+
+  if(PATCH_CHECK_RESULT EQUAL 0)
+    execute_process(
+      COMMAND git apply "${patch_file}"
+      WORKING_DIRECTORY "${work_dir}"
+      RESULT_VARIABLE PATCH_RESULT
+    )
+
+    if(PATCH_RESULT EQUAL 0)
+      message("Successfully applied patch: ${patch_file}")
+    else()
+      message(WARNING "Failed to apply patch: ${patch_file}. Error code: ${PATCH_RESULT}")
+    endif()
+  else()
+    message("Skipping patch ${patch_file}: already applied or not applicable.")
+  endif()
+endfunction()
 
 # GLM
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/glm/CMakeLists.txt")
@@ -156,6 +183,10 @@ else()
   add_subdirectory(Pain/external/SDL_image)
 endif()
 
+apply_git_patch(
+	"${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch"
+	"${CMAKE_SOURCE_DIR}/Pain/external/imgui"
+)
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/CMakeLists.txt")
   message("Fetching Imgui")
   FetchContent_Declare(
@@ -221,7 +252,7 @@ target_precompile_headers(
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/spriteGame")
+set(GAME_FOLDER "Example/scriptGame")
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT
 # Define custom target to rsync resources
