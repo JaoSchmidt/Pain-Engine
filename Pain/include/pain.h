@@ -32,6 +32,8 @@
 #include "ECS/Scene.h"
 #include "ECS/SceneManager.h"
 #include "ECS/Scriptable.h"
+// Scripts
+#include "Scripting/Component.h"
 
 #include <SDL2/SDL_events.h>
 

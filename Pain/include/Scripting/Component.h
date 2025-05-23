@@ -1,13 +1,14 @@
 #pragma once
 #include <SDL2/SDL_events.h>
+extern "C" {
 #include <lua.h>
+}
 
 namespace pain
 {
 struct LuaScriptComponent {
   const char *m_scriptPath;
   lua_State *m_L = nullptr;
-  LuaScriptComponent() = default;
   LuaScriptComponent(const char *scriptPath);
   ~LuaScriptComponent();
   void onCreate();
