@@ -28,3 +28,6 @@
 [submodule "Pain/external/Lua"]
 	path = Pain/external/Lua
 	url = https://github.com/walterschell/Lua.git
+[submodule "Pain/external/sol2"]
+	path = Pain/external/sol2
+	url = git@github.com:ThePhD/sol2.git

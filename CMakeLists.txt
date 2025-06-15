@@ -100,7 +100,7 @@ set(SPDLOG_BUILD_SHARED OFF)
 include(FetchContent)
 # the function purpose is on its name
 function(apply_git_patch patch_file work_dir)
-	# First check if patch can be ENTIRELY applied
+  # First check if patch can be ENTIRELY applied
   execute_process(
     COMMAND git apply --check "${patch_file}"
     WORKING_DIRECTORY "${work_dir}"
@@ -119,7 +119,10 @@ function(apply_git_patch patch_file work_dir)
     if(PATCH_RESULT EQUAL 0)
       message("Successfully applied patch: ${patch_file}")
     else()
-      message(WARNING "Failed to apply patch: ${patch_file}. Error code: ${PATCH_RESULT}")
+      message(
+        WARNING
+        "Failed to apply patch: ${patch_file}. Error code: ${PATCH_RESULT}"
+      )
     endif()
   else()
     message("Skipping patch ${patch_file}: already applied or not applicable.")
@@ -183,27 +186,27 @@ else()
   add_subdirectory(Pain/external/SDL_image)
 endif()
 
-apply_git_patch(
-	"${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch"
-	"${CMAKE_SOURCE_DIR}/Pain/external/imgui"
-)
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/CMakeLists.txt")
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/.git")
   message("Fetching Imgui")
   FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui
     PATCH_COMMAND git apply ${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch
-    GIT_TAG v1.91.6-docking
+    GIT_TAG v1.91.9b-docking
     UPDATE_DISCONNECTED 1
   )
   FetchContent_MakeAvailable(imgui)
 else()
   message("Using submodule for imgui")
+  apply_git_patch(
+    	"${PROJECT_SOURCE_DIR}/.github/patches/imgui.patch"
+    	"${CMAKE_SOURCE_DIR}/Pain/external/imgui"
+  )
   add_subdirectory("Pain/external/imgui")
 endif()
 
 # msdf-atlas-gen
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/CMakeLists.txt")
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/msdf-atlas-gen/.git")
   message("Fetching msdf-atlas-gen")
   FetchContent_Declare(
     msdf-atlas-gen
@@ -228,6 +231,19 @@ else()
   add_subdirectory("Pain/external/Lua")
 endif()
 
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/sol2/.git")
+  message("Fetching Sol2")
+  FetchContent_Declare(
+    sol2
+    GIT_REPOSITORY https://github.com/ThePhD/sol2.git
+    GIT_TAG v3.3.0
+  )
+  FetchContent_MakeAvailable(sol2)
+else()
+  message("Using submodule for sol2")
+  add_subdirectory("Pain/external/sol2")
+endif()
+
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(
@@ -243,6 +259,7 @@ target_link_libraries(
     spdlog::spdlog_header_only
     imgui
     msdf-atlas-gen
+    sol2::sol2
 )
 
 target_precompile_headers(

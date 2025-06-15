@@ -9,16 +9,25 @@
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "SDL_events.h"
+#include "Scripting/State.h"
 
 namespace pain
 {
-
-Scene::Scene() : m_registry(new ArcheRegistry())
+void Scene::initializeScript(Scene *scene, NativeScriptComponent &nsc, Entity e,
+                             Bitmask archetype)
 {
-  m_registry->createBitMasks<
-      MovementComponent, RotationComponent, TransformComponent,
-      ParticleSprayComponent, NativeScriptComponent, SpriteComponent,
-      SpritelessComponent, TrianguleComponent, OrthoCameraComponent>();
+  if (!nsc.instance) {
+    nsc.instantiateFunction(nsc.instance);
+    nsc.instance->m_scene = scene;
+    nsc.instance->m_entity = e;
+    nsc.instance->m_bitmask = archetype;
+
+    if (nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
+  }
+}
+Scene::Scene() : m_registry(new ArcheRegistry()), m_luaState(createLuaState())
+{
 }
 // TODO: Create way to move and copy components to another scene
 

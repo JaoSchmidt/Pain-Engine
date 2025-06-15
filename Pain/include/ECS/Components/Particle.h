@@ -45,7 +45,7 @@ struct ParticleSprayComponent {
     for (int i = 0; i < m_maxNumberOfParticles; i++) {
       Particle particle;
       m_particles.push_back(particle);
-      const float rando = (float)rand() / RAND_MAX;
+      const float rando = (float)rand() / (float)RAND_MAX;
       particle.m_rotationSpeed = rando;
       particle.m_alive = false;
     }

@@ -6,21 +6,27 @@
 #include <utility>
 
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Components/NativeScript.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "Entity.h"
+#include <sol/sol.hpp>
 
 namespace pain
 {
-template <typename... ObjectComponents> class GameObject;
+
+class GameObject;
 
 class Scene
 {
 private:
   ArcheRegistry *m_registry;
+  sol::state m_luaState;
 
 public:
   Scene();
   ~Scene() { delete m_registry; };
+  void initializeScript(Scene *scene, NativeScriptComponent &nsc, Entity entity,
+                        Bitmask archetype);
 
   Entity createEntity();
   void destroyEntity(Entity entity);
@@ -28,6 +34,8 @@ public:
   virtual void onRender(double realTime) = 0;
   virtual void onUpdate(double deltaTime) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
+
+  sol::state &getSharedLuaState() { return m_luaState; }
 
   // ---------------------------------------------------- //
   // Component Archetype stuff
@@ -51,40 +59,53 @@ public:
   // ---------------------------------------------------- //
   // get multiple components together as a tuple
   template <typename... Components>
-  std::tuple<Components &...> getAllComponents(Entity entity)
+  std::tuple<Components &...> getComponents(Entity entity, Bitmask bitmask)
   {
-    return m_registry->getAllComponents<Components...>(entity);
+    return m_registry->getComponents<Components...>(entity, bitmask);
   }
   // get multiple components together as a tuple
   template <typename... Components>
-  const std::tuple<const Components &...> getAllComponents(Entity entity) const
+  const std::tuple<const Components &...> getComponents(Entity entity,
+                                                        Bitmask bitmask) const
   {
     return static_cast<const ArcheRegistry *>(m_registry)
-        ->getAllComponents<Components...>(entity);
+        ->getComponents<Components...>(entity, bitmask);
   }
-
   // get a single component
-  template <typename T, typename... Components> T &getComponent(Entity entity)
+  template <typename T> T &getComponent(Entity entity, Bitmask bitmask)
   {
-    return m_registry->getComponent<T, Components...>(entity);
+    return m_registry->getComponent<T>(entity, bitmask);
   }
   // get a single component
-  template <typename T, typename... Components>
-  const T &getComponent(Entity entity) const
+  template <typename T>
+  const T &getComponent(Entity entity, Bitmask bitmask) const
   {
     return static_cast<const ArcheRegistry *>(m_registry)
-        ->getComponent<T, Components...>(entity);
+        ->getComponent<T>(entity, bitmask);
   }
-
-  template <typename... TargetComponents, typename... ObjectComponents>
-  bool hasComponent(Entity entity) const
+  // ---------------------------------------------------- //
+  // "Has" functions
+  // ---------------------------------------------------- //
+  template <typename... TargetComponents>
+  constexpr bool hasAnyComponents(int bitmask) const
   {
-    return m_registry->has<TargetComponents..., ObjectComponents...>(entity);
+    return static_cast<const ArcheRegistry *>(m_registry)
+        ->hasAny<TargetComponents...>(bitmask);
+  }
+  template <typename... TargetComponents>
+  constexpr bool containsAllComponents(int bitmask) const
+  {
+    return static_cast<const ArcheRegistry *>(m_registry)
+        ->containsAll<TargetComponents...>(bitmask);
   }
   // remove an entity, alongside its components from it's archetype
-  template <typename... ObjectComponents> bool removeEntity(Entity entity)
+  bool removeEntity(Entity entity, int bitmask)
   {
-    return m_registry->remove<ObjectComponents...>(entity);
+    if (m_registry->remove(entity, bitmask)) {
+      destroyEntity(entity);
+      return true;
+    } else
+      return false;
   }
   // Remove components of an entity
   // template <typename... TargetComponents, typename... ObjectComponents>

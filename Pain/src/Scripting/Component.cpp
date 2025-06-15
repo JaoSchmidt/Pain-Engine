@@ -1,125 +1,125 @@
 #include "Scripting/Component.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-
-extern "C" {
-#include <lauxlib.h>
-#include <lualib.h>
-}
+#include "ECS/Scriptable.h"
+#include <sol/forward.hpp>
+#include <sol/sol.hpp>
+#include <sol/types.hpp>
 
 namespace pain
 {
-int custom_print(lua_State *L)
+void custom_print(const std::string &str) { PLOG_I("{}", str); }
+
+LuaScriptComponent::LuaScriptComponent(const char *scriptPath,
+                                       sol::state &solState)
+    : m_scriptPath(scriptPath), m_lua(solState),
+      m_env(solState, sol::create, solState.globals())
 {
-  int nargs = lua_gettop(L);
-  for (int i = 1; i <= nargs; i++) {
-    const char *str = lua_tostring(L, i);
-    if (str) {
-      // TODO: custom spdlog::logger just for lua environment
-      PLOG_I("{}", str);
-    }
+  sol::load_result script = m_lua.load_file(m_scriptPath);
+  if (!script.valid()) {
+    sol::error err = script;
+    PLOG_E("Error loading Lua script: {}", err.what());
   }
-  return 0;
+
+  // NOTE: instead of setting an environment, there is also the option of
+  // setting an new custom LuaScriptComponent usertype which stores the local
+  // stuff. Not that will have any difference imho. It's just another philosophy
+  // that accomplishes the same goal
+  set_environment(m_env, script);
+  sol::protected_function_result result =
+      script(); // will place everything inside an anonymous function and run
+  if (!result.valid()) {
+    sol::error err = result;
+    PLOG_E("Error loading lua script: {}", err.what());
+    return;
+  }
+
+  // Store references to possible callbacks
+  m_onUpdate = m_env["onUpdate"];
+  m_onCreate = m_env["onCreate"];
+  m_onDestroy = m_env["onDestroy"];
+  //
+  // m_lua.set_function();
+  m_lua.new_usertype<glm::vec3>(
+      "vec3", sol::constructors<glm::vec3(), glm::vec3(float, float, float)>(),
+      "x", &glm::vec3::x, "y", &glm::vec3::y, "z", &glm::vec3::z);
+}
+void LuaScriptComponent::InitializeScript()
+{
+  if (hasAnyComponents<TransformComponent>()) {
+    m_lua.new_usertype<TransformComponent>(
+        "TransformComponent", sol::constructors<TransformComponent()>(),
+        "m_position", &TransformComponent::m_position);
+    setTemplateFunction<TransformComponent>("getPosition");
+  }
+  if (hasAnyComponents<MovementComponent>()) {
+    m_lua.new_usertype<MovementComponent>(
+        "MovementComponent", sol::constructors<MovementComponent()>(), //
+        "m_velocity", &MovementComponent::m_velocityDir,               //
+        "m_translationSpeed", &MovementComponent::m_translationSpeed,  //
+        "m_rotationSpeed", &MovementComponent::m_rotationSpeed);
+    setTemplateFunction<MovementComponent>("getMovement");
+  }
+  if (hasAnyComponents<SpriteComponent>()) {
+    m_lua.new_usertype<SpriteComponent>(
+        "SpriteComponent", sol::constructors<SpriteComponent()>(), //
+        "m_size", &SpriteComponent::m_size,                        //
+        "m_color", &SpriteComponent::m_color,                      //
+        "m_tilingFactor", &SpriteComponent::m_tilingFactor,        //
+        "m_ptexture", &SpriteComponent::m_ptexture                 //
+    );
+    setTemplateFunction<SpriteComponent>("getSprite");
+  }
+  if (hasAnyComponents<MovementComponent>()) {
+    m_lua.new_usertype<MovementComponent>(
+        "MovementComponent", sol::constructors<MovementComponent()>(), //
+        "m_velocity", &MovementComponent::m_velocityDir,               //
+        "m_translationSpeed", &MovementComponent::m_translationSpeed,  //
+        "m_rotationSpeed", &MovementComponent::m_rotationSpeed);
+    setTemplateFunction<MovementComponent>("getMovement");
+  }
 }
 
-LuaScriptComponent::LuaScriptComponent(const char *scriptPath)
-    : m_scriptPath(scriptPath)
+void LuaScriptComponent::onCreate()
 {
-  m_L = luaL_newstate();
-  luaL_openlibs(m_L);
-  lua_pushcfunction(m_L, custom_print);
-  lua_setglobal(m_L, "print");
-  if (luaL_dofile(m_L, m_scriptPath) != LUA_OK) {
-    PLOG_E("Error loading Lua script: {}", lua_tostring(m_L, -1));
-    lua_pop(m_L, 1);
-  } else {
-    PLOG_I("Loading Lua script: {}", lua_tostring(m_L, -1));
+  if (m_onCreate) {
+    sol::protected_function_result result = m_onCreate();
+    if (!result.valid()) {
+      PLOG_E("Lua error (onCreate): {}", result.get<sol::error>().what());
+    }
   }
 }
-void LuaScriptComponent::onCreate() { callIfExists("onCreate"); }
 void LuaScriptComponent::onUpdate(double deltaTime)
 {
-  lua_getglobal(m_L, "onUpdate");
-  if (lua_isfunction(m_L, -1)) {
-    lua_pushnumber(m_L, deltaTime);
-    if (lua_pcall(m_L, 0, 0, 0) != LUA_OK) {
-      PLOG_E("Lua error (onUpdate): %s", lua_tostring(m_L, -1));
-      lua_pop(m_L, 1);
+  if (m_onUpdate) {
+    sol::protected_function_result result = m_onUpdate(deltaTime);
+    if (!result.valid()) {
+      PLOG_E("Lua error (onUpdate): {}", result.get<sol::error>().what());
     }
-  } else {
-    PLOG_W("Function onUpdate wasn't find inside lua script {}", m_scriptPath);
-    lua_pop(m_L, 1);
   }
 }
-void LuaScriptComponent::onDestroy() { callIfExists("onDestroy"); }
-void LuaScriptComponent::onEvent(const SDL_Event *event) {}
-LuaScriptComponent::~LuaScriptComponent()
+void LuaScriptComponent::onDestroy()
 {
-  if (m_L) {
-    lua_close(m_L);
-    m_L = nullptr;
+  if (m_onDestroy) {
+    sol::protected_function_result result = m_onDestroy();
+    if (!result.valid()) {
+      PLOG_E("Lua error (onDestroy): {}", result.get<sol::error>().what());
+    }
   }
 }
-
-void LuaScriptComponent::callIfExists(const char *name)
+void LuaScriptComponent::onEvent(const SDL_Event *event)
 {
-  lua_getglobal(m_L, name);
-  if (lua_isfunction(m_L, -1)) {
-    if (lua_pcall(m_L, 0, 0, 0) != LUA_OK) {
-      PLOG_E("Lua error (%s): %s", name, lua_tostring(m_L, -1));
-      lua_pop(m_L, 1);
-    }
-  } else {
-    PLOG_W("Function {} wasn't find inside lua script {}", name, m_scriptPath);
-    lua_pop(m_L, 1);
-  }
+  // not implemented yet
 }
 
-int LuaScriptComponent::standAlone()
+LuaScriptComponent &
+LuaScriptComponent::operator=(LuaScriptComponent &&other) noexcept
 {
-  char buff[256];
-  int error;
-  lua_State *L = luaL_newstate(); /* opens Lua */
-  luaL_openlibs(L); /* open libraries basic, table, I/O, string, math */
-
-  while (fgets(buff, sizeof(buff), stdin) != NULL) {
-    error = luaL_loadstring(L, buff) || lua_pcall(L, 0, 0, 0);
-    if (error) {
-      PLOG_E("Lua error (%s): %s", lua_tostring(m_L, -1));
-      lua_pop(L, 1); /* pop error message from the stack */
-      return 1;
-    }
+  if (this != &other) {
+    m_lua = std::move(other.m_lua);
+    m_scriptPath = std::move(other.m_scriptPath);
   }
-
-  lua_close(L);
-  return 0;
-}
-
-void LuaScriptComponent::stackDump(lua_State *L)
-{
-  int i;
-  int top = lua_gettop(L);     /* depth of the stack */
-  for (i = 1; i <= top; i++) { /* repeat for each level */
-    int t = lua_type(L, i);
-    switch (t) {
-    case LUA_TSTRING: { /* strings */
-      PLOG_I("{}, ", lua_tostring(L, i));
-      break;
-    }
-    case LUA_TBOOLEAN: { /* Booleans */
-      PLOG_I("{}, ", lua_toboolean(L, i) ? "true" : "false");
-      break;
-    }
-    case LUA_TNUMBER: { /* numbers */
-      PLOG_I("{}, ", lua_tonumber(L, i));
-      break;
-    }
-    default: { /* other values */
-      PLOG_I("{}, ", lua_typename(L, t));
-      break;
-    }
-    }
-  }
+  return *this;
 }
 
 } // namespace pain

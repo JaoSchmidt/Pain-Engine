@@ -29,12 +29,12 @@ extern const Texture *m_fontAtlasTexture;
 
 // OrthoCameraEntity *m_cameraEntity = nullptr;
 
-static const OrthoCameraEntity *m_cameraEntity = nullptr;
+static const OrthoCamera *m_cameraEntity = nullptr;
 // ================================================================= //
 // Render initialization and destruction
 // ================================================================= //
 
-void init(const OrthoCameraEntity &cameraEntity)
+void init(const OrthoCamera &cameraEntity)
 {
   // NOTE: This enable 3d and can be changed later in case we need some camera
   // mechanic
@@ -70,32 +70,33 @@ void setClearColor(const glm::vec4 &color)
   glClearColor(color.r, color.g, color.b, color.a);
 }
 
-void beginScene(float globalTime, const glm::mat4 &transform)
+void beginScene(const Scene &scene, float globalTime,
+                const glm::mat4 &transform)
 {
   PROFILE_FUNCTION();
   const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
+      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>(scene);
 
   uploadBasicUniforms(cameraComponent.m_camera->getViewProjectionMatrix(),
                       globalTime, transform);
   goBackToFirstVertex();
 }
 
-void flush()
+void flush(const Scene &scene)
 {
   PROFILE_FUNCTION();
   // bindTextures();
   const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
+      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>(scene);
   drawBatches(cameraComponent.m_camera->getViewProjectionMatrix());
 }
 
-void endScene()
+void endScene(const Scene &scene)
 {
   // quadBatch->sendAllDataToOpenGL();
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
   // otherwise flush() wouldn't need to be a function
-  flush();
+  flush(scene);
 }
 
 void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,

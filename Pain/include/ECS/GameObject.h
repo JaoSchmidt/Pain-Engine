@@ -10,19 +10,21 @@ namespace pain
 {
 
 // Allows easy manipulation of a game object without writing long functions
-template <typename... ObjectComponents> class GameObject
+class GameObject
 {
 public:
   inline Entity getEntity() const { return m_entity; }
-  GameObject(Scene *scene) : m_scene(scene)
+  template <typename... Components> GameObject(Scene *scene) : m_scene(scene)
   {
     m_entity = scene->createEntity();
+    m_bitmask = ComponentManager::multiComponentBitmask<Components...>();
   }
 
-  // Remove the entity, alongside its components from it's archetype
   ~GameObject()
   {
-    m_scene->removeEntity<ObjectComponents...>(m_entity);
+    // Remove the entity, alongside its components from it's archetype
+    m_scene->removeEntity(m_entity, m_bitmask);
+    // Remove the entity from the queue
     m_scene->destroyEntity(m_entity);
   }
   template <typename... Components>
@@ -39,38 +41,34 @@ public:
   // ---------------------------------------------------- //
   // Get components from archetypes
   // ---------------------------------------------------- //
-  std::tuple<ObjectComponents &...> getAllComponents()
+  template <typename... Components> std::tuple<Components &...> getComponents()
   {
     PROFILE_FUNCTION();
-    return m_scene->getAllComponents<ObjectComponents...>(m_entity);
+    return m_scene->getComponents<Components...>(m_entity, m_bitmask);
   }
-  const std::tuple<ObjectComponents &...> getAllComponents() const
+  template <typename... Components>
+  std::tuple<Components &...> getComponents() const
   {
     PROFILE_FUNCTION();
-    return static_cast<const Scene *>(m_scene)
-        ->getAllComponents<ObjectComponents...>(m_entity);
-  }
-  template <typename T> T &getComponent()
-  {
-    PROFILE_FUNCTION();
-    return m_scene->getComponent<T, ObjectComponents...>(m_entity);
-  }
-  template <typename T> const T &getComponent() const
-  {
-    PROFILE_FUNCTION();
-    return static_cast<const Scene *>(m_scene)
-        ->getComponent<T, ObjectComponents...>(m_entity);
+    return m_scene->getComponents<Components...>(m_entity, m_bitmask);
   }
   // ---------------------------------------------------- //
-  // Does archetype has components?
+  // "Has" all components
   // ---------------------------------------------------- //
-  template <typename... TargetComponents> bool hasComponents() const
+  // Does archetype has any of the target components?
+  template <typename... TargetComponents> bool hasAnyComponents() const
   {
     PROFILE_FUNCTION();
-    return m_scene->hasComponent<TargetComponents..., ObjectComponents...>(
-        m_entity);
+    return m_scene->hasAnyComponents<TargetComponents...>(m_entity, m_bitmask);
   }
 
+  // Does archetype has all of the target components?
+  template <typename... TargetComponents> bool hasAllComponents() const
+  {
+    PROFILE_FUNCTION();
+    return m_scene->containsAllComponents<TargetComponents...>(m_entity,
+                                                               m_bitmask);
+  }
   // Remove components of an entity
   // template <typename... TargetComponets, typename... Components>
   // void rmComponents()
@@ -88,6 +86,7 @@ protected:
   }
   Entity m_entity = -1;
   Scene *m_scene;
+  Bitmask m_bitmask;
   friend class Scene;
 };
 

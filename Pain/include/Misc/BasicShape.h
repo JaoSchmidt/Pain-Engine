@@ -4,12 +4,12 @@
 #include "CoreRender/Texture.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
-#include "ECS/GameObject.h"
+#include "ECS/Scriptable.h"
 
 namespace pain
 {
 
-class RectangleSprite : public GameObject<TransformComponent, SpriteComponent>
+class RectangleSprite : public NormalEntity<TransformComponent, SpriteComponent>
 {
 public:
   RectangleSprite(Scene *scene, const glm::vec2 &position,
@@ -17,7 +17,7 @@ public:
                   Texture *ptexture, float tilingFactor);
 };
 
-class Rectangle : public GameObject<TransformComponent, SpriteComponent>
+class Rectangle : public NormalEntity<TransformComponent, SpritelessComponent>
 {
 public:
   Rectangle(Scene *scene, const glm::vec2 &position, const glm::vec2 &size,

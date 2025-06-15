@@ -205,10 +205,10 @@ void Application::run()
         double globalTime = lastFrameTime.GetSeconds();
         for (auto pScene = m_sceneManager->begin();
              pScene != m_sceneManager->end(); ++pScene) {
-          Renderer2d::beginScene(globalTime);
+          Renderer2d::beginScene(*pScene, globalTime);
           (*pScene)->onRender(globalTime);
           (*pScene)->renderSystems(globalTime);
-          Renderer2d::endScene();
+          Renderer2d::endScene(*pScene);
         }
         m_imguiController->onRender();
         P_ASSERT(m_window != nullptr, "m_window is nullptr")

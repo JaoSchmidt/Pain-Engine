@@ -23,11 +23,13 @@ public:
   MainScene() : pain::Scene() {}
   void init(pain::Application &app, Scene *scene, float aspectRatio, float zoom)
   {
-    m_orthocamera = new pain::OrthoCameraEntity(scene, aspectRatio, zoom);
+    m_orthocamera = new pain::OrthoCamera(scene, aspectRatio, zoom);
     pain::Renderer2d::init(*m_orthocamera);
     pain::NativeScriptComponent &a =
-        m_orthocamera->getComponent<pain::NativeScriptComponent>();
+        m_orthocamera->getComponent<pain::NativeScriptComponent>(*scene);
     a.bind<pain::OrthoCameraController>();
+    scene->initializeScript(scene, a, m_orthocamera->getEntity(),
+                            m_orthocamera->getBitMask());
     // ShapesController *sc = new ShapesController();
     // app.addImGuiInstance(sc);
     // m_sc = sc;
@@ -37,13 +39,13 @@ public:
     // m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
     dummy = new Dummy(scene, {0.f, 0.f}, {1.f, 1.f}, {1.f, 1.f, 1.f, 1.f},
                       m_texture, 1.f);
-    ls = &dummy->getComponent<pain::LuaScriptComponent>();
+    // ls = &dummy->getComponent<pain::LuaScriptComponent>();
     ls->onCreate();
   }
 
   void onUpdate(double deltaTime) override
   {
-    // ls->onUpdate(deltaTime);
+    ls->onUpdate(deltaTime);
     // PROFILE_FUNCTION()
     // pain::TransformComponent &tc =
     //     m_orthocamera->getComponent<pain::TransformComponent>();
@@ -79,7 +81,7 @@ public:
 
 private:
   std::vector<std::vector<int>> m_backgroundMap;
-  pain::OrthoCameraEntity *m_orthocamera;
+  pain::OrthoCamera *m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   pain::Texture *m_texture;
   Dummy *dummy;

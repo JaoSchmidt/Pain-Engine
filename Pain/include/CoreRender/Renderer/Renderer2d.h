@@ -43,15 +43,16 @@ struct ParticleVertex {
 
 namespace Renderer2d
 {
-void init(const OrthoCameraEntity &cameraEntity);
+void init(const OrthoCamera &cameraEntity);
 // ================================================================= //
 // Renderer basic wrapper around opengl
 // ================================================================= //
 
 void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
-void beginScene(float globalTime, const glm::mat4 &transform = glm::mat4(1.0f));
-void endScene();
-void shutdown();
+void beginScene(const Scene *scene, float globalTime,
+                const glm::mat4 &transform = glm::mat4(1.0f));
+void endScene(const Scene *scene);
+void shutdown(const Scene *scene);
 void setViewport(int x, int y, int width, int height);
 void setClearColor(const glm::vec4 &color);
 void clear();

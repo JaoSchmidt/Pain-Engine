@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Scriptable.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
 
@@ -32,25 +31,23 @@ concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
 
 namespace pain
 {
+class ExtendedEntity;
 
 struct NativeScriptComponent {
-  ScriptableEntity *instance = nullptr;
-  std::string m_name = "NULL";
+  ExtendedEntity *instance = nullptr;
 
-  void (*instantiateFunction)(ScriptableEntity *&) = nullptr;
-  void (*destroyInstanceFunction)(ScriptableEntity *&) = nullptr;
-  void (*onCreateFunction)(ScriptableEntity *) = nullptr;
-  void (*onDestroyFunction)(ScriptableEntity *) = nullptr;
-  void (*onRenderFunction)(ScriptableEntity *, double) = nullptr;
-  void (*onUpdateFunction)(ScriptableEntity *, double) = nullptr;
-  void (*onEventFunction)(ScriptableEntity *, const SDL_Event &) = nullptr;
+  void (*instantiateFunction)(ExtendedEntity *&) = nullptr;
+  void (*destroyInstanceFunction)(ExtendedEntity *&) = nullptr;
+  void (*onCreateFunction)(ExtendedEntity *) = nullptr;
+  void (*onDestroyFunction)(ExtendedEntity *) = nullptr;
+  void (*onRenderFunction)(ExtendedEntity *, double) = nullptr;
+  void (*onUpdateFunction)(ExtendedEntity *, double) = nullptr;
+  void (*onEventFunction)(ExtendedEntity *, const SDL_Event &) = nullptr;
 
   template <typename T> void bind()
   {
-    instantiateFunction = [](ScriptableEntity *&instance) {
-      instance = new T();
-    };
-    destroyInstanceFunction = [](ScriptableEntity *&instance) {
+    instantiateFunction = [](ExtendedEntity *&instance) { instance = new T(); };
+    destroyInstanceFunction = [](ExtendedEntity *&instance) {
       PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
              "called",
              fmt::ptr(instance));
@@ -59,7 +56,7 @@ struct NativeScriptComponent {
     };
 
     if constexpr (has_onCreate_method<T>) {
-      onCreateFunction = [](ScriptableEntity *instance) {
+      onCreateFunction = [](ExtendedEntity *instance) {
         static_cast<T *>(instance)->onCreate();
       };
     } else {
@@ -67,7 +64,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onDestroy_method<T>) {
-      onDestroyFunction = [](ScriptableEntity *instance) {
+      onDestroyFunction = [](ExtendedEntity *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
     } else {
@@ -75,7 +72,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](ScriptableEntity *instance, double realTime) {
+      onRenderFunction = [](ExtendedEntity *instance, double realTime) {
         static_cast<T *>(instance)->onRender(realTime);
       };
     } else {
@@ -85,7 +82,7 @@ struct NativeScriptComponent {
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
     if constexpr (has_onUpdate_method<T>) {
-      onUpdateFunction = [](ScriptableEntity *instance, double deltaTime) {
+      onUpdateFunction = [](ExtendedEntity *instance, double deltaTime) {
         static_cast<T *>(instance)->onUpdate(deltaTime);
       };
     } else {
@@ -93,7 +90,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onEvent_method<T>) {
-      onEventFunction = [](ScriptableEntity *instance, const SDL_Event &event) {
+      onEventFunction = [](ExtendedEntity *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
     } else {
@@ -102,7 +99,6 @@ struct NativeScriptComponent {
   };
 
   NativeScriptComponent() = default;
-  NativeScriptComponent(const char *name) : m_name(name) {}
   NativeScriptComponent(const NativeScriptComponent &) = delete;
   NativeScriptComponent &operator=(const NativeScriptComponent &) = delete;
   ~NativeScriptComponent()
@@ -121,7 +117,6 @@ struct NativeScriptComponent {
         destroyInstanceFunction(instance);
 
       instance = other.instance;
-      m_name = std::move(other.m_name);
       instantiateFunction = other.instantiateFunction;
       destroyInstanceFunction = other.destroyInstanceFunction;
       onCreateFunction = other.onCreateFunction;
@@ -146,7 +141,6 @@ struct NativeScriptComponent {
   NativeScriptComponent(NativeScriptComponent &&other) noexcept
   {
     instance = other.instance;
-    m_name = std::move(other.m_name);
     instantiateFunction = other.instantiateFunction;
     destroyInstanceFunction = other.destroyInstanceFunction;
     onCreateFunction = other.onCreateFunction;
@@ -167,6 +161,5 @@ struct NativeScriptComponent {
   }
 };
 // initialize the pointers of the Scripts functions
-void initializeScript(Scene *scene, NativeScriptComponent &nsc, int e);
 
 } // namespace pain
