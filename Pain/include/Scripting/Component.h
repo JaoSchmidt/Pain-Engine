@@ -42,7 +42,7 @@ private:
     // NOTE: Unfortunetly, I can't directly set the actual function because the
     // return can't be used to differentiate:
     // https://github.com/ThePhD/sol2/issues/98#issuecomment-950206267
-    m_lua.set_function(
+    m_env.set_function(
         name, [](LuaScriptComponent &c) -> T & { return c.getComponent<T>(); });
   }
 };

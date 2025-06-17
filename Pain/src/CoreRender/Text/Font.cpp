@@ -21,7 +21,7 @@ Font *Font::create(const char *fontFilename, double emSize)
   try {
     return new Font(fontFilename, emSize);
   } catch (const std::exception &e) {
-    PLOG_W("Defaulting to default texture");
+    PLOG_W("Defaulting to default font texture");
     return getDefault();
   }
 }

@@ -64,8 +64,8 @@ void Scene::renderSystems(double currentTime)
     for (; tIt != tItEnd; ++tIt, ++sIt) {
       const TransformComponent &tc = *tIt;
       const SpriteComponent &sc = *sIt;
-      Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.m_ptexture,
-                           sc.m_tilingFactor);
+      Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color,
+                           sc.getTexture(), sc.m_tilingFactor);
     }
   }
   {
@@ -77,7 +77,7 @@ void Scene::renderSystems(double currentTime)
 
     for (; tIt != tItEnd; ++tIt, ++rIt, ++sIt) {
       Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                           rIt->m_rotationAngle, sIt->m_ptexture,
+                           rIt->m_rotationAngle, sIt->getTexture(),
                            sIt->m_tilingFactor);
       // TODO: Remove m_rotation of rc... should only
       // have angle, in the case of the camera

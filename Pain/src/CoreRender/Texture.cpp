@@ -1,12 +1,38 @@
 #include "CoreRender/Texture.h"
+#include "Core.h"
 
-#include "CoreFiles/LogWrapper.h"
-#include "CoreFiles/ResourceManagerSing.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "glad/gl.h"
+#include <SDL2/SDL_surface.h>
+#include <SDL_image.h>
+#include <cstdint>
 
 namespace pain
 {
+SDL_Surface flipVertical(const SDL_Surface &surface)
+{
+  SDL_Surface result = *SDL_CreateRGBSurface(
+      surface.flags, surface.w, surface.h, surface.format->BytesPerPixel * 8,
+      surface.format->Rmask, surface.format->Gmask, surface.format->Bmask,
+      surface.format->Amask);
+  const auto pitch = surface.pitch;
+  const auto pxlength = pitch * (surface.h - 1);
+  auto pixels = static_cast<unsigned char *>(surface.pixels) + pxlength;
+  auto rpixels = static_cast<unsigned char *>(result.pixels);
+  for (auto line = 0; line < surface.h; ++line) {
+    memcpy(rpixels, pixels, pitch);
+    pixels -= pitch;
+    rpixels += pitch;
+  }
+  return result;
+}
+
+SDL_Surface loadSurface(const char *filepath)
+{
+  SDL_Surface *surface = IMG_Load(filepath);
+  P_ASSERT(surface != nullptr, "Texture path \"{}\" was not found!", filepath);
+  return *surface;
+}
 
 bool Texture::operator==(const Texture &other) const
 {
@@ -45,26 +71,25 @@ void Texture::setData(const void *data, uint32_t size)
  * Sets a texture given a specific texture image path
  */
 Texture::Texture(const char *path, bool gl_clamp_to_edge)
+    : m_surface(loadSurface(path))
 {
-  SDL_Surface *surface = resources::getSurface(path);
-  P_ASSERT(surface != nullptr, "Texture path \"{}\" was not found!", path);
-  surface = flipVertical(surface);
+  m_surface = flipVertical(m_surface);
   m_path = path;
 
   glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererId);
   glBindTexture(GL_TEXTURE_2D, m_rendererId);
-  m_width = surface->w;
-  m_height = surface->h;
+  m_width = m_surface.w;
+  m_height = m_surface.h;
 
-  if (surface->format->BytesPerPixel == 3) {
+  if (m_surface.format->BytesPerPixel == 3) {
     m_dataFormat = GL_RGB;
     m_internalFormat = GL_RGB8;
-  } else if (surface->format->BytesPerPixel == 4) {
+  } else if (m_surface.format->BytesPerPixel == 4) {
     m_dataFormat = GL_RGBA;
     m_internalFormat = GL_RGBA8;
   } else {
     P_ASSERT(false, "Unsupported number of bytes per pixel {}",
-             surface->format->BytesPerPixel);
+             m_surface.format->BytesPerPixel);
   }
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -74,8 +99,8 @@ Texture::Texture(const char *path, bool gl_clamp_to_edge)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
-  glTexImage2D(GL_TEXTURE_2D, 0, m_dataFormat, surface->w, surface->h, 0,
-               m_dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
+  glTexImage2D(GL_TEXTURE_2D, 0, m_dataFormat, m_surface.w, m_surface.h, 0,
+               m_dataFormat, GL_UNSIGNED_BYTE, m_surface.pixels);
 }
 
 // bind texture unit i.e. has a slot in a sample array. In theory this is

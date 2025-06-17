@@ -7,7 +7,7 @@ Dummy::Dummy(pain::Scene *scene, const glm::vec2 &position,
     : NormalEntity(*scene)
 {
   createComponents(*scene, pain::TransformComponent{position},
-                   pain::SpriteComponent{size, color, tilingFactor, ptexture});
+                   pain::SpriteComponent{size, color, tilingFactor, *ptexture});
   // pain::LuaScriptComponent{"resources/scripts/lua_script.lua",
   //                          scene->getSharedLuaState()});
 }

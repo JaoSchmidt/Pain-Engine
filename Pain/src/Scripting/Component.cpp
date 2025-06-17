@@ -1,6 +1,7 @@
 #include "Scripting/Component.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreFiles/ResourceManagerSing.h"
 #include "ECS/Scriptable.h"
 #include <sol/forward.hpp>
 #include <sol/sol.hpp>
@@ -15,17 +16,12 @@ LuaScriptComponent::LuaScriptComponent(const char *scriptPath,
     : m_scriptPath(scriptPath), m_lua(solState),
       m_env(solState, sol::create, solState.globals())
 {
-  sol::load_result script = m_lua.load_file(m_scriptPath);
+  sol::load_result &script = resources::loadLuaFile(m_lua, m_scriptPath);
   if (!script.valid()) {
     sol::error err = script;
     PLOG_E("Error loading Lua script: {}", err.what());
   }
 
-  // NOTE: instead of setting an environment, there is also the option of
-  // setting an new custom LuaScriptComponent usertype which stores the local
-  // stuff. Not that will have any difference imho. It's just another philosophy
-  // that accomplishes the same goal
-  set_environment(m_env, script);
   sol::protected_function_result result =
       script(); // will place everything inside an anonymous function and run
   if (!result.valid()) {
@@ -33,50 +29,27 @@ LuaScriptComponent::LuaScriptComponent(const char *scriptPath,
     PLOG_E("Error loading lua script: {}", err.what());
     return;
   }
-
+}
+void LuaScriptComponent::InitializeScript()
+{
+  // NOTE: instead of setting an environment, there is also the option of
+  // setting an new custom LuaScriptComponent usertype which stores the local
+  // stuff. Not that will have any difference imho. It's just another philosophy
+  // that accomplishes the same goal
+  set_environment(m_env, resources::loadLuaFile(m_lua, m_scriptPath)());
   // Store references to possible callbacks
   m_onUpdate = m_env["onUpdate"];
   m_onCreate = m_env["onCreate"];
   m_onDestroy = m_env["onDestroy"];
-  //
-  // m_lua.set_function();
-  m_lua.new_usertype<glm::vec3>(
-      "vec3", sol::constructors<glm::vec3(), glm::vec3(float, float, float)>(),
-      "x", &glm::vec3::x, "y", &glm::vec3::y, "z", &glm::vec3::z);
-}
-void LuaScriptComponent::InitializeScript()
-{
+
   if (hasAnyComponents<TransformComponent>()) {
-    m_lua.new_usertype<TransformComponent>(
-        "TransformComponent", sol::constructors<TransformComponent()>(),
-        "m_position", &TransformComponent::m_position);
     setTemplateFunction<TransformComponent>("getPosition");
   }
   if (hasAnyComponents<MovementComponent>()) {
-    m_lua.new_usertype<MovementComponent>(
-        "MovementComponent", sol::constructors<MovementComponent()>(), //
-        "m_velocity", &MovementComponent::m_velocityDir,               //
-        "m_translationSpeed", &MovementComponent::m_translationSpeed,  //
-        "m_rotationSpeed", &MovementComponent::m_rotationSpeed);
     setTemplateFunction<MovementComponent>("getMovement");
   }
   if (hasAnyComponents<SpriteComponent>()) {
-    m_lua.new_usertype<SpriteComponent>(
-        "SpriteComponent", sol::constructors<SpriteComponent()>(), //
-        "m_size", &SpriteComponent::m_size,                        //
-        "m_color", &SpriteComponent::m_color,                      //
-        "m_tilingFactor", &SpriteComponent::m_tilingFactor,        //
-        "m_ptexture", &SpriteComponent::m_ptexture                 //
-    );
     setTemplateFunction<SpriteComponent>("getSprite");
-  }
-  if (hasAnyComponents<MovementComponent>()) {
-    m_lua.new_usertype<MovementComponent>(
-        "MovementComponent", sol::constructors<MovementComponent()>(), //
-        "m_velocity", &MovementComponent::m_velocityDir,               //
-        "m_translationSpeed", &MovementComponent::m_translationSpeed,  //
-        "m_rotationSpeed", &MovementComponent::m_rotationSpeed);
-    setTemplateFunction<MovementComponent>("getMovement");
   }
 }
 

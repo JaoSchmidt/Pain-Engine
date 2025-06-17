@@ -11,7 +11,7 @@ RectangleSprite::RectangleSprite(Scene *scene, const glm::vec2 &position,
     : NormalEntity(*scene)
 {
   createComponents(*scene, TransformComponent{position},
-                   SpriteComponent{size, color, tilingFactor, ptexture});
+                   SpriteComponent{size, color, tilingFactor, *ptexture});
 }
 
 Rectangle::Rectangle(Scene *scene, const glm::vec2 &position,

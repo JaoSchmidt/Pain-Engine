@@ -2,7 +2,6 @@
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
 
-#include "ECS/Components/Rotation.h"
 #include "glm/ext/matrix_transform.hpp"
 
 namespace pain
@@ -115,19 +114,6 @@ void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 
 void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
               const glm::vec4 &tintColor,
-              Texture *texture, // Raw pointer version
-              float tilingFactor,
-              const std::array<glm::vec2, 4> &textureCoordinate)
-{
-  PROFILE_FUNCTION();
-  const float texIndex =
-      texture ? allocateTextures(*texture) : 0.0f; // White texture if nullptr
-  const glm::mat4 transform = getTransform(position, size);
-  allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
-}
-
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor,
               Texture &texture, // Reference version
               float tilingFactor,
               const std::array<glm::vec2, 4> &textureCoordinate)
@@ -145,18 +131,6 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 {
   PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
-  const glm::mat4 transform = getTransform(position, size, rotationRadians);
-  allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
-}
-
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor, const float rotationRadians,
-              Texture *texture, float tilingFactor,
-              const std::array<glm::vec2, 4> &textureCoordinate)
-{
-  PROFILE_FUNCTION();
-  const float texIndex =
-      texture ? allocateTextures(*texture) : 0.0f; // White Texture if nullptr
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }

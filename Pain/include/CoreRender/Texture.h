@@ -1,8 +1,11 @@
 #pragma once
 
-#include "pch.h"
-
 #include "Core.h"
+
+#include <SDL2/SDL_surface.h>
+#include <cstdint>
+#include <glad/gl.h>
+#include <string>
 
 namespace pain
 {
@@ -39,24 +42,7 @@ private:
   uint32_t m_dataFormat;
   uint32_t m_internalFormat;
   uint32_t m_rendererId;
-
-  static SDL_Surface *flipVertical(SDL_Surface *surface)
-  {
-    SDL_Surface *result = SDL_CreateRGBSurface(
-        surface->flags, surface->w, surface->h,
-        surface->format->BytesPerPixel * 8, surface->format->Rmask,
-        surface->format->Gmask, surface->format->Bmask, surface->format->Amask);
-    const auto pitch = surface->pitch;
-    const auto pxlength = pitch * (surface->h - 1);
-    auto pixels = static_cast<unsigned char *>(surface->pixels) + pxlength;
-    auto rpixels = static_cast<unsigned char *>(result->pixels);
-    for (auto line = 0; line < surface->h; ++line) {
-      memcpy(rpixels, pixels, pitch);
-      pixels -= pitch;
-      rpixels += pitch;
-    }
-    return result;
-  }
+  SDL_Surface m_surface;
 
   constexpr unsigned getInternalFormat(ImageFormat format) const
   {
