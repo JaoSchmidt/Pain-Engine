@@ -2,6 +2,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
+#include "Scripting/Component.h"
 #include <sol/sol.hpp>
 
 namespace pain
@@ -40,10 +41,11 @@ sol::state createLuaState()
         "m_translationSpeed", &MovementComponent::m_translationSpeed,  //
         "m_rotationSpeed", &MovementComponent::m_rotationSpeed);
 
-   lua.new_usertype<TransformComponent>(
+  lua.new_usertype<TransformComponent>(
         "TransformComponent", sol::constructors<TransformComponent()>(),
         "m_position", &TransformComponent::m_position);
 
+  lua.new_usertype<LuaScriptComponent>("LuaScriptComponent");
   // clang-format on
   return lua;
 };

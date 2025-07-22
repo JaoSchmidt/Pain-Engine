@@ -1,4 +1,5 @@
 #include "ECS/Scene.h"
+#include "CoreFiles/ResourceManagerSing.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
@@ -9,7 +10,6 @@
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "SDL_events.h"
-#include "Scripting/State.h"
 
 namespace pain
 {
@@ -26,9 +26,7 @@ void Scene::initializeScript(Scene *scene, NativeScriptComponent &nsc, Entity e,
       nsc.onCreateFunction(nsc.instance);
   }
 }
-Scene::Scene() : m_registry(new ArcheRegistry()), m_luaState(createLuaState())
-{
-}
+Scene::Scene(sol::state &luaState) : m_registry(), m_luaState(luaState) {}
 // TODO: Create way to move and copy components to another scene
 
 Entity Scene::createEntity()
@@ -89,7 +87,8 @@ void Scene::renderSystems(double currentTime)
     auto [tIt, sIt] = begin<TransformComponent, SpritelessComponent>();
     auto [tItEnd, sItEnd] = end<TransformComponent, SpritelessComponent>();
     for (; tIt != tItEnd; ++tIt, ++sIt) {
-      Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color);
+      Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                           resources::getDefaultTexture(resources::BLANK));
     }
   }
   {
@@ -190,6 +189,16 @@ void Scene::updateSystems(double deltaTime)
 
       if (nsc.onUpdateFunction)
         nsc.onUpdateFunction(nsc.instance, deltaTime);
+    }
+  }
+  // =============================================================== //
+  // Update Lua Script Components
+  // =============================================================== //
+  {
+    PROFILE_SCOPE("Scene::updateSystems - lua scripts");
+    for (auto it = begin<onUpdateLuaFunction>();
+         it != end<onUpdateLuaFunction>(); ++it) {
+      onUpdateLuaFunction();
     }
   }
 }

@@ -20,7 +20,7 @@ public:
 class MainScene : public pain::Scene
 {
 public:
-  MainScene() : pain::Scene() {}
+  MainScene(sol::state &luaState) : pain::Scene(luaState) {}
   void init(pain::Application &app, Scene *scene, float aspectRatio, float zoom)
   {
     m_orthocamera = new pain::OrthoCamera(scene, aspectRatio, zoom);
@@ -37,15 +37,15 @@ public:
     m_texture = new pain::Texture("resources/textures/Checkerboard.png", true);
 
     // m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
-    dummy = new Dummy(scene, {0.f, 0.f}, {1.f, 1.f}, {1.f, 1.f, 1.f, 1.f},
+    dummy = new Dummy(scene, {0.f, 0.f}, {1.f, 1.f}, {9.f, 0.f, 5.f, 1.f},
                       m_texture, 1.f);
-    // ls = &dummy->getComponent<pain::LuaScriptComponent>();
+    ls = &dummy->getComponent<pain::LuaScriptComponent>(*scene);
+    ls->bind("resources/scripts/lua_script.lua");
     ls->onCreate();
   }
 
   void onUpdate(double deltaTime) override
   {
-    ls->onUpdate(deltaTime);
     // PROFILE_FUNCTION()
     // pain::TransformComponent &tc =
     //     m_orthocamera->getComponent<pain::TransformComponent>();
@@ -97,7 +97,7 @@ pain::Application *pain::CreateApplication()
   const int height = 1000;
   Application *app = new Application(title, width, height);
 
-  Scene *scene = new MainScene();
+  Scene *scene = new MainScene(app->getLuaState());
   ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
 
   app->pushScene("main", scene);

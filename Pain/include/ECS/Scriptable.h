@@ -5,7 +5,6 @@
 #include "Debugging/Profiling.h"
 #include "ECS/Entity.h"
 #include "ECS/Scene.h"
-class Scene;
 
 namespace pain
 {
@@ -20,6 +19,7 @@ public:
     static_assert(sizeof...(Components) > 0,
                   "No components in the scripted object. Did you create "
                   "an object constructor but forgot to add its components?");
+    m_entity = scene.createEntity();
     return scene.createComponents<Components...>(
         m_entity, std::forward<Components>(args)...);
   }
@@ -97,9 +97,4 @@ protected:
   friend class Scene;
 };
 
-template <typename... Components>
-class LuaScriptableEntity : public ExtendedEntity
-{
-  LuaScriptableEntity(sol::state &solState);
-};
 } // namespace pain

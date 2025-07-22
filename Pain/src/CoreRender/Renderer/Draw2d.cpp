@@ -1,3 +1,4 @@
+#include "CoreFiles/ResourceManagerSing.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
 
@@ -70,7 +71,7 @@ uint32_t m_sprayIndexCount = 0;
 
 // texture initializer
 constexpr uint32_t MaxTextureSlots = 32;
-std::shared_ptr<Texture> m_whiteTexture = nullptr;
+Texture *m_whiteTexture = nullptr;
 std::array<Texture *, MaxTextureSlots> m_textureSlots = {nullptr};
 uint32_t m_textureSlotIndex = 1; // at init, there is 1 white texture
 } // namespace
@@ -136,10 +137,6 @@ void initBatches()
   m_quadVertexArray->setIndexBuffer(quadIB);
   delete[] quadIndices;
 
-  m_whiteTexture.reset(new Texture(1, 1));
-  const uint32_t whiteTextureData = 0xffffffff;
-  m_whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
-
   int32_t samplers[MaxTextureSlots];
   for (uint32_t i = 0; i < MaxTextureSlots; i++) {
     samplers[i] = i;
@@ -150,7 +147,8 @@ void initBatches()
   m_quadTextureShader->bind();
   m_quadTextureShader->uploadUniformIntArray("u_Textures", samplers,
                                              MaxTextureSlots);
-  m_textureSlots[0] = m_whiteTexture.get();
+  m_whiteTexture = &resources::getDefaultTexture(resources::BLANK);
+  m_textureSlots[0] = m_whiteTexture;
 
   // =============================================================== //
   // Triangles

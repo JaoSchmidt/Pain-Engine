@@ -16,7 +16,6 @@ public:
   Texture(const char *path, bool gl_clamp_to_edge = false);
   Texture(uint32_t width, uint32_t height,
           ImageFormat format = ImageFormat::RGBA8);
-  Texture(Texture &t);
   ~Texture();
   void bindToSlot(uint32_t slot = 0) const;
   void bindAndClearSlot();

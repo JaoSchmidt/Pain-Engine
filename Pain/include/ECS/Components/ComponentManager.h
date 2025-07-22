@@ -1,6 +1,7 @@
 #include "ECS/Registry/Bitmask.h"
 
 #include "ECS/Components/Camera.h"
+#include "ECS/Components/LuaScript.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Particle.h"
@@ -9,9 +10,12 @@
 
 namespace pain
 {
-using ComponentManager = CompileTimeBitMask<
-    OrthoCameraComponent, TransformComponent, MovementComponent,
-    NativeScriptComponent, ParticleSprayComponent, RotationComponent,
-    SpriteComponent, SpritelessComponent, TrianguleComponent>;
+struct LuaScriptComponent;
+using ComponentManager =
+    CompileTimeBitMask<OrthoCameraComponent, TransformComponent,
+                       MovementComponent, NativeScriptComponent,
+                       ParticleSprayComponent, RotationComponent,
+                       SpriteComponent, SpritelessComponent, TrianguleComponent,
+                       LuaScriptComponent, onUpdateLuaFunction>;
 
-}
+} // namespace pain

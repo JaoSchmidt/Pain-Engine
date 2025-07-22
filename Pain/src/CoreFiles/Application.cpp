@@ -2,7 +2,9 @@
 #include "Core.h"
 #include "CoreFiles/ImGuiController.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreFiles/ResourceManagerSing.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "Scripting/State.h"
 #include "glm/fwd.hpp"
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_version.h>
@@ -88,6 +90,8 @@ Application::Application(const char *title, int w, int h)
   m_sceneManager = new pain::SceneManager();
   m_defaultImGuiInstance = new EngineController();
   m_imguiController->addImGuiMenu(m_defaultImGuiInstance);
+  m_luaState = createLuaState();
+  resources::initiateDefaultValues(m_luaState);
   // SDL_SetWindowGrab(m_window, SDL_TRUE);
   // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
 }
@@ -205,10 +209,10 @@ void Application::run()
         double globalTime = lastFrameTime.GetSeconds();
         for (auto pScene = m_sceneManager->begin();
              pScene != m_sceneManager->end(); ++pScene) {
-          Renderer2d::beginScene(*pScene, globalTime);
+          Renderer2d::beginScene(**pScene, globalTime);
           (*pScene)->onRender(globalTime);
           (*pScene)->renderSystems(globalTime);
-          Renderer2d::endScene(*pScene);
+          Renderer2d::endScene(**pScene);
         }
         m_imguiController->onRender();
         P_ASSERT(m_window != nullptr, "m_window is nullptr")

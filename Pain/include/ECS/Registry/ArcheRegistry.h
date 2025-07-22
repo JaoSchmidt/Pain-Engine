@@ -22,7 +22,6 @@ concept IsMultipleTypes = (sizeof...(Ts) > 1);
 class ArcheRegistry
 {
   std::map<int, Archetype> m_archetypes = {};
-  int count = -1;
   friend class Scene;
   ArcheRegistry() = default;
 
@@ -39,7 +38,6 @@ class ArcheRegistry
   std::tuple<Components &...> createComponents(Entity entity,
                                                Components &&...comps)
   {
-
     int bitMask = ComponentManager::multiComponentBitmask<Components...>();
     Archetype &archetype = m_archetypes[bitMask];
     // for iterate every component
@@ -259,9 +257,15 @@ class ArcheRegistry
   template <typename... TargetComponents>
   constexpr bool hasAny(int specificBitMask) const
   {
-    int targetBitMask =
-        ComponentManager::multiComponentBitmask<TargetComponents...>();
-    return (targetBitMask & specificBitMask) != 0;
+    if constexpr (sizeof...(TargetComponents) == 1) {
+      int targetBitMask =
+          ComponentManager::singleComponentBitmask<TargetComponents...>();
+      return (targetBitMask & specificBitMask) != 0;
+    } else {
+      int targetBitMask =
+          ComponentManager::multiComponentBitmask<TargetComponents...>();
+      return (targetBitMask & specificBitMask) != 0;
+    }
   }
 
   // ---------------------------------------------------- //

@@ -19,12 +19,12 @@ class GameObject;
 class Scene
 {
 private:
-  ArcheRegistry *m_registry;
-  sol::state m_luaState;
+  ArcheRegistry m_registry;
+  sol::state &m_luaState;
 
 public:
-  Scene();
-  ~Scene() { delete m_registry; };
+  Scene(sol::state &solState);
+  ~Scene() = default;
   void initializeScript(Scene *scene, NativeScriptComponent &nsc, Entity entity,
                         Bitmask archetype);
 
@@ -43,15 +43,13 @@ public:
   template <typename... Components, typename... Args>
   std::tuple<Components &...> createComponents(Entity entity, Args &&...args)
   {
-    return m_registry->createComponents<Components...>(
+    return m_registry.createComponents<Components...>(
         entity, std::forward<Args>(args)...);
   }
   template <typename T, typename... Args>
   T &createComponent(Entity entity, Args &&...args)
   {
-    P_ASSERT_W(!hasComponent<T>(entity), "Entity {} already has component !",
-               entity);
-    return m_registry->createComponent<T>(entity, std::forward<Args>(args)...);
+    return m_registry.createComponent<T>(entity, std::forward<Args>(args)...);
   }
 
   // ---------------------------------------------------- //
@@ -61,27 +59,26 @@ public:
   template <typename... Components>
   std::tuple<Components &...> getComponents(Entity entity, Bitmask bitmask)
   {
-    return m_registry->getComponents<Components...>(entity, bitmask);
+    return m_registry.getComponents<Components...>(entity, bitmask);
   }
   // get multiple components together as a tuple
   template <typename... Components>
   const std::tuple<const Components &...> getComponents(Entity entity,
                                                         Bitmask bitmask) const
   {
-    return static_cast<const ArcheRegistry *>(m_registry)
-        ->getComponents<Components...>(entity, bitmask);
+    return std::as_const(m_registry)
+        .getComponents<Components...>(entity, bitmask);
   }
   // get a single component
   template <typename T> T &getComponent(Entity entity, Bitmask bitmask)
   {
-    return m_registry->getComponent<T>(entity, bitmask);
+    return m_registry.getComponent<T>(entity, bitmask);
   }
   // get a single component
   template <typename T>
   const T &getComponent(Entity entity, Bitmask bitmask) const
   {
-    return static_cast<const ArcheRegistry *>(m_registry)
-        ->getComponent<T>(entity, bitmask);
+    return std::as_const(m_registry).getComponent<T>(entity, bitmask);
   }
   // ---------------------------------------------------- //
   // "Has" functions
@@ -89,19 +86,17 @@ public:
   template <typename... TargetComponents>
   constexpr bool hasAnyComponents(int bitmask) const
   {
-    return static_cast<const ArcheRegistry *>(m_registry)
-        ->hasAny<TargetComponents...>(bitmask);
+    return std::as_const(m_registry).hasAny<TargetComponents...>(bitmask);
   }
   template <typename... TargetComponents>
   constexpr bool containsAllComponents(int bitmask) const
   {
-    return static_cast<const ArcheRegistry *>(m_registry)
-        ->containsAll<TargetComponents...>(bitmask);
+    return std::as_const(m_registry).containsAll<TargetComponents...>(bitmask);
   }
   // remove an entity, alongside its components from it's archetype
   bool removeEntity(Entity entity, int bitmask)
   {
-    if (m_registry->remove(entity, bitmask)) {
+    if (m_registry.remove(entity, bitmask)) {
       destroyEntity(entity);
       return true;
     } else
@@ -122,25 +117,25 @@ public:
     requires IsSingleType<T>
   reg::Iterator<T> end()
   {
-    return m_registry->end<T>();
+    return m_registry.end<T>();
   }
   template <typename T>
     requires IsSingleType<T>
   reg::Iterator<T> begin()
   {
-    return m_registry->begin<T>();
+    return m_registry.begin<T>();
   }
   template <typename... Components>
     requires IsMultipleTypes<Components...>
   std::tuple<reg::Iterator<Components>...> begin()
   {
-    return m_registry->begin<Components...>();
+    return m_registry.begin<Components...>();
   }
   template <typename... Components>
     requires IsMultipleTypes<Components...>
   std::tuple<reg::Iterator<Components>...> end()
   {
-    return m_registry->end<Components...>();
+    return m_registry.end<Components...>();
   }
 
   // ---------------------------------------------------- //

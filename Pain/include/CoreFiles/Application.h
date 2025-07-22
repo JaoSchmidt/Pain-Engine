@@ -6,6 +6,7 @@
 #include "CoreFiles/ImGuiController.h"
 #include "Debugging/DefaultImGui.h"
 #include "ECS/SceneManager.h"
+#include <sol/state.hpp>
 
 namespace pain
 {
@@ -34,6 +35,7 @@ public:
   void inline setTimeMultiplier(double time) { m_timeMultiplier = time; }
   double inline *getTimeMultiplier() { return &m_timeMultiplier; }
   bool inline *getIsSimulation() { return &m_isSimulation; }
+  sol::state &getLuaState() { return m_luaState; };
 
   static void glErrorHandler(unsigned int source, unsigned int type,
                              unsigned int id, unsigned int severity, int lenght,
@@ -61,6 +63,7 @@ private:
   const double m_fixedFPS = 1.0 / 60.0;
   double m_timeMultiplier = 1.0;
   DeltaTime m_maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
+  sol::state m_luaState;
 
   SceneManager *m_sceneManager;
   EngineController *m_defaultImGuiInstance;

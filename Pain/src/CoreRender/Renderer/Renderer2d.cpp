@@ -1,4 +1,5 @@
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "CoreFiles/ResourceManagerSing.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
 
@@ -197,7 +198,6 @@ void drawString(const glm::vec2 &position, const char *string, const Font &font,
     default:
       auto glyph = fontGeometry.getGlyph(*t);
       if (!glyph) {
-        drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f}, {1.f, 0.f, 0.f, 1.f});
         PLOG_E("Glyph '{}' not available on font family", *t);
       }
 

@@ -49,10 +49,10 @@ void init(const OrthoCamera &cameraEntity);
 // ================================================================= //
 
 void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
-void beginScene(const Scene *scene, float globalTime,
+void beginScene(const Scene &scene, float globalTime,
                 const glm::mat4 &transform = glm::mat4(1.0f));
-void endScene(const Scene *scene);
-void shutdown(const Scene *scene);
+void endScene(const Scene &scene);
+void shutdown(const Scene &scene);
 void setViewport(int x, int y, int width, int height);
 void setClearColor(const glm::vec4 &color);
 void clear();
@@ -65,12 +65,6 @@ void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 
 /** Draws a quad */
 void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor, Texture *texture = nullptr,
-              const float tilingFactor = 1.0f,
-              const std::array<glm::vec2, 4> &textureCoordinate = {
-                  glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                  glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
               const glm::vec4 &tintColor, Texture &texture,
               const float tilingFactor = 1.0f,
               const std::array<glm::vec2, 4> &textureCoordinate = {
@@ -78,13 +72,6 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                   glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
 
 /** Draws a quad with rotation, new rotationRadians (angle)*/
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor, const float rotationRadians,
-              Texture *texture = nullptr, const float tilingFactor = 1.0f,
-              const std::array<glm::vec2, 4> &textureCoordinate = {
-                  glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                  glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-
 void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
               const glm::vec4 &tintColor, const float rotationRadians,
               Texture &texture, const float tilingFactor = 1.0f,

@@ -1,68 +1,104 @@
 #include "CoreFiles/ResourceManagerSing.h"
+#include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreRender/Texture.h"
+#include <cstdio>
 #include <utility>
 
 namespace pain
 {
+bool m_enableDefaultWarning = false;
 
 // NOTE: remember folks, surfaceMap is in the static/global memory but its
 // content are in the heap
 static std::map<const char *, Texture *> m_textureMap = {};
-static std::map<std::pair<uint32_t, uint32_t>, Texture *> m_textureDumpMap = {};
-static std::map<const char *, sol::load_result *> m_luaFileMap = {};
-
-sol::load_result &resources::loadLuaFile(sol::state &solstate,
-                                         const char *filepath)
+static std::map<const char *, sol::load_result> m_luaFileMap = {};
+static std::map<const char *, std::string> m_luaScriptSource;
+inline bool exists_file(const std::string &name)
 {
-  auto search = m_luaFileMap.find(filepath);
-  if (search != m_luaFileMap.end())
-    return *search->second;
-  sol::load_result *new_script = solstate.load_file(filepath);
-  if (new_script) {
-    m_luaFileMap[filepath] = new_script;
-  } else {
-    PLOG_W("Could not load script on path \"{}\"", filepath);
-  }
-  return *new_script;
+  struct stat buffer;
+  return (stat(name.c_str(), &buffer) == 0);
 }
-Texture &resources::getDumpTexture(uint32_t width, uint32_t height,
-                                   ImageFormat imf)
+
+// load a script inside filepath, if it's not already loaded, created
+const std::string &resources::getLuaScriptSource(const char *filepath)
 {
-  auto search = m_textureDumpMap.find({width, height});
-  if (search != m_textureDumpMap.end()) {
+  auto it = m_luaScriptSource.find(filepath);
+  if (it != m_luaScriptSource.end())
+    return it->second;
+
+  if (!exists_file(filepath)) {
+    PLOG_E("Could not locate filepath {}", filepath);
+    auto it = m_luaScriptSource.find(getDefaultLuaFile());
+    P_ASSERT(it != m_luaScriptSource.end(),
+             "Could not load default script file {}", getDefaultLuaFile());
+    return it->second;
+  }
+
+  std::ifstream in(filepath);
+  std::string line;
+  std::stringstream ss;
+
+  while (getline(in, line)) {
+    ss << line << '\n';
+  }
+
+  m_luaScriptSource.emplace(filepath, ss.str());
+  return m_luaScriptSource[filepath];
+}
+Texture &resources::createDumpTexture(const char *name, uint32_t width,
+                                      uint32_t height, ImageFormat imf)
+{
+  auto search = m_textureMap.find(name);
+  if (search != m_textureMap.end()) {
+    PLOG_W("You are trying to create {}, but it already was created", name);
     return *(search->second);
   }
-  Texture *texture = new Texture(width, height, imf);
-  if (texture) {
-    m_textureDumpMap[{width, height}] = texture;
-  } else {
-    return getDefaultTexture(GENERAL);
-  }
-  return *texture;
+  m_textureMap[name] = new Texture(width, height, imf);
+  return *m_textureMap[name];
+}
+
+void resources::initiateDefaultValues(sol::state &solstate)
+{
+  Texture &whiteTexture = resources::createDumpTexture("BLANK", 1, 1);
+  const uint32_t whiteTextureData = 0xffffffff;
+  whiteTexture.setData(&whiteTextureData, sizeof(uint32_t));
+  getTexture("resources/default/textures/defaultTexture.png");
+  getLuaScriptSource(getDefaultLuaFile());
+  m_enableDefaultWarning = true;
+}
+
+const char *resources::getDefaultLuaFile()
+{
+  return "resources/default/scripts/default.lua";
 }
 
 Texture &resources::getDefaultTexture(resources::DEFAULT_TEXTURE defTex)
 {
-  PLOG_W("Using a default texture {}", static_cast<int>(defTex));
+  P_ASSERT(m_textureMap.contains("BLANK"),
+           "Some default values are missing, did you remember to call "
+           "initateDefaultValues?")
+  if (m_enableDefaultWarning)
+    PLOG_W("Using a default texture {}", static_cast<int>(defTex));
   switch (defTex) {
   case GENERAL:
-    return *m_textureMap.at("resources/textures/defaultTexture.png");
+    return *m_textureMap.at("resources/default/textures/defaultTexture.png");
   case ERROR:
-    return *m_textureMap.at("resources/textures/defaultTexture.png");
-  case FONT:
-    return *m_textureMap.at("resources/default/fonts/OpenSans-Regular.ttf");
+    return *m_textureMap.at("resources/default/textures/defaultTexture.png");
+  case BLANK:
+    return *m_textureMap.at("BLANK");
   }
 }
 
-Texture &resources::getTexture(const char *filepath)
+Texture &resources::getTexture(const char *filepathOrName)
 {
-  auto search = m_textureMap.find(filepath);
+  auto search = m_textureMap.find(filepathOrName);
   if (search != m_textureMap.end()) {
     return *(search->second);
   }
-  Texture *texture = new Texture(filepath);
+  Texture *texture = new Texture(filepathOrName);
   if (texture) {
-    m_textureMap[filepath] = texture;
+    m_textureMap[filepathOrName] = texture;
   } else {
     return getDefaultTexture(GENERAL);
   }
