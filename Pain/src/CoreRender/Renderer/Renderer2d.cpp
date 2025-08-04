@@ -114,9 +114,7 @@ void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 // ================================================================= //
 
 void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor,
-              Texture &texture, // Reference version
-              float tilingFactor,
+              const glm::vec4 &tintColor, Texture &texture, float tilingFactor,
               const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();

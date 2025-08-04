@@ -278,8 +278,6 @@ if(UNIX OR APPLE)
     sync_resources
     COMMAND
       rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
-      "${PROJECT_SOURCE_DIR}/resources/" &&
-      rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
       "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
     COMMENT "Syncing resources folder"
   )

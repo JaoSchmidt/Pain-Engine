@@ -37,11 +37,11 @@ public:
     m_texture = new pain::Texture("resources/textures/Checkerboard.png", true);
 
     // m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
-    dummy = new Dummy(scene, {0.f, 0.f}, {1.f, 1.f}, {9.f, 0.f, 5.f, 1.f},
-                      m_texture, 1.f);
-    ls = &dummy->getComponent<pain::LuaScriptComponent>(*scene);
-    ls->bind("resources/scripts/lua_script.lua");
-    ls->onCreate();
+    // dummy = new Dummy(scene, {0.f, 0.f}, {1.f, 1.f}, {9.f, 0.f, 5.f, 1.f},
+    //                   m_texture, 1.f);
+    // ls = &dummy->getComponent<pain::LuaScriptComponent>(*scene);
+    // ls->bind("resources/scripts/lua_script.lua");
+    // ls->onCreate();
   }
 
   void onUpdate(double deltaTime) override
@@ -72,8 +72,8 @@ public:
     //                            {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
-    // pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, m_texture, 1.0f,
-    //                            {1.0f, 1.0f, 1.0f, 1.0f});
+    pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f},
+                               {1.0f, 1.0f, 1.0f, 1.0f}, *m_texture);
     // pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f}, m_texture, 1.0f,
     //                            {1.0f, 1.0f, 1.0f, 1.0f});
   }

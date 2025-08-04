@@ -61,6 +61,7 @@ namespace pain
 {
 struct Pain {
   static void initiate();
-  static void runApplication(Application *app);
+  static void runApplicationWithSettings(Application *app);
+  static void createSettingsBeforeApplication(Application *app);
 };
 } // namespace pain

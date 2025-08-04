@@ -35,17 +35,17 @@ void LuaScriptComponent::bind(const char *scriptPath)
   };
 
   if (hasAnyComponents<TransformComponent>())
-    m_lua.set_function("getPosition",
+    m_lua.set_function("get_position",
                        [](LuaScriptComponent &c) -> TransformComponent & {
                          return c.getComponent<TransformComponent>();
                        });
   if (hasAnyComponents<MovementComponent>())
-    m_lua.set_function("getMovement",
+    m_lua.set_function("get_movement",
                        [](LuaScriptComponent &c) -> MovementComponent & {
                          return c.getComponent<MovementComponent>();
                        });
   if (hasAnyComponents<SpriteComponent>())
-    m_lua.set_function("getSprite",
+    m_lua.set_function("get_sprite",
                        [](LuaScriptComponent &c) -> SpriteComponent & {
                          return c.getComponent<SpriteComponent>();
                        });
