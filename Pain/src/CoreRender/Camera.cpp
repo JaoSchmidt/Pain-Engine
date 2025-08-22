@@ -14,7 +14,7 @@ namespace pain
 
 OrthographicCamera::OrthographicCamera(float left, float right, float bottom,
                                        float top)
-    : Camera()
+    : CameraMatrices()
 {
   m_ProjectionMatrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
   m_ViewMatrix = glm::mat4(1.0f);
@@ -45,7 +45,7 @@ void OrthographicCamera::SetProjection(float left, float right, float bottom,
 
 PerspectiveCamera::PerspectiveCamera(float aspectRatio,
                                      float fieldOfViewDegrees)
-    : Camera()
+    : CameraMatrices()
 {
   m_ProjectionMatrix = glm::perspective(glm::radians(fieldOfViewDegrees),
                                         aspectRatio, 0.1f, 10.0f);

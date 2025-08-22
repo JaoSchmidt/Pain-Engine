@@ -1,6 +1,7 @@
-#include "Debugging/DefaultImGui.h"
+#include "Debugging/DebuggingImGui.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
+#include "imgui.h"
 #include <string>
 
 namespace pain

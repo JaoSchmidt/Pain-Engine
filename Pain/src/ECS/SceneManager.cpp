@@ -57,4 +57,11 @@ std::unordered_set<Scene *>::iterator SceneManager::end()
 {
   return m_currentScenes.end();
 }
+SceneManager::~SceneManager()
+{
+  Scene::clearQueue();
+  for (auto pScene = m_scenes.begin(); pScene != m_scenes.end(); ++pScene) {
+    delete pScene->second;
+  }
+}
 } // namespace pain

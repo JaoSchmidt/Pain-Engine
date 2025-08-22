@@ -14,8 +14,6 @@
 namespace pain
 {
 
-class GameObject;
-
 class Scene
 {
 private:
@@ -24,13 +22,13 @@ private:
 
 public:
   Scene(sol::state &solState);
-  ~Scene() = default;
   void initializeScript(Scene *scene, NativeScriptComponent &nsc, Entity entity,
                         Bitmask archetype);
 
   Entity createEntity();
   void destroyEntity(Entity entity);
 
+  virtual ~Scene() = default;
   virtual void onRender(double realTime) = 0;
   virtual void onUpdate(double deltaTime) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
@@ -145,6 +143,11 @@ public:
   void updateSystems(double deltaTime);
   void updateSystems(const SDL_Event &event);
   void renderSystems(double currentTime);
+  static void clearQueue()
+  {
+    std::queue<Entity> empty;
+    std::swap(m_availableEntities, empty);
+  }
 
 private:
   inline static std::queue<Entity> m_availableEntities = {};

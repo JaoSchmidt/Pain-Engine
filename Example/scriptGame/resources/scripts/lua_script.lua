@@ -7,7 +7,7 @@ print(type(script))
 script.on_update(function(self, dt)
 	print("this is inside onUpdate, dt = " .. tostring(dt))
 end)
-
+print(type(script.on_create))
 script.on_create(function(self)
 	local x, y = self:get_position()
 	print(x)

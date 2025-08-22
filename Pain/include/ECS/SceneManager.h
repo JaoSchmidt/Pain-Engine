@@ -7,12 +7,12 @@
 namespace pain
 {
 
-class  SceneManager
+class SceneManager
 {
 public:
   NONCOPYABLE(SceneManager)
   SceneManager() = default;
-  ~SceneManager() = default;
+  ~SceneManager();
 
   void addScene(const std::string &name, Scene *scene);
   // void popScene(Scene *scene);

@@ -1,5 +1,5 @@
 #include "ECS/Scene.h"
-#include "CoreFiles/ResourceManagerSing.h"
+#include "Assets/ResourceManager.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
@@ -112,6 +112,7 @@ void Scene::renderSystems(double currentTime)
         nsc.instantiateFunction(nsc.instance);
         nsc.instance->m_scene = this;
         nsc.instance->m_entity = it.getEntity();
+        nsc.instance->m_bitmask = nsc.instance->m_bitmask;
 
         if (nsc.onCreateFunction)
           nsc.onCreateFunction(nsc.instance);

@@ -1,10 +1,10 @@
 #pragma once
 #include "pch.h"
 
+#include "Assets/DeltaTime.h"
 #include "Core.h"
-#include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/ImGuiController.h"
-#include "Debugging/DefaultImGui.h"
+#include "Debugging/DebuggingImGui.h"
 #include "ECS/SceneManager.h"
 #include <sol/state.hpp>
 
@@ -14,7 +14,7 @@ namespace pain
 class Application
 {
 public:
-  Application(const char *title, int w, int h);
+  Application(const char *title, int w, int h, bool isSettingsApp = false);
   ~Application();
 
   // virtual because the real Application will be the game
@@ -47,11 +47,11 @@ public:
   void inline popScene(const std::string &name) { m_sceneManager->popScene(name); }
   void inline attachScene(const std::string &name) { m_sceneManager->attachScene(name); }
   void inline detachScene(const std::string &name) { m_sceneManager->detachScene(name); }
+  void stop();
   // clasng-format on
 
 private:
   void run();
-  void stop();
   // Refers to the game window
   SDL_Window *m_window = nullptr;
   SDL_GLContext m_context = nullptr;
@@ -85,6 +85,6 @@ private:
 };
 
 // To be defined in CLIENT
-Application *CreateApplication();
+Application *createApplication();
 
 } // namespace pain

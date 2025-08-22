@@ -1,5 +1,5 @@
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "CoreFiles/ResourceManagerSing.h"
+#include "Assets/ResourceManager.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
 

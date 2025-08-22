@@ -3,6 +3,7 @@
 #include "ECS/Scriptable.h"
 #include <SDL2/SDL_events.h>
 
+#include "Assets/ResourceManager.h"
 #include <sol/sol.hpp>
 namespace pain
 {

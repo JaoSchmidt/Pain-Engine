@@ -2,14 +2,15 @@
 
 // For use specifically for games build with Pain
 
+#include "Assets/RandNumberGenerator.h"
 #include "CoreFiles/Application.h"
 #include "CoreFiles/ImGuiController.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreFiles/RandNumberGenerator.h"
 #include "Debugging/Profiling.h"
 // Misc
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/BasicShape.h"
+#include "Misc/Launcher.h"
 #include "Misc/PerspCameraController.h"
 // Renderer
 #include "CoreRender/AllBuffers.h"
@@ -28,7 +29,6 @@
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Entity.h"
-#include "ECS/GameObject.h"
 #include "ECS/Scene.h"
 #include "ECS/SceneManager.h"
 #include "ECS/Scriptable.h"
@@ -60,8 +60,7 @@
 namespace pain
 {
 struct Pain {
-  static void initiate();
-  static void runApplicationWithSettings(Application *app);
-  static void createSettingsBeforeApplication(Application *app);
+  static bool initiate();
+  static void runAndDeleteApplication(Application *app);
 };
 } // namespace pain

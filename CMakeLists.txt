@@ -29,6 +29,7 @@ target_include_directories(
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/inih/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
 )
 set_target_properties(
@@ -128,6 +129,19 @@ function(apply_git_patch patch_file work_dir)
     message("Skipping patch ${patch_file}: already applied or not applicable.")
   endif()
 endfunction()
+
+#inih
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/inih/CMakeLists.txt")
+  message("Fetching inih")
+  FetchContent_Declare(
+    inih
+    GIT_REPOSITORY https://github.com/OSSystems/inih.git
+  )
+  FetchContent_MakeAvailable(inih)
+else()
+  message("Using submodule for inih")
+  add_subdirectory(Pain/external/inih)
+endif()
 
 # GLM
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/glm/CMakeLists.txt")
@@ -255,6 +269,7 @@ target_link_libraries(
     SDL2_image
     lua_static
     glad
+    inihcpp
     glm::glm
     spdlog::spdlog_header_only
     imgui

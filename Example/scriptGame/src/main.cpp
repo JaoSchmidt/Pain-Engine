@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-class ImGuiController : public pain::ImGuiInstance
+class ImGuiGame : public pain::ImGuiInstance
 {
 public:
   void onImGuiUpdate() override
@@ -34,7 +34,8 @@ public:
     // app.addImGuiInstance(sc);
     // m_sc = sc;
 
-    m_texture = new pain::Texture("resources/textures/Checkerboard.png", true);
+    m_texture = std::make_unique<pain::Texture>(
+        "resources/textures/Checkerboard.png", true);
 
     // m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
     // dummy = new Dummy(scene, {0.f, 0.f}, {1.f, 1.f}, {9.f, 0.f, 5.f, 1.f},
@@ -78,18 +79,19 @@ public:
     //                            {1.0f, 1.0f, 1.0f, 1.0f});
   }
   void onEvent(const SDL_Event &event) override {}
+  // ~MainScene() override = default;
 
 private:
   std::vector<std::vector<int>> m_backgroundMap;
   pain::OrthoCamera *m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
-  pain::Texture *m_texture;
-  Dummy *dummy;
-  ImGuiController *m_sc;
-  pain::LuaScriptComponent *ls;
+  std::unique_ptr<pain::Texture> m_texture;
+  std::unique_ptr<Dummy> dummy;
+  std::unique_ptr<ImGuiGame> m_sc;
+  std::unique_ptr<pain::LuaScriptComponent> ls;
 };
 
-pain::Application *pain::CreateApplication()
+pain::Application *pain::createApplication()
 {
   LOG_T("Creating app");
   const char *title = "Developing Pain - Example 2d";
@@ -116,8 +118,13 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 #else
 int main(int argc, char *argv[])
 {
-  pain::Pain::initiate();
-  pain::Pain::runApplication(pain::CreateApplication());
+  bool isSettingsGuiNeeded = pain::Pain::initiate();
+  if (isSettingsGuiNeeded) {
+    pain::Application *app = pain::createLauncher();
+    pain::Pain::runAndDeleteApplication(app);
+  }
+  pain::Application *app = pain::createApplication();
+  pain::Pain::runAndDeleteApplication(app);
   return 0;
 }
 #endif

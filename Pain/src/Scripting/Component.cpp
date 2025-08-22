@@ -1,7 +1,7 @@
 #include "Scripting/Component.h"
+#include "Assets/ResourceManager.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreFiles/ResourceManagerSing.h"
 #include "ECS/Scriptable.h"
 #include <sol/forward.hpp>
 #include <sol/sol.hpp>

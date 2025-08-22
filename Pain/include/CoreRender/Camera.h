@@ -3,10 +3,11 @@
 
 #include "Core.h"
 
+#include <glm/gtc/matrix_transform.hpp>
 namespace pain
 {
 
-class Camera
+class CameraMatrices
 {
 public:
   const glm::mat4 &getProjectionMatrix() const { return m_ProjectionMatrix; }
@@ -22,7 +23,7 @@ protected:
   glm::mat4 m_ViewProjectionCacheMatrix;
 };
 
-class  OrthographicCamera : public Camera
+class OrthographicCamera : public CameraMatrices
 {
 public:
   OrthographicCamera(float left, float right, float bottom, float top);
@@ -31,7 +32,7 @@ public:
   void SetProjection(float left, float right, float bottom, float top);
 };
 
-class  PerspectiveCamera : public Camera
+class PerspectiveCamera : public CameraMatrices
 {
 public:
   PerspectiveCamera(float aspectRatio, float fieldOfViewDegrees);

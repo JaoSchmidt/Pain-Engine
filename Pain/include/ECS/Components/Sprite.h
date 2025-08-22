@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CoreFiles/ResourceManagerSing.h"
+#include "Assets/DefaultTexture.h"
 #include "CoreRender/Texture.h"
 
 namespace pain

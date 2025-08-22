@@ -1,8 +1,8 @@
 #include "CoreFiles/Application.h"
+#include "Assets/DefaultTexture.h"
+#include "Assets/ResourceManager.h"
 #include "Core.h"
-#include "CoreFiles/ImGuiController.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreFiles/ResourceManagerSing.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Scripting/State.h"
 #include "glm/fwd.hpp"
@@ -19,8 +19,9 @@ unsigned Application::getProcessorCount()
 }
 
 /* Creates window, opengl context and init glew*/
-Application::Application(const char *title, int w, int h)
+Application::Application(const char *title, int w, int h, bool isSettingsApp)
 {
+  PLOG_T(resources::getCurrentWorkingDir());
   // =========================================================================//
   // SDL Initial setup
   // =========================================================================//
@@ -83,17 +84,27 @@ Application::Application(const char *title, int w, int h)
   glDebugMessageCallback(glErrorHandler, 0);
 #endif
   // =========================================================================//
-  // Application Initial setup
+  // Application Initial setup before
   // =========================================================================//
-  m_imguiController = std::make_unique<ImGuiController>();
+  m_imguiController = std::make_unique<ImGuiController>(m_context, m_window);
   m_isMinimized = false;
   m_sceneManager = new pain::SceneManager();
   m_defaultImGuiInstance = new EngineController();
-  m_imguiController->addImGuiMenu(m_defaultImGuiInstance);
   m_luaState = createLuaState();
-  resources::initiateDefaultValues(m_luaState);
+
   // SDL_SetWindowGrab(m_window, SDL_TRUE);
   // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
+  // =========================================================================//
+  // Default Values to increase redundancy
+  // =========================================================================//
+  resources::initiateDefaultResources();
+  resources::initiateDefaultScript(m_luaState);
+  resources::initiateDefaultTexture();
+  // =========================================================================//
+  // config.ini file
+  // =========================================================================//
+  if (resources::configDotIni().showDebugMenu && !isSettingsApp)
+    m_imguiController->addImGuiMenu(m_defaultImGuiInstance);
 }
 
 void Application::stop() { m_isGameRunning = false; }

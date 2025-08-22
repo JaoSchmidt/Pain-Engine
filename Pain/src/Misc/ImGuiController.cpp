@@ -9,7 +9,8 @@
 namespace pain
 {
 
-ImGuiController::ImGuiController()
+ImGuiController::ImGuiController(void *context, SDL_Window *window,
+                                 ImGuiConfigFlags flags)
 {
   P_ASSERT(m_io != nullptr,
            "Trying to create a new ImGui context will undermine the singleton "
@@ -18,13 +19,7 @@ ImGuiController::ImGuiController()
   ImGui::CreateContext();
   m_io = &ImGui::GetIO();
   (void)m_io;
-  m_io->ConfigFlags |=
-      ImGuiConfigFlags_NavEnableKeyboard  // Enable Keyboard Controls
-      | ImGuiConfigFlags_NavEnableGamepad // Enable Gamepad Controls
-      | ImGuiConfigFlags_DockingEnable    // Enable Docking
-      | ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform
-                                          // Windows
-
+  m_io->ConfigFlags |= flags;
   ImGui::StyleColorsDark();
 
   ImGuiStyle &style = ImGui::GetStyle();
@@ -32,10 +27,6 @@ ImGuiController::ImGuiController()
     style.WindowRounding = 0.0f;
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
-
-  void *context = SDL_GL_GetCurrentContext();
-  SDL_Window *window = SDL_GL_GetCurrentWindow();
-
   ImGui_ImplSDL2_InitForOpenGL(window, context);
   ImGui_ImplOpenGL3_Init("#version 430"); // OpenGL 3.0 and above
 
@@ -43,6 +34,10 @@ ImGuiController::ImGuiController()
   m_clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 }
 
+// NOTE: Consider the possibility of enabling a "preupdate" and "posupadte"
+// function for each specific system in the ECS, this could enable you to easily
+// make this a simple game object instead of a extraneous insertion inside the
+// onUpdate loop as it is coded right now
 void ImGuiController::onUpdate(bool isMinimized)
 {
   ImGui_ImplOpenGL3_NewFrame();

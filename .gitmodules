@@ -31,3 +31,6 @@
 [submodule "Pain/external/sol2"]
 	path = Pain/external/sol2
 	url = git@github.com:ThePhD/sol2.git
+[submodule "Pain/external/inih"]
+	path = Pain/external/inih
+	url = https://github.com/OSSystems/inih.git

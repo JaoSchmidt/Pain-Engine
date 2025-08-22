@@ -1,4 +1,4 @@
-#include "CoreFiles/ResourceManagerSing.h"
+#include "Assets/ResourceManager.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
 
