@@ -87,7 +87,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   // atlas bitmap.
   Texture texture =
       createAtlasTexture<uint8_t, float, 3, msdf_atlas::msdfGenerator>(
-          textureKey, m_glyphs, m_fontGeometry, width, height);
+          textureKey, m_glyphs, m_fontGeometry, width, height, fontFilename);
   // Cleanup
   msdfgen::destroyFont(font);
   msdfgen::deinitializeFreetype(ft);
@@ -95,11 +95,11 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
 }
 template <typename T, typename S, int N,
           msdf_atlas::GeneratorFunction<S, N> GenFunc>
-Texture
-Font::createAtlasTexture(const char *fontName,
-                         const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
-                         const msdf_atlas::FontGeometry &fontGeometry,
-                         const float width, const float height)
+Texture createAtlasTexture(const char *fontName,
+                           const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
+                           const msdf_atlas::FontGeometry &fontGeometry,
+                           const float width, const float height,
+                           const char *fontFilename)
 {
   msdf_atlas::GeneratorAttributes attributes;
   attributes.config.overlapSupport = true;
@@ -122,7 +122,8 @@ Font::createAtlasTexture(const char *fontName,
       (msdfgen::BitmapConstRef<T, N>)generator.atlasStorage();
 
   // Tranform the msdfgen bitmap into a Texture
-  Texture texture = Texture(bitmap.width, bitmap.height, ImageFormat::RGB8);
+  Texture texture = createTexture(fontFilename, bitmap.width, bitmap.height,
+                                  ImageFormat::RGB8);
   texture.setData((void *)bitmap.pixels, bitmap.width * bitmap.height * 3);
 
   // For tests only, transform into a SDL_Surface

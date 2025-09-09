@@ -22,6 +22,7 @@ concept IsMultipleTypes = (sizeof...(Ts) > 1);
 class ArcheRegistry
 {
   std::map<int, Archetype> m_archetypes = {};
+  friend struct System;
   friend class Scene;
   ArcheRegistry() = default;
 

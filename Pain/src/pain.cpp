@@ -1,5 +1,6 @@
 #include "pain.h"
 #include "Core.h"
+#include "CoreFiles/EndGameFlags.h"
 #include <glad/gl.h>
 
 namespace pain
@@ -8,15 +9,15 @@ namespace pain
 bool Pain::initiate()
 {
   // start log
-  logWrapper::Init();
+  logWrapper::InitLogger();
   PLOG_T("Initialized Log!");
   return resources::isSettingsGuiNeeded();
 }
 
-void Pain::runAndDeleteApplication(Application *app)
+EndGameFlags Pain::runAndDeleteApplication(Application *app)
 {
-  Application *application = app;
-  application->run();
-  delete application;
+  EndGameFlags flags = app->run();
+  delete app;
+  return flags;
 }
 } // namespace pain

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Core.h"
@@ -12,7 +12,7 @@
 namespace pain
 {
 
-class  Renderer3d
+class Renderer3d
 {
 public:
   static void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
@@ -28,8 +28,7 @@ public:
   static void setViewport(int x, int y, int width, int height);
   static void setClearColor(const glm::vec4 color);
   static void clear();
-  static void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
-                          uint32_t indexCount = 0);
+  static void drawIndexed(VertexArray &vertexArray, uint32_t indexCount = 0);
 
   static std::shared_ptr<PerspectiveCameraController> m_cameraController;
 

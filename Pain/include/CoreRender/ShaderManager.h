@@ -3,9 +3,10 @@
 
 #include "Shader.h"
 
+#if 0
 namespace pain
 {
-// NOTE: this is untoched at the moment because every shader is being loaded
+// NOTE: this is not enable at the moment because every shader is being loaded
 // directly inside the renderer
 class ShaderLibrary
 {
@@ -31,3 +32,4 @@ private:
   std::unordered_map<std::string, std::shared_ptr<Shader>> m_Shaders;
 };
 } // namespace pain
+#endif

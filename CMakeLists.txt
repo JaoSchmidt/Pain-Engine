@@ -29,7 +29,7 @@ target_include_directories(
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/inih/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/mINI/src>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
 )
 set_target_properties(
@@ -130,17 +130,17 @@ function(apply_git_patch patch_file work_dir)
   endif()
 endfunction()
 
-#inih
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/inih/CMakeLists.txt")
-  message("Fetching inih")
+#mINI
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/mINI/CMakeLists.txt")
+  message("Fetching mINI")
   FetchContent_Declare(
-    inih
-    GIT_REPOSITORY https://github.com/OSSystems/inih.git
+    mINI
+    GIT_REPOSITORY https://github.com/metayeti/mINI.git
   )
-  FetchContent_MakeAvailable(inih)
+  FetchContent_MakeAvailable(mINI)
 else()
-  message("Using submodule for inih")
-  add_subdirectory(Pain/external/inih)
+  message("Using submodule for mINI")
+  add_subdirectory(Pain/external/mINI)
 endif()
 
 # GLM
@@ -217,6 +217,9 @@ else()
     	"${CMAKE_SOURCE_DIR}/Pain/external/imgui"
   )
   add_subdirectory("Pain/external/imgui")
+  target_sources(imgui PRIVATE
+    ${CMAKE_SOURCE_DIR}/Pain/external/imgui/misc/cpp/imgui_stdlib.cpp
+  )
 endif()
 
 # msdf-atlas-gen
@@ -269,7 +272,7 @@ target_link_libraries(
     SDL2_image
     lua_static
     glad
-    inihcpp
+    mINI
     glm::glm
     spdlog::spdlog_header_only
     imgui

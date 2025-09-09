@@ -4,6 +4,7 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "GUI/ImGuiSystem.h"
 #include "Scripting/State.h"
 #include "glm/fwd.hpp"
 #include <SDL2/SDL_timer.h>
@@ -20,6 +21,7 @@ unsigned Application::getProcessorCount()
 
 /* Creates window, opengl context and init glew*/
 Application::Application(const char *title, int w, int h, bool isSettingsApp)
+    : m_endGameFlags()
 {
   PLOG_T(resources::getCurrentWorkingDir());
   // =========================================================================//
@@ -86,9 +88,8 @@ Application::Application(const char *title, int w, int h, bool isSettingsApp)
   // =========================================================================//
   // Application Initial setup before
   // =========================================================================//
-  m_imguiController = std::make_unique<ImGuiController>(m_context, m_window);
   m_isMinimized = false;
-  m_sceneManager = new pain::SceneManager();
+  m_sceneManager = std::make_unique<SceneManager>();
   m_defaultImGuiInstance = new EngineController();
   m_luaState = createLuaState();
 
@@ -97,24 +98,25 @@ Application::Application(const char *title, int w, int h, bool isSettingsApp)
   // =========================================================================//
   // Default Values to increase redundancy
   // =========================================================================//
-  resources::initiateDefaultResources();
   resources::initiateDefaultScript(m_luaState);
   resources::initiateDefaultTexture();
   // =========================================================================//
   // config.ini file
   // =========================================================================//
-  if (resources::configDotIni().showDebugMenu && !isSettingsApp)
-    m_imguiController->addImGuiMenu(m_defaultImGuiInstance);
 }
 
-void Application::stop() { m_isGameRunning = false; }
+void Application::stopLoop(bool restartFlag)
+{
+  m_isGameRunning = false;
+  PLOG_I("Game has been stopped on {}", fmt::ptr(this));
+  m_endGameFlags.restartGame = restartFlag;
+}
 
-void Application::run()
+EndGameFlags Application::run()
 {
   DeltaTime deltaTime;
   double accumulator = 0.0;
   // double renderAccumulator = 0.0;
-  bool hasAlteredMultiplier = false;
 
   DeltaTime lastFrameTime = SDL_GetPerformanceCounter();
   while (m_isGameRunning) {
@@ -137,25 +139,13 @@ void Application::run()
         m_defaultImGuiInstance->m_currentTPS += fpsSample;
       }
       m_defaultImGuiInstance->m_currentTPS /= FPS_SAMPLE_COUNT;
-      hasAlteredMultiplier = false;
     }
     // =============================================================== //
     // Handle Updates
     // =============================================================== //
-    // NOTE: Eventually render and update systems need to execute at different
-    // rates...
-
     {
       PROFILE_SCOPE("Application::run - Handle Updates");
       double deltaSeconds = deltaTime.GetSeconds() * m_timeMultiplier;
-      if (m_isSimulation && !hasAlteredMultiplier) {
-        // the purpose of this is to only increase when there is spare tps
-        if (m_defaultImGuiInstance->m_currentTPS > 60.0)
-          m_timeMultiplier *= 1.10;
-        else
-          m_timeMultiplier *= 0.90;
-        hasAlteredMultiplier = true;
-      }
       // Uncomment this to create an accumulator cap
       // accumulator = fmod(accumulator + deltaSeconds, 15.0);
       accumulator += deltaSeconds;
@@ -179,15 +169,14 @@ void Application::run()
       SDL_Event event;
       // Start our event loop (goes until the queue is free)
       while (SDL_PollEvent(&event)) {
-        m_imguiController->onEvent(event);
         switch (event.type) {
         case SDL_QUIT:
-          stop();
+          stopLoop();
           break;
         case SDL_WINDOWEVENT:
           if (event.window.event == SDL_WINDOWEVENT_CLOSE &&
               event.window.windowID == SDL_GetWindowID(m_window))
-            stop();
+            stopLoop();
           else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
             m_isMinimized = true;
           else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
@@ -203,38 +192,28 @@ void Application::run()
           (*pScene)->onEvent(event);
         }
       }
-      m_imguiController->onUpdate(m_isMinimized);
     }
     // =============================================================== //
     // Handle rendering
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Rendering");
-      if ((!m_isMinimized) && m_isRendering) {
-        // int w, h;
-        // SDL_GetWindowSize(m_window, &w, &h);
-        // Renderer2d::setViewport(0, 0, w, h);
-        Renderer2d::setClearColor(m_clearColor);
-        Renderer2d::clear();
+      // int w, h;
+      // SDL_GetWindowSize(m_window, &w, &h);
+      // Renderer2d::setViewport(0, 0, w, h);
+      Renderer2d::setClearColor(m_clearColor);
+      Renderer2d::clear();
 
-        double globalTime = lastFrameTime.GetSeconds();
-        for (auto pScene = m_sceneManager->begin();
-             pScene != m_sceneManager->end(); ++pScene) {
-          Renderer2d::beginScene(**pScene, globalTime);
-          (*pScene)->onRender(globalTime);
-          (*pScene)->renderSystems(globalTime);
-          Renderer2d::endScene(**pScene);
-        }
-        m_imguiController->onRender();
-        P_ASSERT(m_window != nullptr, "m_window is nullptr")
-        SDL_GL_SwapWindow(m_window);
-      } else {
-        P_ASSERT(m_window != nullptr, "m_window is nullptr")
-        Renderer2d::setClearColor(glm::vec4(0.f, 0.f, 0.f, 1.f));
-        Renderer2d::clear();
-        m_imguiController->onRender();
-        SDL_GL_SwapWindow(m_window);
+      double globalTime = lastFrameTime.GetSeconds();
+      for (auto pScene = m_sceneManager->begin();
+           pScene != m_sceneManager->end(); ++pScene) {
+        Renderer2d::beginScene(**pScene, globalTime);
+        (*pScene)->onRender(m_isMinimized, globalTime);
+        (*pScene)->renderSystems(m_isMinimized, globalTime);
+        Renderer2d::endScene(**pScene);
       }
+      P_ASSERT(m_window != nullptr, "m_window is nullptr")
+      SDL_GL_SwapWindow(m_window);
     }
 
     // =============================================================== //
@@ -246,13 +225,19 @@ void Application::run()
     if (frameDuration < m_fixedFPS) {
       SDL_Delay(static_cast<uint32_t>((m_fixedFPS - frameDuration) * 1000.0));
     }
+    PLOG_I("is game running on {}? {}", fmt::ptr(this), m_isGameRunning);
   };
+  PLOG_I("Reaching the end of run");
+  return m_endGameFlags;
 }
 
 Application::~Application()
 {
+  Renderer2d::clearEntireRenderer();
+  PLOG_I("Deleting application");
+  resources::clearTextures();
+  resources::getDefaultLuaFile();
   SDL_GL_DeleteContext(m_context);
-  delete m_sceneManager;
   SDL_DestroyWindow(m_window);
   SDL_Quit();
 }

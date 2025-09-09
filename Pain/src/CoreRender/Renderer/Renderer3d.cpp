@@ -1,4 +1,4 @@
-﻿
+
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/CubeVertex.h"
@@ -59,11 +59,11 @@ void Renderer3d::setClearColor(const glm::vec4 color)
 
 void Renderer3d::beginScene(const glm::mat4 &transform)
 {
-  m_cubeBatch->getShader()->bind();
-  m_cubeBatch->getShader()->uploadUniformMat4(
+  m_cubeBatch->getShader().bind();
+  m_cubeBatch->getShader().uploadUniformMat4(
       "u_ViewProjection",
       m_cameraController->getCamera().getViewProjectionMatrix());
-  m_cubeBatch->getShader()->uploadUniformMat4("u_Transform", transform);
+  m_cubeBatch->getShader().uploadUniformMat4("u_Transform", transform);
 
   m_cubeBatch->goBackToFirst();
 }
@@ -81,11 +81,10 @@ void Renderer3d::flush()
   drawIndexed(m_cubeBatch->getVertexArray(), m_cubeBatch->getIndexCount());
 }
 
-void Renderer3d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
-                             uint32_t indexCount)
+void Renderer3d::drawIndexed(VertexArray &vertexArray, uint32_t indexCount)
 {
   uint32_t count =
-      indexCount ? indexCount : vertexArray->getIndexBuffer()->getCount();
+      indexCount ? indexCount : vertexArray.getIndexBuffer().getCount();
   glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);
 }

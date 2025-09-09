@@ -1,4 +1,4 @@
-﻿#include "CoreRender/Renderer/CubeVertex.h"
+#include "CoreRender/Renderer/CubeVertex.h"
 
 namespace pain
 {
@@ -171,9 +171,9 @@ void CubeVertexBatch::drawBatch(const glm::vec3 &position,
 
 CubeVertexBatch::CubeVertexBatch()
 {
-  m_vertexArray.reset(new VertexArray());
+  m_vertexArray = new VertexArray();
 
-  m_vertexBuffer.reset(new VertexBuffer(MaxVertices * sizeof(CubeVertex)));
+  m_vertexBuffer = new VertexBuffer(MaxVertices * sizeof(CubeVertex));
   m_vertexBuffer->setLayout({
       {ShaderDataType::Float3, "a_Position"}, //
       {ShaderDataType::Float4, "a_Color"},    //
@@ -198,16 +198,16 @@ CubeVertexBatch::CubeVertexBatch()
     offset += 4;
   }
 
-  std::shared_ptr<IndexBuffer> quadIB;
-  quadIB.reset(new IndexBuffer(quadIndices, MaxIndices));
-  m_vertexArray->setIndexBuffer(quadIB);
+  // NOTE: indexbuffer will need to be replace to some shared memory because it
+  // will on more then one buffer
+  m_vertexArray->setIndexBuffer(new IndexBuffer(quadIndices, MaxIndices));
   delete[] quadIndices;
 
-  m_whiteTexture.reset(new Texture(1, 1));
+  // m_whiteTexture.reset(new Texture(1, 1));
   // uint32_t whiteTextureData = 0xffffffff;
   // m_whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
 
-  m_textureShader.reset(new Shader("resources/shaders/Texture.glsl"));
+  m_textureShader = new Shader("resources/shaders/Texture.glsl");
   // m_textureShader->bind();
   // m_textureShader->uploadUniformInt("u_Texture", 0);
 }

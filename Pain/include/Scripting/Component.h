@@ -8,13 +8,14 @@
 namespace pain
 {
 struct LuaScriptComponent : public ExtendedEntity {
-  LuaScriptComponent(sol::state &solState);
+  LuaScriptComponent(Scene &scene, Entity entity, Bitmask Bitmask,
+                     sol::state &solState);
   void bind(const char *scriptPath);
   void onCreate();
   void onDestroy();
   void onEvent(const SDL_Event *event);
 
-  NONCOPYABLE(LuaScriptComponent)
+  NONCOPYABLE(LuaScriptComponent);
   LuaScriptComponent &operator=(LuaScriptComponent &&other) noexcept;
   LuaScriptComponent(LuaScriptComponent &&other) noexcept;
   ~LuaScriptComponent() = default;

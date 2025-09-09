@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Entity.h"
+#include "ECS/Scene.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
 
@@ -10,8 +12,8 @@ concept has_onCreate_method = requires(T &&t) {
 };
 
 template <typename T>
-concept has_onRender_method = requires(T &&t, double d) {
-  { t.onRender(d) };
+concept has_onRender_method = requires(T &&t, bool m, double d) {
+  { t.onRender(m, d) };
 };
 
 template <typename T>
@@ -29,6 +31,37 @@ concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
   { t.onEvent(e) };
 };
 
+template <typename T>
+concept has_invalid_onRender_signature = requires(T t) {
+  { t.onRender() };
+};
+template <typename T>
+concept has_invalid_onUpdate_signature = requires(T t) {
+  { t.onUpdate() };
+};
+template <typename T>
+concept has_invalid_onEvent_signature = requires(T t) {
+  { t.onEvent() };
+};
+template <typename T> void check_script_methods()
+{
+  if constexpr (has_invalid_onRender_signature<T>) {
+    static_assert(!has_invalid_onRender_signature<T>,
+                  "Warning: onRender() detected with no arguments! Should be "
+                  "onRender(bool, double).");
+  }
+  if constexpr (has_invalid_onUpdate_signature<T>) {
+    static_assert(!has_invalid_onUpdate_signature<T>,
+                  "Warning: onUpdate() detected with no arguments! Should be "
+                  "onUpdate(double).");
+  }
+  if constexpr (has_invalid_onEvent_signature<T>) {
+    static_assert(!has_invalid_onEvent_signature<T>,
+                  "Warning: onEvent() detected with no arguments! Should be "
+                  "onEvent(const SDL_Event&).");
+  }
+}
+
 namespace pain
 {
 class ExtendedEntity;
@@ -36,17 +69,31 @@ class ExtendedEntity;
 struct NativeScriptComponent {
   ExtendedEntity *instance = nullptr;
 
-  void (*instantiateFunction)(ExtendedEntity *&) = nullptr;
   void (*destroyInstanceFunction)(ExtendedEntity *&) = nullptr;
   void (*onCreateFunction)(ExtendedEntity *) = nullptr;
   void (*onDestroyFunction)(ExtendedEntity *) = nullptr;
-  void (*onRenderFunction)(ExtendedEntity *, double) = nullptr;
+  void (*onRenderFunction)(ExtendedEntity *, bool, double) = nullptr;
   void (*onUpdateFunction)(ExtendedEntity *, double) = nullptr;
   void (*onEventFunction)(ExtendedEntity *, const SDL_Event &) = nullptr;
 
-  template <typename T> void bind()
+  /* Bind the script to the entity, also initialize the script instance.
+   * Previously this was only "bind()" function without iniating the script
+   * instance, but I just never need those two things separate, so I joined
+   * them.
+   */
+  template <typename T, typename... Args>
+  void bindAndInitiate(Scene &scene, Entity entity, Bitmask mask, Args... args)
   {
-    instantiateFunction = [](ExtendedEntity *&instance) { instance = new T(); };
+    check_script_methods<T>();
+    static_assert(
+        std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
+        "Error: You are binding a function whose constructor doesn't implement "
+        "ExtendedEntity constructor: (Scene&, Entity, Bitmask). Pherhaps you "
+        "are using the defualt constructor instead of coding `using "
+        "ExtendedEntity::ExtendedEntity;`?");
+    instance = new T(scene, entity, mask, std::forward<Args>(args)...);
+    // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
+    // }
     destroyInstanceFunction = [](ExtendedEntity *&instance) {
       PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
              "called",
@@ -72,8 +119,9 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](ExtendedEntity *instance, double realTime) {
-        static_cast<T *>(instance)->onRender(realTime);
+      onRenderFunction = [](ExtendedEntity *instance, bool isMinimized,
+                            double realTime) {
+        static_cast<T *>(instance)->onRender(isMinimized, realTime);
       };
     } else {
       onRenderFunction = nullptr;
@@ -117,7 +165,6 @@ struct NativeScriptComponent {
         destroyInstanceFunction(instance);
 
       instance = other.instance;
-      instantiateFunction = other.instantiateFunction;
       destroyInstanceFunction = other.destroyInstanceFunction;
       onCreateFunction = other.onCreateFunction;
       onDestroyFunction = other.onDestroyFunction;
@@ -127,7 +174,6 @@ struct NativeScriptComponent {
 
       // Clear the other's instance
       other.instance = nullptr;
-      other.instantiateFunction = nullptr;
       other.destroyInstanceFunction = nullptr;
       other.onCreateFunction = nullptr;
       other.onDestroyFunction = nullptr;
@@ -141,7 +187,6 @@ struct NativeScriptComponent {
   NativeScriptComponent(NativeScriptComponent &&other) noexcept
   {
     instance = other.instance;
-    instantiateFunction = other.instantiateFunction;
     destroyInstanceFunction = other.destroyInstanceFunction;
     onCreateFunction = other.onCreateFunction;
     onDestroyFunction = other.onDestroyFunction;
@@ -151,7 +196,6 @@ struct NativeScriptComponent {
 
     // Clear the other's instance to avoid double delete
     other.instance = nullptr;
-    other.instantiateFunction = nullptr;
     other.destroyInstanceFunction = nullptr;
     other.onCreateFunction = nullptr;
     other.onDestroyFunction = nullptr;

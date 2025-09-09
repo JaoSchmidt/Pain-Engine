@@ -7,51 +7,12 @@
 
 namespace pain
 {
-namespace Renderer2d
-{
-void goBackToFirstVertex();
-float allocateTextures(Texture &texture);
-void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
-                  const float tilingFactor, const float textureIndex,
-                  const std::array<glm::vec2, 4> &textureCoordinate);
-void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor);
-void allocateSprayParticles(const glm::vec2 &position, const glm::vec2 &offset,
-                            const glm::vec2 &normal, const float startTime,
-                            const float rotationSpeed);
-void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
-                       const std::array<glm::vec2, 4> &textureCoordinate,
-                       const std::array<glm::vec4, 4> &textVertexPositions);
-void initBatches();
-void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                         float globalTime, const glm::mat4 &transform);
-void drawBatches(const glm::mat4 &viewProjectionMatrix);
+
 extern const Texture *m_fontAtlasTexture;
 
 // OrthoCameraEntity *m_cameraEntity = nullptr;
 
 static const OrthoCamera *m_cameraEntity = nullptr;
-// ================================================================= //
-// Render initialization and destruction
-// ================================================================= //
-
-void init(const OrthoCamera &cameraEntity)
-{
-  // NOTE: This enable 3d and can be changed later in case we need some camera
-  // mechanic
-  // glEnable(GL_DEPTH_TEST);
-
-  // allow transparency
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  // HACK: allow textures with 3 channels to align properly, e.g. font textures.
-  // No idea why it works tho, perhaps I will find a proper doc later
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-  // quadBatch = new VertexBatch();
-  initBatches();
-  m_cameraEntity = &cameraEntity;
-}
 
 // ================================================================= //
 // Renderer: basic wrapper around opengl
@@ -104,7 +65,7 @@ void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 {
   PROFILE_FUNCTION();
   uint32_t count =
-      indexCount ? indexCount : vertexArray->getIndexBuffer()->getCount();
+      indexCount ? indexCount : vertexArray->getIndexBuffer().getCount();
   glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);
 }

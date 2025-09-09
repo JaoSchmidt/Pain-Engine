@@ -11,7 +11,7 @@ namespace logWrapper
 {
 std::shared_ptr<spdlog::logger> &GetCoreLogger();
 std::shared_ptr<spdlog::logger> &GetClientLogger();
-void Init();
+void InitLogger();
 } // namespace logWrapper
 
 } // namespace pain

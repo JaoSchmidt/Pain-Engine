@@ -31,17 +31,17 @@
 #endif
 
 #define NONCOPYABLE(c)                                                         \
-  c(const c &) = delete;                                                       \
-  c &operator=(const c &) = delete;
+  c(const c &o) = delete;                                                      \
+  c &operator=(const c &o) = delete;
 
 #define COPIES(c)                                                              \
-  c(const c &) = default;                                                      \
-  c &operator=(const c &) = default;
+  c(const c &o) = default;                                                     \
+  c &operator=(const c &o) = default;
 
 #define MOVABLE(m)                                                             \
-  m(m &&) = default;                                                           \
-  m &operator=(m &&) = default;
+  m(m &&o) = default;                                                          \
+  m &operator=(m &&o) = default;
 
 #define NONMOVABLE(m)                                                          \
-  m(m &&) = default;                                                           \
-  m &operator=(m &&) = default;
+  m(m &&o) = delete;                                                           \
+  m &operator=(m &&o) = delete;

@@ -3,9 +3,10 @@
 
 #include "Assets/DeltaTime.h"
 #include "Core.h"
-#include "CoreFiles/ImGuiController.h"
+#include "CoreFiles/EndGameFlags.h"
 #include "Debugging/DebuggingImGui.h"
 #include "ECS/SceneManager.h"
+#include "GUI/ImGuiSystem.h"
 #include <sol/state.hpp>
 
 namespace pain
@@ -16,15 +17,21 @@ class Application
 public:
   Application(const char *title, int w, int h, bool isSettingsApp = false);
   ~Application();
+  template <typename S = Scene, typename... Args>
+  std::unique_ptr<S> createSceneUPtr(Args &&...args)
+  {
+    return std::make_unique<S>(m_context, m_window, m_luaState,
+                               std::forward<Args>(args)...);
+  };
+  template <typename S = Scene, typename... Args>
+  S *createScenePtr(Args &&...args)
+  {
+    return new S(m_context, m_window, m_luaState, std::forward<Args>(args)...);
+  };
 
   // virtual because the real Application will be the game
 
   // TODO: define those in the source file later
-  void addImGuiInstance(ImGuiInstance *imGuiInstance)
-  {
-    m_imguiController->addImGuiMenu(imGuiInstance);
-  }
-
   void setInfiniteSimulation(bool isSimulation)
   {
     m_isSimulation = isSimulation;
@@ -44,14 +51,16 @@ public:
   // ECS
   // clang-format off
   void inline pushScene(const std::string &name, Scene *scene) { m_sceneManager->addScene(name,scene); }
+  void inline pushScene(const std::string &name, std::unique_ptr<Scene> scene) { m_sceneManager->addScene(name,std::move(scene)); }
   void inline popScene(const std::string &name) { m_sceneManager->popScene(name); }
   void inline attachScene(const std::string &name) { m_sceneManager->attachScene(name); }
   void inline detachScene(const std::string &name) { m_sceneManager->detachScene(name); }
-  void stop();
+  void stopLoop(bool restartFlag = false);
   // clasng-format on
 
 private:
-  void run();
+  EndGameFlags run();
+  EndGameFlags m_endGameFlags = {};
   // Refers to the game window
   SDL_Window *m_window = nullptr;
   SDL_GLContext m_context = nullptr;
@@ -65,9 +74,8 @@ private:
   DeltaTime m_maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
   sol::state m_luaState;
 
-  SceneManager *m_sceneManager;
+  std::unique_ptr<SceneManager> m_sceneManager;
   EngineController *m_defaultImGuiInstance;
-  std::unique_ptr<ImGuiController> m_imguiController;
 
   // Pure Black
   // static constexpr glm::vec4 m_clearColor = glm::vec4(0.0,0.0,0.0,1);
@@ -85,6 +93,6 @@ private:
 };
 
 // To be defined in CLIENT
-Application *createApplication();
 
+  Application *createApplication();
 } // namespace pain

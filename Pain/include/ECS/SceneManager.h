@@ -15,6 +15,7 @@ public:
   ~SceneManager();
 
   void addScene(const std::string &name, Scene *scene);
+  void addScene(const std::string &name, std::unique_ptr<Scene> scene);
   // void popScene(Scene *scene);
   void popScene(const std::string &name);
 
@@ -28,7 +29,7 @@ public:
   std::unordered_set<Scene *>::iterator end();
 
 private:
-  std::unordered_map<std::string, Scene *> m_scenes = {};
+  std::unordered_map<std::string, std::unique_ptr<Scene>> m_scenes = {};
   std::unordered_set<Scene *> m_currentScenes = {};
 };
 } // namespace pain

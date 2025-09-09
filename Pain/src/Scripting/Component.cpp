@@ -11,7 +11,9 @@ namespace pain
 {
 void custom_print(const std::string &str) { PLOG_I("{}", str); }
 
-LuaScriptComponent::LuaScriptComponent(sol::state &solState) : m_lua(solState)
+LuaScriptComponent::LuaScriptComponent(Scene &scene, Entity entity,
+                                       Bitmask bitmask, sol::state &solState)
+    : ExtendedEntity(scene, entity, bitmask), m_lua(solState)
 {
 }
 void LuaScriptComponent::initializeScript() {}
@@ -25,10 +27,10 @@ void LuaScriptComponent::bind(const char *scriptPath)
   script_api["on_create"] = [&](sol::function f) {
     *m_onCreate = std::move(f);
   };
-  m_onUpdateFunction = m_scene->createEntity();
+  m_onUpdateFunction = m_scene.get().createEntity();
   script_api["on_update"] = [&](sol::function f) {
-    m_scene->createComponent<onUpdateLuaFunction>(m_onUpdateFunction,
-                                                  std::move(f));
+    m_scene.get().createComponent<onUpdateLuaFunction>(m_onUpdateFunction,
+                                                       std::move(f));
   };
   script_api["on_destroy"] = [&](sol::function f) {
     *m_onDestroy = std::move(f);

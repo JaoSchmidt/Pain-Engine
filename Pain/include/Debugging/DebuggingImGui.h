@@ -2,7 +2,7 @@
 // processes
 
 #include "Core.h"
-#include "CoreFiles/ImGuiController.h"
+#include "GUI/ImGuiSystem.h"
 namespace pain
 {
 class EngineController : public ImGuiInstance

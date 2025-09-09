@@ -34,3 +34,6 @@
 [submodule "Pain/external/inih"]
 	path = Pain/external/inih
 	url = https://github.com/OSSystems/inih.git
+[submodule "Pain/external/mINI"]
+	path = Pain/external/mINI
+	url = https://github.com/metayeti/mINI.git

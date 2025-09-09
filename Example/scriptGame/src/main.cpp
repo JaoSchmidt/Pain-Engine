@@ -7,35 +7,34 @@
 #include <memory>
 #include <vector>
 
-class ImGuiGame : public pain::ImGuiInstance
-{
-public:
-  void onImGuiUpdate() override
-  {
-    ImGui::Begin("Shapes Controller");
-    ImGui::End();
-  }
-};
-
 class MainScene : public pain::Scene
 {
 public:
-  MainScene(sol::state &luaState) : pain::Scene(luaState) {}
-  void init(pain::Application &app, Scene *scene, float aspectRatio, float zoom)
+  MainScene(void *context, SDL_Window *window, sol::state &luaState,
+            float aspectRatio, float zoom)
+      : pain::Scene(context, window, luaState),
+        m_texture(pain::resources::getTexture(
+            "resources/textures/Checkerboard.png", true))
   {
-    m_orthocamera = new pain::OrthoCamera(scene, aspectRatio, zoom);
+
+    // create the camera
+    m_orthocamera = new pain::OrthoCamera(this, aspectRatio, zoom);
+
+    // make the renderer main camera (not related to the ECS)
     pain::Renderer2d::init(*m_orthocamera);
-    pain::NativeScriptComponent &a =
-        m_orthocamera->getComponent<pain::NativeScriptComponent>(*scene);
-    a.bind<pain::OrthoCameraController>();
-    scene->initializeScript(scene, a, m_orthocamera->getEntity(),
-                            m_orthocamera->getBitMask());
+
+    // create the script component meaning it can now  extend the object
+    m_orthocamera->getComponent<pain::NativeScriptComponent>(*this)
+        .bindAndInitiate<pain::OrthoCameraScript>(
+            *this, m_orthocamera->getEntity(), m_orthocamera->getBitMask());
+
+    // manually instantiate the controller and link it with the bitmask and
+    // entity
+    // scene->initializeScript(a, m_orthocamera->getEntity(),
+    //                         m_orthocamera->getBitMask());
     // ShapesController *sc = new ShapesController();
     // app.addImGuiInstance(sc);
     // m_sc = sc;
-
-    m_texture = std::make_unique<pain::Texture>(
-        "resources/textures/Checkerboard.png", true);
 
     // m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
     // dummy = new Dummy(scene, {0.f, 0.f}, {1.f, 1.f}, {9.f, 0.f, 5.f, 1.f},
@@ -43,8 +42,7 @@ public:
     // ls = &dummy->getComponent<pain::LuaScriptComponent>(*scene);
     // ls->bind("resources/scripts/lua_script.lua");
     // ls->onCreate();
-  }
-
+  };
   void onUpdate(double deltaTime) override
   {
     // PROFILE_FUNCTION()
@@ -52,7 +50,7 @@ public:
     //     m_orthocamera->getComponent<pain::TransformComponent>();
     // m_mainMap->updateSurroundingChunks(tc.m_position, this);
   }
-  void onRender(double currentTime) override
+  void onRender(bool isMinimized, double currentTime) override
   {
     // m_orthocamera->onUpdate(deltaTime);
     // const std::vector<std::vector<int>> mdm =
@@ -74,7 +72,7 @@ public:
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
     pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f},
-                               {1.0f, 1.0f, 1.0f, 1.0f}, *m_texture);
+                               {1.0f, 1.0f, 1.0f, 1.0f}, m_texture);
     // pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f}, m_texture, 1.0f,
     //                            {1.0f, 1.0f, 1.0f, 1.0f});
   }
@@ -85,9 +83,8 @@ private:
   std::vector<std::vector<int>> m_backgroundMap;
   pain::OrthoCamera *m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
-  std::unique_ptr<pain::Texture> m_texture;
+  pain::Texture &m_texture;
   std::unique_ptr<Dummy> dummy;
-  std::unique_ptr<ImGuiGame> m_sc;
   std::unique_ptr<pain::LuaScriptComponent> ls;
 };
 
@@ -99,10 +96,11 @@ pain::Application *pain::createApplication()
   const int height = 1000;
   Application *app = new Application(title, width, height);
 
-  Scene *scene = new MainScene(app->getLuaState());
-  ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
+  auto scene = app->createSceneUPtr<MainScene>((float)width / height, 1.0f);
+  // Scene *scene = new MainScene(app->getLuaState());
+  // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
 
-  app->pushScene("main", scene);
+  app->pushScene("main", std::move(scene));
   app->attachScene("main");
   return app;
 }
@@ -119,12 +117,15 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 int main(int argc, char *argv[])
 {
   bool isSettingsGuiNeeded = pain::Pain::initiate();
+  EndGameFlags flags;
   if (isSettingsGuiNeeded) {
     pain::Application *app = pain::createLauncher();
-    pain::Pain::runAndDeleteApplication(app);
+    flags = pain::Pain::runAndDeleteApplication(app);
   }
-  pain::Application *app = pain::createApplication();
-  pain::Pain::runAndDeleteApplication(app);
+  while (flags.restartGame) {
+    pain::Application *app = pain::createApplication();
+    flags = pain::Pain::runAndDeleteApplication(app);
+  }
   return 0;
 }
 #endif

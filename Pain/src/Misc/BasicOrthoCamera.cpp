@@ -22,16 +22,16 @@ OrthoCamera::OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel)
   );
   // clang-format off
 };
-
+// OrthoCameraScript inherits ExtendedEntity
 inline void
-OrthoCameraController::recalculatePosition(const glm::vec3 &position,
+OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
                                            const float rotation)
 {
   getComponent<OrthoCameraComponent>().m_camera->RecalculateViewMatrix(
       position, rotation);
 }
 
-void OrthoCameraController::onUpdate(double deltaTimeSec)
+void OrthoCameraScript::onUpdate(double deltaTimeSec)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   auto [mc, tc, cc, rc] = getComponents<MovementComponent,TransformComponent,OrthoCameraComponent,RotationComponent>();
@@ -54,7 +54,7 @@ void OrthoCameraController::onUpdate(double deltaTimeSec)
   recalculatePosition(tc.m_position, rc.m_rotationAngle);
 }
 
-void OrthoCameraController::onEvent(const SDL_Event &event)
+void OrthoCameraScript::onEvent(const SDL_Event &event)
 {
   OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
   if (event.type == SDL_MOUSEWHEEL)
@@ -66,7 +66,7 @@ void OrthoCameraController::onEvent(const SDL_Event &event)
   }
 }
 
-void OrthoCameraController::onMouseScrolled(const SDL_Event &event,
+void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
                                             OrthoCameraComponent &cc)
 {
   cc.m_zoomLevel -= (float) event.wheel.y * m_zoomSpeed;
@@ -76,7 +76,7 @@ void OrthoCameraController::onMouseScrolled(const SDL_Event &event,
                              cc.m_zoomLevel);
 }
 
-void OrthoCameraController::onWindowResized(const SDL_Event &event,
+void OrthoCameraScript::onWindowResized(const SDL_Event &event,
                                             OrthoCameraComponent &cc)
 {
   Renderer2d::setViewport(0, 0, event.window.data1, event.window.data2);

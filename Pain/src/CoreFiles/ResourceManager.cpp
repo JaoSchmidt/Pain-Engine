@@ -1,8 +1,8 @@
 #include "Assets/ResourceManager.h"
+#include "Assets/IniWrapper.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Texture.h"
-#include <INIReader.h>
 #include <cstdio>
 #include <iostream>
 #include <stdio.h> /* defines FILENAME_MAX */
@@ -15,27 +15,33 @@
 #include <unistd.h>
 #endif
 
+namespace
+{
+// NOTE: remember folks, surfaceMap is in the static/global memory but its
+// content are in the heap
+static std::map<std::string, sol::load_result> m_luaFileMap = {};
+static std::map<std::string, std::string> m_luaScriptSource;
+} // namespace
 namespace pain
 {
-inline bool exists_file(const std::string &name)
+bool resources::exists_file(const std::string &name)
 {
   struct stat buffer;
   return (stat(name.c_str(), &buffer) == 0);
 }
 bool resources::isSettingsGuiNeeded()
 {
-  if (!exists_file("config.ini"))
+  if (!std::filesystem::exists("config.ini"))
     return true;
-  INIReader reader("config.ini");
-  return reader.GetBoolean("settings", "hideConfigIniGui", true);
-}
 
-static resources::ConfigIni configIni;
-resources::ConfigIni &resources::configDotIni() { return configIni; }
-// NOTE: remember folks, surfaceMap is in the static/global memory but its
-// content are in the heap
-static std::map<const char *, sol::load_result> m_luaFileMap = {};
-static std::map<const char *, std::string> m_luaScriptSource;
+  mINI::INIFile file("config.ini");
+  mINI::INIStructure ini;
+
+  if (!file.read(ini))
+    return true;
+
+  return !IniWrapper::getBoolean(ini, "settings", "HideConfig", true);
+}
 
 // load a script inside filepath, if it's not already loaded, created
 const std::string &resources::getLuaScriptSource(const char *filepath)
@@ -65,7 +71,6 @@ const std::string &resources::getLuaScriptSource(const char *filepath)
 }
 
 // start the stuff to run settings app
-void resources::initiateDefaultResources() {}
 
 void resources::initiateDefaultScript(sol::state &solstate)
 {
@@ -77,7 +82,21 @@ const char *resources::getDefaultLuaFile()
   return "resources/default/scripts/default.lua";
 }
 
-const std::string resources::getCurrentWorkingDir()
+std::string resources::getCurrentWorkingDir(std::string append)
+{
+  char sep =
+#ifdef PLATFORM_IS_WINDOWS
+      '\\';
+#else
+      '/';
+#endif
+  char buff[FILENAME_MAX];
+  getcwd(buff, FILENAME_MAX);
+  const std::string currentDir(buff);
+  return currentDir + sep + append;
+}
+
+std::string resources::getCurrentWorkingDir()
 {
   char buff[FILENAME_MAX];
   getcwd(buff, FILENAME_MAX);
@@ -102,6 +121,11 @@ void resources::defaultNativeScript::onDestroy()
 {
   PLOG_W("You are trying to destroy the default script, not sure if that is "
          "suppose to happen");
+}
+void resources::clearScript()
+{
+  m_luaScriptSource.clear();
+  m_luaFileMap.clear();
 }
 
 } // namespace pain

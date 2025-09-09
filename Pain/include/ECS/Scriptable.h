@@ -6,6 +6,8 @@
 #include "ECS/Entity.h"
 #include "ECS/Scene.h"
 
+#include "ECS/Components/NativeScript.h"
+#include "GUI/ImGuiComponent.h"
 namespace pain
 {
 
@@ -31,10 +33,29 @@ public:
   {
     return scene.getComponent<T>(m_entity, getBitMask());
   }
-  constexpr Bitmask getBitMask() const
+  static constexpr Bitmask getBitMask()
   {
     return ComponentManager::multiComponentBitmask<Components...>();
   }
+  template <typename T, typename... Args>
+  void withScript(Scene &scene, Args... args)
+  {
+    NativeScriptComponent &nsc = getComponent<NativeScriptComponent>(scene);
+    nsc.bindAndInitiate<T>(scene, m_entity, getBitMask(),
+                           std::forward<Args>(args)...);
+    if (nsc.instance && nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
+  }
+  template <typename T, typename... Args>
+  void withImGuiScript(Scene &scene, Args... args)
+  {
+    ImGuiComponent &nsc = getComponent<ImGuiComponent>(scene);
+    nsc.bindAndInitiate<T>(scene, m_entity, getBitMask(),
+                           std::forward<Args>(args)...);
+    if (nsc.instance && nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
+  }
+
   NormalEntity(Scene &scene) { m_entity = scene.createEntity(); }
   inline Entity getEntity() const { return m_entity; }
 
@@ -48,31 +69,34 @@ protected:
 class ExtendedEntity
 {
 public:
-  ExtendedEntity() = default;
+  ExtendedEntity(Scene &scene, Entity entity, Bitmask bitmask)
+      : m_scene(scene), m_entity(entity), m_bitmask(bitmask) {};
   // ---------------------------------------------------- //
   // Get components from archetypes
   // ---------------------------------------------------- //
   template <typename... TargetComponents>
   std::tuple<TargetComponents &...> getComponents()
   {
-    return m_scene->getComponents<TargetComponents...>(m_entity, m_bitmask);
+    return m_scene.get().getComponents<TargetComponents...>(m_entity,
+                                                            m_bitmask);
   }
   // return the components of an entity, as a tuple
   template <typename... TargetComponents>
   const std::tuple<TargetComponents &...> getComponents() const
   {
-    return m_scene->getComponents<TargetComponents...>(m_entity, m_bitmask);
+    return m_scene.get().getComponents<TargetComponents...>(m_entity,
+                                                            m_bitmask);
   }
   template <typename T> T &getComponent()
   {
     PROFILE_FUNCTION();
-    return m_scene->getComponent<T>(m_entity, m_bitmask);
+    return m_scene.get().getComponent<T>(m_entity, m_bitmask);
   }
   template <typename T> const T &getComponent() const
   {
     PROFILE_FUNCTION();
-    return static_cast<const Scene *>(m_scene)->getComponent<T>(m_entity,
-                                                                m_bitmask);
+    return static_cast<const Scene &>(m_scene.get())
+        .getComponent<T>(m_entity, m_bitmask);
   }
   // ---------------------------------------------------- //
   // "Has" all components
@@ -80,20 +104,20 @@ public:
   // Does archetype has any of the target components?
   template <typename... TargetComponents> bool hasAnyComponents() const
   {
-    return m_scene->hasAnyComponents<TargetComponents...>(m_bitmask);
+    return m_scene.get().hasAnyComponents<TargetComponents...>(m_bitmask);
   }
 
   // Does archetype has all of the target components?
   template <typename... TargetComponents> bool hasAllComponents() const
   {
-    return m_scene->containsAllComponents<TargetComponents...>(m_bitmask);
+    return m_scene.get().containsAllComponents<TargetComponents...>(m_bitmask);
   }
   explicit operator bool() const { return m_entity != -1; }
 
 protected:
+  std::reference_wrapper<Scene> m_scene;
   Entity m_entity;
   Bitmask m_bitmask;
-  Scene *m_scene = nullptr;
   friend class Scene;
 };
 

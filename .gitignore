@@ -1,4 +1,8 @@
 ### jaoschmidt (me) stuff
+# generated ini
+imgui.ini
+config.ini
+
 
 CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
@@ -76,22 +80,7 @@ Temporary Items
 # Built application files
 *.apk
 *.ap_
-*.aab
-
-# Files for the ART/Dalvik VM
-*.dex
-
-# Java class files
-*.class
-
-# Generated files
-bin/
-gen/
-out/
-#  Uncomment the following line in case you need and you don't have the release build type files in your app
-# release/
-
-# Gradle files
+# build
 .gradle/
 build/
 build*

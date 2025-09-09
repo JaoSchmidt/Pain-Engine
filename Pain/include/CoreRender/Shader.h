@@ -5,17 +5,23 @@
 
 namespace pain
 {
-class  Shader
+class Shader
 {
 public:
-  Shader(const char *filepath);
-  Shader(const std::string &name, const char *filepath);
-  Shader(const std::string &name, const std::string &vertexShader,
-         const std::string &fragmentShader);
-  Shader(const std::string &name,
-         std::function<std::pair<std::string, std::string>()> fn);
+  static std::optional<Shader> createFromFile(const char *filepath);
+  static std::optional<Shader> createFromFile(const std::string &name,
+                                              const char *filepath);
+  static std::optional<Shader> createFromStrings(const std::string &name,
+                                                 const std::string &vertex,
+                                                 const std::string &fragment);
+  static std::optional<Shader>
+  createFromFn(const std::string &name,
+               std::function<std::pair<std::string, std::string>()> fn);
 
   ~Shader();
+  NONCOPYABLE(Shader);
+  Shader(Shader &&o);
+  Shader &operator=(Shader &&o);
 
   void bind() const;
   void unbind() const;
@@ -34,11 +40,12 @@ public:
                              uint32_t count);
 
 private:
-  std::string m_name;
+  Shader() = default;
+  std::string m_name = "undefined";
   GLint getUniformLocation(const std::string &name) const;
   uint32_t compileShader(uint32_t type, const std::string &source);
   bool checkLinkProgram(uint32_t programID);
-  uint32_t m_programId;
+  uint32_t m_programId = 0;
   void createShaderFromStrings(const std::string &vertexShader,
                                const std::string &fragmentShader);
 };

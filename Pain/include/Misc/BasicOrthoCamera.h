@@ -17,9 +17,10 @@ public:
   OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel);
 };
 
-class OrthoCameraController : public ExtendedEntity
+class OrthoCameraScript : public ExtendedEntity
 {
 public:
+  using ExtendedEntity::ExtendedEntity;
   void onUpdate(double deltaTimeSec);
   void onRender(double currentTime) {};
   void onEvent(const SDL_Event &e);

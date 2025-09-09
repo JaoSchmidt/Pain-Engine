@@ -47,7 +47,8 @@ private:
   createAtlasTexture(const char *fontName,
                      const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
                      const msdf_atlas::FontGeometry &fontGeometry,
-                     const float width, const float height);
+                     const float width, const float height,
+                     const char *fontFilename);
   Font(const char *fontFilename, double emSize);
 };
 

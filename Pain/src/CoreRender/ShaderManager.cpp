@@ -3,6 +3,8 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 
+// NOTE: Not being used for now
+#if 0
 namespace pain
 {
 
@@ -30,7 +32,7 @@ void ShaderLibrary::add(const std::shared_ptr<Shader> &shader)
 
 std::shared_ptr<pain::Shader> ShaderLibrary::load(const char *filepath)
 {
-  auto shader = std::make_shared<Shader>(Shader(filepath));
+  auto shader = std::make_shared<Shader>(Shader::createFromFile(filepath));
   add(shader);
   return shader;
 }
@@ -38,7 +40,7 @@ std::shared_ptr<pain::Shader> ShaderLibrary::load(const char *filepath)
 std::shared_ptr<pain::Shader> ShaderLibrary::load(const std::string &name,
                                                   const char *filepath)
 {
-  auto shader = std::make_shared<Shader>(Shader(filepath));
+  auto shader = std::make_shared<Shader>(Shader::createFromFile(filepath));
   add(name, shader);
   return shader;
 }
@@ -55,3 +57,4 @@ bool ShaderLibrary::exists(const std::string &name) const
 }
 
 } // namespace pain
+#endif

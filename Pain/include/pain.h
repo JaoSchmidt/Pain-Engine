@@ -4,13 +4,13 @@
 
 #include "Assets/RandNumberGenerator.h"
 #include "CoreFiles/Application.h"
-#include "CoreFiles/ImGuiController.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
+#include "GUI/ImGuiSystem.h"
 // Misc
+#include "GUI/Launcher.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/BasicShape.h"
-#include "Misc/Launcher.h"
 #include "Misc/PerspCameraController.h"
 // Renderer
 #include "CoreRender/AllBuffers.h"
@@ -61,6 +61,6 @@ namespace pain
 {
 struct Pain {
   static bool initiate();
-  static void runAndDeleteApplication(Application *app);
+  static EndGameFlags runAndDeleteApplication(Application *app);
 };
 } // namespace pain

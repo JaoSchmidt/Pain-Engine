@@ -1,15 +1,17 @@
 #pragma once
 
 #include "Core.h"
-
-#include <queue>
-#include <utility>
-
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/NativeScript.h"
+#include "CoreRender/System.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "Entity.h"
+#include "GUI/ImGuiSystem.h"
+#include "Physics/Kinematics.h"
+#include "Scripting/NativeSystem.h"
+
+#include <queue>
 #include <sol/sol.hpp>
+#include <utility>
 
 namespace pain
 {
@@ -21,15 +23,13 @@ private:
   sol::state &m_luaState;
 
 public:
-  Scene(sol::state &solState);
-  void initializeScript(Scene *scene, NativeScriptComponent &nsc, Entity entity,
-                        Bitmask archetype);
+  Scene(void *context, SDL_Window *window, sol::state &solState);
 
   Entity createEntity();
   void destroyEntity(Entity entity);
 
   virtual ~Scene() = default;
-  virtual void onRender(double realTime) = 0;
+  virtual void onRender(bool isMinimized, double realTime) = 0;
   virtual void onUpdate(double deltaTime) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
 
@@ -142,7 +142,7 @@ public:
 
   void updateSystems(double deltaTime);
   void updateSystems(const SDL_Event &event);
-  void renderSystems(double currentTime);
+  void renderSystems(bool isMinimized, double currentTime);
   static void clearQueue()
   {
     std::queue<Entity> empty;
@@ -152,5 +152,9 @@ public:
 private:
   inline static std::queue<Entity> m_availableEntities = {};
   inline static Entity numberOfEntities = 0;
+  Systems::Render m_renderSystem = {m_registry};
+  Systems::Kinematics m_kinematicsSystem = {m_registry};
+  Systems::NativeScript m_nativeScriptSystem = {m_registry};
+  Systems::ImGui m_imGuiSystem;
 };
 } // namespace pain
