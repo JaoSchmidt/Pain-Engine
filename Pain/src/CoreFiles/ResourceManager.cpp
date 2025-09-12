@@ -72,7 +72,7 @@ const std::string &resources::getLuaScriptSource(const char *filepath)
 
 // start the stuff to run settings app
 
-void resources::initiateDefaultScript(sol::state &solstate)
+void resources::initiateDefaultScript(const sol::state &solstate)
 {
   getLuaScriptSource(getDefaultLuaFile());
 }

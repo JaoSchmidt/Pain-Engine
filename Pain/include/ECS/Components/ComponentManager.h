@@ -1,3 +1,4 @@
+#pragma once
 #include "ECS/Registry/Bitmask.h"
 
 #include "ECS/Components/Camera.h"

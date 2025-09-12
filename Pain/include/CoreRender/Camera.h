@@ -23,10 +23,10 @@ protected:
   glm::mat4 m_ViewProjectionCacheMatrix;
 };
 
-class OrthographicCamera : public CameraMatrices
+class OrthographicMatrices : public CameraMatrices
 {
 public:
-  OrthographicCamera(float left, float right, float bottom, float top);
+  OrthographicMatrices(float left, float right, float bottom, float top);
   void RecalculateViewMatrix(const glm::vec3 &m_position,
                              const float m_rotation);
   void SetProjection(float left, float right, float bottom, float top);

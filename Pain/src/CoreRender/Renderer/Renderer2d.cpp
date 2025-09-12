@@ -10,58 +10,53 @@ namespace pain
 
 extern const Texture *m_fontAtlasTexture;
 
-// OrthoCameraEntity *m_cameraEntity = nullptr;
-
-static const OrthoCamera *m_cameraEntity = nullptr;
-
 // ================================================================= //
 // Renderer: basic wrapper around opengl
 // ================================================================= //
-void shutdown() {}
+// void Renderer2d::shutdown() {}
 
-void setViewport(int x, int y, int width, int height)
+void Renderer2d::setViewport(int x, int y, int width, int height)
 {
   glViewport(x, y, width, height);
 }
 
-void clear() { glClear(GL_COLOR_BUFFER_BIT); }
+void Renderer2d::clear() { glClear(GL_COLOR_BUFFER_BIT); }
 
-void setClearColor(const glm::vec4 &color)
+void Renderer2d::setClearColor(const glm::vec4 &color)
 {
   glClearColor(color.r, color.g, color.b, color.a);
 }
+void Renderer2d::changeCamera(const OrthographicMatrices &cameraMatrices)
+{
+  m_cameraMatrices = &cameraMatrices;
+}
 
-void beginScene(const Scene &scene, float globalTime,
-                const glm::mat4 &transform)
+void Renderer2d::beginScene(float globalTime, const glm::mat4 &transform)
 {
   PROFILE_FUNCTION();
-  const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>(scene);
 
-  uploadBasicUniforms(cameraComponent.m_camera->getViewProjectionMatrix(),
-                      globalTime, transform);
+  uploadBasicUniforms(m_cameraMatrices->getViewProjectionMatrix(), globalTime,
+                      transform);
   goBackToFirstVertex();
 }
 
-void flush(const Scene &scene)
+void Renderer2d::flush()
 {
   PROFILE_FUNCTION();
   // bindTextures();
-  const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>(scene);
-  drawBatches(cameraComponent.m_camera->getViewProjectionMatrix());
+  drawBatches(m_cameraMatrices->getViewProjectionMatrix());
 }
 
-void endScene(const Scene &scene)
+void Renderer2d::endScene()
 {
   // quadBatch->sendAllDataToOpenGL();
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
   // otherwise flush() wouldn't need to be a function
-  flush(scene);
+  flush();
 }
 
-void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
-                 uint32_t indexCount)
+void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
+                             uint32_t indexCount)
 {
   PROFILE_FUNCTION();
   uint32_t count =
@@ -74,9 +69,10 @@ void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 // Draw Quads
 // ================================================================= //
 
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor, Texture &texture, float tilingFactor,
-              const std::array<glm::vec2, 4> &textureCoordinate)
+void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor, Texture &texture,
+                          float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
@@ -84,10 +80,11 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
 
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor, const float rotationRadians,
-              Texture &texture, float tilingFactor,
-              const std::array<glm::vec2, 4> &textureCoordinate)
+void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor,
+                          const float rotationRadians, Texture &texture,
+                          float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
@@ -99,15 +96,16 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 // Draw Tri
 // ================================================================= //
 
-void drawTri(const glm::vec2 &position, const glm::vec2 &size,
-             const glm::vec4 &tintColor)
+void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
+                         const glm::vec4 &tintColor)
 {
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size);
   allocateTri(transform, tintColor);
 }
-void drawTri(const glm::vec2 &position, const glm::vec2 &size,
-             const glm::vec4 &tintColor, const float rotationRadians)
+void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
+                         const glm::vec4 &tintColor,
+                         const float rotationRadians)
 {
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
@@ -118,7 +116,7 @@ void drawTri(const glm::vec2 &position, const glm::vec2 &size,
 // Draw Spray Particles
 // ================================================================= //
 
-void drawSprayParticle(const Particle &p)
+void Renderer2d::drawSprayParticle(const Particle &p)
 {
   allocateSprayParticles(p.m_position, p.m_offset, p.m_normal, p.m_startTime,
                          p.m_rotationSpeed);
@@ -127,8 +125,8 @@ void drawSprayParticle(const Particle &p)
 // ================================================================= //
 // Draw Text
 // ================================================================= //
-void drawString(const glm::vec2 &position, const char *string, const Font &font,
-                const glm::vec4 &color)
+void Renderer2d::drawString(const glm::vec2 &position, const char *string,
+                            const Font &font, const glm::vec4 &color)
 {
   PROFILE_FUNCTION();
   const auto &fontGeometry = font.getFontGeometry();
@@ -201,6 +199,5 @@ void drawString(const glm::vec2 &position, const char *string, const Font &font,
     }
   }
 }
-} // namespace Renderer2d
 
 } // namespace pain

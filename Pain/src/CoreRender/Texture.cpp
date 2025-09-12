@@ -118,12 +118,11 @@ void Texture::bindAndClearSlot()
 void Texture::bind() const { glBindTexture(GL_TEXTURE_2D, m_rendererId); }
 // Delete the texture, note that this doesn't modify the texture slot array
 // inside the Renderer. That task should be done elsewhere
+
 Texture::~Texture()
 {
   if (m_rendererId != 0) {
-    PLOG_I("Deleted texture id = {}", m_rendererId);
     glDeleteTextures(1, &m_rendererId);
-    Renderer2d::removeTexture(*this);
   }
 }
 Texture Texture::clone()

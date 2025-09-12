@@ -46,7 +46,7 @@ void ImGui::onEvent(const SDL_Event &event)
       nsc.onEventFunction(nsc.instance, event);
   }
 }
-void ImGui::onRender(bool isMinimized, double currentTime)
+void ImGui::onRender(Renderer2d &renderer, bool isMinimized, double currentTime)
 {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
@@ -59,7 +59,7 @@ void ImGui::onRender(bool isMinimized, double currentTime)
       auto &nsc = *it;
 
       if (nsc.instance && nsc.onRenderFunction)
-        nsc.onRenderFunction(nsc.instance, isMinimized, currentTime);
+        nsc.onRenderFunction(nsc.instance, renderer, isMinimized, currentTime);
     }
   }
 

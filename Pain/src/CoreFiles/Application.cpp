@@ -10,6 +10,7 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_version.h>
 #include <cmath>
+#include <memory>
 #include <thread>
 
 namespace pain
@@ -19,9 +20,8 @@ unsigned Application::getProcessorCount()
   return std::thread::hardware_concurrency();
 }
 
-/* Creates window, opengl context and init glew*/
-Application::Application(const char *title, int w, int h, bool isSettingsApp)
-    : m_endGameFlags()
+Application *Application::createApplication(const char *title, int w, int h,
+                                            bool isSettingsApp)
 {
   PLOG_T(resources::getCurrentWorkingDir());
   // =========================================================================//
@@ -40,18 +40,17 @@ Application::Application(const char *title, int w, int h, bool isSettingsApp)
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-  m_window = SDL_CreateWindow(
+  SDL_Window *window = SDL_CreateWindow(
       title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
       SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
-  if (m_window == nullptr)
+  if (window == nullptr)
     PLOG_E("Application window not initialized");
-  m_context = SDL_GL_CreateContext(m_window);
+  void *context = SDL_GL_CreateContext(window);
 
   SDL_version sdl_version;
   SDL_GetVersion(&sdl_version);
   PLOG_T("SDL version: {}.{}.{}", sdl_version.major, sdl_version.minor,
          sdl_version.patch);
-
   // =========================================================================//
   //
   // =========================================================================//
@@ -83,27 +82,36 @@ Application::Application(const char *title, int w, int h, bool isSettingsApp)
 
 #ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);
-  glDebugMessageCallback(glErrorHandler, 0);
+  glDebugMessageCallback(Application::glErrorHandler, 0);
 #endif
+
   // =========================================================================//
   // Application Initial setup before
   // =========================================================================//
-  m_isMinimized = false;
-  m_sceneManager = std::make_unique<SceneManager>();
-  m_defaultImGuiInstance = new EngineController();
-  m_luaState = createLuaState();
+  sol::state luaState = createLuaState();
 
   // SDL_SetWindowGrab(m_window, SDL_TRUE);
   // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
   // =========================================================================//
   // Default Values to increase redundancy
   // =========================================================================//
-  resources::initiateDefaultScript(m_luaState);
+  resources::initiateDefaultScript(luaState);
   resources::initiateDefaultTexture();
   // =========================================================================//
   // config.ini file
   // =========================================================================//
+
+  return new Application(std::move(luaState), std::move(window),
+                         std::move(context));
 }
+/* Creates window, opengl context and init glew*/
+Application::Application(sol::state &&luaState, SDL_Window *window,
+                         void *context)
+    : m_endGameFlags(), m_window(window), m_context(context),
+      m_renderer(Renderer2d::createRenderer2d()),
+      m_luaState(std::move(luaState)),
+      m_sceneManager(std::make_unique<SceneManager>()),
+      m_defaultImGuiInstance(new EngineController()) {};
 
 void Application::stopLoop(bool restartFlag)
 {
@@ -181,6 +189,9 @@ EndGameFlags Application::run()
             m_isMinimized = true;
           else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
             m_isMinimized = false;
+          else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+            m_renderer.setViewport(0, 0, event.window.data1,
+                                   event.window.data2);
           break;
         default:
           break;
@@ -201,16 +212,16 @@ EndGameFlags Application::run()
       // int w, h;
       // SDL_GetWindowSize(m_window, &w, &h);
       // Renderer2d::setViewport(0, 0, w, h);
-      Renderer2d::setClearColor(m_clearColor);
-      Renderer2d::clear();
+      m_renderer.setClearColor(m_clearColor);
+      m_renderer.clear();
 
       double globalTime = lastFrameTime.GetSeconds();
       for (auto pScene = m_sceneManager->begin();
            pScene != m_sceneManager->end(); ++pScene) {
-        Renderer2d::beginScene(**pScene, globalTime);
+        m_renderer.beginScene(globalTime);
         (*pScene)->onRender(m_isMinimized, globalTime);
-        (*pScene)->renderSystems(m_isMinimized, globalTime);
-        Renderer2d::endScene(**pScene);
+        (*pScene)->renderSystems(m_renderer, m_isMinimized, globalTime);
+        m_renderer.endScene();
       }
       P_ASSERT(m_window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_window);
@@ -225,7 +236,6 @@ EndGameFlags Application::run()
     if (frameDuration < m_fixedFPS) {
       SDL_Delay(static_cast<uint32_t>((m_fixedFPS - frameDuration) * 1000.0));
     }
-    PLOG_I("is game running on {}? {}", fmt::ptr(this), m_isGameRunning);
   };
   PLOG_I("Reaching the end of run");
   return m_endGameFlags;
@@ -233,7 +243,6 @@ EndGameFlags Application::run()
 
 Application::~Application()
 {
-  Renderer2d::clearEntireRenderer();
   PLOG_I("Deleting application");
   resources::clearTextures();
   resources::getDefaultLuaFile();

@@ -34,7 +34,7 @@
   c(const c &o) = delete;                                                      \
   c &operator=(const c &o) = delete;
 
-#define COPIES(c)                                                              \
+#define COPYABLE(c)                                                            \
   c(const c &o) = default;                                                     \
   c &operator=(const c &o) = default;
 

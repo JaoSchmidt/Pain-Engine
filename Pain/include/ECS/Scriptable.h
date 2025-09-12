@@ -41,7 +41,7 @@ public:
   void withScript(Scene &scene, Args... args)
   {
     NativeScriptComponent &nsc = getComponent<NativeScriptComponent>(scene);
-    nsc.bindAndInitiate<T>(scene, m_entity, getBitMask(),
+    nsc.bindAndInitiate<T>(m_entity, getBitMask(), scene,
                            std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
@@ -50,7 +50,7 @@ public:
   void withImGuiScript(Scene &scene, Args... args)
   {
     ImGuiComponent &nsc = getComponent<ImGuiComponent>(scene);
-    nsc.bindAndInitiate<T>(scene, m_entity, getBitMask(),
+    nsc.bindAndInitiate<T>(m_entity, getBitMask(), scene,
                            std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
@@ -69,7 +69,7 @@ protected:
 class ExtendedEntity
 {
 public:
-  ExtendedEntity(Scene &scene, Entity entity, Bitmask bitmask)
+  ExtendedEntity(Entity entity, Bitmask bitmask, Scene &scene)
       : m_scene(scene), m_entity(entity), m_bitmask(bitmask) {};
   // ---------------------------------------------------- //
   // Get components from archetypes

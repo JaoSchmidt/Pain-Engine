@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Texture.h"
 
 namespace pain
@@ -19,6 +20,7 @@ Texture &createDumpTexture(const char *name, uint32_t width, uint32_t height,
                            ImageFormat imf = ImageFormat::RGBA8);
 void initiateDefaultTexture();
 void clearTextures();
+bool deleteTexture(const std::string &key, Renderer2d &renderer);
 
 } // namespace resources
 } // namespace pain

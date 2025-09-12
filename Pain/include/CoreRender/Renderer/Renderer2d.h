@@ -2,12 +2,12 @@
 
 #include "Core.h"
 
+#include "CoreRender/Camera.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/Text/Font.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 #include "ECS/Components/Particle.h"
-#include "Misc/BasicOrthoCamera.h"
 
 namespace pain
 {
@@ -42,18 +42,18 @@ struct ParticleVertex {
 };
 
 struct Renderer2d {
-  static std::optional<Renderer2d>
-  createRenderer2d(const OrthoCamera &cameraEntity);
-  void init(const OrthoCamera &cameraEntity);
+  static Renderer2d createRenderer2d();
+  Renderer2d &operator=(Renderer2d &&o) noexcept;
+  ~Renderer2d();
+  void changeCamera(const OrthographicMatrices &cameraMatrices);
   // ================================================================= //
   // Renderer basic wrapper around opengl
   // ================================================================= //
 
   void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
-  void beginScene(const Scene &scene, float globalTime,
+  void beginScene(float globalTime,
                   const glm::mat4 &transform = glm::mat4(1.0f));
-  void endScene(const Scene &scene);
-  void shutdown(const Scene &scene);
+  void endScene();
   void setViewport(int x, int y, int width, int height);
   void setClearColor(const glm::vec4 &color);
   void clear();
@@ -144,16 +144,19 @@ private:
   // // TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
   static constexpr uint32_t MaxTextureSlots = 32;
   Texture *m_whiteTexture = nullptr;
-  std::array<Texture *, MaxTextureSlots> m_textureSlots = {nullptr};
+  std::array<Texture *, MaxTextureSlots> m_textureSlots;
   uint32_t m_textureSlotIndex = 1; // at init, there is 1 white texture
   //
-  IndexBuffer *m_quadIB = nullptr;
-  IndexBuffer *m_triIB = nullptr;
-  IndexBuffer *m_sprayIB = nullptr;
+  IndexBuffer m_quadIB;
+  IndexBuffer m_triIB;
+  IndexBuffer m_sprayIB;
 
+  const Texture *m_fontAtlasTexture = nullptr;
+  const OrthographicMatrices *m_cameraMatrices = nullptr;
+
+  void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                            float globalTime, const glm::mat4 &transform);
-  void initBatches();
   void drawBatches(const glm::mat4 &viewProjectionMatrix);
   void bindTextures();
   void goBackToFirstVertex();
@@ -168,17 +171,28 @@ private:
   void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
                          const std::array<glm::vec2, 4> &textureCoordinate,
                          const std::array<glm::vec4, 4> &textVertexPositions);
-  Renderer2d(VertexArray m_quadVertexArray, VertexBuffer m_quadVertexBuffer,
-             Shader m_quadTextureShader,
-             // quad initializer
-             VertexArray m_textVertexArray, VertexBuffer m_textVertexBuffer,
-             Shader m_textTextureShader,
+  Renderer2d(IndexBuffer &&quadIB,             //
+             IndexBuffer &&triIB,              //
+             IndexBuffer &&sprayIB,            //
+             VertexArray &&quadVertexArray,    //
+             VertexBuffer &&quadVertexBuffer,  //
+             Shader &&quadTextureShader,       //
+             QuadVertex *quadVertexBufferBase, //
+             // text initializer
+             VertexArray &&textVertexArray,        //
+             VertexBuffer &&textVertexBuffer,      //
+             Shader &&textTextureShader,           //
+             TextQuadVertex *textVertexBufferBase, //
              // tri initializer
-             VertexArray m_triVertexArray, VertexBuffer m_triVertexBuffer,
-             Shader m_triShader,
+             VertexArray &&triVertexArray,   //
+             VertexBuffer &&triVertexBuffer, //
+             Shader &&triShader,             //
+             TriVertex *triVertexBufferBase, //
              // spray particle initializer
-             VertexArray m_sprayVertexArray, VertexBuffer m_sprayVertexBuffer,
-             Shader m_sprayShader);
-}; // namespace Renderer2d
+             VertexArray &&sprayVertexArray,   //
+             VertexBuffer &&sprayVertexBuffer, //
+             Shader &&sprayShader,             //
+             ParticleVertex *sprayVertexBufferBase);
+};
 
 } // namespace pain

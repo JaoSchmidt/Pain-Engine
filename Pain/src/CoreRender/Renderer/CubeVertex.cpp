@@ -1,4 +1,5 @@
 #include "CoreRender/Renderer/CubeVertex.h"
+#include "CoreFiles/LogWrapper.h"
 
 namespace pain
 {
@@ -11,7 +12,7 @@ void CubeVertexBatch::sendAllDataToOpenGL()
 {
   uint32_t dataSize =
       (uint8_t *)m_vertexBufferPtr - (uint8_t *)m_vertexBufferBase;
-  m_vertexBuffer->setData((void *)m_vertexBufferBase, dataSize);
+  m_vertexBuffer.setData((void *)m_vertexBufferBase, dataSize);
 }
 
 /* Batch logic mostly in this function */
@@ -169,19 +170,19 @@ void CubeVertexBatch::drawBatch(const glm::vec3 &position,
   m_indexCount += 6;
 }
 
-CubeVertexBatch::CubeVertexBatch()
+CubeVertexBatch CubeVertexBatch::createCubeVertexBatch()
 {
-  m_vertexArray = new VertexArray();
 
-  m_vertexBuffer = new VertexBuffer(MaxVertices * sizeof(CubeVertex));
-  m_vertexBuffer->setLayout({
-      {ShaderDataType::Float3, "a_Position"}, //
-      {ShaderDataType::Float4, "a_Color"},    //
-      {ShaderDataType::Float2, "a_TexCoord"}  //
-  });
-  m_vertexArray->addVertexBuffer(m_vertexBuffer);
+  auto cubeVertexBuffer = VertexBuffer::createVertexBuffer(
+      MaxVertices * sizeof(CubeVertex),
+      {
+          {ShaderDataType::Float3, "a_Position"}, //
+          {ShaderDataType::Float4, "a_Color"},    //
+          {ShaderDataType::Float2, "a_TexCoord"}  //
+      });
+  P_ASSERT(cubeVertexBuffer, "Could not create Cube Vertex BUffer");
 
-  m_vertexBufferBase = new CubeVertex[MaxVertices];
+  CubeVertex *vertexBufferBase = new CubeVertex[MaxVertices];
 
   uint32_t *quadIndices = new uint32_t[MaxIndices];
 
@@ -197,19 +198,33 @@ CubeVertexBatch::CubeVertexBatch()
 
     offset += 4;
   }
-
-  // NOTE: indexbuffer will need to be replace to some shared memory because it
-  // will on more then one buffer
-  m_vertexArray->setIndexBuffer(new IndexBuffer(quadIndices, MaxIndices));
+  auto quadIB = IndexBuffer::createIndexBuffer(quadIndices, MaxIndices);
+  P_ASSERT(quadIB, "Could not create Cube Vertex BUffer");
   delete[] quadIndices;
+  auto cubeVertexArray = VertexArray::createVertexArray(
+      std::move(cubeVertexBuffer.value()), *quadIB);
 
   // m_whiteTexture.reset(new Texture(1, 1));
   // uint32_t whiteTextureData = 0xffffffff;
   // m_whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
 
-  m_textureShader = new Shader("resources/shaders/Texture.glsl");
+  auto cubeTextureShader =
+      Shader::createFromFile("resources/default/shaders/Texture.glsl");
   // m_textureShader->bind();
   // m_textureShader->uploadUniformInt("u_Texture", 0);
+  return CubeVertexBatch(std::move(*cubeVertexArray),
+                         std::move(*cubeVertexBuffer),  //
+                         std::move(*cubeTextureShader), //
+                         std::move(vertexBufferBase));
 }
+
+CubeVertexBatch::CubeVertexBatch(VertexArray vertexArray,
+                                 VertexBuffer vertexBuffer, //
+                                 Shader textureShader,      //
+                                 CubeVertex *vertexBufferBase)
+    : m_vertexArray(std::move(vertexArray)),
+      m_vertexBuffer(std::move(vertexBuffer)),
+      m_textureShader(std::move(textureShader)),
+      m_vertexBufferBase(vertexBufferBase) {};
 
 } // namespace pain

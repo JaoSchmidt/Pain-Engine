@@ -32,7 +32,7 @@ public:
             ImGuiConfigFlags_ViewportsEnable // Enable Multi-Viewport / Platform
   );
   ~ImGui();
-  void onRender(bool isMinimized, double currentTime);
+  void onRender(Renderer2d &renderer, bool isMinimized, double currentTime);
   void onEvent(const SDL_Event &e);
 
 private:

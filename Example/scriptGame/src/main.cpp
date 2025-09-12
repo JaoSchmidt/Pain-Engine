@@ -11,22 +11,25 @@ class MainScene : public pain::Scene
 {
 public:
   MainScene(void *context, SDL_Window *window, sol::state &luaState,
-            float aspectRatio, float zoom)
+            float aspectRatio, float zoom, pain::Application *app)
       : pain::Scene(context, window, luaState),
         m_texture(pain::resources::getTexture(
             "resources/textures/Checkerboard.png", true))
   {
 
     // create the camera
-    m_orthocamera = new pain::OrthoCamera(this, aspectRatio, zoom);
+    m_orthocamera =
+        std::make_unique<pain::OrthoCamera>(this, aspectRatio, zoom);
+    m_orthocamera->withScript<pain::OrthoCameraScript>(*this);
+    app->setRendererCamera(
+        *(std::as_const(m_orthocamera)
+              ->getComponent<pain::OrthoCameraComponent>(*this)
+              .m_camera));
 
     // make the renderer main camera (not related to the ECS)
-    pain::Renderer2d::init(*m_orthocamera);
+    // pain::Renderer2d::init(*m_orthocamera);
 
     // create the script component meaning it can now  extend the object
-    m_orthocamera->getComponent<pain::NativeScriptComponent>(*this)
-        .bindAndInitiate<pain::OrthoCameraScript>(
-            *this, m_orthocamera->getEntity(), m_orthocamera->getBitMask());
 
     // manually instantiate the controller and link it with the bitmask and
     // entity
@@ -71,8 +74,8 @@ public:
     //                            {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
-    pain::Renderer2d::drawQuad({0.0f, 0.0f}, {0.4f, 0.4f},
-                               {1.0f, 1.0f, 1.0f, 1.0f}, m_texture);
+    // renderer.drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, {1.0f, 1.0f, 1.0f, 1.0f},
+    //                   m_texture);
     // pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f}, m_texture, 1.0f,
     //                            {1.0f, 1.0f, 1.0f, 1.0f});
   }
@@ -81,7 +84,7 @@ public:
 
 private:
   std::vector<std::vector<int>> m_backgroundMap;
-  pain::OrthoCamera *m_orthocamera;
+  std::unique_ptr<pain::OrthoCamera> m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   pain::Texture &m_texture;
   std::unique_ptr<Dummy> dummy;
@@ -94,9 +97,10 @@ pain::Application *pain::createApplication()
   const char *title = "Developing Pain - Example 2d";
   const int width = 1280;
   const int height = 1000;
-  Application *app = new Application(title, width, height);
+  Application *app = Application::createApplication(title, width, height);
 
-  auto scene = app->createSceneUPtr<MainScene>((float)width / height, 1.0f);
+  auto scene =
+      app->createSceneUPtr<MainScene>((float)width / height, 1.0f, app);
   // Scene *scene = new MainScene(app->getLuaState());
   // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
 

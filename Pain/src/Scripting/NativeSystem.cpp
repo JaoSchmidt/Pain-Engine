@@ -35,7 +35,8 @@ void NativeScript::onEvent(const SDL_Event &e)
       nsc.onEventFunction(nsc.instance, e);
   }
 }
-void NativeScript::onRender(bool isMinimized, double currentTime)
+void NativeScript::onRender(Renderer2d &renderer, bool isMinimized,
+                            double currentTime)
 {
   PROFILE_SCOPE("Scene::renderSystems - NativeScripts");
   for (auto it = begin<NativeScriptComponent>();
@@ -43,7 +44,7 @@ void NativeScript::onRender(bool isMinimized, double currentTime)
     auto &nsc = *it;
 
     if (nsc.instance && nsc.onRenderFunction)
-      nsc.onRenderFunction(nsc.instance, isMinimized, currentTime);
+      nsc.onRenderFunction(nsc.instance, renderer, isMinimized, currentTime);
   }
 }
 } // namespace Systems

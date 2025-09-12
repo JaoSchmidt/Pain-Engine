@@ -16,7 +16,7 @@ SDL_Surface *getSurface(const char *filepath);
 
 const char *getDefaultLuaFile();
 const std::string &getLuaScriptSource(const char *filepath);
-void initiateDefaultScript(sol::state &solstate);
+void initiateDefaultScript(const sol::state &solstate);
 std::string getCurrentWorkingDir();
 std::string getCurrentWorkingDir(std::string append);
 bool exists_file(const std::string &name);

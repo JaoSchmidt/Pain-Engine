@@ -10,7 +10,7 @@
 namespace pain
 {
 Scene::Scene(void *context, SDL_Window *window, sol::state &luaState)
-    : m_registry(), m_luaState(luaState),
+    : m_registry(), m_luaState(luaState), m_entity(createEntity()),
       m_imGuiSystem(m_registry, context, window) {};
 // TODO: Create way to move and copy components to another scene
 
@@ -29,14 +29,6 @@ Entity Scene::createEntity()
 
 // TODO: I may need to fix this
 void Scene::destroyEntity(Entity entity) { m_availableEntities.push(entity); }
-
-void Scene::renderSystems(bool isMinimized, double currentTime)
-{
-  PROFILE_FUNCTION();
-  m_renderSystem.onRender(isMinimized, currentTime);
-  m_nativeScriptSystem.onRender(isMinimized, currentTime);
-  m_imGuiSystem.onRender(isMinimized, currentTime);
-}
 
 void Scene::updateSystems(double deltaTime)
 {

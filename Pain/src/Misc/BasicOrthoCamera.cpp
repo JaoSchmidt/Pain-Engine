@@ -79,7 +79,6 @@ void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
 void OrthoCameraScript::onWindowResized(const SDL_Event &event,
                                             OrthoCameraComponent &cc)
 {
-  Renderer2d::setViewport(0, 0, event.window.data1, event.window.data2);
   cc.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
   cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
                              cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,

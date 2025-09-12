@@ -5,18 +5,36 @@
 namespace pain
 {
 
-VertexArray::VertexArray() { glCreateVertexArrays(1, &m_rendererId); }
+std::optional<VertexArray>
+VertexArray::createVertexArray(VertexBuffer &&vertexBuffer,
+                               IndexBuffer &indexBuffer)
+{
+  uint32_t rendererId;
+  glCreateVertexArrays(1, &rendererId);
+  if (rendererId == 0) {
+    PLOG_W("Failed to generate vertex buffer");
+    return std::nullopt;
+  }
+
+  addVertexBuffer(vertexBuffer, rendererId);
+  setIndexBuffer(indexBuffer, rendererId);
+  return VertexArray(std::move(vertexBuffer), indexBuffer, rendererId);
+}
+VertexArray::VertexArray(VertexBuffer &&vertexBuffer, IndexBuffer &indexBuffer,
+                         uint32_t rendererId)
+    : m_vertexBuffer(std::move(vertexBuffer)), m_indexBuffer(indexBuffer),
+      m_rendererId(rendererId) {};
 VertexArray::VertexArray(VertexArray &&o)
-    : m_vertexBuffer(o.m_vertexBuffer), m_indexBuffer(o.m_indexBuffer),
-      m_rendererId(o.m_rendererId)
+    : m_vertexBuffer(std::move(o.m_vertexBuffer)),
+      m_indexBuffer(o.m_indexBuffer), m_rendererId(o.m_rendererId)
 {
   o.m_rendererId = 0;
 }
 VertexArray &VertexArray::operator=(VertexArray &&o)
 {
   if (this != &o) {
-    m_vertexBuffer = o.m_vertexBuffer;
-    m_indexBuffer = o.m_indexBuffer;
+    m_vertexBuffer = std::move(o.m_vertexBuffer);
+    m_indexBuffer = std::move(o.m_indexBuffer);
     m_rendererId = o.m_rendererId;
     o.m_rendererId = 0;
   }
@@ -26,19 +44,21 @@ VertexArray::~VertexArray()
 {
   if (m_rendererId != 0)
     glDeleteVertexArrays(1, &m_rendererId);
+  // buffers will be deleted later from here, which is the correct order
 }
 void VertexArray::bind() const { glBindVertexArray(m_rendererId); }
 void VertexArray::unbind() const { glBindVertexArray(0); }
-void VertexArray::addVertexBuffer(VertexBuffer *vertexBuffer)
+void VertexArray::addVertexBuffer(const VertexBuffer &vertexBuffer,
+                                  uint32_t rendererId)
 {
   P_ASSERT(
-      vertexBuffer->getLayout().GetElements().size() > 0,
+      vertexBuffer.getLayout().GetElements().size() > 0,
       "VertexArray.h: Can't add a vertexBuffer that doesn't have a layout");
-  glBindVertexArray(m_rendererId);
-  vertexBuffer->bind();
+  glBindVertexArray(rendererId);
+  vertexBuffer.bind();
 
   uint32_t index = 0;
-  const auto &layout = vertexBuffer->getLayout();
+  const auto &layout = vertexBuffer.getLayout();
   for (const auto &element : layout) {
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(                       //
@@ -51,12 +71,11 @@ void VertexArray::addVertexBuffer(VertexBuffer *vertexBuffer)
         reinterpret_cast<const void *>(static_cast<uintptr_t>(element.offset)));
     index++;
   }
-  m_vertexBuffer = vertexBuffer;
 }
-void VertexArray::setIndexBuffer(IndexBuffer *indexBuffer)
+void VertexArray::setIndexBuffer(const IndexBuffer &indexBuffer,
+                                 uint32_t rendererId)
 {
-  glBindVertexArray(m_rendererId);
-  indexBuffer->bind();
-  m_indexBuffer = indexBuffer;
+  glBindVertexArray(rendererId);
+  indexBuffer.bind();
 }
 } // namespace pain

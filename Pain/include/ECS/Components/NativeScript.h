@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
+#include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Entity.h"
-#include "ECS/Scene.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
 
@@ -10,27 +10,23 @@ template <typename T>
 concept has_onCreate_method = requires(T &&t) {
   { t.onCreate() };
 };
-
 template <typename T>
-concept has_onRender_method = requires(T &&t, bool m, double d) {
-  { t.onRender(m, d) };
-};
-
+concept has_onRender_method =
+    requires(T &&t, pain::Renderer2d &r, bool m, double d) {
+      { t.onRender(r, m, d) };
+    };
 template <typename T>
 concept has_onUpdate_method = requires(T &&t, double d) {
   { t.onUpdate(d) };
 };
-
 template <typename T>
 concept has_onDestroy_method = requires(T &&t) {
   { t.onDestroy() };
 };
-
 template <typename T>
 concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
   { t.onEvent(e) };
 };
-
 template <typename T>
 concept has_invalid_onRender_signature = requires(T t) {
   { t.onRender() };
@@ -43,12 +39,13 @@ template <typename T>
 concept has_invalid_onEvent_signature = requires(T t) {
   { t.onEvent() };
 };
+
 template <typename T> void check_script_methods()
 {
   if constexpr (has_invalid_onRender_signature<T>) {
     static_assert(!has_invalid_onRender_signature<T>,
                   "Warning: onRender() detected with no arguments! Should be "
-                  "onRender(bool, double).");
+                  "onRender(const Renderer&, bool, double).");
   }
   if constexpr (has_invalid_onUpdate_signature<T>) {
     static_assert(!has_invalid_onUpdate_signature<T>,
@@ -72,7 +69,8 @@ struct NativeScriptComponent {
   void (*destroyInstanceFunction)(ExtendedEntity *&) = nullptr;
   void (*onCreateFunction)(ExtendedEntity *) = nullptr;
   void (*onDestroyFunction)(ExtendedEntity *) = nullptr;
-  void (*onRenderFunction)(ExtendedEntity *, bool, double) = nullptr;
+  void (*onRenderFunction)(ExtendedEntity *, Renderer2d &, bool,
+                           double) = nullptr;
   void (*onUpdateFunction)(ExtendedEntity *, double) = nullptr;
   void (*onEventFunction)(ExtendedEntity *, const SDL_Event &) = nullptr;
 
@@ -81,17 +79,16 @@ struct NativeScriptComponent {
    * instance, but I just never need those two things separate, so I joined
    * them.
    */
-  template <typename T, typename... Args>
-  void bindAndInitiate(Scene &scene, Entity entity, Bitmask mask, Args... args)
+  template <typename T, typename... Args> void bindAndInitiate(Args &&...args)
   {
     check_script_methods<T>();
-    static_assert(
-        std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
-        "Error: You are binding a function whose constructor doesn't implement "
-        "ExtendedEntity constructor: (Scene&, Entity, Bitmask). Pherhaps you "
-        "are using the defualt constructor instead of coding `using "
-        "ExtendedEntity::ExtendedEntity;`?");
-    instance = new T(scene, entity, mask, std::forward<Args>(args)...);
+    // static_assert(
+    //     std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
+    //     "Error: You are binding a function whose constructor doesn't
+    //     implement " "ExtendedEntity constructor: (Scene&, Entity, Bitmask).
+    //     Pherhaps you " "are using the defualt constructor instead of coding
+    //     `using " "ExtendedEntity::ExtendedEntity;`?");
+    instance = new T(std::forward<Args>(args)...);
     // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
     // }
     destroyInstanceFunction = [](ExtendedEntity *&instance) {
@@ -119,9 +116,9 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](ExtendedEntity *instance, bool isMinimized,
-                            double realTime) {
-        static_cast<T *>(instance)->onRender(isMinimized, realTime);
+      onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
+                            bool isMinimized, double realTime) {
+        static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
       };
     } else {
       onRenderFunction = nullptr;

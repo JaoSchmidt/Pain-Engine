@@ -22,7 +22,7 @@ std::shared_ptr<PerspectiveCameraController> Renderer3d::m_cameraController =
 void Renderer3d::init(
     std::shared_ptr<PerspectiveCameraController> &cameraController)
 {
-  m_cubeBatch = new CubeVertexBatch();
+  // m_cubeBatch = new CubeVertexBatch();
   // NOTE: This can be changed later in case the engine needs a camera mechanic
 
   glEnable(GL_DEPTH_TEST);

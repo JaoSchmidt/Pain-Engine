@@ -9,6 +9,7 @@
 #include "ECS/Scene.h"
 #include "ECS/Scriptable.h"
 #include "GUI/ImGuiComponent.h"
+#include "Misc/BasicOrthoCamera.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 #include <cstdio>
@@ -20,8 +21,8 @@ namespace pain
 class ImGuiLauncher : public ExtendedEntity
 {
 public:
-  ImGuiLauncher(Scene &scene, Entity entity, Bitmask bitmask, Application *app)
-      : ExtendedEntity(scene, entity, bitmask), m_init(), m_app(app)
+  ImGuiLauncher(Entity entity, Bitmask bitmask, Scene &scene, Application *app)
+      : ExtendedEntity(entity, bitmask, scene), m_init(), m_app(app)
   {
     PLOG_I("Opening Launcher");
   };
@@ -43,9 +44,8 @@ public:
           ini, "settings", m_init.assetsPath.name, m_init.assetsPath.def);
     }
   }
-  void onRender(bool isMinimized, double currentTime)
+  void onRender(Renderer2d &renderer, bool isMinimized, double currentTime)
   {
-
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
@@ -168,7 +168,9 @@ public:
       : Scene(sdlcontext, window, solState)
   {
     m_orthocamera = std::make_unique<OrthoCamera>(this, aspectRatio, zoom);
-    Renderer2d::init(*m_orthocamera);
+    app->setRendererCamera(*(std::as_const(m_orthocamera)
+                                 ->getComponent<OrthoCameraComponent>(*this)
+                                 .m_camera));
     m_orthocamera->withScript<OrthoCameraScript>(*this);
     m_imguiDummy = std::make_unique<ImGuiDummy>(this, app);
   };
@@ -188,7 +190,8 @@ Application *createLauncher()
   const char *title = "Settings";
   const int width = 500;
   const int height = 200;
-  Application *settingsApp = new Application(title, width, height, true);
+  Application *settingsApp =
+      Application::createApplication(title, width, height, true);
   auto pscene = settingsApp->createSceneUPtr<SettingsScene>(
       (float)width / height, 1.0f, settingsApp);
 

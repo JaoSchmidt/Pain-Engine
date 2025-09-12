@@ -1,12 +1,15 @@
 #include "Assets/DefaultTexture.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreRender/Renderer/Renderer2d.h"
 #include <optional>
 
 namespace pain
 {
-
+namespace
+{
 bool m_enableDefaultTextureWarning = false;
-static std::map<std::string, Texture> m_textureMap = {};
+std::map<std::string, Texture> m_textureMap = {};
+} // namespace
 Texture &resources::createDumpTexture(const char *name, uint32_t width,
                                       uint32_t height, ImageFormat imf)
 {
@@ -75,6 +78,20 @@ void resources::initiateDefaultTexture()
   const uint32_t whiteTextureData = 0xffffffff;
   whiteTexture.setData(&whiteTextureData, sizeof(uint32_t));
   m_enableDefaultTextureWarning = true;
+}
+
+bool resources::deleteTexture(const std::string &key, Renderer2d &renderer)
+{
+  auto search = m_textureMap.find(key);
+  if (search == m_textureMap.end()) {
+    PLOG_W("Tried to delete texture {}, but it does not exist in the map", key);
+    return false;
+  }
+  Texture &tex = search->second;
+  renderer.removeTexture(tex);
+  m_textureMap.erase(search);
+  PLOG_I("Deleted texture {}", key);
+  return true;
 }
 
 void resources::clearTextures() { m_textureMap.clear(); }

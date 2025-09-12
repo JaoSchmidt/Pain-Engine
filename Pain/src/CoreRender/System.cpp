@@ -10,7 +10,8 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render::onRender(bool isMinimized, double currentTime)
+void Render::onRender(Renderer2d &renderer, bool isMinimized,
+                      double currentTime)
 {
   PROFILE_FUNCTION();
   {
@@ -21,8 +22,8 @@ void Render::onRender(bool isMinimized, double currentTime)
     for (; tIt != tItEnd; ++tIt, ++sIt) {
       const TransformComponent &tc = *tIt;
       const SpriteComponent &sc = *sIt;
-      Renderer2d::drawQuad(tc.m_position, sc.m_size, sc.m_color,
-                           sc.getTexture(), sc.m_tilingFactor);
+      renderer.drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.getTexture(),
+                        sc.m_tilingFactor);
     }
   }
   {
@@ -33,9 +34,9 @@ void Render::onRender(bool isMinimized, double currentTime)
         end<TransformComponent, SpriteComponent, RotationComponent>();
 
     for (; tIt != tItEnd; ++tIt, ++rIt, ++sIt) {
-      Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                           rIt->m_rotationAngle, sIt->getTexture(),
-                           sIt->m_tilingFactor);
+      renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                        rIt->m_rotationAngle, sIt->getTexture(),
+                        sIt->m_tilingFactor);
       // TODO: Remove m_rotation of rc... should only
       // have angle, in the case of the camera
       // inclune rot direction in its script
@@ -46,8 +47,8 @@ void Render::onRender(bool isMinimized, double currentTime)
     auto [tIt, sIt] = begin<TransformComponent, SpritelessComponent>();
     auto [tItEnd, sItEnd] = end<TransformComponent, SpritelessComponent>();
     for (; tIt != tItEnd; ++tIt, ++sIt) {
-      Renderer2d::drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                           resources::getDefaultTexture(resources::BLANK));
+      renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                        resources::getDefaultTexture(resources::BLANK));
     }
   }
   {
@@ -55,7 +56,7 @@ void Render::onRender(bool isMinimized, double currentTime)
     auto [tIt, triIt] = begin<TransformComponent, TrianguleComponent>();
     auto [tItEnd, triItEnd] = end<TransformComponent, TrianguleComponent>();
     for (; tIt != tItEnd; ++tIt, ++triIt) {
-      Renderer2d::drawTri(tIt->m_position, triIt->m_height, triIt->m_color);
+      renderer.drawTri(tIt->m_position, triIt->m_height, triIt->m_color);
     }
   }
   // =============================================================== //
@@ -66,10 +67,10 @@ void Render::onRender(bool isMinimized, double currentTime)
     for (auto it = begin<ParticleSprayComponent>();
          it != end<ParticleSprayComponent>(); ++it) {
       ParticleSprayComponent &psc = *it;
-      Renderer2d::beginSprayParticle((float)currentTime, psc);
+      renderer.beginSprayParticle((float)currentTime, psc);
       for (Particle &pa : psc.m_particles) {
         if (pa.m_alive)
-          Renderer2d::drawSprayParticle(pa);
+          renderer.drawSprayParticle(pa);
         // Remove dead particles
         if (currentTime - pa.m_startTime >= psc.m_lifeTime) {
           pa.m_alive = false;

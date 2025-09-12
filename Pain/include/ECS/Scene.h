@@ -4,6 +4,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/System.h"
 #include "ECS/Registry/ArcheRegistry.h"
+#include "ECS/WithScript.h"
 #include "Entity.h"
 #include "GUI/ImGuiSystem.h"
 #include "Physics/Kinematics.h"
@@ -15,12 +16,12 @@
 
 namespace pain
 {
-
 class Scene
 {
 private:
   ArcheRegistry m_registry;
   sol::state &m_luaState;
+  Entity m_entity;
 
 public:
   Scene(void *context, SDL_Window *window, sol::state &solState);
@@ -33,8 +34,20 @@ public:
   virtual void onUpdate(double deltaTime) = 0;
   virtual void onEvent(const SDL_Event &event) = 0;
 
-  sol::state &getSharedLuaState() { return m_luaState; }
+  template <typename T, typename... Args> void withScript(Args &&...args)
+  {
+    SceneHelper::withScript<T>(m_entity, m_registry, *this,
+                               std::forward<Args>(args)...);
+  }
 
+  template <typename T, typename... Args>
+  void withImGuiScriptScript(Args &&...args)
+  {
+    SceneHelper::withImGuiScript<T>(m_entity, m_registry, *this,
+                                    std::forward<Args>(args)...);
+  }
+
+  sol::state &getSharedLuaState() { return m_luaState; }
   // ---------------------------------------------------- //
   // Component Archetype stuff
   // ---------------------------------------------------- //
@@ -142,11 +155,18 @@ public:
 
   void updateSystems(double deltaTime);
   void updateSystems(const SDL_Event &event);
-  void renderSystems(bool isMinimized, double currentTime);
+  // template <typename... Args> void renderSystems(Args... args);
   static void clearQueue()
   {
     std::queue<Entity> empty;
     std::swap(m_availableEntities, empty);
+  }
+
+  template <typename... Args> void renderSystems(Args &&...args)
+  {
+    m_renderSystem.onRender(std::forward<Args>(args)...);
+    m_nativeScriptSystem.onRender(std::forward<Args>(args)...);
+    m_imGuiSystem.onRender(std::forward<Args>(args)...);
   }
 
 private:

@@ -210,7 +210,7 @@ class ArcheRegistry
   // ---------------------------------------------------- //
   // get
   // ---------------------------------------------------- //
-
+public:
   // Get a single column of an archetype as a tuple, which represents the
   // components of an entity.
   template <typename... TargetComponents>
@@ -242,6 +242,7 @@ class ArcheRegistry
     return archetype.extractComponent<T>(entity);
   }
 
+private:
   // ---------------------------------------------------- //
   // has
   // ---------------------------------------------------- //

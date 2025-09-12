@@ -8,13 +8,6 @@ namespace pain
 // IndexBuffer
 // ======================================================================== //
 
-IndexBuffer::IndexBuffer(uint32_t *indexes, uint32_t count) : m_count(count)
-{
-  glGenBuffers(1, &m_bufferId);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufferId);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indexes,
-               GL_STATIC_DRAW);
-}
 std::optional<IndexBuffer> IndexBuffer::createIndexBuffer(uint32_t *indexes,
                                                           uint32_t count)
 {
@@ -35,17 +28,58 @@ std::optional<IndexBuffer> IndexBuffer::createIndexBuffer(uint32_t *indexes,
   }
   return IndexBuffer(bufferId, count);
 }
-
 void IndexBuffer::bind() const
 {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufferId);
 }
 void IndexBuffer::unbind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
+IndexBuffer::IndexBuffer(uint32_t bufferId, uint32_t count)
+    : m_bufferId(bufferId), m_count(count) {};
+IndexBuffer::~IndexBuffer()
+{
+  if (m_bufferId != 0) {
+    glDeleteBuffers(1, &m_bufferId);
+  }
+}
+IndexBuffer::IndexBuffer(IndexBuffer &&o)
+    : m_bufferId(o.m_bufferId), m_count(o.m_count)
+{
+  o.m_bufferId = 0;
+}
+IndexBuffer &IndexBuffer::operator=(IndexBuffer &&o)
+{
+  if (this != &o) {
+    m_bufferId = o.m_bufferId;
+    m_count = o.m_count;
+    o.m_bufferId = 0;
+  }
+  return *this;
+}
 
 // ======================================================================== //
 // VertexBuffer
 // ======================================================================== //
 
+VertexBuffer::VertexBuffer(VertexBuffer &&o)
+    : m_bufferId(o.m_bufferId), m_layout(std::move(o.m_layout))
+{
+  o.m_bufferId = 0;
+};
+VertexBuffer &VertexBuffer::operator=(VertexBuffer &&o)
+{
+  if (this != &o) {
+    m_bufferId = o.m_bufferId;
+    m_layout = std::move(o.m_layout);
+    o.m_bufferId = 0;
+  }
+  return *this;
+}
+VertexBuffer::~VertexBuffer()
+{
+  if (m_bufferId != 0) {
+    glDeleteBuffers(1, &m_bufferId);
+  }
+}
 void VertexBuffer::setData(const void *data, uint32_t size)
 {
   bind();
@@ -60,7 +94,7 @@ void VertexBuffer::unbind() const { glBindBuffer(GL_ARRAY_BUFFER, 0); }
 
 std::optional<VertexBuffer>
 VertexBuffer::createVertexBuffer(float *vertices, uint32_t size,
-                                 const BufferLayout &&layout)
+                                 BufferLayout &&layout)
 {
   uint32_t bufferId = 0;
   glGenBuffers(1, &bufferId);
@@ -79,7 +113,7 @@ VertexBuffer::createVertexBuffer(float *vertices, uint32_t size,
   return VertexBuffer(bufferId, std::move(layout));
 }
 std::optional<VertexBuffer>
-VertexBuffer::createVertexBuffer(uint32_t size, const BufferLayout &&layout)
+VertexBuffer::createVertexBuffer(uint32_t size, BufferLayout &&layout)
 {
   uint32_t bufferId;
   glGenBuffers(1, &bufferId);
@@ -97,7 +131,7 @@ VertexBuffer::createVertexBuffer(uint32_t size, const BufferLayout &&layout)
   }
   return VertexBuffer(bufferId, std::move(layout));
 }
-VertexBuffer::VertexBuffer(uint32_t bufferId, const BufferLayout &&layout)
+VertexBuffer::VertexBuffer(uint32_t bufferId, BufferLayout &&layout)
     : m_bufferId(bufferId), m_layout(std::move(layout)) {};
 
 } // namespace pain

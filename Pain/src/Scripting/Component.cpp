@@ -13,7 +13,7 @@ void custom_print(const std::string &str) { PLOG_I("{}", str); }
 
 LuaScriptComponent::LuaScriptComponent(Scene &scene, Entity entity,
                                        Bitmask bitmask, sol::state &solState)
-    : ExtendedEntity(scene, entity, bitmask), m_lua(solState)
+    : ExtendedEntity(entity, bitmask, scene), m_lua(solState)
 {
 }
 void LuaScriptComponent::initializeScript() {}
