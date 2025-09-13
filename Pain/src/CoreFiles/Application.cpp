@@ -162,7 +162,6 @@ EndGameFlags Application::run()
       while (accumulator >= m_fixedUpdateTime) {
         for (auto pScene = m_sceneManager->begin();
              pScene != m_sceneManager->end(); ++pScene) {
-          (*pScene)->onUpdate(m_fixedUpdateTime);
           (*pScene)->updateSystems(m_fixedUpdateTime);
         }
         accumulator -= m_fixedUpdateTime;
@@ -200,7 +199,6 @@ EndGameFlags Application::run()
         for (auto pScene = m_sceneManager->begin();
              pScene != m_sceneManager->end(); ++pScene) {
           (*pScene)->updateSystems(event);
-          (*pScene)->onEvent(event);
         }
       }
     }
@@ -219,7 +217,6 @@ EndGameFlags Application::run()
       for (auto pScene = m_sceneManager->begin();
            pScene != m_sceneManager->end(); ++pScene) {
         m_renderer.beginScene(globalTime);
-        (*pScene)->onRender(m_isMinimized, globalTime);
         (*pScene)->renderSystems(m_renderer, m_isMinimized, globalTime);
         m_renderer.endScene();
       }

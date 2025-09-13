@@ -1,29 +1,29 @@
 #include <iostream>
 #include <pain.h>
 
+#include "ECS/Components/NativeScript.h"
 #include "dummy.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
 
-class MainScene : public pain::Scene
+class MainScript : public pain::ExtendedEntity
 {
 public:
-  MainScene(void *context, SDL_Window *window, sol::state &luaState,
-            float aspectRatio, float zoom, pain::Application *app)
-      : pain::Scene(context, window, luaState),
+  MainScript(pain::Entity entity, pain::Bitmask bitmask, pain::Scene &scene,
+             float aspectRatio, float zoom, pain::Application *app)
+      : ExtendedEntity(entity, bitmask, scene),
         m_texture(pain::resources::getTexture(
             "resources/textures/Checkerboard.png", true))
   {
-
     // create the camera
     m_orthocamera =
-        std::make_unique<pain::OrthoCamera>(this, aspectRatio, zoom);
-    m_orthocamera->withScript<pain::OrthoCameraScript>(*this);
+        std::make_unique<pain::OrthoCamera>(&scene, aspectRatio, zoom);
+    m_orthocamera->withScript<pain::OrthoCameraScript>(scene);
     app->setRendererCamera(
         *(std::as_const(m_orthocamera)
-              ->getComponent<pain::OrthoCameraComponent>(*this)
+              ->getComponent<pain::OrthoCameraComponent>(scene)
               .m_camera));
 
     // make the renderer main camera (not related to the ECS)
@@ -46,14 +46,15 @@ public:
     // ls->bind("resources/scripts/lua_script.lua");
     // ls->onCreate();
   };
-  void onUpdate(double deltaTime) override
+  void onUpdate(double deltaTime)
   {
     // PROFILE_FUNCTION()
     // pain::TransformComponent &tc =
     //     m_orthocamera->getComponent<pain::TransformComponent>();
     // m_mainMap->updateSurroundingChunks(tc.m_position, this);
   }
-  void onRender(bool isMinimized, double currentTime) override
+  void onRender(pain::Renderer2d &renderer, bool isMinimized,
+                double currentTime)
   {
     // m_orthocamera->onUpdate(deltaTime);
     // const std::vector<std::vector<int>> mdm =
@@ -74,13 +75,13 @@ public:
     //                            {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
-    // renderer.drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, {1.0f, 1.0f, 1.0f, 1.0f},
-    //                   m_texture);
+    PLOG_I("banana");
+    renderer.drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, {1.0f, 1.0f, 1.0f, 1.0f},
+                      m_texture);
     // pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f}, m_texture, 1.0f,
     //                            {1.0f, 1.0f, 1.0f, 1.0f});
   }
-  void onEvent(const SDL_Event &event) override {}
-  // ~MainScene() override = default;
+  void onEvent(const SDL_Event &event) {}
 
 private:
   std::vector<std::vector<int>> m_backgroundMap;
@@ -99,8 +100,9 @@ pain::Application *pain::createApplication()
   const int height = 1000;
   Application *app = Application::createApplication(title, width, height);
 
-  auto scene =
-      app->createSceneUPtr<MainScene>((float)width / height, 1.0f, app);
+  std::unique_ptr<Scene> scene =
+      app->createSceneUPtr<Scene>(NativeScriptComponent{});
+  scene->withScript<MainScript>((float)width / height, 1.0f, app);
   // Scene *scene = new MainScene(app->getLuaState());
   // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
 

@@ -495,15 +495,19 @@ Renderer2d::Renderer2d(IndexBuffer &&quadIB,            //
     : m_quadVertexArray(std::move(quadVertexArray)),
       m_quadVertexBuffer(std::move(quadVertexBuffer)),
       m_quadTextureShader(std::move(quadTextureShader)),
+      m_quadVertexBufferBase(quadVertexBufferBase),
       m_textVertexArray(std::move(textVertexArray)),
       m_textVertexBuffer(std::move(textVertexBuffer)),
       m_textTextureShader(std::move(textTextureShader)),
+      m_textVertexBufferBase(textVertexBufferBase),
       m_triVertexArray(std::move(triVertexArray)),
       m_triVertexBuffer(std::move(triVertexBuffer)),
       m_triShader(std::move(triShader)),
+      m_triVertexBufferBase(triVertexBufferBase),
       m_sprayVertexArray(std::move(sprayVertexArray)),
       m_sprayVertexBuffer(std::move(sprayVertexBuffer)),
       m_sprayShader(std::move(sprayShader)), //
+      m_sprayVertexBufferBase(sprayVertexBufferBase),
       m_textureSlots({&resources::getDefaultTexture(resources::BLANK)}),
       m_quadIB(std::move(quadIB)), //
       m_triIB(std::move(triIB)),   //

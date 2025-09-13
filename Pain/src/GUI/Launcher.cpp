@@ -176,9 +176,6 @@ public:
   };
 
 private:
-  void onUpdate(double deltaTime) override {}
-  void onRender(bool isMinimized, double currentTime) override {}
-  void onEvent(const SDL_Event &event) override {}
   std::unique_ptr<OrthoCamera> m_orthocamera;
   // std::unique_ptr<ImGuiLauncher> m_imgui;
   std::unique_ptr<ImGuiDummy> m_imguiDummy;

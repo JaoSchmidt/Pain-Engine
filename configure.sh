@@ -12,6 +12,8 @@ ARCH="x86_64"
 # GENERATOR='Unix Makefiles'
 GENERATOR="Ninja"
 TYPE="Debug"
+COMPILER_LAUNCHER="ccache"
+# COMPILER_LAUNCHER="distcc"
 
 if [ "$#" -ne 1 ]; then
 	BUILD_DIR="./build"
@@ -43,7 +45,7 @@ else
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
 				-DCMAKE_BUILD_TYPE="$TYPE" \
 				-DCMAKE_CXX_COMPILER="$DEFAULT_COMPILER" \
-				-DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+				-DCMAKE_CXX_COMPILER_LAUNCHER=$COMPILER_LAUNCHER \
 				-DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold" \
 				-G "$GENERATOR" \
 				-S . \

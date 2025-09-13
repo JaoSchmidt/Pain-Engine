@@ -22,17 +22,25 @@ private:
   ArcheRegistry m_registry;
   sol::state &m_luaState;
   Entity m_entity;
+  Bitmask m_bitmask = 0;
 
 public:
-  Scene(void *context, SDL_Window *window, sol::state &solState);
-
+  template <typename... Components>
+  Scene(void *context, SDL_Window *window, sol::state &solState)
+      : m_registry(), m_luaState(solState), m_entity(createEntity()),
+        m_imGuiSystem(m_registry, context, window){};
+  template <typename... Components>
+  Scene(void *context, SDL_Window *window, sol::state &luaState,
+        Components &&...args)
+      : m_registry(), m_luaState(luaState), m_entity(createEntity()),
+        m_imGuiSystem(m_registry, context, window)
+  {
+    createComponents<Components...>(m_entity,
+                                    std::forward<Components>(args)...);
+    m_bitmask = ComponentManager::multiComponentBitmask<Components...>();
+  };
   Entity createEntity();
   void destroyEntity(Entity entity);
-
-  virtual ~Scene() = default;
-  virtual void onRender(bool isMinimized, double realTime) = 0;
-  virtual void onUpdate(double deltaTime) = 0;
-  virtual void onEvent(const SDL_Event &event) = 0;
 
   template <typename T, typename... Args> void withScript(Args &&...args)
   {
