@@ -1,3 +1,4 @@
+#include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 
 #include "Assets/ResourceManager.h"
@@ -75,8 +76,8 @@ Renderer2d Renderer2d::createRenderer2d()
   auto quadIB = IndexBuffer::createIndexBuffer(quadIndices, MaxQuadIndices);
   P_ASSERT(quadIB, "Could not create Quad Vertex BUffer");
   delete[] quadIndices;
-  auto quadVertexArray = VertexArray::createVertexArray(
-      std::move(quadVertexBuffer.value()), *quadIB);
+  auto quadVertexArray =
+      VertexArray::createVertexArray(quadVertexBuffer.value(), *quadIB);
   P_ASSERT(quadVertexArray, "Quad Vertex Array wasn't initialized");
 
   int32_t samplers[MaxTextureSlots];
@@ -115,7 +116,7 @@ Renderer2d Renderer2d::createRenderer2d()
       Shader::createFromFile("resources/default/shaders/Triangles.glsl");
   P_ASSERT(triShader, "Triangule shader wasn't initialized");
   auto triVertexArray =
-      VertexArray::createVertexArray(std::move(*triVertexBuffer), *triIB);
+      VertexArray::createVertexArray(*triVertexBuffer, *triIB);
   // =============================================================== //
   // Text
   // =============================================================== //
@@ -134,7 +135,7 @@ Renderer2d Renderer2d::createRenderer2d()
   textTextureShader->bind();
   P_ASSERT(textTextureShader, "Triangule shader wasn't initialized");
   auto textVertexArray =
-      VertexArray::createVertexArray(std::move(*textVertexBuffer), *quadIB);
+      VertexArray::createVertexArray(*textVertexBuffer, *quadIB);
 
   // =============================================================== //
   // Spray Particles
@@ -164,7 +165,7 @@ Renderer2d Renderer2d::createRenderer2d()
   delete[] sprayIndices;
 
   auto sprayVertexArray =
-      VertexArray::createVertexArray(std::move(*sprayVertexBuffer), *sprayIB);
+      VertexArray::createVertexArray(*sprayVertexBuffer, *sprayIB);
   auto sprayShader =
       Shader::createFromFile("resources/default/shaders/SprayParticles.glsl");
 
@@ -210,6 +211,7 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
   // =============================================================== //
   // PLOG_I("bind texture id = {}", m_textureSlots[i]->getRendererId());
   if (m_quadIndexCount) {
+    m_quadIB.bind(); // TODO: this fixed the issue, but why?
     m_quadVertexArray.bind();
     const uint32_t quadDataSize =
         (uint8_t *)m_quadVertexBufferPtr - (uint8_t *)m_quadVertexBufferBase;
@@ -470,27 +472,27 @@ Renderer2d::~Renderer2d()
   delete[] m_sprayVertexBufferBase;
 }
 
-Renderer2d::Renderer2d(IndexBuffer &&quadIB,            //
-                       IndexBuffer &&triIB,             //
-                       IndexBuffer &&sprayIB,           //
-                       VertexArray &&quadVertexArray,   //
-                       VertexBuffer &&quadVertexBuffer, //
-                       Shader &&quadTextureShader,
+Renderer2d::Renderer2d(IndexBuffer quadIB,            //
+                       IndexBuffer triIB,             //
+                       IndexBuffer sprayIB,           //
+                       VertexArray quadVertexArray,   //
+                       VertexBuffer quadVertexBuffer, //
+                       Shader quadTextureShader,
                        QuadVertex *quadVertexBufferBase,
                        // text initializer
-                       VertexArray &&textVertexArray,
-                       VertexBuffer &&textVertexBuffer, //
-                       Shader &&textTextureShader,
+                       VertexArray textVertexArray,
+                       VertexBuffer textVertexBuffer, //
+                       Shader textTextureShader,
                        TextQuadVertex *textVertexBufferBase,
                        // tri initializer
-                       VertexArray &&triVertexArray,
-                       VertexBuffer &&triVertexBuffer, //
-                       Shader &&triShader,             //
+                       VertexArray triVertexArray,
+                       VertexBuffer triVertexBuffer, //
+                       Shader triShader,             //
                        TriVertex *triVertexBufferBase,
                        // spray particle initializer
-                       VertexArray &&sprayVertexArray,
-                       VertexBuffer &&sprayVertexBuffer, //
-                       Shader &&sprayShader,
+                       VertexArray sprayVertexArray,
+                       VertexBuffer sprayVertexBuffer, //
+                       Shader sprayShader,
                        ParticleVertex *sprayVertexBufferBase)
     : m_quadVertexArray(std::move(quadVertexArray)),
       m_quadVertexBuffer(std::move(quadVertexBuffer)),

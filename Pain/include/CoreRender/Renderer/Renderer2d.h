@@ -171,27 +171,27 @@ private:
   void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
                          const std::array<glm::vec2, 4> &textureCoordinate,
                          const std::array<glm::vec4, 4> &textVertexPositions);
-  Renderer2d(IndexBuffer &&quadIB,             //
-             IndexBuffer &&triIB,              //
-             IndexBuffer &&sprayIB,            //
-             VertexArray &&quadVertexArray,    //
-             VertexBuffer &&quadVertexBuffer,  //
-             Shader &&quadTextureShader,       //
+  Renderer2d(IndexBuffer quadIB,               //
+             IndexBuffer triIB,                //
+             IndexBuffer sprayIB,              //
+             VertexArray quadVertexArray,      //
+             VertexBuffer quadVertexBuffer,    //
+             Shader quadTextureShader,         //
              QuadVertex *quadVertexBufferBase, //
              // text initializer
-             VertexArray &&textVertexArray,        //
-             VertexBuffer &&textVertexBuffer,      //
-             Shader &&textTextureShader,           //
+             VertexArray textVertexArray,          //
+             VertexBuffer textVertexBuffer,        //
+             Shader textTextureShader,             //
              TextQuadVertex *textVertexBufferBase, //
              // tri initializer
-             VertexArray &&triVertexArray,   //
-             VertexBuffer &&triVertexBuffer, //
-             Shader &&triShader,             //
+             VertexArray triVertexArray,     //
+             VertexBuffer triVertexBuffer,   //
+             Shader triShader,               //
              TriVertex *triVertexBufferBase, //
              // spray particle initializer
-             VertexArray &&sprayVertexArray,   //
-             VertexBuffer &&sprayVertexBuffer, //
-             Shader &&sprayShader,             //
+             VertexArray sprayVertexArray,   //
+             VertexBuffer sprayVertexBuffer, //
+             Shader sprayShader,             //
              ParticleVertex *sprayVertexBufferBase);
 };
 

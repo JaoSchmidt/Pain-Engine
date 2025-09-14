@@ -201,8 +201,8 @@ CubeVertexBatch CubeVertexBatch::createCubeVertexBatch()
   auto quadIB = IndexBuffer::createIndexBuffer(quadIndices, MaxIndices);
   P_ASSERT(quadIB, "Could not create Cube Vertex BUffer");
   delete[] quadIndices;
-  auto cubeVertexArray = VertexArray::createVertexArray(
-      std::move(cubeVertexBuffer.value()), *quadIB);
+  auto cubeVertexArray =
+      VertexArray::createVertexArray(cubeVertexBuffer.value(), *quadIB);
 
   // m_whiteTexture.reset(new Texture(1, 1));
   // uint32_t whiteTextureData = 0xffffffff;

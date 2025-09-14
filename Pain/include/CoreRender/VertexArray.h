@@ -14,7 +14,7 @@ public:
   VertexArray(VertexArray &&o);
   VertexArray &operator=(VertexArray &&o);
   std::optional<VertexArray> static createVertexArray(
-      VertexBuffer &&vertexBuffer, IndexBuffer &indexBuffer);
+      VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer);
 
   ~VertexArray();
   void bind() const;
@@ -33,9 +33,12 @@ private:
                               uint32_t rendererId);
   static void setIndexBuffer(const IndexBuffer &indexBuffer,
                              uint32_t rendererId);
-  VertexArray(VertexBuffer &&vertexBuffer, IndexBuffer &indexBuffer,
+  VertexArray(VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer,
               uint32_t rendererId);
-  VertexBuffer m_vertexBuffer;
+  // NOTE: in theory, even thought opengl can create multiple vertex arrays, it
+  // might be worth to just use 1 vertex arrays and ALL vertexBuffer. Remember
+  // what cherno said about using multiple vertex arrays: "no need"
+  VertexBuffer &m_vertexBuffer;
   IndexBuffer &m_indexBuffer;
   uint32_t m_rendererId;
 };
