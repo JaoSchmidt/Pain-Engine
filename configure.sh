@@ -32,7 +32,7 @@ fi
 if [ "$(basename "$(pwd)")" != "build" ]; then
   mkdir -p "$BUILD_DIR"
 fi
-
+echo $CICD
 if [ "$CICD" == true ]; then
   mkdir -p "dkr_build"
   echo "🚀 Running in CICD (GitHub Actions) mode..."
@@ -42,6 +42,7 @@ if [ "$CICD" == true ]; then
         -G "Unix Makefiles" \
         -S . \
         -B "dkr_build"
+echo "Using compiler: g++"
 elif [ "$ARG" == "mingw" ]; then
   echo "🔧 Running with MinGW toolchain..."
   COMPILER="$MINGW_PATH/bin/g++"
@@ -51,6 +52,7 @@ elif [ "$ARG" == "mingw" ]; then
         -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
         -S . \
         -B "$BUILD_DIR"
+echo "Using compiler: $COMPILER"
 else
   echo "💻 Running with default compiler..."
   COMPILER="$DEFAULT_COMPILER"
@@ -62,7 +64,7 @@ else
         -G "$GENERATOR" \
         -S . \
         -B "$BUILD_DIR"
+echo "Using compiler: $COMPILER"
 fi
 
-echo "Using compiler: $COMPILER"
 
