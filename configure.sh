@@ -1,4 +1,5 @@
-# #/bin/bash/
+#!/bin/bash
+
 # Set the default compiler
 DEFAULT_COMPILER="clang++"
 
@@ -15,41 +16,53 @@ TYPE="Debug"
 COMPILER_LAUNCHER="ccache"
 # COMPILER_LAUNCHER="distcc"
 
-if [ "$#" -ne 1 ]; then
-	BUILD_DIR="./build"
-else
-	BUILD_DIR="$1"
+# Default build directory
+BUILD_DIR="./build"
+
+# Parse argument (default: none)
+ARG="${1:-}"
+
+# CICD mode is enabled only if explicitly passed
+CICD=false
+if [ "$ARG" == "CICD" ]; then
+  CICD=true
 fi
 
-# Check if the script is already in the build directory
+# Ensure build directory exists
 if [ "$(basename "$(pwd)")" != "build" ]; then
   mkdir -p "$BUILD_DIR"
 fi
 
-# Check if the user provided the "mingw" argument
-if [ "$1" == "mingw" ]; then
-  # Use MinGW compiler
+if [ "$CICD" == true ]; then
+  mkdir -p "dkr_build"
+  echo "🚀 Running in CICD (GitHub Actions) mode..."
+  COMPILER="$DEFAULT_COMPILER"
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_CXX_COMPILER="g++" \
+        -G "Unix Makefiles" \
+        -S . \
+        -B "dkr_build"
+elif [ "$ARG" == "mingw" ]; then
+  echo "🔧 Running with MinGW toolchain..."
   COMPILER="$MINGW_PATH/bin/g++"
-  # Run CMake with the MinGW toolchain file
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-				-DCMAKE_BUILD_TYPE="$TYPE" \
-				-DCMAKE_CXX_COMPILER="$COMPILER" \
-				-DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
+        -DCMAKE_BUILD_TYPE="$TYPE" \
+        -DCMAKE_CXX_COMPILER="$COMPILER" \
+        -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
         -S . \
         -B "$BUILD_DIR"
-        # -DCMAKE_TOOLCHAIN_FILE="$MINGW_PATH/mingw$ARCH.cmake" \
 else
-  # Use default compiler
+  echo "💻 Running with default compiler..."
   COMPILER="$DEFAULT_COMPILER"
-  # Run CMake with default compiler
   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-				-DCMAKE_BUILD_TYPE="$TYPE" \
-				-DCMAKE_CXX_COMPILER="$DEFAULT_COMPILER" \
-				-DCMAKE_CXX_COMPILER_LAUNCHER=$COMPILER_LAUNCHER \
-				-DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold" \
-				-G "$GENERATOR" \
-				-S . \
-				-B "$BUILD_DIR"
+        -DCMAKE_BUILD_TYPE="$TYPE" \
+        -DCMAKE_CXX_COMPILER="$DEFAULT_COMPILER" \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=$COMPILER_LAUNCHER \
+        -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold" \
+        -G "$GENERATOR" \
+        -S . \
+        -B "$BUILD_DIR"
 fi
 
 echo "Using compiler: $COMPILER"
+

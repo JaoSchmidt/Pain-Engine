@@ -9,6 +9,8 @@ CMakeDoxygenDefaults.cmake
 .cmake/
 ## Debug stuff
 resources/*
+.luarc.json
+lua_types/
 
 ##### Windows
 # Windows thumbnail cache files
