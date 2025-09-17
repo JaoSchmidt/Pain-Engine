@@ -18,9 +18,8 @@
 namespace
 {
 // NOTE: remember folks, surfaceMap is in the static/global memory but its
-// content are in the heap
-static std::map<std::string, sol::load_result> m_luaFileMap = {};
-static std::map<std::string, std::string> m_luaScriptSource;
+// content is in the heap
+static std::map<std::string, std::string> m_luaScriptSource = {};
 } // namespace
 namespace pain
 {
@@ -122,10 +121,6 @@ void resources::defaultNativeScript::onDestroy()
   PLOG_W("You are trying to destroy the default script, not sure if that is "
          "suppose to happen");
 }
-void resources::clearScript()
-{
-  m_luaScriptSource.clear();
-  m_luaFileMap.clear();
-}
+void resources::clearScript() { m_luaScriptSource.clear(); }
 
 } // namespace pain

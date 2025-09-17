@@ -17,17 +17,13 @@ struct SpriteComponent {
   SpriteComponent(const glm::vec2 &size, const glm::vec4 &color,
                   float tilingFactor, Texture &texture)
       : m_size(size), m_color(color), m_tilingFactor(tilingFactor),
-        m_texture(&texture)
-  {
-  }
+        m_texture(&texture) {};
   SpriteComponent() = default;
 
   // Move
   SpriteComponent(SpriteComponent &&other) noexcept
       : m_size(std::move(other.m_size)), m_color(std::move(other.m_color)),
-        m_tilingFactor(other.m_tilingFactor), m_texture(other.m_texture)
-  {
-  }
+        m_tilingFactor(other.m_tilingFactor), m_texture(other.m_texture) {};
   SpriteComponent &operator=(SpriteComponent &&other) noexcept
   {
     if (this != &other) {
@@ -45,9 +41,7 @@ struct SpritelessComponent {
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   SpritelessComponent() = default;
   SpritelessComponent(const glm::vec2 &size, const glm::vec4 &color)
-      : m_size(size), m_color(color)
-  {
-  }
+      : m_size(size), m_color(color) {};
 };
 
 struct TrianguleComponent {
@@ -55,9 +49,7 @@ struct TrianguleComponent {
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   TrianguleComponent() = default;
   TrianguleComponent(const glm::vec2 &height, const glm::vec4 &color)
-      : m_height(height), m_color(color)
-  {
-  }
+      : m_height(height), m_color(color) {};
 };
 
 } // namespace pain

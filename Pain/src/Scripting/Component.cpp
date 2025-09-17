@@ -11,11 +11,9 @@ namespace pain
 {
 void custom_print(const std::string &str) { PLOG_I("{}", str); }
 
-LuaScriptComponent::LuaScriptComponent(Scene &scene, Entity entity,
-                                       Bitmask bitmask, sol::state &solState)
-    : ExtendedEntity(entity, bitmask, scene), m_lua(solState)
-{
-}
+LuaScriptComponent::LuaScriptComponent(Entity entity, Bitmask bitmask,
+                                       Scene &scene, sol::state &solState)
+    : ExtendedEntity(entity, bitmask, scene), m_lua(solState) {};
 void LuaScriptComponent::initializeScript() {}
 void LuaScriptComponent::bind(const char *scriptPath)
 {
@@ -25,41 +23,30 @@ void LuaScriptComponent::bind(const char *scriptPath)
   // Temporary table that store references to possible callbacks... lambda is
   // only invoked if the function exists inside lua script
   script_api["on_create"] = [&](sol::function f) {
-    *m_onCreate = std::move(f);
+    m_onCreate = sol::protected_function(std::move(f));
   };
-  m_onUpdateFunction = m_scene.get().createEntity();
   script_api["on_update"] = [&](sol::function f) {
-    m_scene.get().createComponent<onUpdateLuaFunction>(m_onUpdateFunction,
-                                                       std::move(f));
+    m_onUpdateFunction = sol::protected_function(std::move(f));
+  };
+  script_api["on_event"] = [&](sol::function f) {
+    m_onEventFunction = sol::protected_function(std::move(f));
+  };
+  script_api["on_render"] = [&](sol::function f) {
+    m_onRenderFunction = sol::protected_function(std::move(f));
   };
   script_api["on_destroy"] = [&](sol::function f) {
-    *m_onDestroy = std::move(f);
+    m_onDestroy = sol::protected_function(std::move(f));
   };
 
-  if (hasAnyComponents<TransformComponent>())
-    m_lua.set_function("get_position",
-                       [](LuaScriptComponent &c) -> TransformComponent & {
-                         return c.getComponent<TransformComponent>();
-                       });
-  if (hasAnyComponents<MovementComponent>())
-    m_lua.set_function("get_movement",
-                       [](LuaScriptComponent &c) -> MovementComponent & {
-                         return c.getComponent<MovementComponent>();
-                       });
-  if (hasAnyComponents<SpriteComponent>())
-    m_lua.set_function("get_sprite",
-                       [](LuaScriptComponent &c) -> SpriteComponent & {
-                         return c.getComponent<SpriteComponent>();
-                       });
   m_scriptPath = scriptPath;
-  m_lua["script"] = script_api;
+  m_lua["Script"] = script_api;
   sol::load_result script =
-      m_lua.load(resources::getLuaScriptSource(m_scriptPath));
+      m_lua.load(resources::getLuaScriptSource(m_scriptPath), m_scriptPath);
   if (!script.valid()) {
     sol::error err = script;
     PLOG_E("Error loading Lua script: {}", err.what());
   }
-
+  PLOG_I("has transform? {}", hasAnyComponents<TransformComponent>());
   sol::protected_function_result result =
       script(); // will place everything inside an anonymous function and run
   if (!result.valid()) {
@@ -72,7 +59,7 @@ void LuaScriptComponent::bind(const char *scriptPath)
 void LuaScriptComponent::onCreate()
 {
   if (m_onCreate) {
-    sol::protected_function_result result = (*m_onCreate)();
+    sol::protected_function_result result = (*m_onCreate)(*this);
     if (!result.valid()) {
       PLOG_E("Lua error (onCreate): {}", result.get<sol::error>().what());
     }
@@ -81,25 +68,19 @@ void LuaScriptComponent::onCreate()
 void LuaScriptComponent::onDestroy()
 {
   if (m_onDestroy) {
-    sol::protected_function_result result = (*m_onDestroy)();
+    sol::protected_function_result result = (*m_onDestroy)(*this);
     if (!result.valid()) {
-      PLOG_E("Lua error (onUpdate): {}", result.get<sol::error>().what());
+      PLOG_E("Lua error (onDestroy): {}", result.get<sol::error>().what());
     }
   }
 }
 
-void LuaScriptComponent::onEvent(const SDL_Event *event)
-{
-  // not implemented yet
-}
-
 LuaScriptComponent::LuaScriptComponent(LuaScriptComponent &&other) noexcept
     : ExtendedEntity(std::move(other)), // base class
+      m_onCreate(std::move(other.m_onCreate)),
+      m_onDestroy(std::move(other.m_onDestroy)),
       m_scriptPath(std::exchange(other.m_scriptPath, nullptr)),
-      m_lua(other.m_lua), m_onCreate(std::move(other.m_onCreate)),
-      m_onDestroy(std::move(other.m_onDestroy))
-{
-}
+      m_lua(other.m_lua) {};
 
 LuaScriptComponent &
 LuaScriptComponent::operator=(LuaScriptComponent &&other) noexcept

@@ -33,17 +33,7 @@ void Scene::updateSystems(double deltaTime)
   PROFILE_FUNCTION();
   m_kinematicsSystem.onUpdate(deltaTime);
   m_nativeScriptSystem.onUpdate(deltaTime);
-
-  // =============================================================== //
-  // Update Lua Script Components
-  // =============================================================== //
-  {
-    PROFILE_SCOPE("Scene::updateSystems - lua scripts");
-    for (auto it = begin<onUpdateLuaFunction>();
-         it != end<onUpdateLuaFunction>(); ++it) {
-      onUpdateLuaFunction();
-    }
-  }
+  m_luaSystem.onUpdate(deltaTime);
 }
 
 void Scene::updateSystems(const SDL_Event &event)
@@ -51,6 +41,7 @@ void Scene::updateSystems(const SDL_Event &event)
   PROFILE_SCOPE("Scene::updateSystems - events for nsc");
   m_nativeScriptSystem.onEvent(event);
   m_imGuiSystem.onEvent(event);
+  m_luaSystem.onEvent(event);
 }
 
 } // namespace pain

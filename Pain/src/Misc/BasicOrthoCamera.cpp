@@ -36,20 +36,19 @@ void OrthoCameraScript::onUpdate(double deltaTimeSec)
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   auto [mc, tc, cc, rc] = getComponents<MovementComponent,TransformComponent,OrthoCameraComponent,RotationComponent>();
 
-  mc.m_velocityDir =
-      (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
-                             : glm::vec3(0.0)) +
-      (state[SDL_SCANCODE_S] ? glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
-                             : glm::vec3(0.0)) +
-      (state[SDL_SCANCODE_A] ? -rc.m_rotation : glm::vec3(0.0)) +
-      (state[SDL_SCANCODE_D] ? rc.m_rotation : glm::vec3(0.0));
-
-  if (state[SDL_SCANCODE_Q])
-    rc.m_rotationAngle += mc.m_rotationSpeed * (float) deltaTimeSec;
-  if (state[SDL_SCANCODE_E])
-    rc.m_rotationAngle -= mc.m_rotationSpeed * (float) deltaTimeSec;
-  // PLOG_I("({},{},{})", tc.m_position.x, tc.m_position.y, tc.m_position.z);
-
+  // mc.m_velocityDir =
+  //     (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
+  //                            : glm::vec3(0.0)) +
+  //     (state[SDL_SCANCODE_S] ? glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
+  //                            : glm::vec3(0.0)) +
+  //     (state[SDL_SCANCODE_A] ? -rc.m_rotation : glm::vec3(0.0)) +
+  //     (state[SDL_SCANCODE_D] ? rc.m_rotation : glm::vec3(0.0));
+  //
+  // if (state[SDL_SCANCODE_Q])
+  //   rc.m_rotationAngle += mc.m_rotationSpeed * (float) deltaTimeSec;
+  // if (state[SDL_SCANCODE_E])
+  //   rc.m_rotationAngle -= mc.m_rotationSpeed * (float) deltaTimeSec;
+  //
   mc.m_translationSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
   recalculatePosition(tc.m_position, rc.m_rotationAngle);
 }

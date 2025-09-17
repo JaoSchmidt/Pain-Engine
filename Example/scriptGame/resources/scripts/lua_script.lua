@@ -1,20 +1,30 @@
-local function add(x, y)
-	return x + y
-end
-
-print(type(script.on_update))
-print(type(script))
-script.on_update(function(self, dt)
-	print("this is inside onUpdate, dt = " .. tostring(dt))
+Script.on_update(function(self, dt)
+	local tr = self:get_position()
+	if tr ~= nil then
+		if Input.is_key_pressed(Scancode.A) then
+			tr.m_position.x = tr.m_position.x - 0.04
+		end
+		if Input.is_key_pressed(Scancode.D) then
+			tr.m_position.x = tr.m_position.x + 0.04
+		end
+		if Input.is_key_pressed(Scancode.W) then
+			tr.m_position.y = tr.m_position.y + 0.04
+		end
+		if Input.is_key_pressed(Scancode.S) then
+			tr.m_position.y = tr.m_position.y - 0.04
+		end
+	end
 end)
-print(type(script.on_create))
-script.on_create(function(self)
-	local x, y = self:get_position()
-	print(x)
-	print(y)
-	print("this is onCreate function, x+y = " .. tostring(add(x, y)))
+
+Script.on_create(function(self)
+	-- print("this is onCreate function, x later is " .. transform.m_position.x)
 end)
 
-script.on_destroy(function(self)
+Script.on_event(function(self, event)
+	-- print("this is on event function")
+	-- print(type(event))
+end)
+
+Script.on_destroy(function(self)
 	print("this is onDestroy function")
 end)

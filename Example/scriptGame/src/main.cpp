@@ -40,11 +40,11 @@ public:
     // m_sc = sc;
 
     // m_mainMap = std::make_unique<MainMap>(16.0f, 16.0f, tc.m_position, this);
-    // dummy = new Dummy(scene, {0.f, 0.f}, {1.f, 1.f}, {9.f, 0.f, 5.f, 1.f},
-    //                   m_texture, 1.f);
-    // ls = &dummy->getComponent<pain::LuaScriptComponent>(*scene);
-    // ls->bind("resources/scripts/lua_script.lua");
-    // ls->onCreate();
+    dummy.reset(new Dummy(&scene, {0.23f, 0.54f}, {1.f, 1.f},
+                          {9.f, 0.f, 5.f, 1.f}, &m_texture, 1.f));
+    auto ls = &dummy->getComponent<pain::LuaScriptComponent>(scene);
+    ls->bind("resources/scripts/lua_script.lua");
+    ls->onCreate();
   };
   void onUpdate(double deltaTime)
   {
@@ -75,8 +75,8 @@ public:
     //                            {0.9f, 0.3f, 0.2f, 1.0f});
     // pain::Renderer2d::drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f},
     //                            {0.8f, 0.9f, 0.3f, 1.0f});
-    renderer.drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, {1.0f, 1.0f, 1.0f, 1.0f},
-                      m_texture);
+    // renderer.drawQuad({0.0f, 0.0f}, {0.4f, 0.4f}, {1.0f, 1.0f, 1.0f, 1.0f},
+    //                   m_texture);
     // pain::Renderer2d::drawQuad({-0.5f, -0.5f}, {0.4f, 0.4f}, m_texture, 1.0f,
     //                            {1.0f, 1.0f, 1.0f, 1.0f});
   }
@@ -88,7 +88,6 @@ private:
   std::shared_ptr<pain::Shader> m_texture_shader;
   pain::Texture &m_texture;
   std::unique_ptr<Dummy> dummy;
-  std::unique_ptr<pain::LuaScriptComponent> ls;
 };
 
 pain::Application *pain::createApplication()
@@ -123,6 +122,7 @@ int main(int argc, char *argv[])
 {
   bool isSettingsGuiNeeded = pain::Pain::initiate();
   EndGameFlags flags;
+  flags.restartGame = !isSettingsGuiNeeded;
   if (isSettingsGuiNeeded) {
     pain::Application *app = pain::createLauncher();
     flags = pain::Pain::runAndDeleteApplication(app);

@@ -8,6 +8,7 @@
 #include "Entity.h"
 #include "GUI/ImGuiSystem.h"
 #include "Physics/Kinematics.h"
+#include "Scripting/LuaScriptSystem.h"
 #include "Scripting/NativeSystem.h"
 
 #include <queue>
@@ -175,6 +176,7 @@ public:
     m_renderSystem.onRender(std::forward<Args>(args)...);
     m_nativeScriptSystem.onRender(std::forward<Args>(args)...);
     m_imGuiSystem.onRender(std::forward<Args>(args)...);
+    m_luaSystem.onRender(std::forward<Args>(args)...);
   }
 
 private:
@@ -184,5 +186,6 @@ private:
   Systems::Kinematics m_kinematicsSystem = {m_registry};
   Systems::NativeScript m_nativeScriptSystem = {m_registry};
   Systems::ImGui m_imGuiSystem;
+  Systems::LuaScript m_luaSystem = {m_registry};
 };
 } // namespace pain

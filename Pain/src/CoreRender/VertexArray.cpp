@@ -76,6 +76,6 @@ void VertexArray::setIndexBuffer(const IndexBuffer &indexBuffer,
                                  uint32_t rendererId)
 {
   glBindVertexArray(rendererId);
-  indexBuffer.bind();
+  indexBuffer.bind(); // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufferId);
 }
 } // namespace pain

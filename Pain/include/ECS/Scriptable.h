@@ -21,7 +21,6 @@ public:
     static_assert(sizeof...(Components) > 0,
                   "No components in the scripted object. Did you create "
                   "an object constructor but forgot to add its components?");
-    m_entity = scene.createEntity();
     return scene.createComponents<Components...>(
         m_entity, std::forward<Components>(args)...);
   }

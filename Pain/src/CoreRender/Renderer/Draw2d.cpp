@@ -253,6 +253,7 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
   // Spray Particles
   // =============================================================== //
   if (m_sprayIndexCount) {
+    m_sprayIB.bind();
     m_sprayVertexArray.bind();
     const uint32_t sprayDataSize =
         (uint8_t *)m_sprayVertexBufferPtr - (uint8_t *)m_sprayVertexBufferBase;
@@ -274,6 +275,7 @@ void Renderer2d::drawBatches(const glm::mat4 &viewProjectionMatrix)
   // Triangles
   // =============================================================== //
   if (m_triIndexCount) {
+    m_triIB.bind();
     m_triVertexArray.bind();
     const uint32_t triDataSize =
         (uint8_t *)m_triVertexBufferPtr - (uint8_t *)m_triVertexBufferBase;
