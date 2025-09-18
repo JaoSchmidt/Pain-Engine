@@ -1,15 +1,14 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Core.h"
-#include "CoreFiles/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Camera.h"
 
 namespace pain
 {
 
-class  PerspectiveCameraController
+class PerspectiveCameraController
 {
 public:
   PerspectiveCameraController(float windowWidth, float windowHeight,

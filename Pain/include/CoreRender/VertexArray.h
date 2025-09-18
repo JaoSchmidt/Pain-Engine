@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 
 #include "Core.h"
@@ -7,28 +7,39 @@
 
 namespace pain
 {
-class  VertexArray
+class VertexArray
 {
 public:
-  // NONCOPYABLE(VertexArray)
+  NONCOPYABLE(VertexArray);
+  VertexArray(VertexArray &&o);
+  VertexArray &operator=(VertexArray &&o);
+  std::optional<VertexArray> static createVertexArray(
+      VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer);
+
   ~VertexArray();
-  VertexArray();
   void bind() const;
   void unbind() const;
-  void addVertexBuffer(const std::shared_ptr<VertexBuffer> &vertexBuffer);
-  void setIndexBuffer(const std::shared_ptr<IndexBuffer> &indexBuffer);
-  const std::vector<std::shared_ptr<VertexBuffer>> &getVertexBuffers() const
+  // const std::vector<std::shared_ptr<VertexBuffer>> &getVertexBuffers() const
+  // {
+  //   return m_vertexBuffer;
+  // };
+  const IndexBuffer &getIndexBuffer() const
   {
-    return m_vertexBuffer;
-  };
-  const std::shared_ptr<IndexBuffer> &getIndexBuffer() const
-  {
-    return m_indexBuffer;
+    return std::as_const(m_indexBuffer);
   }
 
 private:
-  std::vector<std::shared_ptr<VertexBuffer>> m_vertexBuffer;
-  std::shared_ptr<IndexBuffer> m_indexBuffer;
+  static void addVertexBuffer(const VertexBuffer &vertexBuffer,
+                              uint32_t rendererId);
+  static void setIndexBuffer(const IndexBuffer &indexBuffer,
+                             uint32_t rendererId);
+  VertexArray(VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer,
+              uint32_t rendererId);
+  // NOTE: in theory, even thought opengl can create multiple vertex arrays, it
+  // might be worth to just use 1 vertex arrays and ALL vertexBuffer. Remember
+  // what cherno said about using multiple vertex arrays: "no need"
+  VertexBuffer &m_vertexBuffer;
+  IndexBuffer &m_indexBuffer;
   uint32_t m_rendererId;
 };
 

@@ -2,8 +2,8 @@
 // https://gist.github.com/TheCherno/31f135eea6ee729ab5f26a6908eb3a5e
 #pragma once
 
+#include "Assets/DeltaTime.h"
 #include "Core.h"
-#include "CoreFiles/DeltaTime.h"
 
 namespace pain
 {

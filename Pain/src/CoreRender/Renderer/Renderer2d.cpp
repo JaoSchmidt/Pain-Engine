@@ -1,96 +1,53 @@
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "Assets/ResourceManager.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
 
-#include "ECS/Components/Rotation.h"
 #include "glm/ext/matrix_transform.hpp"
 
 namespace pain
 {
-namespace Renderer2d
-{
-void goBackToFirstVertex();
-float allocateTextures(Texture &texture);
-void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
-                  const float tilingFactor, const float textureIndex,
-                  const std::array<glm::vec2, 4> &textureCoordinate);
-void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor);
-void allocateSprayParticles(const glm::vec2 &position, const glm::vec2 &offset,
-                            const glm::vec2 &normal, const float startTime,
-                            const float rotationSpeed);
-void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
-                       const std::array<glm::vec2, 4> &textureCoordinate,
-                       const std::array<glm::vec4, 4> &textVertexPositions);
-void initBatches();
-void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                         float globalTime, const glm::mat4 &transform);
-void drawBatches(const glm::mat4 &viewProjectionMatrix);
+
 extern const Texture *m_fontAtlasTexture;
-
-// OrthoCameraEntity *m_cameraEntity = nullptr;
-
-static const OrthoCameraEntity *m_cameraEntity = nullptr;
-// ================================================================= //
-// Render initialization and destruction
-// ================================================================= //
-
-void init(const OrthoCameraEntity &cameraEntity)
-{
-  // NOTE: This enable 3d and can be changed later in case we need some camera
-  // mechanic
-  // glEnable(GL_DEPTH_TEST);
-
-  // allow transparency
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  // HACK: allow textures with 3 channels to align properly, e.g. font textures.
-  // No idea why it works tho, perhaps I will find a proper doc later
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-  // quadBatch = new VertexBatch();
-  initBatches();
-  m_cameraEntity = &cameraEntity;
-}
 
 // ================================================================= //
 // Renderer: basic wrapper around opengl
 // ================================================================= //
-void shutdown() {}
+// void Renderer2d::shutdown() {}
 
-void setViewport(int x, int y, int width, int height)
+void Renderer2d::setViewport(int x, int y, int width, int height)
 {
   glViewport(x, y, width, height);
 }
 
-void clear() { glClear(GL_COLOR_BUFFER_BIT); }
+void Renderer2d::clear() { glClear(GL_COLOR_BUFFER_BIT); }
 
-void setClearColor(const glm::vec4 &color)
+void Renderer2d::setClearColor(const glm::vec4 &color)
 {
   glClearColor(color.r, color.g, color.b, color.a);
 }
+void Renderer2d::changeCamera(const OrthographicMatrices &cameraMatrices)
+{
+  m_cameraMatrices = &cameraMatrices;
+}
 
-void beginScene(float globalTime, const glm::mat4 &transform)
+void Renderer2d::beginScene(float globalTime, const glm::mat4 &transform)
 {
   PROFILE_FUNCTION();
-  const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
 
-  uploadBasicUniforms(cameraComponent.m_camera->getViewProjectionMatrix(),
-                      globalTime, transform);
+  uploadBasicUniforms(m_cameraMatrices->getViewProjectionMatrix(), globalTime,
+                      transform);
   goBackToFirstVertex();
 }
 
-void flush()
+void Renderer2d::flush()
 {
   PROFILE_FUNCTION();
   // bindTextures();
-  const OrthoCameraComponent &cameraComponent =
-      std::as_const(m_cameraEntity)->getComponent<OrthoCameraComponent>();
-  drawBatches(cameraComponent.m_camera->getViewProjectionMatrix());
+  drawBatches(m_cameraMatrices->getViewProjectionMatrix());
 }
 
-void endScene()
+void Renderer2d::endScene()
 {
   // quadBatch->sendAllDataToOpenGL();
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
@@ -98,12 +55,12 @@ void endScene()
   flush();
 }
 
-void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
-                 uint32_t indexCount)
+void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
+                             uint32_t indexCount)
 {
   PROFILE_FUNCTION();
   uint32_t count =
-      indexCount ? indexCount : vertexArray->getIndexBuffer()->getCount();
+      indexCount ? indexCount : vertexArray->getIndexBuffer().getCount();
   glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -112,24 +69,10 @@ void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
 // Draw Quads
 // ================================================================= //
 
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor,
-              Texture *texture, // Raw pointer version
-              float tilingFactor,
-              const std::array<glm::vec2, 4> &textureCoordinate)
-{
-  PROFILE_FUNCTION();
-  const float texIndex =
-      texture ? allocateTextures(*texture) : 0.0f; // White texture if nullptr
-  const glm::mat4 transform = getTransform(position, size);
-  allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
-}
-
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor,
-              Texture &texture, // Reference version
-              float tilingFactor,
-              const std::array<glm::vec2, 4> &textureCoordinate)
+void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor, Texture &texture,
+                          float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
@@ -137,25 +80,14 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
 
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor, const float rotationRadians,
-              Texture &texture, float tilingFactor,
-              const std::array<glm::vec2, 4> &textureCoordinate)
+void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
+                          const glm::vec4 &tintColor,
+                          const float rotationRadians, Texture &texture,
+                          float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
-  const glm::mat4 transform = getTransform(position, size, rotationRadians);
-  allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
-}
-
-void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-              const glm::vec4 &tintColor, const float rotationRadians,
-              Texture *texture, float tilingFactor,
-              const std::array<glm::vec2, 4> &textureCoordinate)
-{
-  PROFILE_FUNCTION();
-  const float texIndex =
-      texture ? allocateTextures(*texture) : 0.0f; // White Texture if nullptr
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   allocateQuad(transform, tintColor, tilingFactor, texIndex, textureCoordinate);
 }
@@ -164,15 +96,16 @@ void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 // Draw Tri
 // ================================================================= //
 
-void drawTri(const glm::vec2 &position, const glm::vec2 &size,
-             const glm::vec4 &tintColor)
+void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
+                         const glm::vec4 &tintColor)
 {
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size);
   allocateTri(transform, tintColor);
 }
-void drawTri(const glm::vec2 &position, const glm::vec2 &size,
-             const glm::vec4 &tintColor, const float rotationRadians)
+void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
+                         const glm::vec4 &tintColor,
+                         const float rotationRadians)
 {
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
@@ -183,7 +116,7 @@ void drawTri(const glm::vec2 &position, const glm::vec2 &size,
 // Draw Spray Particles
 // ================================================================= //
 
-void drawSprayParticle(const Particle &p)
+void Renderer2d::drawSprayParticle(const Particle &p)
 {
   allocateSprayParticles(p.m_position, p.m_offset, p.m_normal, p.m_startTime,
                          p.m_rotationSpeed);
@@ -192,8 +125,8 @@ void drawSprayParticle(const Particle &p)
 // ================================================================= //
 // Draw Text
 // ================================================================= //
-void drawString(const glm::vec2 &position, const char *string, const Font &font,
-                const glm::vec4 &color)
+void Renderer2d::drawString(const glm::vec2 &position, const char *string,
+                            const Font &font, const glm::vec4 &color)
 {
   PROFILE_FUNCTION();
   const auto &fontGeometry = font.getFontGeometry();
@@ -222,7 +155,6 @@ void drawString(const glm::vec2 &position, const char *string, const Font &font,
     default:
       auto glyph = fontGeometry.getGlyph(*t);
       if (!glyph) {
-        drawQuad({-0.5f, 0.0f}, {0.3f, 0.3f}, {1.f, 0.f, 0.f, 1.f});
         PLOG_E("Glyph '{}' not available on font family", *t);
       }
 
@@ -267,6 +199,5 @@ void drawString(const glm::vec2 &position, const char *string, const Font &font,
     }
   }
 }
-} // namespace Renderer2d
 
 } // namespace pain

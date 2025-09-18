@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Entity.h"
+#include <exception>
 #include <typeindex>
 
 namespace pain
@@ -146,15 +147,28 @@ public:
 
   template <typename C> const std::vector<C> &getComponent() const
   {
-    return *static_cast<const std::vector<C> *>(
-        m_componentMap.at(std::type_index(typeid(C))));
+    auto it = m_componentMap.find(std::type_index(typeid(C)));
+    if (it == m_componentMap.end()) {
+      PLOG_E("Cannot find component vector inside Archetype");
+      PLOG_E("You are probably trying to call getComponent but the component "
+             "you want doesn't exist in the object.");
+      std::terminate();
+    }
+    return *static_cast<const std::vector<C> *>(it->second);
   }
 
   template <typename C> std::vector<C> &getComponent()
   {
-    return *static_cast<std::vector<C> *>(
-        m_componentMap.at(std::type_index(typeid(C))));
+    auto it = m_componentMap.find(std::type_index(typeid(C)));
+    if (it == m_componentMap.end()) {
+      PLOG_E("Cannot find component vector inside Archetype");
+      PLOG_E("You are probably trying to call getComponent but the component "
+             "you want doesn't exist in the object.");
+      std::terminate();
+    }
+    return *static_cast<std::vector<C> *>(it->second);
   }
+  // either finds or create a new component
   template <typename C> std::vector<C> &createComponent()
   {
     auto it = m_componentMap.find(std::type_index(typeid(C)));

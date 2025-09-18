@@ -1,6 +1,6 @@
-﻿#pragma once
+#pragma once
 
-#include "pch.h"
+#include "Core.h"
 
 namespace pain
 {
@@ -29,9 +29,11 @@ struct BufferElement {
   BufferElement() = default;
   BufferElement(ShaderDataType type, const std::string &name,
                 bool normalized = false)
-      : type(type), size(getComponentSize()), offset(0), normalized(normalized)
-  {
-  }
+      : type(type), size(getComponentSize()), offset(0),
+        normalized(normalized) {};
+  MOVABLE(BufferElement);
+  COPYABLE(BufferElement);
+  ~BufferElement() = default;
   constexpr uint32_t getComponentCount() const
   {
     constexpr uint32_t counts[] = {
@@ -106,6 +108,17 @@ class BufferLayout
 {
 public:
   BufferLayout() {}
+  NONCOPYABLE(BufferLayout);
+  BufferLayout(BufferLayout &&o)
+      : m_Elements(o.m_Elements), m_Stride(o.m_Stride) {};
+  BufferLayout &operator=(BufferLayout &&o)
+  {
+    if (this != &o) {
+      m_Elements = o.m_Elements;
+      m_Stride = o.m_Stride;
+    }
+    return *this;
+  }
 
   BufferLayout(const std::initializer_list<BufferElement> &elements)
       : m_Elements(elements)

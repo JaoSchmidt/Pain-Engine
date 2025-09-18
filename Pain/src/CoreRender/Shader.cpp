@@ -8,7 +8,25 @@
 
 namespace pain
 {
-Shader::~Shader() { glDeleteProgram(m_programId); };
+Shader::~Shader()
+{
+  if (m_programId != 0)
+    glDeleteProgram(m_programId);
+};
+Shader::Shader(Shader &&o)
+    : m_name(std::move(o.m_name)), m_programId(o.m_programId)
+{
+  o.m_programId = 0;
+}
+Shader &Shader::operator=(Shader &&o)
+{
+  if (this != &o) {
+    m_name = std::move(o.m_name);
+    m_programId = o.m_programId;
+    o.m_programId = 0;
+  }
+  return *this;
+}
 
 void Shader::bind() const { glUseProgram(m_programId); };
 void Shader::unbind() const { glUseProgram(0); };
@@ -144,35 +162,53 @@ std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
   return {ss[0].str(), ss[1].str()};
 }
 
-Shader::Shader(const char *filepath)
+std::optional<Shader> Shader::createFromFile(const char *filepath)
 {
-  // Extract name from filepath
-  std::filesystem::path fp(filepath);
-  m_name = fp.filename().stem().string();
+  if (!std::filesystem::exists(filepath)) {
+    PLOG_W("Shader file {} does not exist.", filepath);
+    return std::nullopt;
+  }
 
   auto [vertexShader, fragmentShader] = parseShader(filepath);
-  createShaderFromStrings(vertexShader, fragmentShader);
+  auto shaderOpt =
+      createFromStrings(std::filesystem::path(filepath).stem().string(),
+                        vertexShader, fragmentShader);
+  if (!shaderOpt)
+    PLOG_W("Failed to create shader from file {}", filepath);
+  return shaderOpt;
 }
 
-Shader::Shader(const std::string &name, const char *filepath)
+std::optional<Shader> Shader::createFromFile(const std::string &name,
+                                             const char *filepath)
 {
+  if (!std::filesystem::exists(filepath)) {
+    PLOG_W("Shader file {} does not exist.", filepath);
+    return std::nullopt;
+  }
+
   auto [vertexShader, fragmentShader] = parseShader(filepath);
-  m_name = name;
-  createShaderFromStrings(vertexShader, fragmentShader);
+  return createFromStrings(name, vertexShader, fragmentShader);
 }
 
-Shader::Shader(const std::string &name, const std::string &vertexShader,
-               const std::string &fragmentShader)
+std::optional<Shader> Shader::createFromStrings(const std::string &name,
+                                                const std::string &vertex,
+                                                const std::string &fragment)
 {
-  createShaderFromStrings(vertexShader, fragmentShader);
+  Shader shader;
+  shader.m_name = name;
+  shader.createShaderFromStrings(vertex, fragment);
+  if (shader.m_programId == 0) {
+    return std::nullopt;
+  }
+  return shader;
 }
 
-Shader::Shader(const std::string &name,
-               std::function<std::pair<std::string, std::string>()> fn)
+std::optional<Shader>
+Shader::createFromFn(const std::string &name,
+                     std::function<std::pair<std::string, std::string>()> fn)
 {
-  auto [vertexShader, fragmentShader] = fn();
-  m_name = name;
-  createShaderFromStrings(vertexShader, fragmentShader);
+  auto [vertex, fragment] = fn();
+  return createFromStrings(name, vertex, fragment);
 }
 
 void Shader::createShaderFromStrings(const std::string &vertexShader,

@@ -16,7 +16,7 @@ std::shared_ptr<spdlog::logger> s_ClientLogger;
 namespace logWrapper
 {
 // using shared for now
-void Init()
+void InitLogger()
 {
   spdlog::set_pattern("%^[%T] %n: %v%$");
   s_CoreLogger = spdlog::stdout_color_mt("PAIN");

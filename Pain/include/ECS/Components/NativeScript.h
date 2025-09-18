@@ -1,7 +1,8 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Scriptable.h"
+#include "CoreRender/Renderer/Renderer2d.h"
+#include "ECS/Entity.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
 
@@ -9,48 +10,88 @@ template <typename T>
 concept has_onCreate_method = requires(T &&t) {
   { t.onCreate() };
 };
-
 template <typename T>
-concept has_onRender_method = requires(T &&t, double d) {
-  { t.onRender(d) };
-};
-
+concept has_onRender_method =
+    requires(T &&t, pain::Renderer2d &r, bool m, double d) {
+      { t.onRender(r, m, d) };
+    };
 template <typename T>
 concept has_onUpdate_method = requires(T &&t, double d) {
   { t.onUpdate(d) };
 };
-
 template <typename T>
 concept has_onDestroy_method = requires(T &&t) {
   { t.onDestroy() };
 };
-
 template <typename T>
 concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
   { t.onEvent(e) };
 };
+template <typename T>
+concept has_invalid_onRender_signature = requires(T t) {
+  { t.onRender() };
+};
+template <typename T>
+concept has_invalid_onUpdate_signature = requires(T t) {
+  { t.onUpdate() };
+};
+template <typename T>
+concept has_invalid_onEvent_signature = requires(T t) {
+  { t.onEvent() };
+};
+
+template <typename T> void check_script_methods()
+{
+  if constexpr (has_invalid_onRender_signature<T>) {
+    static_assert(!has_invalid_onRender_signature<T>,
+                  "Warning: onRender() detected with no arguments! Should be "
+                  "onRender(const Renderer&, bool, double).");
+  }
+  if constexpr (has_invalid_onUpdate_signature<T>) {
+    static_assert(!has_invalid_onUpdate_signature<T>,
+                  "Warning: onUpdate() detected with no arguments! Should be "
+                  "onUpdate(double).");
+  }
+  if constexpr (has_invalid_onEvent_signature<T>) {
+    static_assert(!has_invalid_onEvent_signature<T>,
+                  "Warning: onEvent() detected with no arguments! Should be "
+                  "onEvent(const SDL_Event&).");
+  }
+}
 
 namespace pain
 {
+class ExtendedEntity;
 
 struct NativeScriptComponent {
-  ScriptableEntity *instance = nullptr;
-  std::string m_name = "NULL";
+  ExtendedEntity *instance = nullptr;
 
-  void (*instantiateFunction)(ScriptableEntity *&) = nullptr;
-  void (*destroyInstanceFunction)(ScriptableEntity *&) = nullptr;
-  void (*onCreateFunction)(ScriptableEntity *) = nullptr;
-  void (*onDestroyFunction)(ScriptableEntity *) = nullptr;
-  void (*onRenderFunction)(ScriptableEntity *, double) = nullptr;
-  void (*onUpdateFunction)(ScriptableEntity *, double) = nullptr;
-  void (*onEventFunction)(ScriptableEntity *, const SDL_Event &) = nullptr;
+  void (*destroyInstanceFunction)(ExtendedEntity *&) = nullptr;
+  void (*onCreateFunction)(ExtendedEntity *) = nullptr;
+  void (*onDestroyFunction)(ExtendedEntity *) = nullptr;
+  void (*onRenderFunction)(ExtendedEntity *, Renderer2d &, bool,
+                           double) = nullptr;
+  void (*onUpdateFunction)(ExtendedEntity *, double) = nullptr;
+  void (*onEventFunction)(ExtendedEntity *, const SDL_Event &) = nullptr;
 
-  template <typename T> void bind()
+  /* Bind the script to the entity, also initialize the script instance.
+   * Previously this was only "bind()" function without iniating the script
+   * instance, but I just never need those two things separate, so I joined
+   * them.
+   */
+  template <typename T, typename... Args> void bindAndInitiate(Args &&...args)
   {
-    instantiateFunction = [](ScriptableEntity *&instance) {
-      instance = new T();
-    };
-    destroyInstanceFunction = [](ScriptableEntity *&instance) {
+    check_script_methods<T>();
+    // static_assert(
+    //     std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
+    //     "Error: You are binding a function whose constructor doesn't
+    //     implement " "ExtendedEntity constructor: (Scene&, Entity, Bitmask).
+    //     Pherhaps you " "are using the defualt constructor instead of coding
+    //     `using " "ExtendedEntity::ExtendedEntity;`?");
+    instance = new T(std::forward<Args>(args)...);
+    // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
+    // }
+    destroyInstanceFunction = [](ExtendedEntity *&instance) {
       PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
              "called",
              fmt::ptr(instance));
@@ -59,7 +100,7 @@ struct NativeScriptComponent {
     };
 
     if constexpr (has_onCreate_method<T>) {
-      onCreateFunction = [](ScriptableEntity *instance) {
+      onCreateFunction = [](ExtendedEntity *instance) {
         static_cast<T *>(instance)->onCreate();
       };
     } else {
@@ -67,7 +108,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onDestroy_method<T>) {
-      onDestroyFunction = [](ScriptableEntity *instance) {
+      onDestroyFunction = [](ExtendedEntity *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
     } else {
@@ -75,8 +116,9 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](ScriptableEntity *instance, double realTime) {
-        static_cast<T *>(instance)->onRender(realTime);
+      onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
+                            bool isMinimized, double realTime) {
+        static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
       };
     } else {
       onRenderFunction = nullptr;
@@ -85,7 +127,7 @@ struct NativeScriptComponent {
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
     if constexpr (has_onUpdate_method<T>) {
-      onUpdateFunction = [](ScriptableEntity *instance, double deltaTime) {
+      onUpdateFunction = [](ExtendedEntity *instance, double deltaTime) {
         static_cast<T *>(instance)->onUpdate(deltaTime);
       };
     } else {
@@ -93,7 +135,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onEvent_method<T>) {
-      onEventFunction = [](ScriptableEntity *instance, const SDL_Event &event) {
+      onEventFunction = [](ExtendedEntity *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
     } else {
@@ -102,7 +144,6 @@ struct NativeScriptComponent {
   };
 
   NativeScriptComponent() = default;
-  NativeScriptComponent(const char *name) : m_name(name) {}
   NativeScriptComponent(const NativeScriptComponent &) = delete;
   NativeScriptComponent &operator=(const NativeScriptComponent &) = delete;
   ~NativeScriptComponent()
@@ -121,8 +162,6 @@ struct NativeScriptComponent {
         destroyInstanceFunction(instance);
 
       instance = other.instance;
-      m_name = std::move(other.m_name);
-      instantiateFunction = other.instantiateFunction;
       destroyInstanceFunction = other.destroyInstanceFunction;
       onCreateFunction = other.onCreateFunction;
       onDestroyFunction = other.onDestroyFunction;
@@ -132,7 +171,6 @@ struct NativeScriptComponent {
 
       // Clear the other's instance
       other.instance = nullptr;
-      other.instantiateFunction = nullptr;
       other.destroyInstanceFunction = nullptr;
       other.onCreateFunction = nullptr;
       other.onDestroyFunction = nullptr;
@@ -146,8 +184,6 @@ struct NativeScriptComponent {
   NativeScriptComponent(NativeScriptComponent &&other) noexcept
   {
     instance = other.instance;
-    m_name = std::move(other.m_name);
-    instantiateFunction = other.instantiateFunction;
     destroyInstanceFunction = other.destroyInstanceFunction;
     onCreateFunction = other.onCreateFunction;
     onDestroyFunction = other.onDestroyFunction;
@@ -157,7 +193,6 @@ struct NativeScriptComponent {
 
     // Clear the other's instance to avoid double delete
     other.instance = nullptr;
-    other.instantiateFunction = nullptr;
     other.destroyInstanceFunction = nullptr;
     other.onCreateFunction = nullptr;
     other.onDestroyFunction = nullptr;
@@ -167,6 +202,5 @@ struct NativeScriptComponent {
   }
 };
 // initialize the pointers of the Scripts functions
-void initializeScript(Scene *scene, NativeScriptComponent &nsc, int e);
 
 } // namespace pain

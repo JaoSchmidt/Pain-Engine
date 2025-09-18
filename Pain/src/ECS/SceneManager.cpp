@@ -9,7 +9,12 @@ namespace pain
 
 void SceneManager::addScene(const std::string &name, Scene *scene)
 {
-  m_scenes[name] = scene;
+  m_scenes[name] = std::unique_ptr<Scene>(scene);
+}
+void SceneManager::addScene(const std::string &name,
+                            std::unique_ptr<Scene> scene)
+{
+  m_scenes[name] = std::move(scene);
 }
 
 void SceneManager::popScene(const std::string &name)
@@ -36,16 +41,16 @@ const Scene &SceneManager::getScene(const std::string &name) const
 void SceneManager::attachScene(const std::string &name)
 {
   if (m_scenes.find(name) != m_scenes.end() &&
-      m_currentScenes.find(m_scenes.at(name)) == m_currentScenes.end()) {
-    m_currentScenes.insert(m_scenes.at(name));
+      m_currentScenes.find(m_scenes.at(name).get()) == m_currentScenes.end()) {
+    m_currentScenes.insert(m_scenes.at(name).get());
   }
 }
 
 void SceneManager::detachScene(const std::string &name)
 {
   if (m_scenes.find(name) != m_scenes.end() &&
-      m_currentScenes.find(m_scenes.at(name)) != m_currentScenes.end()) {
-    m_currentScenes.erase(m_scenes.at(name));
+      m_currentScenes.find(m_scenes.at(name).get()) != m_currentScenes.end()) {
+    m_currentScenes.erase(m_scenes.at(name).get());
   }
 }
 
@@ -56,5 +61,10 @@ std::unordered_set<Scene *>::iterator SceneManager::begin()
 std::unordered_set<Scene *>::iterator SceneManager::end()
 {
   return m_currentScenes.end();
+}
+SceneManager::~SceneManager()
+{
+  m_scenes.clear();
+  Scene::clearQueue();
 }
 } // namespace pain

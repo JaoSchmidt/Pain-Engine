@@ -1,15 +1,23 @@
 #include "pain.h"
+#include "Core.h"
+#include "CoreFiles/EndGameFlags.h"
 #include <glad/gl.h>
 
-void pain::Pain::initiate()
+namespace pain
 {
-  pain::logWrapper::Init();
+
+bool Pain::initiate()
+{
+  // start log
+  logWrapper::InitLogger();
   PLOG_T("Initialized Log!");
+  return resources::isSettingsGuiNeeded();
 }
 
-void pain::Pain::runApplication(Application *app)
+EndGameFlags Pain::runAndDeleteApplication(Application *app)
 {
-  Application *application = app;
-  application->run();
-  delete application;
+  EndGameFlags flags = app->run();
+  delete app;
+  return flags;
 }
+} // namespace pain

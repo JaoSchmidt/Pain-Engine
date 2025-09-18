@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Components/ComponentManager.h"
 #include "ECS/Registry/Archetype.h"
 #include "ECS/Registry/IteratorArchetype.h"
 
@@ -21,44 +22,10 @@ concept IsMultipleTypes = (sizeof...(Ts) > 1);
 class ArcheRegistry
 {
   std::map<int, Archetype> m_archetypes = {};
-  std::map<std::type_index, int> m_componentBitMasks = {};
-  int count = -1;
+  friend struct System;
   friend class Scene;
   ArcheRegistry() = default;
 
-  // ---------------------------------------------------- //
-  // manipulation of maps
-  // ---------------------------------------------------- //
-
-  inline int createBitMaskId() { return 1 << ++count; }
-
-  // will check if component has associated bitmask, otherwise will create
-  template <typename Component> int createBitMask()
-  {
-    auto it = m_componentBitMasks.find(std::type_index(typeid(Component)));
-    if (it != m_componentBitMasks.end()) {
-      return it->second;
-    } else {
-      auto [newIt, isInserted] = m_componentBitMasks.emplace(
-          std::type_index(typeid(Component)), createBitMaskId());
-      P_ASSERT(isInserted, "Could not create new component bitMask");
-      return newIt->second;
-    }
-  }
-  template <typename... Components> int createBitMasks()
-  {
-    return (0 | ... | createBitMask<Components>());
-  }
-
-  template <typename Component> int getComponentBitMask() const
-  {
-    return m_componentBitMasks.at(std::type_index(typeid(Component)));
-  }
-  // Get the correct bitmask corresponding to the archetype components
-  template <typename... Components> int getBitMask() const
-  {
-    return (0 | ... | getComponentBitMask<Components>());
-  }
   // ---------------------------------------------------- //
   // add
   // ---------------------------------------------------- //
@@ -72,7 +39,7 @@ class ArcheRegistry
   std::tuple<Components &...> createComponents(Entity entity,
                                                Components &&...comps)
   {
-    int bitMask = createBitMasks<Components...>();
+    int bitMask = ComponentManager::multiComponentBitmask<Components...>();
     Archetype &archetype = m_archetypes[bitMask];
     // for iterate every component
     (archetype.pushComponent<Components>(std::forward<Components>(comps)), ...);
@@ -86,7 +53,7 @@ class ArcheRegistry
   template <typename Component>
   Component &createComponent(Entity entity, Component &&args)
   {
-    int bitMask = createBitMask<Component>();
+    int bitMask = ComponentManager::singleComponentBitmask<Component>();
     Archetype &archetype = m_archetypes[bitMask];
     // for iterate every component
     archetype.pushComponent<Component>(std::forward<Component>(args));
@@ -202,7 +169,7 @@ class ArcheRegistry
     requires IsSingleType<T>
   reg::Iterator<T> begin()
   {
-    int bitMask = getBitMask<T>();
+    int bitMask = ComponentManager::singleComponentBitmask<T>();
     return createIteratorFromComponentBegin<T>(bitMask);
   }
 
@@ -211,7 +178,7 @@ class ArcheRegistry
     requires IsSingleType<T>
   reg::Iterator<T> end()
   {
-    int bitMask = getBitMask<T>();
+    int bitMask = ComponentManager::singleComponentBitmask<T>();
     return createIteratorFromComponentEnd<T>(bitMask);
   }
 
@@ -220,7 +187,7 @@ class ArcheRegistry
     requires IsMultipleTypes<Components...>
   std::tuple<reg::Iterator<Components>...> begin()
   {
-    int bitMask = getBitMask<Components...>();
+    int bitMask = ComponentManager::multiComponentBitmask<Components...>();
     // for each component, extract all vectors of that component in each
     // Archetype (SoA)
     // return into a tuple of components
@@ -232,7 +199,7 @@ class ArcheRegistry
     requires IsMultipleTypes<Components...>
   std::tuple<reg::Iterator<Components>...> end()
   {
-    int bitMask = getBitMask<Components...>();
+    int bitMask = ComponentManager::multiComponentBitmask<Components...>();
     // for each component, extract all vectors of that component in each
     // Archetype (SoA)
     // return into a tuple of components
@@ -243,80 +210,75 @@ class ArcheRegistry
   // ---------------------------------------------------- //
   // get
   // ---------------------------------------------------- //
-
+public:
   // Get a single column of an archetype as a tuple, which represents the
   // components of an entity.
-  template <typename... Components>
-  std::tuple<Components &...> getAllComponents(Entity entity)
+  template <typename... TargetComponents>
+  std::tuple<TargetComponents &...> getComponents(Entity entity,
+                                                  int archetypeBitmask)
   {
-    int bitMask = getBitMask<Components...>();
-    Archetype &archetype = m_archetypes.at(bitMask);
-    return archetype.extractColumn<Components...>(entity);
+    Archetype &archetype = m_archetypes.at(archetypeBitmask);
+    return archetype.extractColumn<TargetComponents...>(entity);
   }
   // Get a single column of an archetype as a tuple, which represents the
   // components of an entity.
-  template <typename... Components>
-  const std::tuple<Components &...> getAllComponents(Entity entity) const
+  template <typename... TargetComponents>
+  const std::tuple<TargetComponents &...>
+  getComponents(Entity entity, int archetypeBitmask) const
   {
-    int bitMask = getBitMask<Components...>();
-    const Archetype &archetype = m_archetypes.at(bitMask);
-    return archetype.extractColumn<Components...>(entity);
+    const Archetype &archetype = m_archetypes.at(archetypeBitmask);
+    return archetype.extractColumn<TargetComponents...>(entity);
   }
-
-  // A single component of an entity
-  template <typename T, typename... Components> T &getComponent(Entity entity)
+  // A single component of an entity, no tuple
+  template <typename T> T &getComponent(Entity entity, int bitmask)
   {
-    const int bitMask = getBitMask<Components...>();
-    static_assert(sizeof...(Components) > 0,
-                  "You must provide the entity components in the template, "
-                  "perhaps you only provided the target component?");
-    Archetype &archetype = m_archetypes.at(bitMask);
+    Archetype &archetype = m_archetypes.at(bitmask);
     return archetype.extractComponent<T>(entity);
   }
-  // A single component of an entity
-  template <typename T, typename... Components>
-  const T &getComponent(Entity entity) const
+  // A single component of an entity, no tuple
+  template <typename T> const T &getComponent(Entity entity, int bitmask) const
   {
-    static_assert(sizeof...(Components) > 0,
-                  "You must provide the entity components in the template, "
-                  "perhaps you only provided the target component?");
-    const int bitMask = getBitMask<Components...>();
-    const Archetype &archetype = m_archetypes.at(bitMask);
+    const Archetype &archetype = m_archetypes.at(bitmask);
     return archetype.extractComponent<T>(entity);
   }
 
+private:
   // ---------------------------------------------------- //
   // has
   // ---------------------------------------------------- //
 
-  // Targeted has function for a specific archetype
-  template <typename... TargetComponents, typename... ObjectComponents>
-  bool has(Entity entity) const
+  // Are all components inside the targetBitMask?
+  template <typename... ObjectComponents>
+  constexpr bool containsAll(int targetBitMask) const
   {
-    int objectBitMask = getBitMask<ObjectComponents...>();
-    int targetBitMask = getBitMask<TargetComponents...>();
+    int objectBitMask =
+        ComponentManager::multiComponentBitmask<ObjectComponents...>();
     return (targetBitMask | objectBitMask) == objectBitMask;
   }
-  // Slightly slower "has" function, because it will look on every known
-  // archetype
-  bool has(Entity entity) const
+  // Targeted has at least one component that a specific archetype also has
+  template <typename... TargetComponents>
+  constexpr bool hasAny(int specificBitMask) const
   {
-    for (const auto &pair : m_archetypes) {
-      if (pair.second.has(entity))
-        return true;
+    if constexpr (sizeof...(TargetComponents) == 1) {
+      int targetBitMask =
+          ComponentManager::singleComponentBitmask<TargetComponents...>();
+      return (targetBitMask & specificBitMask) != 0;
+    } else {
+      int targetBitMask =
+          ComponentManager::multiComponentBitmask<TargetComponents...>();
+      return (targetBitMask & specificBitMask) != 0;
     }
-    return false;
   }
 
   // ---------------------------------------------------- //
   // remove
   // ---------------------------------------------------- //
 
-  // Remove the entity, alongside its components from it's archetype
-  template <typename... ObjectComponents> bool remove(Entity entity)
+  // Remove the entity, alongside its components from its archetype
+  template <typename... ObjectComponents>
+  bool remove(Entity entity, int bitmask)
   {
-    int bitMask = getBitMask<ObjectComponents...>();
-    Archetype &archetype = m_archetypes.at(bitMask);
+    Archetype &archetype = m_archetypes.at(bitmask);
     return archetype.remove<ObjectComponents...>(entity);
   }
   // Remove the components from an entity
