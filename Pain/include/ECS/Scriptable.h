@@ -112,6 +112,18 @@ public:
     return m_scene.get().containsAllComponents<TargetComponents...>(m_bitmask);
   }
   explicit operator bool() const { return m_entity != -1; }
+  ExtendedEntity(ExtendedEntity &&other) noexcept
+      : m_scene(other.m_scene), m_entity(std::exchange(other.m_entity, -1)),
+        m_bitmask(std::exchange(other.m_bitmask, 0)) {};
+  ExtendedEntity &operator=(ExtendedEntity &&other) noexcept
+  {
+    if (this != &other) {
+      m_scene = other.m_scene;
+      m_entity = std::exchange(other.m_entity, -1);
+      m_bitmask = std::exchange(other.m_bitmask, 0);
+    }
+    return *this;
+  }
 
 protected:
   std::reference_wrapper<Scene> m_scene;

@@ -49,8 +49,7 @@ public:
                                std::forward<Args>(args)...);
   }
 
-  template <typename T, typename... Args>
-  void withImGuiScriptScript(Args &&...args)
+  template <typename T, typename... Args> void withImGuiScript(Args &&...args)
   {
     SceneHelper::withImGuiScript<T>(m_entity, m_registry, *this,
                                     std::forward<Args>(args)...);
