@@ -27,8 +27,7 @@ void withScript(Entity entity, ArcheRegistry &registry, Args &&...args)
 template <typename T, typename... Args>
 void withImGuiScript(Entity entity, ArcheRegistry &registry, Args &&...args)
 {
-  Bitmask bitmask =
-      ComponentManager::singleComponentBitmask<NativeScriptComponent>();
+  Bitmask bitmask = ComponentManager::singleComponentBitmask<ImGuiComponent>();
   ImGuiComponent &nsc = registry.getComponent<ImGuiComponent>(entity, bitmask);
   nsc.bindAndInitiate<T>(entity, bitmask, std::forward<Args>(args)...);
   if (nsc.instance && nsc.onCreateFunction)

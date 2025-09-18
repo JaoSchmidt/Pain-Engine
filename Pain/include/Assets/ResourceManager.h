@@ -2,6 +2,7 @@
 #include "ECS/Scriptable.h"
 #include "pch.h"
 #include <sol/state.hpp>
+#include <utility>
 
 namespace pain
 {
@@ -32,17 +33,24 @@ class defaultNativeScript : public ExtendedEntity
 
 } // namespace resources
 template <typename T> struct Config {
-  const T def;
-  T value = def;
+private:
+  T m_def;
+
+public:
+  const T getDefault() const { return std::as_const(m_def); }
+  T value = m_def;
   const char *name;
-  Config(T t, const char *name) : def(t), name(name) {}
+  Config(T t, const char *name) : m_def(t), value(m_def), name(name) {}
   Config &operator=(Config &&o)
   {
-    name = o.name;
-    value = o.value;
+    if (this != &o) {
+      m_def = o.m_def;
+      name = o.name;
+      value = o.value;
+    }
     return *this;
   }
-  Config(Config &&o) : def(o.def), name(o.name), value(o.value) {}
+  Config(Config &&o) : m_def(o.m_def), value(o.value), name(o.name) {}
   NONCOPYABLE(Config);
 };
 struct IniConfig {

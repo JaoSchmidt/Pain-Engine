@@ -22,13 +22,29 @@ class ImGuiLauncher : public ExtendedEntity
 {
 public:
   ImGuiLauncher(Entity entity, Bitmask bitmask, Scene &scene, Application *app)
-      : ExtendedEntity(entity, bitmask, scene), m_init(), m_app(app)
-  {
-    PLOG_I("Opening Launcher");
-  };
+      : ExtendedEntity(entity, bitmask, scene), m_init(), m_app(app) {};
   ~ImGuiLauncher() = default;
   NONCOPYABLE(ImGuiLauncher);
-  MOVABLE(ImGuiLauncher);
+  ImGuiLauncher(ImGuiLauncher &&other) noexcept
+      : ExtendedEntity(std::move(other)),
+        m_availableResolutions(std::move(other.m_availableResolutions)),
+        m_windowFlags(std::exchange(other.m_windowFlags, 0)),
+        m_dockspaceOpen(std::exchange(other.m_dockspaceOpen, true)),
+        m_init(std::move(other.m_init)),
+        m_app(std::exchange(other.m_app, nullptr)) {};
+  ImGuiLauncher &operator=(ImGuiLauncher &&other) noexcept
+  {
+    if (this != &other) {
+      ExtendedEntity::operator=(std::move(other));
+      m_availableResolutions = std::move(other.m_availableResolutions);
+      m_windowFlags = std::exchange(other.m_windowFlags, 0);
+      m_dockspaceOpen = std::exchange(other.m_dockspaceOpen, true);
+      m_init = std::move(other.m_init);
+      m_app = std::exchange(other.m_app, nullptr);
+    }
+    return *this;
+  }
+
   // void init(Application *app) { m_app = app; }
   void onCreate()
   {
@@ -36,13 +52,15 @@ public:
       mINI::INIFile file(m_initFilename);
       mINI::INIStructure ini;
       file.read(ini);
+      // clang-format off
       m_init.hideConfig.value = IniWrapper::getBoolean(
-          ini, "settings", m_init.hideConfig.name, m_init.hideConfig.def);
+          ini, "settings", m_init.hideConfig.name, m_init.hideConfig.getDefault());
       m_init.fullscreen.value = IniWrapper::getBoolean(
-          ini, "settings", m_init.fullscreen.name, m_init.fullscreen.def);
+          ini, "settings", m_init.fullscreen.name, m_init.fullscreen.getDefault());
       m_init.assetsPath.value = IniWrapper::get(
-          ini, "settings", m_init.assetsPath.name, m_init.assetsPath.def);
+          ini, "settings", m_init.assetsPath.name, m_init.assetsPath.getDefault());
     }
+    // clang-format on
   }
   void onRender(Renderer2d &renderer, bool isMinimized, double currentTime)
   {
@@ -147,17 +165,6 @@ private:
   Application *m_app = nullptr;
 };
 
-// honestly didn't think this through, but I guess I need a dummy
-class ImGuiDummy : public NormalEntity<ImGuiComponent>
-{
-public:
-  ImGuiDummy(Scene *scene, Application *app) : NormalEntity(*scene)
-  {
-    createComponents(*scene, ImGuiComponent{});
-    withImGuiScript<ImGuiLauncher>(*scene, app);
-  }
-};
-
 class SettingsScene : public Scene
 {
 public:
@@ -165,20 +172,19 @@ public:
 
   SettingsScene(void *sdlcontext, SDL_Window *window, sol::state &solState,
                 float aspectRatio, float zoom, Application *app)
-      : Scene(sdlcontext, window, solState)
+      : Scene(sdlcontext, window, solState, ImGuiComponent{})
   {
     m_orthocamera = std::make_unique<OrthoCamera>(this, aspectRatio, zoom);
     app->setRendererCamera(*(std::as_const(m_orthocamera)
                                  ->getComponent<OrthoCameraComponent>(*this)
                                  .m_camera));
     m_orthocamera->withScript<OrthoCameraScript>(*this);
-    m_imguiDummy = std::make_unique<ImGuiDummy>(this, app);
+
+    withImGuiScript<ImGuiLauncher>(app);
   };
 
 private:
   std::unique_ptr<OrthoCamera> m_orthocamera;
-  // std::unique_ptr<ImGuiLauncher> m_imgui;
-  std::unique_ptr<ImGuiDummy> m_imguiDummy;
 };
 
 Application *createLauncher()
