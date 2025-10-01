@@ -27,7 +27,7 @@ public:
   bool operator==(const Texture &other) const;
   Texture clone();
 
-  uint32_t getRendererId() const { return m_rendererId; }
+  uint32_t getRendererId() const { return m_textureId; }
   uint32_t getWidth() const { return m_width; }
   uint32_t getHeight() const { return m_height; }
 
@@ -39,12 +39,12 @@ public:
   // this variable should only be modified inside the renderer
   uint32_t m_slot = 0;
 
+  std::string m_path = "NULL texture string"; // or name
 private:
-  const char *m_path; // or name
   uint32_t m_width, m_height;
   uint32_t m_dataFormat;
   uint32_t m_internalFormat;
-  uint32_t m_rendererId;
+  uint32_t m_textureId;
 
   Texture(const char *path, uint32_t width, uint32_t height,
           uint32_t dataFormat, uint32_t internalFormat, uint32_t rendererId);

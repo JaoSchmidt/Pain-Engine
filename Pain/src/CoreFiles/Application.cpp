@@ -85,6 +85,9 @@ Application *Application::createApplication(const char *title, int w, int h,
   glDebugMessageCallback(Application::glErrorHandler, 0);
 #endif
 
+  // renderer is created BEFORE the asset manager, as the asset manager retrives
+  // the default assets, it will slowly link some to the renderer cache
+
   // =========================================================================//
   // Application Initial setup before
   // =========================================================================//

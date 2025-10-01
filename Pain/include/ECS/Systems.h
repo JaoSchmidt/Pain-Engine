@@ -1,11 +1,35 @@
 #pragma once
 #include "ECS/Registry/ArcheRegistry.h"
+#include <iostream>
 
 namespace pain
 {
 struct System {
 public:
   System(ArcheRegistry &archetype) : m_registry(archetype) {};
+  ~System() { std::cout << "System destructed\n"; }
+
+  // Move constructor
+  System(System &&other) noexcept : m_registry(other.m_registry)
+  {
+    std::cout << "System move-constructed\n";
+  }
+
+  // Move assignment
+  System &operator=(System &&other) noexcept
+  {
+    std::cout << "System move-assigned\n";
+    if (this != &other) {
+      // you cannot rebind a reference, so just keep the old one
+      // m_registry still refers to the same ArcheRegistry
+      // but we can log this for clarity
+    }
+    return *this;
+  }
+
+  // Delete copy operations to be explicit
+  System(const System &) = delete;
+  System &operator=(const System &) = delete;
 
 protected:
   ArcheRegistry &m_registry;

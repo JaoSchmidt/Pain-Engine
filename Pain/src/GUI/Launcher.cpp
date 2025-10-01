@@ -49,17 +49,8 @@ public:
   // void init(Application *app) { m_app = app; }
   void onCreate()
   {
-    if (resources::exists_file(m_initFilename)) {
-      mINI::INIFile file(m_initFilename);
-      mINI::INIStructure ini;
-      file.read(ini);
-      // clang-format off
-      m_init.hideConfig.value = IniWrapper::getBoolean(
-          ini, "settings", m_init.hideConfig.name, m_init.hideConfig.getDefault());
-      m_init.fullscreen.value = IniWrapper::getBoolean(
-          ini, "settings", m_init.fullscreen.name, m_init.fullscreen.getDefault());
-      m_init.assetsPath.value = IniWrapper::get(
-          ini, "settings", m_init.assetsPath.name, m_init.assetsPath.getDefault());
+    if (resources::exists_file(m_app->configIniFile)) {
+      m_init.readAndUpdate(m_app->configIniFile.c_str());
     }
     // clang-format on
   }
@@ -126,14 +117,14 @@ public:
     ImGui::SetCursorPosX(windowWidth - totalWidth);
 
     if (ImGui::Button("Exit", ImVec2(buttonWidth, buttonHeight))) {
-      updateIni();
+      m_init.write(m_app->configIniFile.c_str());
       m_app->stopLoop();
     }
 
     ImGui::SameLine(0.0f, spacing);
 
     if (ImGui::Button("Play", ImVec2(buttonWidth, buttonHeight))) {
-      updateIni();
+      m_init.write(m_app->configIniFile.c_str());
       m_app->stopLoop(true);
     }
 
@@ -141,19 +132,6 @@ public:
   }
 
 private:
-  void updateIni()
-  {
-    mINI::INIFile file(m_initFilename);
-    mINI::INIStructure ini;
-    file.read(ini);
-    ini["settings"][m_init.hideConfig.name] =
-        m_init.hideConfig.value ? "true" : "false";
-    ini["settings"][m_init.fullscreen.name] =
-        m_init.fullscreen.value ? "true" : "false";
-    ini["settings"][m_init.assetsPath.name] = m_init.assetsPath.value;
-    file.write(ini);
-  }
-  constexpr static const char *m_initFilename = "config.ini";
   std::vector<std::string> m_availableResolutions;
 
   ImGuiWindowFlags m_windowFlags =
@@ -166,53 +144,27 @@ private:
   Application *m_app = nullptr;
 };
 
-<<<<<<< HEAD
-// honestly didn't think this through, but I guess I need a dummy
-class ImGuiDummy : public NormalEntity<ImGuiComponent>
-{
-public:
-  ImGuiDummy(Scene *scene, Application *app) : NormalEntity(*scene)
-  {
-    createComponents(*scene, ImGuiComponent{});
-    withImGuiScript<ImGuiLauncher>(*scene, app);
-  }
-};
-
-=======
->>>>>>> lua_script
 class SettingsScene : public Scene
 {
 public:
   using Scene::Scene;
 
-  SettingsScene(void *sdlcontext, SDL_Window *window, sol::state &solState,
-                float aspectRatio, float zoom, Application *app)
-<<<<<<< HEAD
-      : Scene(sdlcontext, window, solState)
-=======
-      : Scene(sdlcontext, window, solState, ImGuiComponent{})
->>>>>>> lua_script
+  SettingsScene(std::string name, void *sdlcontext, SDL_Window *window,
+                sol::state &solState, float aspectRatio, float zoom,
+                Application *app)
+      : Scene(name, sdlcontext, window, solState, ImGuiComponent{})
   {
     m_orthocamera = std::make_unique<OrthoCamera>(this, aspectRatio, zoom);
     app->setRendererCamera(*(std::as_const(m_orthocamera)
                                  ->getComponent<OrthoCameraComponent>(*this)
                                  .m_camera));
     m_orthocamera->withScript<OrthoCameraScript>(*this);
-<<<<<<< HEAD
-    m_imguiDummy = std::make_unique<ImGuiDummy>(this, app);
-=======
 
     withImGuiScript<ImGuiLauncher>(app);
->>>>>>> lua_script
   };
 
 private:
   std::unique_ptr<OrthoCamera> m_orthocamera;
-<<<<<<< HEAD
-  // std::unique_ptr<ImGuiLauncher> m_imgui;
-  std::unique_ptr<ImGuiDummy> m_imguiDummy;
-=======
->>>>>>> lua_script
 };
 
 Application *createLauncher()
@@ -223,10 +175,10 @@ Application *createLauncher()
   const int height = 200;
   Application *settingsApp =
       Application::createApplication(title, width, height, true);
-  auto pscene = settingsApp->createSceneUPtr<SettingsScene>(
-      (float)width / height, 1.0f, settingsApp);
+  Scene *pscene = settingsApp->createScenePtr<SettingsScene>(
+      "settingsMain", (float)width / height, 1.0f, settingsApp);
 
-  settingsApp->pushScene("settingsMain", std::move(pscene));
+  settingsApp->pushScene("settingsMain", pscene);
   settingsApp->attachScene("settingsMain");
   return settingsApp;
 }

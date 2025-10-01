@@ -19,12 +19,17 @@ concept IsSingleType = (sizeof...(Ts) == 1);
 template <typename... Ts>
 concept IsMultipleTypes = (sizeof...(Ts) > 1);
 
+static int id = 0;
 class ArcheRegistry
 {
+public:
+  int getid() const { return id; }
+
+private:
   std::map<int, Archetype> m_archetypes = {};
   friend struct System;
   friend class Scene;
-  ArcheRegistry() = default;
+  ArcheRegistry() : m_archetypes() { id = id + 1; };
 
   // ---------------------------------------------------- //
   // add

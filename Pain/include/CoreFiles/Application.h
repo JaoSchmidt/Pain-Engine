@@ -16,19 +16,26 @@ namespace pain
 class Application
 {
 public:
+  static constexpr std::string configIniFile = "config.ini";
   static Application *createApplication(const char *title, int w, int h,
                                         bool isSettingsApp = false);
   ~Application();
+
+  // TODO: This isn't working, perhaps some Scene member needs a move
+  // constructor/assignment?
+  // template <typename S = Scene, typename... Args>
+  // std::unique_ptr<S> createSceneUPtr(std::string name, Args &&...args)
+  // {
+  //   return std::make_unique<S>(name, m_context, m_window, m_luaState,
+  //                              std::forward<Args>(args)...);
+  // };
+
+  // create Scene using a ptr
   template <typename S = Scene, typename... Args>
-  std::unique_ptr<S> createSceneUPtr(Args &&...args)
+  S *createScenePtr(std::string name, Args &&...args)
   {
-    return std::make_unique<S>(m_context, m_window, m_luaState,
-                               std::forward<Args>(args)...);
-  };
-  template <typename S = Scene, typename... Args>
-  S *createScenePtr(Args &&...args)
-  {
-    return new S(m_context, m_window, m_luaState, std::forward<Args>(args)...);
+    return new S(name, m_context, m_window, m_luaState,
+                 std::forward<Args>(args)...);
   };
 
   // virtual because the real Application will be the game
@@ -54,7 +61,8 @@ public:
   // ECS
   // clang-format off
   void inline pushScene(const std::string &name, Scene *scene) { m_sceneManager->addScene(name,scene); }
-  void inline pushScene(const std::string &name, std::unique_ptr<Scene> scene) { m_sceneManager->addScene(name,std::move(scene)); }
+  // TODO: This isn't working, perhaps some Scene member needs a move constructor/assignment?
+  // void inline pushScene(const std::string &name, std::unique_ptr<Scene> scene) { m_sceneManager->addScene(name,std::move(scene)); }
   void inline popScene(const std::string &name) { m_sceneManager->popScene(name); }
   void inline attachScene(const std::string &name) { m_sceneManager->attachScene(name); }
   void inline detachScene(const std::string &name) { m_sceneManager->detachScene(name); }

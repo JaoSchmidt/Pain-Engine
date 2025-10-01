@@ -142,6 +142,69 @@ struct NativeScriptComponent {
       onEventFunction = nullptr;
     }
   };
+  template <typename T> void bindAndInitiate(T &&t)
+  {
+    check_script_methods<T>();
+    // static_assert(
+    //     std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
+    //     "Error: You are binding a function whose constructor doesn't
+    //     implement " "ExtendedEntity constructor: (Scene&, Entity, Bitmask).
+    //     Pherhaps you " "are using the defualt constructor instead of coding
+    //     `using " "ExtendedEntity::ExtendedEntity;`?");
+    instance = std::move(t);
+    // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
+    // }
+    destroyInstanceFunction = [](ExtendedEntity *&instance) {
+      PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
+             "called",
+             fmt::ptr(instance));
+      delete static_cast<T *>(instance);
+      instance = nullptr;
+    };
+
+    if constexpr (has_onCreate_method<T>) {
+      onCreateFunction = [](ExtendedEntity *instance) {
+        static_cast<T *>(instance)->onCreate();
+      };
+    } else {
+      onCreateFunction = nullptr;
+    }
+
+    if constexpr (has_onDestroy_method<T>) {
+      onDestroyFunction = [](ExtendedEntity *instance) {
+        static_cast<T *>(instance)->onDestroy();
+      };
+    } else {
+      onDestroyFunction = nullptr;
+    }
+
+    if constexpr (has_onRender_method<T>) {
+      onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
+                            bool isMinimized, double realTime) {
+        static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
+      };
+    } else {
+      onRenderFunction = nullptr;
+    }
+
+    // TODO: Check if has onUpdate and onEvent functions, be aware of extra
+    // argument
+    if constexpr (has_onUpdate_method<T>) {
+      onUpdateFunction = [](ExtendedEntity *instance, double deltaTime) {
+        static_cast<T *>(instance)->onUpdate(deltaTime);
+      };
+    } else {
+      onUpdateFunction = nullptr;
+    }
+
+    if constexpr (has_onEvent_method<T>) {
+      onEventFunction = [](ExtendedEntity *instance, const SDL_Event &event) {
+        static_cast<T *>(instance)->onEvent(event);
+      };
+    } else {
+      onEventFunction = nullptr;
+    }
+  };
 
   NativeScriptComponent() = default;
   NativeScriptComponent(const NativeScriptComponent &) = delete;

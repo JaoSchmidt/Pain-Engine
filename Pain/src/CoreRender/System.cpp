@@ -18,12 +18,16 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
     PROFILE_SCOPE("Scene::renderSystems - texture quads");
     auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
     const auto &[tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
-
     for (; tIt != tItEnd; ++tIt, ++sIt) {
       const TransformComponent &tc = *tIt;
       const SpriteComponent &sc = *sIt;
-      renderer.drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.getTexture(),
-                        sc.m_tilingFactor);
+      if (sc.m_textureSheetId == -1)
+        renderer.drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.getTexture(),
+                          sc.m_tilingFactor);
+      else
+        renderer.drawQuad(tc.m_position, sc.m_size, sc.m_color,
+                          sc.getTextureFromTextureSheet(), sc.m_tilingFactor,
+                          sc.getCoords());
     }
   }
   {

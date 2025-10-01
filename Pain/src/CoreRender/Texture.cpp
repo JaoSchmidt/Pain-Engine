@@ -27,10 +27,6 @@ SDL_Surface flipVertical(const SDL_Surface &surface)
   return result;
 }
 
-bool Texture::operator==(const Texture &other) const
-{
-  return m_rendererId == other.m_rendererId;
-}
 /*
  * Sets a dump texture
  */
@@ -41,17 +37,18 @@ std::optional<Texture> Texture::createTexture(const char *name, uint32_t width,
   uint32_t internalFormat = getInternalFormat(format);
   uint32_t dataFormat = getGLDataFormat(format);
 
-  uint32_t rendererId;
-  glCreateTextures(GL_TEXTURE_2D, 1, &rendererId);
-  glBindTexture(GL_TEXTURE_2D, rendererId);
-  glTextureStorage2D(rendererId, 1, internalFormat, width, height);
+  uint32_t textureId;
+  glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
+  glBindTexture(GL_TEXTURE_2D, textureId);
+  glTextureStorage2D(textureId, 1, internalFormat, width, height);
 
-  glTextureParameteri(rendererId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTextureParameteri(rendererId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTextureParameteri(textureId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTextureParameteri(textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  glTextureParameteri(rendererId, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTextureParameteri(rendererId, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  return Texture(name, width, height, dataFormat, internalFormat, rendererId);
+  glTextureParameteri(textureId, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTextureParameteri(textureId, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  PLOG_I("Texture created id = {}, name = {}", textureId, name);
+  return Texture(name, width, height, dataFormat, internalFormat, textureId);
 }
 /*
  * Sets a texture given a specific texture image path
@@ -65,9 +62,9 @@ std::optional<Texture> Texture::createTexture(const char *path,
   if (surface == nullptr)
     return {};
 
-  uint32_t rendererId;
-  glCreateTextures(GL_TEXTURE_2D, 1, &rendererId);
-  glBindTexture(GL_TEXTURE_2D, rendererId);
+  uint32_t textureId;
+  glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
+  glBindTexture(GL_TEXTURE_2D, textureId);
 
   uint32_t dataFormat, internalFormat;
   if (surface->format->BytesPerPixel == 3) {
@@ -90,8 +87,9 @@ std::optional<Texture> Texture::createTexture(const char *path,
   }
   glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, surface->w, surface->h, 0,
                dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
+  PLOG_I("Texture created id = {}, path = {}", textureId, path);
   return Texture(path, surface->w, surface->h, dataFormat, internalFormat,
-                 rendererId);
+                 textureId);
 }
 
 void Texture::setData(const void *data, uint32_t size)
@@ -99,7 +97,7 @@ void Texture::setData(const void *data, uint32_t size)
   uint32_t bytesPerPixel = m_dataFormat == GL_RGBA ? 4 : 3;
   P_ASSERT_W(size == m_width * m_height * bytesPerPixel,
              "Data must be entire texture!");
-  glTextureSubImage2D(m_rendererId, 0, 0, 0, m_width, m_height, m_dataFormat,
+  glTextureSubImage2D(m_textureId, 0, 0, 0, m_width, m_height, m_dataFormat,
                       GL_UNSIGNED_BYTE, data);
 }
 
@@ -107,57 +105,61 @@ void Texture::setData(const void *data, uint32_t size)
 // depreciated because I'm caching the slots inside the Texture Object
 void Texture::bindToSlot(const uint32_t slot) const
 {
-  glBindTextureUnit(slot, m_rendererId);
+  glBindTextureUnit(slot, m_textureId);
 }
 // bind texture to cached slot, clear the slot value
 void Texture::bindAndClearSlot()
 {
-  glBindTextureUnit(m_slot, m_rendererId);
+  glBindTextureUnit(m_slot, m_textureId);
   m_slot = 0;
 }
-void Texture::bind() const { glBindTexture(GL_TEXTURE_2D, m_rendererId); }
+void Texture::bind() const { glBindTexture(GL_TEXTURE_2D, m_textureId); }
 // Delete the texture, note that this doesn't modify the texture slot array
 // inside the Renderer. That task should be done elsewhere
 
 Texture::~Texture()
 {
-  if (m_rendererId != 0) {
-    glDeleteTextures(1, &m_rendererId);
+  if (m_textureId != 0) {
+    glDeleteTextures(1, &m_textureId);
   }
 }
 Texture Texture::clone()
 {
-  return Texture(m_path, m_width, m_height, m_dataFormat, m_internalFormat,
-                 m_rendererId);
+  return Texture(m_path.c_str(), m_width, m_height, m_dataFormat,
+                 m_internalFormat, m_textureId);
 }
 Texture::Texture(const char *path, uint32_t width, uint32_t height,
                  uint32_t dataFormat, uint32_t internalFormat,
                  uint32_t rendererId)
     : m_path(path), m_width(width), m_height(height), m_dataFormat(dataFormat),
-      m_internalFormat(internalFormat), m_rendererId(rendererId) {};
+      m_internalFormat(internalFormat), m_textureId(rendererId) {};
 
 Texture::Texture(Texture &&other) noexcept
-    : m_path(std::move(other.m_path)), m_width(other.m_width),
-      m_height(other.m_height), m_dataFormat(other.m_dataFormat),
-      m_internalFormat(other.m_internalFormat), m_rendererId(other.m_rendererId)
+    : m_path(other.m_path), m_width(other.m_width), m_height(other.m_height),
+      m_dataFormat(other.m_dataFormat),
+      m_internalFormat(other.m_internalFormat), m_textureId(other.m_textureId)
 {
-  other.m_rendererId = 0; // prevent double delete
+  other.m_textureId = 0; // prevent double delete
 }
 
 Texture &Texture::operator=(Texture &&other) noexcept
 {
   if (this != &other) {
-    m_path = std::move(other.m_path);
+    m_path = other.m_path;
     m_width = other.m_width;
     m_height = other.m_height;
     m_dataFormat = other.m_dataFormat;
     m_internalFormat = other.m_internalFormat;
-    m_rendererId = other.m_rendererId;
+    m_textureId = other.m_textureId;
 
-    other.m_rendererId =
+    other.m_textureId =
         0; // prevent deleting texture case the remaining texture is deleted
   }
   return *this;
+}
+bool Texture::operator==(const Texture &other) const
+{
+  return m_textureId == other.m_textureId;
 }
 
 } // namespace pain

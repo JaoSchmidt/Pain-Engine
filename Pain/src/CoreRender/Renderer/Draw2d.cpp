@@ -582,7 +582,7 @@ Renderer2d &Renderer2d::operator=(Renderer2d &&other) noexcept
   other.m_sprayVertexBufferPtr = nullptr;
   other.m_sprayIndexCount = 0;
 
-  other.m_textureSlotIndex = 1;
+  other.m_textureSlotIndex = 0;
   other.m_whiteTexture = nullptr;
   other.m_fontAtlasTexture = nullptr;
   other.m_cameraMatrices = nullptr;
