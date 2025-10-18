@@ -27,6 +27,8 @@ struct LuaScriptComponent : public ExtendedEntity {
   std::optional<sol::protected_function> m_onEventFunction;
   std::optional<sol::protected_function> m_onRenderFunction;
   std::optional<sol::protected_function> m_onDestroy;
+  std::optional<sol::protected_function> m_onCollisionEnter;
+  std::unordered_set<Entity> m_currentCollisions;
 
 private:
   const char *m_scriptPath = resources::getDefaultLuaFile();

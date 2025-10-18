@@ -9,13 +9,15 @@
 #include "ECS/Scriptable.h"
 #include "Scripting/Component.h"
 
-class Player : public pain::NormalEntity<pain::TransformComponent,     //
-                                         pain::SpriteComponent,        //
-                                         pain::MovementComponent,      //
-                                         pain::ParticleSprayComponent, //
-                                         pain::OrthoCameraComponent,
+class Player : public pain::NormalEntity<pain::TransformComponent,         //
+                                         pain::SpriteComponent,            //
+                                         pain::MovementComponent,          //
+                                         pain::ParticleSprayComponent,     //
+                                         pain::OrthoCameraComponent,       //
+                                         pain::ColliderComponent,          //
+                                         pain::CollisionCallbackComponent, //
                                          pain::LuaScriptComponent>
 {
 public:
-  Player(pain::Scene *scene);
+  Player(pain::Scene &scene, pain::Texture &tex);
 };

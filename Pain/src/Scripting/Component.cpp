@@ -37,6 +37,9 @@ void LuaScriptComponent::bind(const char *scriptPath)
   script_api["on_destroy"] = [&](sol::function f) {
     m_onDestroy = sol::protected_function(std::move(f));
   };
+  script_api["on_collision_enter"] = [&](sol::function f) {
+    m_onCollisionEnter = sol::protected_function(std::move(f));
+  };
 
   m_scriptPath = scriptPath;
   m_lua["Script"] = script_api;

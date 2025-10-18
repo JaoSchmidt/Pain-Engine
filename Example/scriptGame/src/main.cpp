@@ -1,14 +1,9 @@
 #include <iostream>
 #include <pain.h>
 
-#include "Assets/DefaultTexture.h"
-#include "Assets/IniWrapper.h"
-#include "ECS/Components/NativeScript.h"
-#include "ECS/Components/Sprite.h"
-#include "ECS/Scene.h"
+#include "Asteroid.h"
+#include "Player.h"
 #include "Stars.h"
-#include "dummy.h"
-#include "mini/ini.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
@@ -34,6 +29,8 @@ public:
     // auto ls = &dummy->getComponent<pain::LuaScriptComponent>(scene);
     // ls->bind("resources/scripts/lua_script.lua");
     // ls->onCreate();
+
+    // STARS ---------------------------------------------------------------
     pain::TextureSheet &texSheet = pain::resources::createTextureSheet(
         "star_animation", // Unique name
         "resources/textures/star_animation_strip.png", 1, 4,
@@ -49,22 +46,53 @@ public:
                  randomPos};
       stars.emplace_back(std::move(s));
     }
+    // PLAYER ---------------------------------------------------------------
+    // pain::Texture &shipTex =
+    //     pain::resources::getTexture("resources/textures/ship_H.png");
+    // Player player = {scene, shipTex};
+    // auto lsc = &player.getComponent<pain::LuaScriptComponent>(scene);
+    // lsc->bind("resources/scripts/lua_script.lua");
+    // ASTEROID ---------------------------------------------------------------
+    pain::TextureSheet &asteroidSheet = pain::resources::createTextureSheet(
+        "asteroids", "resources/textures/asteroid.png", 1, 5,
+        {{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}});
+    std::vector<Asteroid> asteroids;
+    asteroids.reserve(asteroidAmount);
+    pain::GridManager gm;
+    for (short i = 0; i < asteroidAmount; i++) {
+      glm::vec2 randomPos(dist(gen), dist(gen));
+      glm::vec2 randomVel(dist(gen), dist(gen));
+      Asteroid ast = {scene,                                        //
+                      gm,                                           //
+                      asteroidSheet,                                //
+                      static_cast<short>(i % asteroidSheet.size()), //
+                      randomPos,                                    //
+                      randomVel};
+      asteroids.emplace_back(std::move(ast));
+      scene.insertStaticCollider(ast.getEntity(), ast.getBitMask());
+    }
     scene.withScript<MainScript>(aspectRatio, zoom, app, std::move(stars),
-                                 std::move(orthocamera));
+                                 std::move(orthocamera), std::move(asteroids));
   }
 
   MainScript(pain::Entity entity, pain::Bitmask bitmask, pain::Scene &scene,
              float aspectRatio, float zoom, pain::Application *app,
              std::vector<Stars> &&stars,
-             std::unique_ptr<pain::OrthoCamera> orthocamera)
+             std::unique_ptr<pain::OrthoCamera> orthocamera,
+             std::vector<Asteroid> &&ast, Player &&player)
       : ExtendedEntity(entity, bitmask, scene),
-        m_orthocamera(std::move(orthocamera)), m_stars(std::move(stars)) {};
+        m_orthocamera(std::move(orthocamera)), m_stars(std::move(stars)),
+        m_asteroids(std::move(ast)) {};
 
   std::vector<std::vector<int>> m_backgroundMap;
   std::unique_ptr<pain::OrthoCamera> m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::vector<Stars> m_stars;
+  std::vector<Asteroid> m_asteroids;
+  // Player m_player;
+  pain::GridManager m_gridManager;
   const static unsigned starAmout = 12;
+  const static unsigned asteroidAmount = 12;
 };
 
 pain::Application *pain::createApplication()

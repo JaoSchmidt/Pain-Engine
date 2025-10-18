@@ -62,5 +62,33 @@ protected:
   {
     return m_registry.end<Components...>();
   }
+
+  // ---------------------------------------------------- //
+  // Get components from archetypes
+  // ---------------------------------------------------- //
+  template <typename... Components>
+  std::tuple<Components &...> getComponents(Entity entity, Bitmask bitmask)
+  {
+    return m_registry.getComponents<Components...>(entity, bitmask);
+  }
+  // get multiple components together as a tuple
+  template <typename... Components>
+  const std::tuple<const Components &...> getComponents(Entity entity,
+                                                        Bitmask bitmask) const
+  {
+    return std::as_const(m_registry)
+        .getComponents<Components...>(entity, bitmask);
+  }
+  // get a single component
+  template <typename T> T &getComponent(Entity entity, Bitmask bitmask)
+  {
+    return m_registry.getComponent<T>(entity, bitmask);
+  }
+  // get a single component
+  template <typename T>
+  const T &getComponent(Entity entity, Bitmask bitmask) const
+  {
+    return std::as_const(m_registry).getComponent<T>(entity, bitmask);
+  }
 };
 } // namespace pain

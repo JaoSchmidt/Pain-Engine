@@ -11,7 +11,7 @@ struct SpriteComponent {
   glm::vec2 m_size{0.1f, 0.1f};
 
   glm::vec4 m_color{1.0f, 1.0f, 1.0f,1.0f}; // HACK: perhaps I could map colors?
-  float m_tilingFactor = 1.f;
+  float m_tilingFactor = 1.f; // HACK: perhaps this could be inside every texture? or perhaps I could also map this?
   short m_textureSheetId = -1; // check
   union {
     TextureSheet *m_textureSheet;
@@ -57,9 +57,11 @@ struct SpriteComponent {
                   float tilingFactor, Texture &texture)
       : m_size(size), m_color(color), m_tilingFactor(tilingFactor),
         m_texture(&texture) {};
-  SpriteComponent(Texture &texture) : m_texture(&texture) {};
-  SpriteComponent(TextureSheet &texSheet, short id)
-      : m_textureSheetId(id), m_textureSheet(&texSheet) {};
+  SpriteComponent(Texture &texture, glm::vec2 size = {0.1f, 0.1f})
+      : m_size(size), m_texture(&texture) {};
+  SpriteComponent(TextureSheet &texSheet, short id,
+                  glm::vec2 size = {0.1f, 0.1f})
+      : m_size(size), m_textureSheetId(id), m_textureSheet(&texSheet) {};
   SpriteComponent(const char *filePath)
       : m_texture(&resources::getTexture(filePath)) {};
   SpriteComponent() = default;

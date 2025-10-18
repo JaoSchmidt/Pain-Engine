@@ -44,4 +44,10 @@ void Scene::updateSystems(const SDL_Event &event)
   m_luaSystem.onEvent(event);
 }
 
+void Scene::insertStaticCollider(Entity entity, Bitmask bitmask)
+{
+  m_collisionSystem.insertStatic(
+      entity, getComponent<TransformComponent>(entity, bitmask).m_position);
+}
+
 } // namespace pain

@@ -17,12 +17,15 @@ template <typename Alias, typename Target> struct AliasComponent {
 };
 struct LuaScriptComponent;
 struct NativeScriptComponent;
+struct CollisionCallbackComponent;
+struct ColliderComponent;
+struct CollisionComponent;
 struct ImGuiComponent;
-using ComponentManager =
-    CompileTimeBitMask<OrthoCameraComponent, TransformComponent,
-                       MovementComponent, NativeScriptComponent,
-                       ParticleSprayComponent, RotationComponent,
-                       SpriteComponent, SpritelessComponent, TrianguleComponent,
-                       LuaScriptComponent, onUpdateLuaFunction, ImGuiComponent>;
+using ComponentManager = CompileTimeBitMask<
+    OrthoCameraComponent, TransformComponent, MovementComponent,
+    NativeScriptComponent, ParticleSprayComponent, RotationComponent,
+    SpriteComponent, SpritelessComponent, TrianguleComponent,
+    LuaScriptComponent, onUpdateLuaFunction, ImGuiComponent,
+    CollisionCallbackComponent, ColliderComponent, CollisionComponent>;
 
 } // namespace pain

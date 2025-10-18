@@ -18,6 +18,16 @@ sol::state createLuaState()
       PLOG_I("{}", arg.get<std::string>());
     }
   });
+  lua.set_function("print_error", [](sol::variadic_args va) {
+    for (auto arg : va) {
+      PLOG_E("{}", arg.get<std::string>());
+    }
+  });
+  lua.set_function("print_warning", [](sol::variadic_args va) {
+    for (auto arg : va) {
+      PLOG_W("{}", arg.get<std::string>());
+    }
+  });
   // clang-format off
   // ------ GRAPHICS ----------------------------------------
   lua.new_usertype<glm::vec2>(

@@ -7,6 +7,7 @@
 #include "ECS/WithScript.h"
 #include "Entity.h"
 #include "GUI/ImGuiSystem.h"
+#include "Physics/Collision/CollisionSystem.h"
 #include "Physics/Kinematics.h"
 #include "Scripting/LuaScriptSystem.h"
 #include "Scripting/NativeSystem.h"
@@ -27,14 +28,13 @@ private:
 public:
   Entity m_entity;
   Bitmask m_bitmask = 0;
+
+  void insertStaticCollider(Entity entity, Bitmask bitmask);
   template <typename... Components>
   Scene(std::string &name, void *context, SDL_Window *window,
         sol::state &solState)
       : m_registry(), m_luaState(solState), m_name(name),
-        m_entity(createEntity()), m_imGuiSystem(m_registry, context, window)
-  {
-    PLOG_I("registry id scene = {}", m_registry.getid());
-  };
+        m_entity(createEntity()), m_imGuiSystem(m_registry, context, window){};
   template <typename... Components>
   Scene(std::string &name, void *context, SDL_Window *window,
         sol::state &luaState, Components &&...args)
@@ -44,7 +44,6 @@ public:
     createComponents<Components...>(m_entity,
                                     std::forward<Components>(args)...);
     m_bitmask = ComponentManager::multiComponentBitmask<Components...>();
-    PLOG_I("registry id scene = {}", m_registry.getid());
   };
   Entity createEntity();
   void destroyEntity(Entity entity);
@@ -191,5 +190,6 @@ private:
   Systems::NativeScript m_nativeScriptSystem = {m_registry};
   Systems::ImGui m_imGuiSystem;
   Systems::LuaScript m_luaSystem = {m_registry};
+  Systems::CollisionSystem m_collisionSystem = {m_registry};
 };
 } // namespace pain

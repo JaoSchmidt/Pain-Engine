@@ -21,8 +21,12 @@ Script.on_create(function(self)
 end)
 
 Script.on_event(function(self, event)
-	-- print("this is on event function")
-	-- print(type(event))
+	print("this is on event function")
+	print(type(event))
+end)
+
+Script.on_collision_enter(function(self)
+	print("a")
 end)
 
 Script.on_destroy(function(self)

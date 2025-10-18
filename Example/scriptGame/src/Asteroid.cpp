@@ -1,9 +1,16 @@
 #include "Asteroid.h"
+#include "Physics/Collision/GridManager.h"
 #include <pain.h>
 
-Asteroid::Asteroid(pain::Scene *scene) : NormalEntity(*scene)
+Asteroid::Asteroid(pain::Scene &scene, pain::GridManager &gm,
+                   pain::TextureSheet &texSheet, short id, glm::vec2 &pos,
+                   glm::vec2 &vel)
+    : NormalEntity(scene)
 {
-  createComponents(*scene, pain::TransformComponent{}, //
-                   pain::SpriteComponent{},            //
-                   pain::MovementComponent{});
+  glm::vec3 pos3 = glm::vec3(pos, 1.f);
+  createComponents(scene, pain::TransformComponent{pos},          //
+                   pain::SpriteComponent{texSheet, id},           //
+                   pain::MovementComponent{glm::vec3(vel, 1.f)},  //
+                   pain::ColliderComponent::createStaticCollider( //
+                       gm, getEntity(), pos3));
 }

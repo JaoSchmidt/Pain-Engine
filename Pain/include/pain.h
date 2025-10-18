@@ -2,6 +2,7 @@
 
 // For use specifically for games build with Pain
 
+#include "Assets/DefaultTexture.h"
 #include "Assets/RandNumberGenerator.h"
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
@@ -34,6 +35,8 @@
 #include "ECS/Scriptable.h"
 // Scripts
 #include "Scripting/Component.h"
+
+#include "Physics/Collision/Collider.h"
 
 #include <SDL2/SDL_events.h>
 
