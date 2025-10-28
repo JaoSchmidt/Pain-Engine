@@ -5,7 +5,7 @@ namespace pain
 {
 namespace Systems
 {
-struct Kinematics : public System {
+struct Kinematics : public System<ComponentManager> {
   using System::System;
   void onUpdate(double dt);
 };

@@ -6,7 +6,7 @@ namespace pain
 {
 namespace Systems
 {
-struct LuaScript : public System {
+struct LuaScript : public System<ComponentManager> {
   using System::System;
   void onUpdate(double deltaTime);
   void onEvent(const SDL_Event &e);

@@ -1,32 +1,10 @@
 #include "ECS/Scene.h"
-#include "Assets/ResourceManager.h"
-#include "CoreRender/System.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Components/Camera.h"
-#include "ECS/Components/Particle.h"
 
 #include "SDL_events.h"
 
 namespace pain
 {
-
-// TODO: Create way to move and copy components to another scene
-
-Entity Scene::createEntity()
-{
-  PROFILE_FUNCTION();
-  Entity id;
-  if (m_availableEntities.empty()) {
-    id = ++numberOfEntities;
-  } else {
-    id = m_availableEntities.front();
-    m_availableEntities.pop();
-  }
-  return id;
-}
-
-// TODO: I may need to fix this
-void Scene::destroyEntity(Entity entity) { m_availableEntities.push(entity); }
 
 void Scene::updateSystems(double deltaTime)
 {
@@ -44,10 +22,10 @@ void Scene::updateSystems(const SDL_Event &event)
   m_luaSystem.onEvent(event);
 }
 
-void Scene::insertStaticCollider(Entity entity, Bitmask bitmask)
+void Scene::insertStaticCollider(reg::Entity entity)
 {
-  m_collisionSystem.insertStatic(
-      entity, getComponent<TransformComponent>(entity, bitmask).m_position);
+  // m_collisionSystem.insertStatic(
+  //     entity, getComponent<TransformComponent>(entity).m_position);
 }
 
 } // namespace pain

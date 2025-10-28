@@ -1,6 +1,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 
+#include "Assets/DefaultTexture.h"
 #include "Assets/ResourceManager.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Particle.h"

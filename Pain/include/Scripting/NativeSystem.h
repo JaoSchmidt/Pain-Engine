@@ -6,7 +6,7 @@ namespace pain
 {
 namespace Systems
 {
-struct NativeScript : public System {
+struct NativeScript : public System<ComponentManager> {
   using System::System;
   void onUpdate(double deltaTime);
   void onEvent(const SDL_Event &e);

@@ -1,6 +1,9 @@
 #include "CoreRender/System.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
+#include "ECS/Components/Movement.h"
+#include "ECS/Components/Rotation.h"
+#include "ECS/Components/Sprite.h"
 
 namespace pain
 {

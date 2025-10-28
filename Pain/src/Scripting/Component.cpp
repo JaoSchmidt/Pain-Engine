@@ -11,9 +11,9 @@ namespace pain
 {
 void custom_print(const std::string &str) { PLOG_I("{}", str); }
 
-LuaScriptComponent::LuaScriptComponent(Entity entity, Bitmask bitmask,
-                                       Scene &scene, sol::state &solState)
-    : ExtendedEntity(entity, bitmask, scene), m_lua(solState) {};
+LuaScriptComponent::LuaScriptComponent(reg::Entity entity, Scene &scene,
+                                       sol::state &solState)
+    : ExtendedEntity(entity, scene), m_lua(solState) {};
 void LuaScriptComponent::initializeScript() {}
 void LuaScriptComponent::bind(const char *scriptPath)
 {

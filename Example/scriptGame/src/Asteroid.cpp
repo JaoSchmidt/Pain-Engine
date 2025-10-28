@@ -8,9 +8,8 @@ Asteroid::Asteroid(pain::Scene &scene, pain::GridManager &gm,
     : NormalEntity(scene)
 {
   glm::vec3 pos3 = glm::vec3(pos, 1.f);
-  createComponents(scene, pain::TransformComponent{pos},          //
-                   pain::SpriteComponent{texSheet, id},           //
-                   pain::MovementComponent{glm::vec3(vel, 1.f)},  //
-                   pain::ColliderComponent::createStaticCollider( //
-                       gm, getEntity(), pos3));
+  createComponents(scene, pain::TransformComponent{pos},         //
+                   pain::SpriteComponent{texSheet, id},          //
+                   pain::MovementComponent{glm::vec3(vel, 1.f)}, //
+                   pain::ColliderComponent::createCollider({0.1f, 0.1f}));
 }

@@ -1,5 +1,5 @@
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Entity.h"
+#include "ECS/Registry/Entity.h"
 
 namespace reg
 {
@@ -9,11 +9,9 @@ template <typename T> struct Iterator {
   using iterator_category = std::forward_iterator_tag;
 
   Iterator(std::vector<std::vector<T> *> vectors, int outerIndex,
-           int innerIndex, std::vector<std::vector<pain::Entity> *> entities)
-      : m_entities(entities), m_vectors(vectors), m_outerIndex(outerIndex),
-        m_innerIndex(innerIndex)
-  {
-  }
+           int innerIndex)
+      : m_vectors(vectors), m_outerIndex(outerIndex),
+        m_innerIndex(innerIndex) {};
 
   const T &operator*() const
   {
@@ -44,24 +42,32 @@ template <typename T> struct Iterator {
   };
   bool operator!=(const Iterator &o) { return !(*this == o); };
 
-  // get the entity index inside the archetype
-  inline pain::Entity getEntity() const
-  {
-    P_ASSERT(m_entities.size() == m_vectors.size(),
-             "Number of entities is different from the number of components, "
-             "they are the same archetypes");
-    P_ASSERT(m_entities.at(m_outerIndex)->size() ==
-                 m_vectors.at(m_outerIndex)->size(),
-             "Number of entities in an archetype should be the same as their "
-             "components");
-    return m_entities.at(m_outerIndex)->at(m_innerIndex);
-  }
-
-private:
-  std::vector<std::vector<pain::Entity> *> m_entities;
+protected:
   std::vector<std::vector<T> *> m_vectors;
   size_t m_outerIndex;
   size_t m_innerIndex;
+};
+
+template <typename T> struct IteratorWithEntities : public Iterator<T> {
+  IteratorWithEntities(std::vector<std::vector<T> *> vectors, int outerIndex,
+                       int innerIndex,
+                       std::vector<std::vector<reg::Entity> *> entities)
+      : Iterator<T>(vectors, outerIndex, innerIndex), m_entities(entities) {};
+
+  inline reg::Entity getEntity() const
+  {
+    P_ASSERT(m_entities.size() == this->m_vectors.size(),
+             "Number of entities is different from the number of components, "
+             "they are the same archetypes");
+    P_ASSERT(m_entities.at(this->m_outerIndex)->size() ==
+                 this->m_vectors.at(this->m_outerIndex)->size(),
+             "Number of entities in an archetype should be the same as their "
+             "components");
+    return m_entities.at(this->m_outerIndex)->at(this->m_innerIndex);
+  }
+
+private:
+  std::vector<std::vector<reg::Entity> *> m_entities;
 };
 
 } // namespace reg

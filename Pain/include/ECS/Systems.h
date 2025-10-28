@@ -4,9 +4,9 @@
 
 namespace pain
 {
-struct System {
+template <typename CM> struct System {
 public:
-  System(ArcheRegistry &archetype) : m_registry(archetype) {};
+  System(reg::ArcheRegistry<CM> &archetype) : m_registry(archetype) {};
   ~System() { std::cout << "System destructed\n"; }
 
   // Move constructor
@@ -32,63 +32,62 @@ public:
   System &operator=(const System &) = delete;
 
 protected:
-  ArcheRegistry &m_registry;
+  reg::ArcheRegistry<CM> &m_registry;
 
   // ---------------------------------------------------- //
   // Iterate archetypes
   // ---------------------------------------------------- //
 
   template <typename T>
-    requires IsSingleType<T>
+    requires reg::IsSingleType<T>
   inline reg::Iterator<T> end()
   {
-    return m_registry.end<T>();
+    return m_registry.template end<T>();
   }
   template <typename T>
-    requires IsSingleType<T>
+    requires reg::IsSingleType<T>
   inline reg::Iterator<T> begin()
   {
-    return m_registry.begin<T>();
+    return m_registry.template begin<T>();
   }
   template <typename... Components>
-    requires IsMultipleTypes<Components...>
+    requires reg::IsMultipleTypes<Components...>
   inline std::tuple<reg::Iterator<Components>...> begin()
   {
-    return m_registry.begin<Components...>();
+    return m_registry.template begin<Components...>();
   }
   template <typename... Components>
-    requires IsMultipleTypes<Components...>
+    requires reg::IsMultipleTypes<Components...>
   inline std::tuple<reg::Iterator<Components>...> end()
   {
-    return m_registry.end<Components...>();
+    return m_registry.template end<Components...>();
   }
 
   // ---------------------------------------------------- //
   // Get components from archetypes
   // ---------------------------------------------------- //
   template <typename... Components>
-  std::tuple<Components &...> getComponents(Entity entity, Bitmask bitmask)
+  std::tuple<Components &...> getComponents(reg::Entity entity)
   {
-    return m_registry.getComponents<Components...>(entity, bitmask);
+    return m_registry.template getComponents<Components...>(entity);
   }
   // get multiple components together as a tuple
   template <typename... Components>
-  const std::tuple<const Components &...> getComponents(Entity entity,
-                                                        Bitmask bitmask) const
+  const std::tuple<const Components &...>
+  getComponents(reg::Entity entity) const
   {
     return std::as_const(m_registry)
-        .getComponents<Components...>(entity, bitmask);
+        .template getComponents<Components...>(entity);
   }
   // get a single component
-  template <typename T> T &getComponent(Entity entity, Bitmask bitmask)
+  template <typename T> T &getComponent(reg::Entity entity)
   {
-    return m_registry.getComponent<T>(entity, bitmask);
+    return m_registry.template getComponent<T>(entity);
   }
   // get a single component
-  template <typename T>
-  const T &getComponent(Entity entity, Bitmask bitmask) const
+  template <typename T> const T &getComponent(reg::Entity entity) const
   {
-    return std::as_const(m_registry).getComponent<T>(entity, bitmask);
+    return std::as_const(m_registry).template getComponent<T>(entity);
   }
 };
 } // namespace pain

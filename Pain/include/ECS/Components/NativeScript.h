@@ -2,7 +2,7 @@
 
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "ECS/Entity.h"
+#include "ECS/Registry/Entity.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
 

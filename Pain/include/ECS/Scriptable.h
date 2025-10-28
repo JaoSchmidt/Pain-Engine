@@ -3,7 +3,7 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Entity.h"
+#include "ECS/Registry/Entity.h"
 #include "ECS/Scene.h"
 
 #include "ECS/Components/NativeScript.h"
@@ -26,22 +26,18 @@ public:
   }
   template <typename T> T &getComponent(Scene &scene)
   {
-    return scene.getComponent<T>(m_entity, getBitMask());
+    return scene.getComponent<T>(m_entity);
   }
   template <typename T> const T &getComponent(const Scene &scene) const
   {
-    return scene.getComponent<T>(m_entity, getBitMask());
+    return scene.getComponent<T>(m_entity);
   }
-  static constexpr Bitmask getBitMask()
-  {
-    return ComponentManager::multiComponentBitmask<Components...>();
-  }
+
   template <typename T, typename... Args>
   void withScript(Scene &scene, Args... args)
   {
     NativeScriptComponent &nsc = getComponent<NativeScriptComponent>(scene);
-    nsc.bindAndInitiate<T>(m_entity, getBitMask(), scene,
-                           std::forward<Args>(args)...);
+    nsc.bindAndInitiate<T>(m_entity, scene, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
   }
@@ -49,17 +45,16 @@ public:
   void withImGuiScript(Scene &scene, Args... args)
   {
     ImGuiComponent &nsc = getComponent<ImGuiComponent>(scene);
-    nsc.bindAndInitiate<T>(m_entity, getBitMask(), scene,
-                           std::forward<Args>(args)...);
+    nsc.bindAndInitiate<T>(m_entity, scene, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
   }
 
   NormalEntity(Scene &scene) { m_entity = scene.createEntity(); }
-  inline Entity getEntity() const { return m_entity; }
+  inline reg::Entity getEntity() const { return m_entity; }
 
 protected:
-  Entity m_entity = 0;
+  reg::Entity m_entity = reg::Entity{0};
 };
 
 // ExtendedEntity, meaning that it has additional functions to more
@@ -68,34 +63,31 @@ protected:
 class ExtendedEntity
 {
 public:
-  ExtendedEntity(Entity entity, Bitmask bitmask, Scene &scene)
-      : m_scene(scene), m_entity(entity), m_bitmask(bitmask) {};
+  ExtendedEntity(reg::Entity entity, Scene &scene)
+      : m_scene(scene), m_entity(entity) {};
   // ---------------------------------------------------- //
   // Get components from archetypes
   // ---------------------------------------------------- //
   template <typename... TargetComponents>
   std::tuple<TargetComponents &...> getComponents()
   {
-    return m_scene.get().getComponents<TargetComponents...>(m_entity,
-                                                            m_bitmask);
+    return m_scene.get().getComponents<TargetComponents...>(m_entity);
   }
   // return the components of an entity, as a tuple
   template <typename... TargetComponents>
   const std::tuple<TargetComponents &...> getComponents() const
   {
-    return m_scene.get().getComponents<TargetComponents...>(m_entity,
-                                                            m_bitmask);
+    return m_scene.get().getComponents<TargetComponents...>(m_entity);
   }
   template <typename T> T &getComponent()
   {
     PROFILE_FUNCTION();
-    return m_scene.get().getComponent<T>(m_entity, m_bitmask);
+    return m_scene.get().getComponent<T>(m_entity);
   }
   template <typename T> const T &getComponent() const
   {
     PROFILE_FUNCTION();
-    return static_cast<const Scene &>(m_scene.get())
-        .getComponent<T>(m_entity, m_bitmask);
+    return static_cast<const Scene &>(m_scene.get()).getComponent<T>(m_entity);
   }
   // ---------------------------------------------------- //
   // "Has" all components
@@ -103,32 +95,30 @@ public:
   // Does archetype has any of the target components?
   template <typename... TargetComponents> bool hasAnyComponents() const
   {
-    return m_scene.get().hasAnyComponents<TargetComponents...>(m_bitmask);
+    return m_scene.get().hasAnyComponents<TargetComponents...>(m_entity);
   }
 
   // Does archetype has all of the target components?
   template <typename... TargetComponents> bool hasAllComponents() const
   {
-    return m_scene.get().containsAllComponents<TargetComponents...>(m_bitmask);
+    return m_scene.get().containsAllComponents<TargetComponents...>();
   }
   explicit operator bool() const { return m_entity != -1; }
   ExtendedEntity(ExtendedEntity &&other) noexcept
-      : m_scene(other.m_scene), m_entity(std::exchange(other.m_entity, -1)),
-        m_bitmask(std::exchange(other.m_bitmask, 0)) {};
+      : m_scene(other.m_scene),
+        m_entity(std::exchange(other.m_entity, reg::Entity{-1})) {};
   ExtendedEntity &operator=(ExtendedEntity &&other) noexcept
   {
     if (this != &other) {
       m_scene = other.m_scene;
-      m_entity = std::exchange(other.m_entity, -1);
-      m_bitmask = std::exchange(other.m_bitmask, 0);
+      m_entity = std::exchange(other.m_entity, reg::Entity{-1});
     }
     return *this;
   }
 
 protected:
   std::reference_wrapper<Scene> m_scene;
-  Entity m_entity;
-  Bitmask m_bitmask;
+  reg::Entity m_entity;
   friend class Scene;
 };
 

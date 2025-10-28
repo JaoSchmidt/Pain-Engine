@@ -4,8 +4,8 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/System.h"
 #include "ECS/Registry/ArcheRegistry.h"
+#include "ECS/Registry/Entity.h"
 #include "ECS/WithScript.h"
-#include "Entity.h"
 #include "GUI/ImGuiSystem.h"
 #include "Physics/Collision/CollisionSystem.h"
 #include "Physics/Kinematics.h"
@@ -21,15 +21,14 @@ namespace pain
 class Scene
 {
 private:
-  ArcheRegistry m_registry;
+  reg::ArcheRegistry<ComponentManager> m_registry;
   sol::state &m_luaState;
   std::string m_name = "NULL scene name";
 
 public:
-  Entity m_entity;
-  Bitmask m_bitmask = 0;
+  reg::Entity m_entity;
 
-  void insertStaticCollider(Entity entity, Bitmask bitmask);
+  void insertStaticCollider(reg::Entity entity);
   template <typename... Components>
   Scene(std::string &name, void *context, SDL_Window *window,
         sol::state &solState)
@@ -43,20 +42,27 @@ public:
   {
     createComponents<Components...>(m_entity,
                                     std::forward<Components>(args)...);
-    m_bitmask = ComponentManager::multiComponentBitmask<Components...>();
   };
-  Entity createEntity();
-  void destroyEntity(Entity entity);
+  inline reg::Entity createEntity() { return m_registry.createEntity(); }
   template <typename T, typename... Args> void withScript(Args &&...args)
   {
-    SceneHelper::withScript<T>(m_entity, m_registry, *this,
-                               std::forward<Args>(args)...);
+    // SceneHelper::withScript<T>(m_entity, m_registry, *this,
+    //                            std::forward<Args>(args)...);
+    NativeScriptComponent &nsc =
+        m_registry.getComponent<NativeScriptComponent>(m_entity);
+    nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);
+    if (nsc.instance && nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
   }
 
   template <typename T, typename... Args> void withImGuiScript(Args &&...args)
   {
-    SceneHelper::withImGuiScript<T>(m_entity, m_registry, *this,
-                                    std::forward<Args>(args)...);
+    ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
+    nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);
+    if (nsc.instance && nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
+    // SceneHelper::withImGuiScript<T>(m_entity, m_registry, *this,
+    //                                 std::forward<Args>(args)...);
   }
 
   sol::state &getSharedLuaState() { return m_luaState; }
@@ -64,13 +70,14 @@ public:
   // Component Archetype stuff
   // ---------------------------------------------------- //
   template <typename... Components, typename... Args>
-  std::tuple<Components &...> createComponents(Entity entity, Args &&...args)
+  std::tuple<Components &...> createComponents(reg::Entity entity,
+                                               Args &&...args)
   {
     return m_registry.createComponents<Components...>(
         entity, std::forward<Args>(args)...);
   }
   template <typename T, typename... Args>
-  T &createComponent(Entity entity, Args &&...args)
+  T &createComponent(reg::Entity entity, Args &&...args)
   {
     return m_registry.createComponent<T>(entity, std::forward<Args>(args)...);
   }
@@ -80,54 +87,49 @@ public:
   // ---------------------------------------------------- //
   // get multiple components together as a tuple
   template <typename... Components>
-  std::tuple<Components &...> getComponents(Entity entity, Bitmask bitmask)
+  std::tuple<Components &...> getComponents(reg::Entity entity)
   {
-    return m_registry.getComponents<Components...>(entity, bitmask);
+    return m_registry.getComponents<Components...>(entity);
   }
   // get multiple components together as a tuple
   template <typename... Components>
-  const std::tuple<const Components &...> getComponents(Entity entity,
-                                                        Bitmask bitmask) const
+  const std::tuple<const Components &...>
+  getComponents(reg::Entity entity) const
   {
-    return std::as_const(m_registry)
-        .getComponents<Components...>(entity, bitmask);
+    return std::as_const(m_registry).getComponents<Components...>(entity);
   }
   // get a single component
-  template <typename T> T &getComponent(Entity entity, Bitmask bitmask)
+  template <typename T> T &getComponent(reg::Entity entity)
   {
-    return m_registry.getComponent<T>(entity, bitmask);
+    return m_registry.getComponent<T>(entity);
   }
   // get a single component
-  template <typename T>
-  const T &getComponent(Entity entity, Bitmask bitmask) const
+  template <typename T> const T &getComponent(reg::Entity entity) const
   {
-    return std::as_const(m_registry).getComponent<T>(entity, bitmask);
+    return std::as_const(m_registry).getComponent<T>(entity);
   }
   // ---------------------------------------------------- //
   // "Has" functions
   // ---------------------------------------------------- //
   template <typename... TargetComponents>
-  constexpr bool hasAnyComponents(int bitmask) const
+  bool hasAnyComponents(reg::Entity entity) const
   {
-    return std::as_const(m_registry).hasAny<TargetComponents...>(bitmask);
+    return std::as_const(m_registry).hasAny<TargetComponents...>(entity);
   }
   template <typename... TargetComponents>
-  constexpr bool containsAllComponents(int bitmask) const
+  constexpr bool containsAllComponents(reg::Entity entity) const
   {
-    return std::as_const(m_registry).containsAll<TargetComponents...>(bitmask);
+    return std::as_const(m_registry).containsAll<TargetComponents...>(entity);
   }
-  // remove an entity, alongside its components from it's archetype
-  bool removeEntity(Entity entity, int bitmask)
+  // remove an entity, alongside its components from it's archetype,
+  // NOTE: The caller needs to tell me the components of the entity
+  template <typename... Components> bool removeEntity(reg::Entity entity)
   {
-    if (m_registry.remove(entity, bitmask)) {
-      destroyEntity(entity);
-      return true;
-    } else
-      return false;
+    return m_registry.remove<Components...>(entity);
   }
   // Remove components of an entity
   // template <typename... TargetComponents, typename... ObjectComponents>
-  // void rmComponent(Entity entity)
+  // void rmComponent(reg::Entity entity)
   // {
   //   m_registry->remove<TargetComponents..., ObjectComponents...>(entity);
   // }
@@ -137,25 +139,25 @@ public:
   // ---------------------------------------------------- //
 
   template <typename T>
-    requires IsSingleType<T>
+    requires reg::IsSingleType<T>
   reg::Iterator<T> end()
   {
     return m_registry.end<T>();
   }
   template <typename T>
-    requires IsSingleType<T>
+    requires reg::IsSingleType<T>
   reg::Iterator<T> begin()
   {
     return m_registry.begin<T>();
   }
   template <typename... Components>
-    requires IsMultipleTypes<Components...>
+    requires reg::IsMultipleTypes<Components...>
   std::tuple<reg::Iterator<Components>...> begin()
   {
     return m_registry.begin<Components...>();
   }
   template <typename... Components>
-    requires IsMultipleTypes<Components...>
+    requires reg::IsMultipleTypes<Components...>
   std::tuple<reg::Iterator<Components>...> end()
   {
     return m_registry.end<Components...>();
@@ -168,11 +170,6 @@ public:
   void updateSystems(double deltaTime);
   void updateSystems(const SDL_Event &event);
   // template <typename... Args> void renderSystems(Args... args);
-  static void clearQueue()
-  {
-    std::queue<Entity> empty;
-    std::swap(m_availableEntities, empty);
-  }
 
   template <typename... Args> void renderSystems(Args &&...args)
   {
@@ -183,13 +180,11 @@ public:
   }
 
 private:
-  inline static std::queue<Entity> m_availableEntities = {};
-  inline static Entity numberOfEntities = 0;
   Systems::Render m_renderSystem = {m_registry};
   Systems::Kinematics m_kinematicsSystem = {m_registry};
   Systems::NativeScript m_nativeScriptSystem = {m_registry};
   Systems::ImGui m_imGuiSystem;
   Systems::LuaScript m_luaSystem = {m_registry};
-  Systems::CollisionSystem m_collisionSystem = {m_registry};
+  Systems::CollisionSystem m_collisionSystem = {16.f, m_registry};
 };
 } // namespace pain

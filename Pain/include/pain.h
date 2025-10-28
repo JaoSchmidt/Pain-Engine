@@ -29,7 +29,6 @@
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
-#include "ECS/Entity.h"
 #include "ECS/Scene.h"
 #include "ECS/SceneManager.h"
 #include "ECS/Scriptable.h"

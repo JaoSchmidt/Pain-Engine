@@ -11,17 +11,18 @@ void CollisionCallbackComponent::clearCurrentFrame()
   m_currentCollisions.clear();
 }
 
-void CollisionCallbackComponent::addCurrentCollision(Entity otherId)
+void CollisionCallbackComponent::addCurrentCollision(reg::Entity otherId)
 {
   m_currentCollisions.insert(otherId);
 }
 
-bool CollisionCallbackComponent::wasCollidingLastFrame(Entity otherId) const
+bool CollisionCallbackComponent::wasCollidingLastFrame(
+    reg::Entity otherId) const
 {
   return m_previousCollisions.find(otherId) != m_previousCollisions.end();
 }
 
-bool CollisionCallbackComponent::isCollidingThisFrame(Entity otherId) const
+bool CollisionCallbackComponent::isCollidingThisFrame(reg::Entity otherId) const
 {
   return m_currentCollisions.find(otherId) != m_currentCollisions.end();
 }

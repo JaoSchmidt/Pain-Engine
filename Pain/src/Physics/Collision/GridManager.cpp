@@ -14,9 +14,16 @@ namespace pain
 
 GridManager::GridManager(float cellSize) : m_cellSize(cellSize) {}
 
-int64_t GridManager::getKey(int x, int y) const
+int64_t GridManager::getKey(int32_t x, int32_t y) const
 {
   return (static_cast<int64_t>(x) << 32) | static_cast<int64_t>(y);
+}
+GridCell &GridManager::getCell(int32_t x, int32_t y,
+                               std::unordered_map<int64_t, GridCell> &grid)
+{
+  auto [it, inserted] =
+      m_staticGrid.try_emplace(getKey(x, y), m_defaultReserved);
+  return it->second;
 }
 
 // NOTE: idk if this is the function I should use on the collision system, or
@@ -37,24 +44,24 @@ void GridManager::clearDynamic(const glm::vec3 &pos)
   // multiple cells
   int x = static_cast<int>(pos.x / m_cellSize);
   int y = static_cast<int>(pos.y / m_cellSize);
-  m_grid[getKey(x, y)].clear();
+  getCell(x, y, m_grid).clear();
 }
-void GridManager::insertStatic(Entity entity, const ColliderComponent &cc,
-                               const TransformComponent &tc)
+void GridManager::insertStatic(const ColliderComponent &cc,
+                               TransformComponent &tc, MovementComponent &mc)
 {
   // TODO: Calculate using size to check the case a single entity is inside
   // multiple cells
   int x = static_cast<int>(tc.m_position.x / m_cellSize);
   int y = static_cast<int>(tc.m_position.y / m_cellSize);
-  m_staticGrid[getKey(x, y)].push_back(entity, cc, tc);
+  getCell(x, y, m_staticGrid).push_back(cc, tc, mc);
 }
 
-void GridManager::insertDynamic(Entity entity, const ColliderComponent &cc,
-                                const TransformComponent &tc)
+void GridManager::insertDynamic(const ColliderComponent &cc,
+                                TransformComponent &tc, MovementComponent &mc)
 {
   int x = static_cast<int>(tc.m_position.x / m_cellSize);
   int y = static_cast<int>(tc.m_position.y / m_cellSize);
-  m_grid[getKey(x, y)].push_back(entity, cc, tc);
+  getCell(x, y, m_grid).push_back(cc, tc, mc);
 }
 
 } // namespace pain

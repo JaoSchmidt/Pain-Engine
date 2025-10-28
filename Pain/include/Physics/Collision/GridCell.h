@@ -1,6 +1,6 @@
 #pragma once
 #include "ECS/Components/Movement.h"
-#include "ECS/Entity.h"
+#include "ECS/Registry/Entity.h"
 #include "Physics/Collision/Collider.h"
 #include "glm/ext/vector_float2.hpp"
 #include <vector>
@@ -11,19 +11,19 @@ namespace pain
 // strategy for different shapes. Possibly a tree like in the Reducible video:
 // https://www.youtube.com/watch?v=eED4bSkYCB8
 struct GridCell {
-  std::vector<Entity> m_entities;
-  std::vector<std::tuple<const ColliderComponent *, const TransformComponent *>>
+  std::vector<std::tuple<const ColliderComponent *, TransformComponent *,
+                         MovementComponent *>>
       m_components;
   GridCell(int reserved);
   void clear();
-  void push_back(Entity e, const ColliderComponent &cc,
-                 const TransformComponent &tc);
+  void push_back(const ColliderComponent &cc, TransformComponent &tc,
+                 MovementComponent &mc);
 
-  std::vector<std::tuple<const ColliderComponent *,
-                         const TransformComponent *>>::const_iterator
+  std::vector<std::tuple<const ColliderComponent *, TransformComponent *,
+                         MovementComponent *>>::const_iterator
   begin() const;
-  std::vector<std::tuple<const ColliderComponent *,
-                         const TransformComponent *>>::const_iterator
+  std::vector<std::tuple<const ColliderComponent *, TransformComponent *,
+                         MovementComponent *>>::const_iterator
   end() const;
 };
 

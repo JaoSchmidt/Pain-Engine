@@ -21,9 +21,9 @@ namespace pain
 class ImGuiLauncher : public ExtendedEntity
 {
 public:
-  ImGuiLauncher(Entity entity, Bitmask bitmask, Scene &scene, Application *app)
+  ImGuiLauncher(reg::Entity entity, Scene &scene, Application *app)
 
-      : ExtendedEntity(entity, bitmask, scene), m_init(), m_app(app) {};
+      : ExtendedEntity(entity, scene), m_init(), m_app(app) {};
   ~ImGuiLauncher() = default;
   NONCOPYABLE(ImGuiLauncher);
   ImGuiLauncher(ImGuiLauncher &&other) noexcept

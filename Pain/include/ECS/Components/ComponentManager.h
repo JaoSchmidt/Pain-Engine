@@ -1,15 +1,6 @@
 #pragma once
 #include "ECS/Registry/Bitmask.h"
 
-#include "ECS/Components/Camera.h"
-#include "ECS/Components/LuaScript.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Particle.h"
-#include "ECS/Components/Rotation.h"
-#include "ECS/Components/Sprite.h"
-
-// TODO: Test without any include, that is, try declare and not define anything
-
 namespace pain
 {
 template <typename Alias, typename Target> struct AliasComponent {
@@ -19,9 +10,19 @@ struct LuaScriptComponent;
 struct NativeScriptComponent;
 struct CollisionCallbackComponent;
 struct ColliderComponent;
+struct OrthoCameraComponent;
+struct TransformComponent;
+struct MovementComponent;
+struct ParticleSprayComponent;
+struct RotationComponent;
+struct SpriteComponent;
+struct SpritelessComponent;
+struct TrianguleComponent;
+struct onUpdateLuaFunction;
 struct CollisionComponent;
 struct ImGuiComponent;
-using ComponentManager = CompileTimeBitMask<
+
+using ComponentManager = reg::CompileTimeBitMask<
     OrthoCameraComponent, TransformComponent, MovementComponent,
     NativeScriptComponent, ParticleSprayComponent, RotationComponent,
     SpriteComponent, SpritelessComponent, TrianguleComponent,

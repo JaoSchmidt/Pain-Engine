@@ -11,8 +11,8 @@ namespace pain
 {
 namespace Systems
 {
-ImGui::ImGui(ArcheRegistry &archetype, void *context, SDL_Window *window,
-             ImGuiConfigFlags flags)
+ImGui::ImGui(reg::ArcheRegistry<ComponentManager> &archetype, void *context,
+             SDL_Window *window, ImGuiConfigFlags flags)
     : System(archetype)
 {
   P_ASSERT(m_io == nullptr,

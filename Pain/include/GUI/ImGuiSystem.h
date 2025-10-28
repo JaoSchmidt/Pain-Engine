@@ -1,7 +1,7 @@
 #pragma once
-#include "pch.h"
 
 #include "Core.h"
+#include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Systems.h"
 
 #include "imgui.h"
@@ -17,13 +17,14 @@ public:
 };
 namespace Systems
 {
-class ImGui : public System
+class ImGui : public System<ComponentManager>
 {
 public:
   // HACK: The singleton (static) approach assumes that there
   // will be only one context necessary for Dear ImGui to work.
   // Keep an eye on that in case it doesn't work.
-  ImGui(ArcheRegistry &archetype, void *context, SDL_Window *window,
+  ImGui(reg::ArcheRegistry<ComponentManager> &archetype, void *context,
+        SDL_Window *window,
         ImGuiConfigFlags flags =
             ImGuiConfigFlags_NavEnableKeyboard  // Enable Keyboard Controls
             | ImGuiConfigFlags_NavEnableGamepad // Enable Gamepad Controls

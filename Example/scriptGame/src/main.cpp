@@ -69,20 +69,18 @@ public:
                       randomPos,                                    //
                       randomVel};
       asteroids.emplace_back(std::move(ast));
-      scene.insertStaticCollider(ast.getEntity(), ast.getBitMask());
+      scene.insertStaticCollider(ast.getEntity());
     }
     scene.withScript<MainScript>(aspectRatio, zoom, app, std::move(stars),
                                  std::move(orthocamera), std::move(asteroids));
   }
 
-  MainScript(pain::Entity entity, pain::Bitmask bitmask, pain::Scene &scene,
-             float aspectRatio, float zoom, pain::Application *app,
-             std::vector<Stars> &&stars,
+  MainScript(reg::Entity entity, pain::Scene &scene, float aspectRatio,
+             float zoom, pain::Application *app, std::vector<Stars> &&stars,
              std::unique_ptr<pain::OrthoCamera> orthocamera,
-             std::vector<Asteroid> &&ast, Player &&player)
-      : ExtendedEntity(entity, bitmask, scene),
-        m_orthocamera(std::move(orthocamera)), m_stars(std::move(stars)),
-        m_asteroids(std::move(ast)) {};
+             std::vector<Asteroid> &&ast)
+      : ExtendedEntity(entity, scene), m_orthocamera(std::move(orthocamera)),
+        m_stars(std::move(stars)), m_asteroids(std::move(ast)) {};
 
   std::vector<std::vector<int>> m_backgroundMap;
   std::unique_ptr<pain::OrthoCamera> m_orthocamera;

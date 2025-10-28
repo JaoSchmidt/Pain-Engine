@@ -8,8 +8,7 @@
 namespace pain
 {
 struct LuaScriptComponent : public ExtendedEntity {
-  LuaScriptComponent(Entity entity, Bitmask Bitmask, Scene &scene,
-                     sol::state &solState);
+  LuaScriptComponent(reg::Entity entity, Scene &scene, sol::state &solState);
   void bind(const char *scriptPath);
   void onCreate();
   void onDestroy();
@@ -28,7 +27,7 @@ struct LuaScriptComponent : public ExtendedEntity {
   std::optional<sol::protected_function> m_onRenderFunction;
   std::optional<sol::protected_function> m_onDestroy;
   std::optional<sol::protected_function> m_onCollisionEnter;
-  std::unordered_set<Entity> m_currentCollisions;
+  std::unordered_set<reg::Entity> m_currentCollisions;
 
 private:
   const char *m_scriptPath = resources::getDefaultLuaFile();

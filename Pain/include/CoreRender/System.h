@@ -7,7 +7,7 @@ namespace pain
 {
 namespace Systems
 {
-struct Render : public System {
+struct Render : public System<ComponentManager> {
   using System::System;
   ~Render() { std::cout << "Render destructed\n"; }
 

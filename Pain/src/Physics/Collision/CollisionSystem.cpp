@@ -8,7 +8,12 @@ namespace pain
 namespace Systems
 {
 
-void CollisionSystem::solidCollision(Entity entity1, Entity entity2) {}
+void CollisionSystem::solidCollision(glm::vec3 &pos1,          //
+                                     glm::vec3 &vel1,          //
+                                     float &translationSpeed1, //
+                                     glm::vec3 &pos2,          //
+                                     glm::vec3 &vel2,          //
+                                     float &translationSpeed2) {};
 
 bool checkAABBCollision(const glm::vec3 &pos1, const glm::vec2 &size1,
                         const glm::vec3 &pos2, const glm::vec2 &size2)
@@ -33,7 +38,7 @@ void CollisionSystem::onUpdate(double deltaTime)
         end<TransformComponent, ColliderComponent, MovementComponent>();
 
     for (; tIt != tItEnd; ++tIt, ++cIt, ++mIt) {
-      m_gridManager.insertDynamic(tIt.getEntity(), *cIt, *tIt);
+      m_gridManager.insertDynamic(*cIt, *tIt, *mIt);
     }
   }
   // // Step 2: clear "collision count" from entities with callbacks
@@ -53,19 +58,18 @@ void CollisionSystem::onUpdate(double deltaTime)
     for (const auto &gridIt : m_gridManager.m_grid) {
       const GridCell &cell = gridIt.second;
 
-      const auto &components = cell.m_components;
-      const auto &entities = cell.m_entities;
+      auto &components = cell.m_components;
 
       const std::size_t count = components.size();
       for (std::size_t i = 0; i < count; ++i) {
         for (std::size_t j = i + 1; j < count; ++j) {
-          const auto &[collider1, transform1] = components[i];
-          const auto &[collider2, transform2] = components[j];
+          auto &[collider1, transform1, movement1] = components[i];
+          auto &[collider2, transform2, movement2] = components[j];
 
           // --- Compute world-space positions (include offsets) ---
-          const glm::vec3 pos1 =
+          glm::vec3 pos1 =
               transform1->m_position + glm::vec3(collider1->m_offset, 0.f);
-          const glm::vec3 pos2 =
+          glm::vec3 pos2 =
               transform2->m_position + glm::vec3(collider2->m_offset, 0.f);
 
           const bool collisionHappened = checkAABBCollision(
@@ -76,9 +80,12 @@ void CollisionSystem::onUpdate(double deltaTime)
             if (collider1->m_isTrigger || collider2->m_isTrigger) {
               // TODO: perform trigger callback
             } else {
-              const Entity entity1 = entities[i];
-              const Entity entity2 = entities[j];
-              solidCollision(entity1, entity2);
+              solidCollision(pos1,                          //
+                             movement1->m_velocityDir,      //
+                             movement1->m_translationSpeed, //
+                             pos2,                          //
+                             movement2->m_velocityDir,      //
+                             movement2->m_translationSpeed);
             }
           }
         }

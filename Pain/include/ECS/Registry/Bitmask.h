@@ -1,14 +1,15 @@
+#include "ECS/Registry/Entity.h"
 #include <cstddef>
-#include <cstdint>
 #include <type_traits>
-namespace pain
+namespace reg
 {
+
 template <typename... Components> class CompileTimeBitMask
 {
 
 public:
   // Get the index of a component type (compile-time)
-  template <typename Target> static constexpr int singleComponentBitmask()
+  template <typename Target> static constexpr Bitmask singleComponentBitmask()
   {
     static_assert(isRegistered<Target>(),
                   "You are asking for a component but haven't registered it "
@@ -20,7 +21,7 @@ public:
 
   // Get combined bit mask for multiple components
   template <typename... Targets>
-  static constexpr std::uint64_t multiComponentBitmask()
+  static constexpr Bitmask multiComponentBitmask()
   {
     static_assert(sizeof...(Targets) > 0, "At least one component is required");
     return getComponentsBitmask<Targets...>();
@@ -66,7 +67,7 @@ private:
   }
 
   template <typename FirstDirty, typename... Targets>
-  static constexpr std::size_t getComponentsBitmask()
+  static constexpr Bitmask getComponentsBitmask()
   {
     using First = std::remove_pointer_t<
         std::remove_cv_t<std::remove_reference_t<FirstDirty>>>;
@@ -81,7 +82,22 @@ private:
     }
   }
 
-  static constexpr std::size_t exp(std::size_t n) { return 1 << n; }
+  static constexpr Bitmask exp(std::size_t n) { return Bitmask{1 << n}; }
 };
 
-} // namespace pain
+// ---------------------------------------------------- //
+// Assert the right class inside registries
+// ---------------------------------------------------- //
+template <typename T> struct is_compile_time_bitmask : std::false_type {
+};
+
+template <typename... Components>
+struct is_compile_time_bitmask<CompileTimeBitMask<Components...>>
+    : std::true_type {
+};
+
+template <typename T>
+inline constexpr bool is_compile_time_bitmask_v =
+    is_compile_time_bitmask<T>::value;
+
+} // namespace reg
