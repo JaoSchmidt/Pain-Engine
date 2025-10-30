@@ -44,7 +44,7 @@ void Renderer2d::flush()
 {
   PROFILE_FUNCTION();
   // bindTextures();
-  drawBatches(m_cameraMatrices->getViewProjectionMatrix());
+  draw(m_cameraMatrices->getViewProjectionMatrix());
 }
 
 void Renderer2d::endScene()

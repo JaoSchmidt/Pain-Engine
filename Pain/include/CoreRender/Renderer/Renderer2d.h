@@ -12,6 +12,10 @@
 namespace pain
 {
 
+struct GridVertex {
+  glm::vec3 position;
+};
+
 struct TextQuadVertex {
   glm::vec3 position;
   glm::vec4 color;
@@ -140,6 +144,12 @@ private:
   ParticleVertex *m_sprayVertexBufferPtr = nullptr;
   uint32_t m_sprayIndexCount = 0;
 
+  // debug grid
+  Shader m_gridShader;
+  bool m_seeGrid = true;
+  VertexArray m_gridVertexArray;
+  VertexBuffer m_gridVertexBuffer;
+
   // texture initializer
   // // TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
   static constexpr uint32_t MaxTextureSlots = 32;
@@ -150,6 +160,7 @@ private:
   IndexBuffer m_quadIB;
   IndexBuffer m_triIB;
   IndexBuffer m_sprayIB;
+  IndexBuffer m_gridIB;
 
   const Texture *m_fontAtlasTexture = nullptr;
   const OrthographicMatrices *m_cameraMatrices = nullptr;
@@ -157,7 +168,7 @@ private:
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                            float globalTime, const glm::mat4 &transform);
-  void drawBatches(const glm::mat4 &viewProjectionMatrix);
+  void draw(const glm::mat4 &viewProjectionMatrix);
   void bindTextures();
   void goBackToFirstVertex();
   float allocateTextures(Texture &texture);
@@ -171,9 +182,10 @@ private:
   void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
                          const std::array<glm::vec2, 4> &textureCoordinate,
                          const std::array<glm::vec4, 4> &textVertexPositions);
-  Renderer2d(IndexBuffer quadIB,               //
-             IndexBuffer triIB,                //
-             IndexBuffer sprayIB,              //
+  Renderer2d(IndexBuffer quadIB,  //
+             IndexBuffer triIB,   //
+             IndexBuffer sprayIB, //
+             IndexBuffer gridIB,
              VertexArray quadVertexArray,      //
              VertexBuffer quadVertexBuffer,    //
              Shader quadTextureShader,         //
@@ -189,10 +201,14 @@ private:
              Shader triShader,               //
              TriVertex *triVertexBufferBase, //
              // spray particle initializer
-             VertexArray sprayVertexArray,   //
-             VertexBuffer sprayVertexBuffer, //
-             Shader sprayShader,             //
-             ParticleVertex *sprayVertexBufferBase);
+             VertexArray sprayVertexArray,          //
+             VertexBuffer sprayVertexBuffer,        //
+             Shader sprayShader,                    //
+             ParticleVertex *sprayVertexBufferBase, //
+             // grid visualizer
+             VertexArray gridVertexArray,
+             VertexBuffer gridVertexBuffer, //
+             Shader gridShader);            //
 };
 
 } // namespace pain

@@ -4,6 +4,7 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "Debugging/OpenGLDebugger.h"
 #include "GUI/ImGuiSystem.h"
 #include "Scripting/State.h"
 #include "glm/fwd.hpp"
@@ -82,7 +83,7 @@ Application *Application::createApplication(const char *title, int w, int h,
 
 #ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);
-  glDebugMessageCallback(Application::glErrorHandler, 0);
+  glDebugMessageCallback(Debug::glErrorHandler, 0);
 #endif
 
   // renderer is created BEFORE the asset manager, as the asset manager retrives
@@ -251,54 +252,4 @@ Application::~Application()
   SDL_Quit();
 }
 
-void Application::glErrorHandler(unsigned int source, unsigned int type,
-                                 unsigned int id, unsigned int severity,
-                                 int lenght, const char *message,
-                                 const void *userParam)
-{
-  // uncomment this if your gpu being too educated with warnings
-  // notification warnings are usually just optimizations anyway
-  if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
-    return;
-
-  if (GL_DEBUG_SEVERITY_HIGH == type || GL_DEBUG_TYPE_ERROR == type) {
-    PLOG_E("-----------------------------------");
-    PLOG_E("Debug message ({}): {}", id, message);
-  } else {
-    PLOG_W("-----------------------------------");
-    PLOG_W("Debug message ({}): {}", id, message);
-  }
-  // clang-format off
-  switch (source)
-  {
-      case GL_DEBUG_SOURCE_API:             PLOG_W(  "Source: API"); break;
-      case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   PLOG_W(  "Source: Window System"); break;
-      case GL_DEBUG_SOURCE_SHADER_COMPILER: PLOG_W(  "Source: Shader Compiler"); break;
-      case GL_DEBUG_SOURCE_THIRD_PARTY:     PLOG_W(  "Source: Third Party"); break;
-      case GL_DEBUG_SOURCE_APPLICATION:     PLOG_W(  "Source: Application"); break;
-      case GL_DEBUG_SOURCE_OTHER:           PLOG_W(  "Source: Other"); break;
-  }
-  switch (type)
-  {
-      case GL_DEBUG_TYPE_ERROR:               PLOG_E(  "Type: Error"); break;
-      case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: PLOG_W(  "Type: Deprecated Behaviour"); break;
-      case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  PLOG_W(  "Type: Undefined Behaviour"); break;
-      case GL_DEBUG_TYPE_PORTABILITY:         PLOG_W(  "Type: Portability"); break;
-      case GL_DEBUG_TYPE_PERFORMANCE:         PLOG_W(  "Type: Performance"); break;
-      case GL_DEBUG_TYPE_MARKER:              PLOG_W(  "Type: Marker"); break;
-      case GL_DEBUG_TYPE_PUSH_GROUP:          PLOG_W(  "Type: Push Group"); break;
-      case GL_DEBUG_TYPE_POP_GROUP:           PLOG_W(  "Type: Pop Group"); break;
-      case GL_DEBUG_TYPE_OTHER:               PLOG_W(  "Type: Other"); break;
-  }
-  switch (severity)
-  {
-      case GL_DEBUG_SEVERITY_HIGH:         PLOG_E(  "Severity: high"); break;
-      case GL_DEBUG_SEVERITY_MEDIUM:       PLOG_W(  "Severity: medium"); break;
-      case GL_DEBUG_SEVERITY_LOW:          PLOG_W(  "Severity: low"); break;
-      case GL_DEBUG_SEVERITY_NOTIFICATION: PLOG_W(  "Severity: notification"); break;
-  }
-	if (GL_DEBUG_SEVERITY_HIGH == type || GL_DEBUG_TYPE_ERROR == type)
-		P_ASSERT(false,"OpenGL critical error");
-  // clang-format on
-}
 } // namespace pain

@@ -8,12 +8,34 @@ namespace pain
 namespace Systems
 {
 
-void CollisionSystem::solidCollision(glm::vec3 &pos1,          //
-                                     glm::vec3 &vel1,          //
-                                     float &translationSpeed1, //
-                                     glm::vec3 &pos2,          //
-                                     glm::vec3 &vel2,          //
-                                     float &translationSpeed2) {};
+void CollisionSystem::solidCollision(glm::vec3 &pos1, //
+                                     glm::vec3 &vel1, //
+                                     glm::vec3 &pos2, //
+                                     glm::vec3 &vel2, //
+                                     float mass1, float mass2)
+{
+  glm::vec3 normal = glm::normalize(pos2 - pos1);
+
+  // vel along normal
+  float v1n = glm::dot(vel1, normal);
+  float v2n = glm::dot(vel2, normal);
+
+  // small check objects are moving apart e.g. collision already made
+  if (v1n - v2n > 0.0f)
+    return;
+
+  // not sure if its correct I just use gpt
+  // --- Perfectly elastic collision response (1D along the normal) ---
+  float newV1n = (v1n * (mass1 - mass2) + 2.0f * mass2 * v2n) / (mass1 + mass2);
+  float newV2n = (v2n * (mass2 - mass1) + 2.0f * mass1 * v1n) / (mass1 + mass2);
+
+  // --- Compute velocity changes along the normal ---
+  glm::vec3 deltaV1 = (newV1n - v1n) * normal;
+  glm::vec3 deltaV2 = (newV2n - v2n) * normal;
+
+  vel1 += deltaV1;
+  vel2 += deltaV2;
+};
 
 bool checkAABBCollision(const glm::vec3 &pos1, const glm::vec2 &size1,
                         const glm::vec3 &pos2, const glm::vec2 &size2)
@@ -79,13 +101,13 @@ void CollisionSystem::onUpdate(double deltaTime)
           if (collisionHappened) {
             if (collider1->m_isTrigger || collider2->m_isTrigger) {
               // TODO: perform trigger callback
+              PLOG_I("Trigger collision happened despite being WIP");
             } else {
-              solidCollision(pos1,                          //
-                             movement1->m_velocityDir,      //
-                             movement1->m_translationSpeed, //
-                             pos2,                          //
-                             movement2->m_velocityDir,      //
-                             movement2->m_translationSpeed);
+              solidCollision(pos1,                  //
+                             movement1->m_velocity, //
+                             pos2,                  //
+                             movement2->m_velocity  //
+              );
             }
           }
         }

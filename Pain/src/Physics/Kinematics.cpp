@@ -15,10 +15,10 @@ void Systems::Kinematics::onUpdate(double deltaTime)
   // =============================================================== //
   {
     PROFILE_SCOPE("Scene::updateSystems - rotation");
-    for (auto it = begin<RotationComponent>(); it != end<RotationComponent>();
-         ++it) {
-      RotationComponent &rc = *it;
-      rc.m_rotation = {cos(rc.m_rotationAngle), sin(rc.m_rotationAngle), 0};
+    for (auto rIt = begin<RotationComponent>(); rIt != end<RotationComponent>();
+         ++rIt) {
+      rIt->m_rotation = {cos(rIt->m_rotationAngle), sin(rIt->m_rotationAngle),
+                         0};
     }
   }
 
@@ -30,8 +30,7 @@ void Systems::Kinematics::onUpdate(double deltaTime)
     auto [tIt, mIt] = begin<TransformComponent, MovementComponent>();
     auto [tItEnd, mItEnd] = end<TransformComponent, MovementComponent>();
     for (; tIt != tItEnd; ++tIt, ++mIt) {
-      const float moveAmount = (float)(mIt->m_translationSpeed * deltaTime);
-      tIt->m_position += mIt->m_velocityDir * moveAmount;
+      tIt->m_position += mIt->m_velocity * static_cast<float>(deltaTime);
     }
   }
 }

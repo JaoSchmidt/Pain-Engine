@@ -1,10 +1,10 @@
-
 #include "CoreRender/Shader.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include "Debugging/OpenGLDebugger.h"
 
 namespace pain
 {
@@ -28,8 +28,16 @@ Shader &Shader::operator=(Shader &&o)
   return *this;
 }
 
-void Shader::bind() const { glUseProgram(m_programId); };
-void Shader::unbind() const { glUseProgram(0); };
+void Shader::bind() const
+{
+  glUseProgram(m_programId);
+  P_OPENGL_CHECK("Failed to bind shader program {}", m_programId);
+};
+void Shader::unbind() const
+{
+  glUseProgram(0);
+  P_OPENGL_CHECK("Failed to unbind shader program");
+};
 
 // ========================================================== //
 // Upload stuff to Shader
@@ -37,6 +45,7 @@ void Shader::unbind() const { glUseProgram(0); };
 
 GLint Shader::getUniformLocation(const std::string &name) const
 {
+  // TODO: getUniformLocation IS SLOW. Should be cached if possible later
   GLint location = glGetUniformLocation(m_programId, name.c_str());
   P_ASSERT_W(location != -1, "Uniform {} was not found on shader program {}",
              name, std::to_string(m_programId));
@@ -46,26 +55,34 @@ void Shader::uploadUniformInt(const std::string &name, int value)
 {
   GLint location = getUniformLocation(name);
   glUniform1i(location, value);
+  P_OPENGL_CHECK("Value {} could not be uploaded to uniform {}", value, name);
 }
 void Shader::uploadUniformFloat(const std::string &name, float value)
 {
   GLint location = getUniformLocation(name);
   glUniform1f(location, value);
+  P_OPENGL_CHECK("Value {} could not be uploaded to uniform {}", value, name);
 }
 void Shader::uploadUniformFloat2(const std::string &name, const glm::vec2 &val)
 {
   GLint location = getUniformLocation(name);
   glUniform2f(location, val.x, val.y);
+  P_OPENGL_CHECK("Vec2 ({}, {}) could not be uploaded to uniform {}",
+                 TP_VEC2(val), name);
 }
 void Shader::uploadUniformFloat3(const std::string &name, const glm::vec3 &val)
 {
   GLint location = getUniformLocation(name);
   glUniform3f(location, val.x, val.y, val.z);
+  P_OPENGL_CHECK("Vec3 ({}, {}, {}) could not be uploaded to uniform {}",
+                 TP_VEC3(val), name);
 }
 void Shader::uploadUniformFloat4(const std::string &name, const glm::vec4 &val)
 {
   GLint location = getUniformLocation(name);
   glUniform4f(location, val.x, val.y, val.z, val.w);
+  P_OPENGL_CHECK("Vec4 ({}, {}, {}, {}) could not be uploaded to uniform {}",
+                 TP_VEC4(val), name);
 }
 void Shader::uploadUniformMat3(const std::string &name, const glm::mat3 &matrix)
 {
@@ -94,6 +111,8 @@ uint32_t Shader::compileShader(uint32_t type, const std::string &source)
   const char *src = source.c_str();
   glShaderSource(id, 1, &src, nullptr);
   glCompileShader(id);
+  P_OPENGL_CHECK("Failed to create shader of type {}",
+                 type == GL_VERTEX_SHADER ? "vertex" : "fragment");
 
   int result;
   glGetShaderiv(id, GL_COMPILE_STATUS, &result);

@@ -54,10 +54,6 @@ public:
   sol::state &getLuaState() { return m_luaState; };
   Renderer2d &getRenderer() { return m_renderer; }
 
-  static void glErrorHandler(unsigned int source, unsigned int type,
-                             unsigned int id, unsigned int severity, int lenght,
-                             const char *message, const void *userParam);
-
   // ECS
   // clang-format off
   void inline pushScene(const std::string &name, Scene *scene) { m_sceneManager->addScene(name,scene); }

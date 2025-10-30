@@ -20,12 +20,11 @@ OrthoCamera::OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel)
       OrthoCameraComponent{aspectRatio, zoomLevel},
       NativeScriptComponent{}
   );
-  // clang-format off
+  // clang-format on
 };
 // OrthoCameraScript inherits ExtendedEntity
-inline void
-OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
-                                           const float rotation)
+inline void OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
+                                                   const float rotation)
 {
   getComponent<OrthoCameraComponent>().m_camera->RecalculateViewMatrix(
       position, rotation);
@@ -34,22 +33,34 @@ OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
 void OrthoCameraScript::onUpdate(double deltaTimeSec)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-  auto [mc, tc, cc, rc] = getComponents<MovementComponent,TransformComponent,OrthoCameraComponent,RotationComponent>();
+  auto [mc, tc, cc, rc] =
+      getComponents<MovementComponent, TransformComponent, OrthoCameraComponent,
+                    RotationComponent>();
 
-  mc.m_velocityDir =
-      (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
-                             : glm::vec3(0.0)) +
-      (state[SDL_SCANCODE_S] ? glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
-                             : glm::vec3(0.0)) +
-      (state[SDL_SCANCODE_A] ? -rc.m_rotation : glm::vec3(0.0)) +
-      (state[SDL_SCANCODE_D] ? rc.m_rotation : glm::vec3(0.0));
+  glm::vec3 moveDir{0.0f};
+
+  if (state[SDL_SCANCODE_W])
+    moveDir += -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+  if (state[SDL_SCANCODE_S])
+    moveDir += glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+  if (state[SDL_SCANCODE_A])
+    moveDir += -rc.m_rotation;
+  if (state[SDL_SCANCODE_D])
+    moveDir += rc.m_rotation;
+
+  // Normalize movement direction (avoid diagonal speed boost)
+  if (glm::length(moveDir) > 0.0001f)
+    moveDir = glm::normalize(moveDir);
+
+  float moveSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
+  mc.m_velocity = moveDir * moveSpeed;
 
   if (state[SDL_SCANCODE_Q])
-    rc.m_rotationAngle += mc.m_rotationSpeed * (float) deltaTimeSec;
+    rc.m_rotationAngle += mc.m_rotationSpeed * static_cast<float>(deltaTimeSec);
   if (state[SDL_SCANCODE_E])
-    rc.m_rotationAngle -= mc.m_rotationSpeed * (float) deltaTimeSec;
+    rc.m_rotationAngle -= mc.m_rotationSpeed * static_cast<float>(deltaTimeSec);
 
-  mc.m_translationSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
+  tc.m_position += mc.m_velocity * static_cast<float>(deltaTimeSec);
   recalculatePosition(tc.m_position, rc.m_rotationAngle);
 }
 
@@ -66,9 +77,9 @@ void OrthoCameraScript::onEvent(const SDL_Event &event)
 }
 
 void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
-                                            OrthoCameraComponent &cc)
+                                        OrthoCameraComponent &cc)
 {
-  cc.m_zoomLevel -= (float) event.wheel.y * m_zoomSpeed;
+  cc.m_zoomLevel -= (float)event.wheel.y * m_zoomSpeed;
   cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
   cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
                              cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
@@ -76,7 +87,7 @@ void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
 }
 
 void OrthoCameraScript::onWindowResized(const SDL_Event &event,
-                                            OrthoCameraComponent &cc)
+                                        OrthoCameraComponent &cc)
 {
   cc.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
   cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,

@@ -22,15 +22,13 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
     auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
     const auto &[tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
     for (; tIt != tItEnd; ++tIt, ++sIt) {
-      const TransformComponent &tc = *tIt;
-      const SpriteComponent &sc = *sIt;
-      if (sc.m_textureSheetId == -1)
-        renderer.drawQuad(tc.m_position, sc.m_size, sc.m_color, sc.getTexture(),
-                          sc.m_tilingFactor);
+      if (sIt->m_textureSheetId == -1)
+        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                          sIt->getTexture(), sIt->m_tilingFactor);
       else
-        renderer.drawQuad(tc.m_position, sc.m_size, sc.m_color,
-                          sc.getTextureFromTextureSheet(), sc.m_tilingFactor,
-                          sc.getCoords());
+        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                          sIt->getTextureFromTextureSheet(),
+                          sIt->m_tilingFactor, sIt->getCoords());
     }
   }
   {
@@ -41,9 +39,16 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
         end<TransformComponent, SpriteComponent, RotationComponent>();
 
     for (; tIt != tItEnd; ++tIt, ++rIt, ++sIt) {
-      renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                        rIt->m_rotationAngle, sIt->getTexture(),
-                        sIt->m_tilingFactor);
+      // renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+      //                   rIt->m_rotationAngle, sIt->getTexture(),
+      //                   sIt->m_tilingFactor);
+      if (sIt->m_textureSheetId == -1)
+        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                          sIt->getTexture(), sIt->m_tilingFactor);
+      else
+        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                          sIt->getTextureFromTextureSheet(),
+                          sIt->m_tilingFactor, sIt->getCoords());
       // TODO: Remove m_rotation of rc... should only
       // have angle, in the case of the camera
       // inclune rot direction in its script

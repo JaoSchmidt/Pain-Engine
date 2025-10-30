@@ -16,12 +16,11 @@ struct CollisionSystem : public System<ComponentManager> {
   void onUpdate(double dt);
 
   GridManager m_gridManager;
-  void solidCollision(glm::vec3 &pos1,          //
-                      glm::vec3 &vel1,          //
-                      float &translationSpeed1, //
-                      glm::vec3 &pos2,          //
-                      glm::vec3 &vel2,          //
-                      float &translationSpeed2);
+  void solidCollision(glm::vec3 &pos1, //
+                      glm::vec3 &vel1, //
+                      glm::vec3 &pos2, //
+                      glm::vec3 &vel2, //
+                      float mass1 = 1.f, float mass2 = 1.f);
 };
 
 } // namespace Systems

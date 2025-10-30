@@ -7,8 +7,9 @@
 #include "Physics/Collision/GridManager.h"
 
 class Asteroid : public pain::NormalEntity<pain::TransformComponent, //
-                                           pain::SpriteComponent,    //
                                            pain::MovementComponent,  //
+                                           pain::RotationComponent,  //
+                                           pain::SpriteComponent,    //
                                            pain::ColliderComponent>  //
 {
 public:

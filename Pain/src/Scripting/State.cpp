@@ -51,9 +51,8 @@ sol::state createLuaState()
   );
   // type returned by get_movement(self)
   lua.new_usertype<MovementComponent>(
-      "MovementComponent", sol::no_constructor,                     //
-      "m_velocity", &MovementComponent::m_velocityDir,              //
-      "m_translationSpeed", &MovementComponent::m_translationSpeed, //
+      "MovementComponent", sol::no_constructor,     //
+      "m_velocity", &MovementComponent::m_velocity, //
       "m_rotationSpeed", &MovementComponent::m_rotationSpeed);
 
   // type returned by get_position(self)

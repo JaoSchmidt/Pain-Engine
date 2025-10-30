@@ -297,6 +297,9 @@ if(UNIX OR APPLE)
     COMMAND
       rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
       "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
+    COMMAND
+      rsync -av "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
+      "${PROJECT_SOURCE_DIR}/resources/"
     COMMENT "Syncing resources folder"
   )
   # Add dependency to sync_resources target on make

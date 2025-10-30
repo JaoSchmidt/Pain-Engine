@@ -65,7 +65,7 @@ out vec4 FragColor;
 
 void main()
 {   
-		vec3 colorStart = vec3(0.9, 0.5, 0.0); // Orange
+	vec3 colorStart = vec3(0.9, 0.5, 0.0); // Orange
     vec3 colorEnd = vec3(0.5, 0.5, 0.5);   // Gray
 
     // Fetch the texture color (assuming a texture with transparency for smooth edges)
