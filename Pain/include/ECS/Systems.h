@@ -1,4 +1,6 @@
+// Systems.h
 #pragma once
+
 #include "ECS/Registry/ArcheRegistry.h"
 #include <iostream>
 
@@ -7,7 +9,6 @@ namespace pain
 template <typename CM> struct System {
 public:
   System(reg::ArcheRegistry<CM> &archetype) : m_registry(archetype) {};
-  ~System() { std::cout << "System destructed\n"; }
 
   // Move constructor
   System(System &&other) noexcept : m_registry(other.m_registry)

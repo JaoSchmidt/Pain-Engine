@@ -1,6 +1,7 @@
-#include "Scripting/LuaScriptSystem.h"
+#include "Scripting/LuaScriptSys.h"
 #include "Debugging/Profiling.h"
 #include "Scripting/Component.h"
+#include <CoreRender/Renderer/Renderer2d.h>
 #include <sol/error.hpp>
 #include <sol/protected_function_result.hpp>
 

@@ -1,15 +1,14 @@
 #pragma once
 
-#include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Systems.h"
 
 namespace pain
 {
+struct Renderer2d;
 namespace Systems
 {
 struct Render : public System<ComponentManager> {
   using System::System;
-  ~Render() { std::cout << "Render destructed\n"; }
 
   Render(Render &&other) noexcept : System(std::move(other))
   {

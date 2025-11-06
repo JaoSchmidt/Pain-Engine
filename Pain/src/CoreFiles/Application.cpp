@@ -5,7 +5,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/OpenGLDebugger.h"
-#include "GUI/ImGuiSystem.h"
+#include "GUI/ImGuiSys.h"
 #include "Scripting/State.h"
 #include "glm/fwd.hpp"
 #include <SDL2/SDL_timer.h>
@@ -111,11 +111,10 @@ Application *Application::createApplication(const char *title, int w, int h,
 /* Creates window, opengl context and init glew*/
 Application::Application(sol::state &&luaState, SDL_Window *window,
                          void *context)
-    : m_endGameFlags(), m_window(window), m_context(context),
-      m_renderer(Renderer2d::createRenderer2d()),
-      m_luaState(std::move(luaState)),
-      m_sceneManager(std::make_unique<SceneManager>()),
-      m_defaultImGuiInstance(new EngineController()) {};
+    : m_renderer(Renderer2d::createRenderer2d()),
+      m_defaultImGuiInstance(new EngineController()),
+      m_luaState(std::move(luaState)), m_endGameFlags(), m_window(window),
+      m_context(context) {};
 
 void Application::stopLoop(bool restartFlag)
 {
@@ -164,10 +163,7 @@ EndGameFlags Application::run()
 
       // renderAccumulator += deltaSeconds;
       while (accumulator >= m_fixedUpdateTime) {
-        for (auto pScene = m_sceneManager->begin();
-             pScene != m_sceneManager->end(); ++pScene) {
-          (*pScene)->updateSystems(m_fixedUpdateTime);
-        }
+        m_worldSceneSys->updateSystems(m_fixedUpdateTime);
         accumulator -= m_fixedUpdateTime;
       }
     }
@@ -199,11 +195,7 @@ EndGameFlags Application::run()
         default:
           break;
         }
-        // Handle each specific event
-        for (auto pScene = m_sceneManager->begin();
-             pScene != m_sceneManager->end(); ++pScene) {
-          (*pScene)->updateSystems(event);
-        }
+        m_worldSceneSys->updateSystems(event);
       }
     }
     // =============================================================== //
@@ -218,12 +210,9 @@ EndGameFlags Application::run()
       m_renderer.clear();
 
       double globalTime = lastFrameTime.GetSeconds();
-      for (auto pScene = m_sceneManager->begin();
-           pScene != m_sceneManager->end(); ++pScene) {
-        m_renderer.beginScene(globalTime);
-        (*pScene)->renderSystems(m_renderer, m_isMinimized, globalTime);
-        m_renderer.endScene();
-      }
+      m_renderer.beginScene(globalTime);
+      m_worldSceneSys->renderSystems(m_renderer, m_isMinimized, globalTime);
+      m_renderer.endScene();
       P_ASSERT(m_window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_window);
     }

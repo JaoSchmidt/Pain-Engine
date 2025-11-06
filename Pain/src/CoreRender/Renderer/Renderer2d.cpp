@@ -26,9 +26,11 @@ void Renderer2d::setClearColor(const glm::vec4 &color)
 {
   glClearColor(color.r, color.g, color.b, color.a);
 }
-void Renderer2d::changeCamera(const OrthographicMatrices &cameraMatrices)
+void Renderer2d::changeCamera(const OrthographicMatrices &cameraMatrices,
+                              const OrthoCamera &camera)
 {
   m_cameraMatrices = &cameraMatrices;
+  m_orthoCamera = &camera;
 }
 
 void Renderer2d::beginScene(float globalTime, const glm::mat4 &transform)
@@ -36,7 +38,7 @@ void Renderer2d::beginScene(float globalTime, const glm::mat4 &transform)
   PROFILE_FUNCTION();
 
   uploadBasicUniforms(m_cameraMatrices->getViewProjectionMatrix(), globalTime,
-                      transform);
+                      transform, m_cameraMatrices->getResolution());
   goBackToFirstVertex();
 }
 

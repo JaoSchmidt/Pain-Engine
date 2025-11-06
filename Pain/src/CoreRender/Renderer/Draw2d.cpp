@@ -184,29 +184,34 @@ Renderer2d Renderer2d::createRenderer2d()
   // =============================================================== //
   // Create Grid
   // =============================================================== //
+
+  float gridVertices[] = {
+      -1.0f, -1.0f, 0.0f, //
+      1.0f,  -1.0f, 0.0f, //
+      1.0f,  1.0f,  0.0f, //
+      -1.0f, 1.0f,  0.0f,
+  }; //
+
+  unsigned int gridIndices[] = {0, 1, 2, 2, 3, 0};
+
+  auto gridVertexBuffer = VertexBuffer::createStaticVertexBuffer(
+      gridVertices, sizeof(gridVertices),
+      {{ShaderDataType::Float3, "a_Position"}});
+
+  auto gridIB = IndexBuffer::createIndexBuffer(
+      gridIndices, sizeof(gridIndices) / sizeof(gridIndices[0]));
+  auto gridVertexArray =
+      VertexArray::createVertexArray(*gridVertexBuffer, *gridIB);
+
   auto gridShader = Shader::createFromFile(
       "resources/default/shaders/InfiniteGrid.glsl"); // or your shader loader
   P_ASSERT(gridShader,
            "The grid shader could not be created, something went wrong");
   gridShader->bind();
   gridShader->uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
-  gridShader->uploadUniformFloat("u_CellSize", 1.0f);
+  gridShader->uploadUniformFloat("u_CellSize", 0.2f);
+  gridShader->uploadUniformFloat("u_Thickness", 0.05f);
   gridShader->uploadUniformFloat3("u_Center", glm::vec3(0.0f, 0.0f, 0.0f));
-
-  float vertices[] = {-1.0f, -1.0f, 0.0f,  //
-                      1.0f,  -1.0f, 0.0f,  //
-                      1.0f,  1.0f,  0.0f,  //
-                      -1.0f, 1.0f,  0.0f}; //
-
-  unsigned int gridIndices[] = {0, 1, 2, 2, 3, 0};
-
-  auto gridVertexBuffer = VertexBuffer::createVertexBuffer(
-      vertices, sizeof(GridVertex), {{ShaderDataType::Float3, "a_pos"}});
-  // gridIndexes is not defined yet
-  auto gridIB = IndexBuffer::createIndexBuffer(gridIndices, 1);
-  auto gridVertexArray =
-      VertexArray::createVertexArray(*gridVertexBuffer, *gridIB);
-
   // =============================================================== //
   // Create Renderer
   // =============================================================== //
@@ -254,13 +259,13 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   // SINGLE OBJECTS ONLY i.e NO BATCHES
   // =============================================================== //
   // =============================================================== //
+
   // if (m_seeGrid) {
-  m_gridIB.bind();
   m_gridVertexArray.bind();
   m_gridVertexBuffer.bind();
   m_gridShader.bind();
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-  glBindTexture(GL_TEXTURE_2D, 0);
+  // glBindTexture(GL_TEXTURE_2D, 0);
   // }
   // =============================================================== //
   // =============================================================== //
@@ -379,7 +384,8 @@ void Renderer2d::goBackToFirstVertex()
 
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                                      float globalTime,
-                                     const glm::mat4 &transform)
+                                     const glm::mat4 &transform,
+                                     const glm::ivec2 &resolution)
 {
   PROFILE_FUNCTION();
   m_quadTextureShader.bind();
@@ -403,6 +409,9 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
 
   m_gridShader.bind();
   m_gridShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
+  m_gridShader.uploadUniformMat4("u_Transform", transform);
+  m_gridShader.uploadUniformFloat2("u_Resolution",
+                                   glm::vec2(resolution.x, resolution.y));
 }
 
 float Renderer2d::allocateTextures(Texture &texture)
@@ -570,21 +579,26 @@ Renderer2d::Renderer2d(IndexBuffer quadIB,  //
       m_quadVertexBuffer(std::move(quadVertexBuffer)),                   //
       m_quadTextureShader(std::move(quadTextureShader)),                 //
       m_quadVertexBufferBase(quadVertexBufferBase),                      //
+                                                                         //
       m_textVertexArray(std::move(textVertexArray)),                     //
       m_textVertexBuffer(std::move(textVertexBuffer)),                   //
       m_textTextureShader(std::move(textTextureShader)),                 //
       m_textVertexBufferBase(textVertexBufferBase),                      //
+                                                                         //
       m_triVertexArray(std::move(triVertexArray)),                       //
       m_triVertexBuffer(std::move(triVertexBuffer)),                     //
       m_triShader(std::move(triShader)),                                 //
       m_triVertexBufferBase(triVertexBufferBase),                        //
+                                                                         //
       m_sprayVertexArray(std::move(sprayVertexArray)),                   //
       m_sprayVertexBuffer(std::move(sprayVertexBuffer)),                 //
       m_sprayShader(std::move(sprayShader)),                             //
       m_sprayVertexBufferBase(sprayVertexBufferBase),                    //
+                                                                         //
       m_gridShader(std::move(gridShader)),                               //
       m_gridVertexArray(std::move(gridVertexArray)),                     //
       m_gridVertexBuffer(std::move(gridVertexBuffer)),                   //
+                                                                         //
       m_textureSlots({&resources::getDefaultTexture(resources::BLANK)}), //
       m_quadIB(std::move(quadIB)),                                       //
       m_triIB(std::move(triIB)),                                         //

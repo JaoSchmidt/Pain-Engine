@@ -16,11 +16,13 @@ public:
   {
     return m_ViewProjectionCacheMatrix;
   }
+  const glm::ivec2 &getResolution() const { return m_resolution; };
 
 protected:
   glm::mat4 m_ProjectionMatrix;
   glm::mat4 m_ViewMatrix;
   glm::mat4 m_ViewProjectionCacheMatrix;
+  glm::ivec2 m_resolution;
 };
 
 class OrthographicMatrices : public CameraMatrices

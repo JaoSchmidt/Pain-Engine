@@ -1,6 +1,7 @@
 #include <iostream>
 #include <pain.h>
 
+#include "Assets/DefaultTexture.h"
 #include "Asteroid.h"
 #include "Player.h"
 #include "Stars.h"
@@ -12,17 +13,19 @@
 class MainScript : public pain::ExtendedEntity
 {
 public:
-  static void createScript(pain::Scene &scene, float aspectRatio, float zoom,
-                           pain::Application *app)
+  static pain::Scene &createScriptScene(int resWeight, int resHeight,
+                                        float zoom, pain::Application *app)
   {
+    pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{});
+
     // create the camera
-    std::unique_ptr<pain::OrthoCamera> orthocamera =
-        std::make_unique<pain::OrthoCamera>(&scene, aspectRatio, zoom);
-    orthocamera->withScript<pain::OrthoCameraScript>(scene);
+    pain::OrthoCamera orthocamera = {&scene, resWeight, resHeight, zoom};
+    orthocamera.withScript<pain::OrthoCameraScript>(scene);
     app->setRendererCamera(
         *(std::as_const(orthocamera)
-              ->getComponent<pain::OrthoCameraComponent>(scene)
-              .m_camera));
+              .getComponent<pain::OrthoCameraComponent>(scene)
+              .m_matrices),
+        orthocamera);
 
     // dummy.reset(new Dummy(&scene, {0.23f, 0.54f}, {1.f, 1.f},
     //                       {9.f, 0.f, 5.f, 1.f}, &m_texture, 1.f));
@@ -69,21 +72,26 @@ public:
                       randomPos,                                    //
                       randomVel};
       asteroids.emplace_back(std::move(ast));
-      scene.insertStaticCollider(ast.getEntity());
+      // scene.insertStaticCollider(ast.getEntity());
     }
-    scene.withScript<MainScript>(aspectRatio, zoom, app, std::move(stars),
-                                 std::move(orthocamera), std::move(asteroids));
+    scene.withScript<MainScript>(std::move(stars), std::move(orthocamera),
+                                 std::move(asteroids));
+    return scene;
+  }
+  void onRender(pain::Renderer2d &renderer, bool minimazed, double deltatime)
+  {
+    renderer.drawQuad(
+        {0.2f, -0.2f}, {0.3f, 0.4f}, {0.2f, 0.3f, 0.9f, 1.f},
+        pain::resources::getDefaultTexture(pain::resources::BLANK, false));
   }
 
-  MainScript(reg::Entity entity, pain::Scene &scene, float aspectRatio,
-             float zoom, pain::Application *app, std::vector<Stars> &&stars,
-             std::unique_ptr<pain::OrthoCamera> orthocamera,
-             std::vector<Asteroid> &&ast)
+  MainScript(reg::Entity entity, pain::Scene &scene, std::vector<Stars> &&stars,
+             pain::OrthoCamera &&orthocamera, std::vector<Asteroid> &&ast)
       : ExtendedEntity(entity, scene), m_orthocamera(std::move(orthocamera)),
         m_stars(std::move(stars)), m_asteroids(std::move(ast)) {};
 
   std::vector<std::vector<int>> m_backgroundMap;
-  std::unique_ptr<pain::OrthoCamera> m_orthocamera;
+  pain::OrthoCamera m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::vector<Stars> m_stars;
   std::vector<Asteroid> m_asteroids;
@@ -107,13 +115,10 @@ pain::Application *pain::createApplication()
   const int height = 1000;
   Application *app = Application::createApplication(title, width, height);
 
-  Scene *scene = app->createScenePtr<Scene>("main", NativeScriptComponent{});
-  MainScript::createScript(*scene, (float)width / height, 1.0f, app);
+  MainScript::createScriptScene(width, height, 2.0f, app);
   // Scene *scene = new MainScene(app->getLuaState());
   // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
 
-  app->pushScene("main", scene);
-  app->attachScene("main");
   return app;
 }
 

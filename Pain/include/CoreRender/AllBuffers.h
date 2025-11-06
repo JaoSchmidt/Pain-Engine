@@ -14,7 +14,8 @@ public:
   static std::optional<VertexBuffer> createVertexBuffer(uint32_t size,
                                                         BufferLayout &&layout);
   static std::optional<VertexBuffer>
-  createVertexBuffer(float *vertices, uint32_t size, BufferLayout &&layout);
+  createStaticVertexBuffer(float *vertices, uint32_t size,
+                           BufferLayout &&layout);
   VertexBuffer(VertexBuffer &&o);
   VertexBuffer &operator=(VertexBuffer &&o);
   NONCOPYABLE(VertexBuffer)
@@ -23,6 +24,7 @@ public:
   void bind() const;
   void unbind() const;
 
+  const uint32_t getId() const { return m_bufferId; }
   inline const BufferLayout &getLayout() const { return m_layout; }
   void setData(const void *data, uint32_t size);
 

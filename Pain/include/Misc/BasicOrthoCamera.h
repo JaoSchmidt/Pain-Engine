@@ -1,3 +1,4 @@
+// BasicOrthoCamera.h
 #pragma once
 
 #include "Core.h"
@@ -8,13 +9,17 @@
 namespace pain
 {
 
+class Scene;
 class OrthoCamera
     : public NormalEntity<MovementComponent, RotationComponent,
                           TransformComponent, OrthoCameraComponent,
                           NativeScriptComponent>
 {
 public:
-  OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel);
+  MOVABLE(OrthoCamera)
+  NONCOPYABLE(OrthoCamera)
+  OrthoCamera(Scene *scene, int resolutionHeight, int resolutionWeight,
+              float zoomLevel);
 };
 
 class OrthoCameraScript : public ExtendedEntity

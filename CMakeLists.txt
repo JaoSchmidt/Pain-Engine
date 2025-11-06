@@ -316,4 +316,31 @@ else()
   add_dependencies(${LIBRARY_NAME} sync_resources)
 endif()
 
+# =========== Dump shit to separete the compiler vomiting information ======
+# get current date (every build)
+# set(COLOR_GREEN "\x1b[1;32m")
+# set(COLOR_BLUE  "\x1b[1;34m")
+# set(COLOR_RESET "\x1b[0m")
+# string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
+
+
+string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
+
+if(UNIX)
+  add_custom_target(BuildBanner ALL
+    COMMAND printf "\\n\\033[1;32m==========================================================================================\\n"
+    COMMAND printf "  BUILD:   ${PROJECT_NAME}\\n"
+    COMMAND printf "  VERSION:   ${PROJECT_VERSION}\\n"
+    COMMAND printf "  TYPE:    ${CMAKE_BUILD_TYPE}\\n"
+    COMMAND printf "  STANDARD:  C++${CMAKE_CXX_STANDARD}\\n"
+    COMMAND printf "  COMPILER: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\\n"
+    COMMAND printf "  SOURCE:    ${CMAKE_SOURCE_DIR}\\n"
+    COMMAND printf "  BINARY:    ${CMAKE_BINARY_DIR}\\n"
+    COMMAND printf "  DATE:    ${NOW}\\n"
+    COMMAND printf "==========================================================================================\\033[0m\\n\\n"
+    VERBATIM
+  )
+endif()
+
+# =========================================================================
 add_subdirectory(${GAME_FOLDER})

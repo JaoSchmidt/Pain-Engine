@@ -93,8 +93,8 @@ void VertexBuffer::bind() const
 void VertexBuffer::unbind() const { glBindBuffer(GL_ARRAY_BUFFER, 0); }
 
 std::optional<VertexBuffer>
-VertexBuffer::createVertexBuffer(float *vertices, uint32_t size,
-                                 BufferLayout &&layout)
+VertexBuffer::createStaticVertexBuffer(float *vertices, uint32_t size,
+                                       BufferLayout &&layout)
 {
   uint32_t bufferId = 0;
   glGenBuffers(1, &bufferId);

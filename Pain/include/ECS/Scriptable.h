@@ -6,7 +6,6 @@
 #include "ECS/Registry/Entity.h"
 #include "ECS/Scene.h"
 
-#include "ECS/Components/NativeScript.h"
 #include "GUI/ImGuiComponent.h"
 namespace pain
 {
@@ -65,6 +64,7 @@ class ExtendedEntity
 public:
   ExtendedEntity(reg::Entity entity, Scene &scene)
       : m_scene(scene), m_entity(entity) {};
+  NONCOPYABLE(ExtendedEntity)
   // ---------------------------------------------------- //
   // Get components from archetypes
   // ---------------------------------------------------- //
@@ -104,6 +104,10 @@ public:
     return m_scene.get().containsAllComponents<TargetComponents...>();
   }
   explicit operator bool() const { return m_entity != -1; }
+
+  // ------------------------------------------------------------ //
+  // MOVE CONSTRUCTORS AND ASSGINMENT
+  // ------------------------------------------------------------ //
   ExtendedEntity(ExtendedEntity &&other) noexcept
       : m_scene(other.m_scene),
         m_entity(std::exchange(other.m_entity, reg::Entity{-1})) {};

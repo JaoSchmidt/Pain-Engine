@@ -8,6 +8,7 @@
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 #include "ECS/Components/Particle.h"
+#include "Misc/BasicOrthoCamera.h"
 
 namespace pain
 {
@@ -49,7 +50,9 @@ struct Renderer2d {
   static Renderer2d createRenderer2d();
   Renderer2d &operator=(Renderer2d &&o) noexcept;
   ~Renderer2d();
-  void changeCamera(const OrthographicMatrices &cameraMatrices);
+  // void changeCamera(const OrthographicMatrices &cameraMatrices);
+  void changeCamera(const OrthographicMatrices &cameraMatrices,
+                    const OrthoCamera &camera);
   // ================================================================= //
   // Renderer basic wrapper around opengl
   // ================================================================= //
@@ -164,10 +167,12 @@ private:
 
   const Texture *m_fontAtlasTexture = nullptr;
   const OrthographicMatrices *m_cameraMatrices = nullptr;
+  const OrthoCamera *m_orthoCamera = nullptr;
 
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                           float globalTime, const glm::mat4 &transform);
+                           float globalTime, const glm::mat4 &transform,
+                           const glm::ivec2 &resolution);
   void draw(const glm::mat4 &viewProjectionMatrix);
   void bindTextures();
   void goBackToFirstVertex();

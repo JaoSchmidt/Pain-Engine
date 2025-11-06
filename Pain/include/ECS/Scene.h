@@ -1,18 +1,12 @@
+// Scene.h
 #pragma once
 
 #include "Core.h"
-#include "CoreFiles/LogWrapper.h"
-#include "CoreRender/System.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Registry/Entity.h"
-#include "ECS/WithScript.h"
-#include "GUI/ImGuiSystem.h"
-#include "Physics/Collision/CollisionSystem.h"
-#include "Physics/Kinematics.h"
-#include "Scripting/LuaScriptSystem.h"
+#include "GUI/ImGuiComponent.h"
 #include "Scripting/NativeSystem.h"
 
-#include <queue>
 #include <sol/sol.hpp>
 #include <utility>
 
@@ -23,31 +17,40 @@ class Scene
 private:
   reg::ArcheRegistry<ComponentManager> m_registry;
   sol::state &m_luaState;
-  std::string m_name = "NULL scene name";
-
-public:
   reg::Entity m_entity;
 
+public:
+  reg::ArcheRegistry<ComponentManager> &getRegistry() { return m_registry; };
+  reg::Entity getEntity() const { return m_entity; }
   void insertStaticCollider(reg::Entity entity);
+  sol::state &getSharedLuaState() { return m_luaState; }
+  inline reg::Entity createEntity() { return m_registry.createEntity(); }
+  // ---------------------------------------------------- //
+  // Constructors
+  // ---------------------------------------------------- //
   template <typename... Components>
-  Scene(std::string &name, void *context, SDL_Window *window,
-        sol::state &solState)
-      : m_registry(), m_luaState(solState), m_name(name),
-        m_entity(createEntity()), m_imGuiSystem(m_registry, context, window){};
+  Scene(sol::state &solState)
+      : m_registry(), m_luaState(solState), m_entity(createEntity()){};
   template <typename... Components>
-  Scene(std::string &name, void *context, SDL_Window *window,
-        sol::state &luaState, Components &&...args)
-      : m_registry(), m_luaState(luaState), m_name(name),
-        m_entity(createEntity()), m_imGuiSystem(m_registry, context, window)
+  Scene(sol::state &luaState, Components &&...args)
+      : m_registry(), m_luaState(luaState), m_entity(createEntity())
   {
     createComponents<Components...>(m_entity,
                                     std::forward<Components>(args)...);
   };
-  inline reg::Entity createEntity() { return m_registry.createEntity(); }
+  // ---------------------------------------------------- //
+  // Scripts
+  // ---------------------------------------------------- //
+  template <typename T> void withScript(T &&t)
+  {
+    NativeScriptComponent &nsc =
+        m_registry.getComponent<NativeScriptComponent>(m_entity);
+    nsc.bindAndInitiate<T>(std::move(t));
+    if (nsc.instance && nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
+  }
   template <typename T, typename... Args> void withScript(Args &&...args)
   {
-    // SceneHelper::withScript<T>(m_entity, m_registry, *this,
-    //                            std::forward<Args>(args)...);
     NativeScriptComponent &nsc =
         m_registry.getComponent<NativeScriptComponent>(m_entity);
     nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);
@@ -55,17 +58,21 @@ public:
       nsc.onCreateFunction(nsc.instance);
   }
 
+  template <typename T> void withImGuiScript(T &&t)
+  {
+    ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
+    nsc.bindAndInitiate<T>(std::move(t));
+    if (nsc.instance && nsc.onCreateFunction)
+      nsc.onCreateFunction(nsc.instance);
+  }
   template <typename T, typename... Args> void withImGuiScript(Args &&...args)
   {
     ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
     nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
-    // SceneHelper::withImGuiScript<T>(m_entity, m_registry, *this,
-    //                                 std::forward<Args>(args)...);
   }
 
-  sol::state &getSharedLuaState() { return m_luaState; }
   // ---------------------------------------------------- //
   // Component Archetype stuff
   // ---------------------------------------------------- //
@@ -162,29 +169,5 @@ public:
   {
     return m_registry.end<Components...>();
   }
-
-  // ---------------------------------------------------- //
-  // Systems
-  // ---------------------------------------------------- //
-
-  void updateSystems(double deltaTime);
-  void updateSystems(const SDL_Event &event);
-  // template <typename... Args> void renderSystems(Args... args);
-
-  template <typename... Args> void renderSystems(Args &&...args)
-  {
-    m_renderSystem.onRender(std::forward<Args>(args)...);
-    m_nativeScriptSystem.onRender(std::forward<Args>(args)...);
-    m_imGuiSystem.onRender(std::forward<Args>(args)...);
-    m_luaSystem.onRender(std::forward<Args>(args)...);
-  }
-
-private:
-  Systems::Render m_renderSystem = {m_registry};
-  Systems::Kinematics m_kinematicsSystem = {m_registry};
-  Systems::NativeScript m_nativeScriptSystem = {m_registry};
-  Systems::ImGui m_imGuiSystem;
-  Systems::LuaScript m_luaSystem = {m_registry};
-  Systems::CollisionSystem m_collisionSystem = {16.f, m_registry};
 };
 } // namespace pain

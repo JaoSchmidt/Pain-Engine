@@ -22,6 +22,7 @@ public:
   NONCOPYABLE(Shader);
   Shader(Shader &&o);
   Shader &operator=(Shader &&o);
+  const uint32_t getId() const { return m_programId; }
 
   void bind() const;
   void unbind() const;
@@ -30,6 +31,9 @@ public:
 
   // upload variables to shaders
   void uploadUniformInt(const std::string &name, int integer);
+  void uploadUniformInt2(const std::string &name, const glm::ivec2 &value);
+  void uploadUniformInt3(const std::string &name, const glm::ivec3 &value);
+  void uploadUniformInt4(const std::string &name, const glm::ivec4 &value);
   void uploadUniformFloat(const std::string &name, float value);
   void uploadUniformFloat2(const std::string &name, const glm::vec2 &value);
   void uploadUniformFloat3(const std::string &name, const glm::vec3 &value);

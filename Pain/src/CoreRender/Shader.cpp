@@ -57,6 +57,28 @@ void Shader::uploadUniformInt(const std::string &name, int value)
   glUniform1i(location, value);
   P_OPENGL_CHECK("Value {} could not be uploaded to uniform {}", value, name);
 }
+void Shader::uploadUniformInt2(const std::string &name, const glm::ivec2 &val)
+{
+  GLint location = getUniformLocation(name);
+  glUniform2i(location, TP_VEC2(val));
+  P_OPENGL_CHECK("Vec ({}, {}) could not be uploaded to uniform {}",
+                 TP_VEC2(val), name);
+}
+void Shader::uploadUniformInt3(const std::string &name, const glm::ivec3 &val)
+{
+  GLint location = getUniformLocation(name);
+  glUniform3i(location, TP_VEC3(val));
+  P_OPENGL_CHECK("Vec3 ({}, {}, {}) could not be uploaded to uniform {}",
+                 TP_VEC3(val), name);
+}
+void Shader::uploadUniformInt4(const std::string &name, const glm::ivec4 &val)
+{
+  GLint location = getUniformLocation(name);
+  glUniform4i(location, TP_VEC4(val));
+  P_OPENGL_CHECK("Vec4 ({}, {}, {}, {}) could not be uploaded to uniform {}",
+                 TP_VEC4(val), name);
+}
+
 void Shader::uploadUniformFloat(const std::string &name, float value)
 {
   GLint location = getUniformLocation(name);
@@ -84,6 +106,7 @@ void Shader::uploadUniformFloat4(const std::string &name, const glm::vec4 &val)
   P_OPENGL_CHECK("Vec4 ({}, {}, {}, {}) could not be uploaded to uniform {}",
                  TP_VEC4(val), name);
 }
+
 void Shader::uploadUniformMat3(const std::string &name, const glm::mat3 &matrix)
 {
   GLint location = getUniformLocation(name);

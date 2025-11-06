@@ -1,6 +1,5 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "CoreRender/Camera.h"
-#include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
@@ -9,7 +8,8 @@
 namespace pain
 {
 
-OrthoCamera::OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel)
+OrthoCamera::OrthoCamera(Scene *scene, int resolutionHeight,
+                         int resolutionWeigh, float zoomLevel)
     : NormalEntity(*scene)
 {
   // clang-format off
@@ -17,7 +17,7 @@ OrthoCamera::OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel)
       MovementComponent{},
       RotationComponent{},
       TransformComponent{},
-      OrthoCameraComponent{aspectRatio, zoomLevel},
+      OrthoCameraComponent{(float) resolutionWeigh/resolutionHeight, zoomLevel},
       NativeScriptComponent{}
   );
   // clang-format on
@@ -26,7 +26,7 @@ OrthoCamera::OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel)
 inline void OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
                                                    const float rotation)
 {
-  getComponent<OrthoCameraComponent>().m_camera->RecalculateViewMatrix(
+  getComponent<OrthoCameraComponent>().m_matrices->RecalculateViewMatrix(
       position, rotation);
 }
 
@@ -81,17 +81,17 @@ void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
 {
   cc.m_zoomLevel -= (float)event.wheel.y * m_zoomSpeed;
   cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
-  cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
-                             cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
-                             cc.m_zoomLevel);
+  cc.m_matrices->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
+                               cc.m_aspectRatio * cc.m_zoomLevel,
+                               -cc.m_zoomLevel, cc.m_zoomLevel);
 }
 
 void OrthoCameraScript::onWindowResized(const SDL_Event &event,
                                         OrthoCameraComponent &cc)
 {
   cc.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
-  cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
-                             cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
-                             cc.m_zoomLevel);
+  cc.m_matrices->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
+                               cc.m_aspectRatio * cc.m_zoomLevel,
+                               -cc.m_zoomLevel, cc.m_zoomLevel);
 }
 } // namespace pain

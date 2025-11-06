@@ -1,4 +1,4 @@
-#include "GUI/ImGuiSystem.h"
+#include "GUI/ImGuiSys.h"
 
 #include "CoreFiles/LogWrapper.h"
 #include "GUI/ImGuiComponent.h"

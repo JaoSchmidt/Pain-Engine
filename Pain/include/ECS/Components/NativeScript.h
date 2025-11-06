@@ -1,10 +1,14 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Registry/Entity.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
+
+namespace pain
+{
+struct Renderer2d;
+}
 
 template <typename T>
 concept has_onCreate_method = requires(T &&t) {
@@ -63,6 +67,11 @@ namespace pain
 {
 class ExtendedEntity;
 
+// TODO: make the "setParams" function,  but perhaps in the lua script only?
+// that is because the use of a variable set of parameters only make sense in
+// the context of objects that need a null state. And in my current approach,
+// not necesserally if any object in c++ needs to be null at the beginning. We
+// can just construct them
 struct NativeScriptComponent {
   ExtendedEntity *instance = nullptr;
 
@@ -74,12 +83,7 @@ struct NativeScriptComponent {
   void (*onUpdateFunction)(ExtendedEntity *, double) = nullptr;
   void (*onEventFunction)(ExtendedEntity *, const SDL_Event &) = nullptr;
 
-  /* Bind the script to the entity, also initialize the script instance.
-   * Previously this was only "bind()" function without iniating the script
-   * instance, but I just never need those two things separate, so I joined
-   * them.
-   */
-  template <typename T, typename... Args> void bindAndInitiate(Args &&...args)
+  template <typename T> void bindAndInitiate(T &&t)
   {
     check_script_methods<T>();
     // static_assert(
@@ -88,7 +92,7 @@ struct NativeScriptComponent {
     //     implement " "ExtendedEntity constructor: (Scene&, Entity, Bitmask).
     //     Pherhaps you " "are using the defualt constructor instead of coding
     //     `using " "ExtendedEntity::ExtendedEntity;`?");
-    instance = new T(std::forward<Args>(args)...);
+    instance = new T(std::move(t));
     // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
     // }
     destroyInstanceFunction = [](ExtendedEntity *&instance) {
@@ -142,7 +146,12 @@ struct NativeScriptComponent {
       onEventFunction = nullptr;
     }
   };
-  template <typename T> void bindAndInitiate(T &&t)
+  /* Bind the script to the entity, also initialize the script instance.
+   * Previously this was only "bind()" function without iniating the script
+   * instance, but I just never need those two things separate, so I joined
+   * them.
+   */
+  template <typename T, typename... Args> void bindAndInitiate(Args &&...args)
   {
     check_script_methods<T>();
     // static_assert(
@@ -151,7 +160,7 @@ struct NativeScriptComponent {
     //     implement " "ExtendedEntity constructor: (Scene&, Entity, Bitmask).
     //     Pherhaps you " "are using the defualt constructor instead of coding
     //     `using " "ExtendedEntity::ExtendedEntity;`?");
-    instance = std::move(t);
+    instance = new T(std::forward<Args>(args)...);
     // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
     // }
     destroyInstanceFunction = [](ExtendedEntity *&instance) {

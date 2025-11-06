@@ -1,14 +1,13 @@
 #pragma once
 
 #include "Core.h"
-#include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Systems.h"
 
 #include "imgui.h"
 
 namespace pain
 {
-
+struct Renderer2d;
 class ImGuiInstance
 {
 public:

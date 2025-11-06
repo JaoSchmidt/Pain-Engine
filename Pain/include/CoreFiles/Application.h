@@ -6,8 +6,8 @@
 #include "CoreFiles/EndGameFlags.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/DebuggingImGui.h"
-#include "ECS/SceneManager.h"
-#include "GUI/ImGuiSystem.h"
+#include "ECS/WorldSys.h"
+#include "GUI/ImGuiSys.h"
 #include <sol/state.hpp>
 
 namespace pain
@@ -21,26 +21,8 @@ public:
                                         bool isSettingsApp = false);
   ~Application();
 
-  // TODO: This isn't working, perhaps some Scene member needs a move
-  // constructor/assignment?
-  // template <typename S = Scene, typename... Args>
-  // std::unique_ptr<S> createSceneUPtr(std::string name, Args &&...args)
-  // {
-  //   return std::make_unique<S>(name, m_context, m_window, m_luaState,
-  //                              std::forward<Args>(args)...);
-  // };
-
-  // create Scene using a ptr
-  template <typename S = Scene, typename... Args>
-  S *createScenePtr(std::string name, Args &&...args)
-  {
-    return new S(name, m_context, m_window, m_luaState,
-                 std::forward<Args>(args)...);
-  };
-
-  // virtual because the real Application will be the game
-
-  // TODO: define those in the source file later
+  // TODO: This is useful to mess with time e.g. set speed to as high as
+  // possible
   void setInfiniteSimulation(bool isSimulation)
   {
     m_isSimulation = isSimulation;
@@ -55,28 +37,47 @@ public:
   Renderer2d &getRenderer() { return m_renderer; }
 
   // ECS
-  // clang-format off
-  void inline pushScene(const std::string &name, Scene *scene) { m_sceneManager->addScene(name,scene); }
-  // TODO: This isn't working, perhaps some Scene member needs a move constructor/assignment?
-  // void inline pushScene(const std::string &name, std::unique_ptr<Scene> scene) { m_sceneManager->addScene(name,std::move(scene)); }
-  void inline popScene(const std::string &name) { m_sceneManager->popScene(name); }
-  void inline attachScene(const std::string &name) { m_sceneManager->attachScene(name); }
-  void inline detachScene(const std::string &name) { m_sceneManager->detachScene(name); }
   void stopLoop(bool restartFlag = false);
   // clang-format on
-  void setRendererCamera(const OrthographicMatrices &cameraMatrices)
+  void setRendererCamera(const OrthographicMatrices &cameraMatrices,
+                         const OrthoCamera &camera)
   {
-    m_renderer.changeCamera(cameraMatrices);
+    m_renderer.changeCamera(cameraMatrices, camera);
+  }
+
+  template <typename... Components>
+  Scene &createScene(float collisionGridSize, Components... args)
+  {
+    m_worldScene =
+        std::make_unique<Scene>(m_luaState, std::forward<Components>(args)...);
+    m_worldSceneSys = std::make_unique<WorldSystems>(
+        m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
+
+    return *m_worldScene;
   }
 
 private:
   Application(sol::state &&luaState, SDL_Window *window, void *context);
+  // =============================================================== //
+  // OWNED CLASSES
+  // =============================================================== //
+  std::unique_ptr<Scene> m_worldScene;
+  std::unique_ptr<WorldSystems> m_worldSceneSys;
+
+  Renderer2d m_renderer;
+
+  EngineController *m_defaultImGuiInstance;
+
+  sol::state m_luaState;
+
+  // =============================================================== //
+  // VARIABLES/CONSTANTS
+  // =============================================================== //
   EndGameFlags run();
   EndGameFlags m_endGameFlags = {};
   // Refers to the game window
   SDL_Window *m_window = nullptr;
   SDL_GLContext m_context = nullptr;
-  Renderer2d m_renderer;
   bool m_isGameRunning = true;
   bool m_isRendering = true;
   bool m_isMinimized = false;
@@ -85,10 +86,6 @@ private:
   const double m_fixedFPS = 1.0 / 60.0;
   double m_timeMultiplier = 1.0;
   DeltaTime m_maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
-  sol::state m_luaState;
-
-  std::unique_ptr<SceneManager> m_sceneManager;
-  EngineController *m_defaultImGuiInstance;
 
   // Pure Black
   // static constexpr glm::vec4 m_clearColor = glm::vec4(0.0,0.0,0.0,1);

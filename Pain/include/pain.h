@@ -7,7 +7,7 @@
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
-#include "GUI/ImGuiSystem.h"
+#include "GUI/ImGuiSys.h"
 // Misc
 #include "GUI/Launcher.h"
 #include "Misc/BasicOrthoCamera.h"
@@ -30,7 +30,6 @@
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scene.h"
-#include "ECS/SceneManager.h"
 #include "ECS/Scriptable.h"
 // Scripts
 #include "Scripting/Component.h"

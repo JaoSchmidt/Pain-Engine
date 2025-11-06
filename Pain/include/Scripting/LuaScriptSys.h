@@ -1,9 +1,9 @@
 #pragma once
-#include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Systems.h"
 
 namespace pain
 {
+struct Renderer2d;
 namespace Systems
 {
 struct LuaScript : public System<ComponentManager> {
