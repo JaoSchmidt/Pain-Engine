@@ -11,12 +11,13 @@ struct OrthoCameraComponent {
   float m_zoomLevel = 1.0f;
   OrthographicMatrices *m_matrices = nullptr;
   OrthoCameraComponent() = default;
-  OrthoCameraComponent(float aspectRatio, float zoomLevel)
+  OrthoCameraComponent(float aspectRatio, float zoomLevel, int resWidth,
+                       int resHeight)
       : m_aspectRatio(aspectRatio), m_zoomLevel(zoomLevel)
   {
-    m_matrices = new OrthographicMatrices(-m_aspectRatio * m_zoomLevel,
-                                          m_aspectRatio * m_zoomLevel,
-                                          -m_zoomLevel, m_zoomLevel);
+    m_matrices = new OrthographicMatrices(
+        -m_aspectRatio * m_zoomLevel, m_aspectRatio * m_zoomLevel, -m_zoomLevel,
+        m_zoomLevel, resWidth, resHeight);
   }
   ~OrthoCameraComponent() { delete m_matrices; }
   OrthoCameraComponent(const OrthoCameraComponent &other)

@@ -10,15 +10,13 @@ namespace pain
 
 // ======================================================================== //
 // OrthographicCamera
-// ======================================================================== //
+// ======================================================================= //
 
 OrthographicMatrices::OrthographicMatrices(float left, float right,
-                                           float bottom, float top)
-    : CameraMatrices()
+                                           float bottom, float top,
+                                           int resWidth, int resHeight)
+    : CameraMatrices(left, right, bottom, top, resWidth, resHeight)
 {
-  m_ProjectionMatrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
-  m_ViewMatrix = glm::mat4(1.0f);
-  m_ViewProjectionCacheMatrix = m_ProjectionMatrix * m_ViewMatrix;
 }
 
 void OrthographicMatrices::RecalculateViewMatrix(const glm::vec3 &position,

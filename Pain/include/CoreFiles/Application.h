@@ -40,7 +40,7 @@ public:
   void stopLoop(bool restartFlag = false);
   // clang-format on
   void setRendererCamera(const OrthographicMatrices &cameraMatrices,
-                         const OrthoCamera &camera)
+                         const reg::Entity camera)
   {
     m_renderer.changeCamera(cameraMatrices, camera);
   }
@@ -55,6 +55,7 @@ public:
 
     return *m_worldScene;
   }
+  float getCellSize() const { return m_worldSceneSys->getCellSize(); };
 
 private:
   Application(sol::state &&luaState, SDL_Window *window, void *context);

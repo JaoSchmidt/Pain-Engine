@@ -11,8 +11,8 @@ namespace pain
 {
 namespace Systems
 {
-ImGui::ImGui(reg::ArcheRegistry<ComponentManager> &archetype, void *context,
-             SDL_Window *window, ImGuiConfigFlags flags)
+ImGuiSys::ImGuiSys(reg::ArcheRegistry<ComponentManager> &archetype,
+                   void *context, SDL_Window *window, ImGuiConfigFlags flags)
     : System(archetype)
 {
   P_ASSERT(m_io == nullptr,
@@ -37,7 +37,7 @@ ImGui::ImGui(reg::ArcheRegistry<ComponentManager> &archetype, void *context,
   m_clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 }
 
-void ImGui::onEvent(const SDL_Event &event)
+void ImGuiSys::onEvent(const SDL_Event &event)
 {
   ImGui_ImplSDL2_ProcessEvent(&event);
   for (auto it = begin<ImGuiComponent>(); it != end<ImGuiComponent>(); ++it) {
@@ -46,7 +46,8 @@ void ImGui::onEvent(const SDL_Event &event)
       nsc.onEventFunction(nsc.instance, event);
   }
 }
-void ImGui::onRender(Renderer2d &renderer, bool isMinimized, double currentTime)
+void ImGuiSys::onRender(Renderer2d &renderer, bool isMinimized,
+                        double currentTime)
 {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
@@ -74,7 +75,7 @@ void ImGui::onRender(Renderer2d &renderer, bool isMinimized, double currentTime)
   }
 }
 
-Systems::ImGui::~ImGui()
+Systems::ImGuiSys::~ImGuiSys()
 {
   PLOG_T("Shut ImGui System");
   ImGui_ImplOpenGL3_Shutdown();

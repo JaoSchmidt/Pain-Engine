@@ -16,22 +16,22 @@ public:
 };
 namespace Systems
 {
-class ImGui : public System<ComponentManager>
+class ImGuiSys : public System<ComponentManager>
 {
 public:
   // HACK: The singleton (static) approach assumes that there
   // will be only one context necessary for Dear ImGui to work.
   // Keep an eye on that in case it doesn't work.
-  ImGui(reg::ArcheRegistry<ComponentManager> &archetype, void *context,
-        SDL_Window *window,
-        ImGuiConfigFlags flags =
-            ImGuiConfigFlags_NavEnableKeyboard  // Enable Keyboard Controls
-            | ImGuiConfigFlags_NavEnableGamepad // Enable Gamepad Controls
-            | ImGuiConfigFlags_DockingEnable    // Enable Docking
-            |
-            ImGuiConfigFlags_ViewportsEnable // Enable Multi-Viewport / Platform
+  ImGuiSys(
+      reg::ArcheRegistry<ComponentManager> &archetype, void *context,
+      SDL_Window *window,
+      ImGuiConfigFlags flags =
+          ImGuiConfigFlags_NavEnableKeyboard  // Enable Keyboard Controls
+          | ImGuiConfigFlags_NavEnableGamepad // Enable Gamepad Controls
+          | ImGuiConfigFlags_DockingEnable    // Enable Docking
+          | ImGuiConfigFlags_ViewportsEnable // Enable Multi-Viewport / Platform
   );
-  ~ImGui();
+  ~ImGuiSys();
   void onRender(Renderer2d &renderer, bool isMinimized, double currentTime);
   void onEvent(const SDL_Event &e);
 

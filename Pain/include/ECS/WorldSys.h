@@ -22,12 +22,14 @@ public:
   WorldSystems(reg::ArcheRegistry<ComponentManager> &m_registry,
                float collisionGridSize, void *context, SDL_Window *window);
 
+  double getCellSize() const { return m_collisionSystem.getCellSize(); }
+
 private:
   reg::ArcheRegistry<ComponentManager> &m_registry;
   Systems::Render m_renderSystem = {m_registry};
   Systems::Kinematics m_kinematicsSystem = {m_registry};
   Systems::NativeScript m_nativeScriptSystem = {m_registry};
-  Systems::ImGui m_imGuiSystem;
+  Systems::ImGuiSys m_imGuiSystem;
   Systems::LuaScript m_luaSystem = {m_registry};
   Systems::CollisionSystem m_collisionSystem = {16.f, m_registry};
 };

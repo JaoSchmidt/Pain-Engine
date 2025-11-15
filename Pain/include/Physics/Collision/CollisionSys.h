@@ -15,6 +15,7 @@ struct CollisionSystem : public System<ComponentManager> {
   CollisionSystem() = delete;
   void onUpdate(double dt);
 
+  float getCellSize() const { return m_gridManager.getCellSize(); }
   GridManager m_gridManager;
   void solidCollision(glm::vec3 &pos1, //
                       glm::vec3 &vel1, //

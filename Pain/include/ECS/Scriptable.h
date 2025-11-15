@@ -52,6 +52,19 @@ public:
   NormalEntity(Scene &scene) { m_entity = scene.createEntity(); }
   inline reg::Entity getEntity() const { return m_entity; }
 
+  // ------------------------------------------------------------ //
+  // MOVE CONSTRUCTORS AND ASSGINMENT
+  // ------------------------------------------------------------ //
+  NormalEntity(NormalEntity &&other) noexcept
+      : m_entity(std::exchange(other.m_entity, reg::Entity{-1})) {};
+  NormalEntity &operator=(NormalEntity &&other) noexcept
+  {
+    if (this != &other) {
+      m_entity = std::exchange(other.m_entity, reg::Entity{-1});
+    }
+    return *this;
+  }
+
 protected:
   reg::Entity m_entity = reg::Entity{0};
 };
@@ -104,6 +117,7 @@ public:
     return m_scene.get().containsAllComponents<TargetComponents...>();
   }
   explicit operator bool() const { return m_entity != -1; }
+  inline reg::Entity getEntity() const { return m_entity; }
 
   // ------------------------------------------------------------ //
   // MOVE CONSTRUCTORS AND ASSGINMENT

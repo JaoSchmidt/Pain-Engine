@@ -18,6 +18,14 @@ public:
   }
   const glm::ivec2 &getResolution() const { return m_resolution; };
 
+  CameraMatrices() = default;
+  CameraMatrices(float left, float right, float bottom, float top, int resWidth,
+                 int resHeight)
+      : m_ProjectionMatrix{glm::ortho(left, right, bottom, top, -1.0f, 1.0f)},
+        m_ViewMatrix{glm::mat4(1.0f)},
+        m_ViewProjectionCacheMatrix{m_ProjectionMatrix * m_ViewMatrix},
+        m_resolution{1920, 1080} {};
+
 protected:
   glm::mat4 m_ProjectionMatrix;
   glm::mat4 m_ViewMatrix;
@@ -28,7 +36,8 @@ protected:
 class OrthographicMatrices : public CameraMatrices
 {
 public:
-  OrthographicMatrices(float left, float right, float bottom, float top);
+  OrthographicMatrices(float left, float right, float bottom, float top,
+                       int resWidth, int resHeight);
   void RecalculateViewMatrix(const glm::vec3 &m_position,
                              const float m_rotation);
   void SetProjection(float left, float right, float bottom, float top);

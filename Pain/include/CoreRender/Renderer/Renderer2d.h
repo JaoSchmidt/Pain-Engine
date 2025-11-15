@@ -13,6 +13,8 @@
 namespace pain
 {
 
+class Scene;
+
 struct GridVertex {
   glm::vec3 position;
 };
@@ -52,13 +54,13 @@ struct Renderer2d {
   ~Renderer2d();
   // void changeCamera(const OrthographicMatrices &cameraMatrices);
   void changeCamera(const OrthographicMatrices &cameraMatrices,
-                    const OrthoCamera &camera);
+                    reg::Entity camera);
   // ================================================================= //
   // Renderer basic wrapper around opengl
   // ================================================================= //
 
   void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
-  void beginScene(float globalTime,
+  void beginScene(float globalTime, const Scene &scene,
                   const glm::mat4 &transform = glm::mat4(1.0f));
   void endScene();
   void setViewport(int x, int y, int width, int height);
@@ -167,12 +169,13 @@ private:
 
   const Texture *m_fontAtlasTexture = nullptr;
   const OrthographicMatrices *m_cameraMatrices = nullptr;
-  const OrthoCamera *m_orthoCamera = nullptr;
+  reg::Entity m_orthoCameraEntity = reg::Entity{-1};
 
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                            float globalTime, const glm::mat4 &transform,
-                           const glm::ivec2 &resolution);
+                           const glm::ivec2 &resolution,
+                           const glm::vec3 &cameraPos, const float zoomLevel);
   void draw(const glm::mat4 &viewProjectionMatrix);
   void bindTextures();
   void goBackToFirstVertex();

@@ -10,6 +10,11 @@ namespace pain
 struct Renderer2d;
 }
 
+// --------------------------------------------------------------- //
+// concepts for methods to use as scripts. Use this to check if a class is
+// asking for a specific script function
+// --------------------------------------------------------------- //
+
 template <typename T>
 concept has_onCreate_method = requires(T &&t) {
   { t.onCreate() };
@@ -31,33 +36,38 @@ template <typename T>
 concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
   { t.onEvent(e) };
 };
+
+// --------------------------------------------------------------- //
+// concepts for static asserts. Use this to check if you or other developers are
+// defining incorrect functions
+// --------------------------------------------------------------- //
 template <typename T>
-concept has_invalid_onRender_signature = requires(T t) {
-  { t.onRender() };
+concept has_any_onRender_signature = requires(T t) {
+  { t.onRender };
 };
 template <typename T>
-concept has_invalid_onUpdate_signature = requires(T t) {
-  { t.onUpdate() };
+concept has_any_onUpdate_signature = requires(T t) {
+  { t.onUpdate };
 };
 template <typename T>
-concept has_invalid_onEvent_signature = requires(T t) {
-  { t.onEvent() };
+concept has_any_onEvent_signature = requires(T t) {
+  { t.onEvent };
 };
 
 template <typename T> void check_script_methods()
 {
-  if constexpr (has_invalid_onRender_signature<T>) {
-    static_assert(!has_invalid_onRender_signature<T>,
+  if constexpr (has_any_onRender_signature<T> && !has_onRender_method<T>) {
+    static_assert(false,
                   "Warning: onRender() detected with no arguments! Should be "
                   "onRender(const Renderer&, bool, double).");
   }
-  if constexpr (has_invalid_onUpdate_signature<T>) {
-    static_assert(!has_invalid_onUpdate_signature<T>,
+  if constexpr (has_any_onUpdate_signature<T> && !has_onUpdate_method<T>) {
+    static_assert(false,
                   "Warning: onUpdate() detected with no arguments! Should be "
                   "onUpdate(double).");
   }
-  if constexpr (has_invalid_onEvent_signature<T>) {
-    static_assert(!has_invalid_onEvent_signature<T>,
+  if constexpr (has_any_onEvent_signature<T> && !has_onEvent_method<T>) {
+    static_assert(false,
                   "Warning: onEvent() detected with no arguments! Should be "
                   "onEvent(const SDL_Event&).");
   }

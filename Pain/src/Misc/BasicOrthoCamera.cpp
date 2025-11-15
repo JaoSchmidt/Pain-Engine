@@ -17,7 +17,7 @@ OrthoCamera::OrthoCamera(Scene *scene, int resolutionHeight,
       MovementComponent{},
       RotationComponent{},
       TransformComponent{},
-      OrthoCameraComponent{(float) resolutionWeigh/resolutionHeight, zoomLevel},
+      OrthoCameraComponent{(float)resolutionWeigh/resolutionHeight, zoomLevel, resolutionWeigh, resolutionHeight},
       NativeScriptComponent{}
   );
   // clang-format on

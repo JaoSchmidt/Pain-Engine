@@ -12,6 +12,7 @@ namespace pain
 struct GridManager {
   float m_cellSize = 1.0f;
   int m_defaultReserved = 8;
+  float getCellSize() const { return m_cellSize; };
   std::unordered_map<int64_t, GridCell> m_grid = {};
   std::unordered_map<int64_t, GridCell> m_staticGrid = {};
 

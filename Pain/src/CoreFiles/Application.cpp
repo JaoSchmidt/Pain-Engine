@@ -210,7 +210,7 @@ EndGameFlags Application::run()
       m_renderer.clear();
 
       double globalTime = lastFrameTime.GetSeconds();
-      m_renderer.beginScene(globalTime);
+      m_renderer.beginScene(globalTime, *m_worldScene);
       m_worldSceneSys->renderSystems(m_renderer, m_isMinimized, globalTime);
       m_renderer.endScene();
       P_ASSERT(m_window != nullptr, "m_window is nullptr")

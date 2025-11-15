@@ -110,6 +110,7 @@ public:
       PLOG_E("Cannot find component vector inside Archetype");
       PLOG_E("You are probably trying to call getComponent but the component "
              "you want doesn't exist in the object.");
+      PLOG_E("Missing component type: %s", typeid(C).name());
       std::terminate();
     }
     return *static_cast<const std::vector<C> *>(it->second);
@@ -122,6 +123,7 @@ public:
       PLOG_E("Cannot find component vector inside Archetype");
       PLOG_E("You are probably trying to call getComponent but the component "
              "you want doesn't exist in the object.");
+      PLOG_E("Missing component type: %s", typeid(C).name());
       std::terminate();
     }
     return *static_cast<std::vector<C> *>(it->second);

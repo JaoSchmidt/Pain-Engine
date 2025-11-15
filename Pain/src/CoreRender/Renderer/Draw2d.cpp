@@ -385,7 +385,9 @@ void Renderer2d::goBackToFirstVertex()
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                                      float globalTime,
                                      const glm::mat4 &transform,
-                                     const glm::ivec2 &resolution)
+                                     const glm::ivec2 &resolution,
+                                     const glm::vec3 &cameraPos,
+                                     float zoomLevel)
 {
   PROFILE_FUNCTION();
   m_quadTextureShader.bind();
@@ -408,10 +410,14 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
   m_textTextureShader.uploadUniformMat4("u_Transform", transform);
 
   m_gridShader.bind();
-  m_gridShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
-  m_gridShader.uploadUniformMat4("u_Transform", transform);
-  m_gridShader.uploadUniformFloat2("u_Resolution",
-                                   glm::vec2(resolution.x, resolution.y));
+  // m_gridShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
+  // m_gridShader.uploadUniformMat4("u_Transform", transform);
+  m_gridShader.uploadUniformFloat2("u_cameraPos", glm::vec2(cameraPos));
+  m_gridShader.uploadUniformFloat("u_zoomLevel", zoomLevel);
+  m_gridShader.uploadUniformFloat2("u_resolution", glm::vec2(resolution));
+
+  // float cellScreenPixels = (1.f / zoomLevel) * resolution.y;
+  // PLOG_I("cellScreenPixels inside BasicUniform= {}", cellScreenPixels);
 }
 
 float Renderer2d::allocateTextures(Texture &texture)

@@ -3,11 +3,12 @@
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Camera.h"
 
+#include "ECS/Components/Movement.h"
+#include "ECS/Scene.h"
 #include "glm/ext/matrix_transform.hpp"
 
 namespace pain
 {
-
 extern const Texture *m_fontAtlasTexture;
 
 // ================================================================= //
@@ -27,18 +28,23 @@ void Renderer2d::setClearColor(const glm::vec4 &color)
   glClearColor(color.r, color.g, color.b, color.a);
 }
 void Renderer2d::changeCamera(const OrthographicMatrices &cameraMatrices,
-                              const OrthoCamera &camera)
+                              reg::Entity cameraEntity)
 {
+
   m_cameraMatrices = &cameraMatrices;
-  m_orthoCamera = &camera;
+  m_orthoCameraEntity = cameraEntity;
 }
 
-void Renderer2d::beginScene(float globalTime, const glm::mat4 &transform)
+void Renderer2d::beginScene(float globalTime, const Scene &scene,
+                            const glm::mat4 &transform)
 {
   PROFILE_FUNCTION();
-
-  uploadBasicUniforms(m_cameraMatrices->getViewProjectionMatrix(), globalTime,
-                      transform, m_cameraMatrices->getResolution());
+  uploadBasicUniforms(
+      m_cameraMatrices->getViewProjectionMatrix(), globalTime, transform,
+      m_cameraMatrices->getResolution(),
+      scene.getComponent<TransformComponent>(m_orthoCameraEntity).m_position,
+      scene.getComponent<OrthoCameraComponent>(m_orthoCameraEntity)
+          .m_zoomLevel);
   goBackToFirstVertex();
 }
 

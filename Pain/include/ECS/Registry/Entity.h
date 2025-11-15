@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spdlog/fmt/bundled/base.h"
 #include <cstdint>
 #include <ostream>
 
@@ -51,6 +52,15 @@ constexpr Bitmask &operator^=(Bitmask &lhs, Bitmask rhs) noexcept { lhs.value ^=
 } // namespace reg
 
 // clang-format on
+
+// For spdlog
+template <> struct fmt::formatter<reg::Entity> : fmt::formatter<int32_t> {
+  auto format(const reg::Entity &e, fmt::format_context &ctx) const
+  {
+    return fmt::formatter<int32_t>::format(e.value, ctx);
+  }
+};
+
 // For remove batch function
 namespace std
 {

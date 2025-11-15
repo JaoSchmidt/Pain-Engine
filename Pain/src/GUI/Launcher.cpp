@@ -34,7 +34,7 @@ public:
         *(std::as_const(orthoCamera)
               .getComponent<OrthoCameraComponent>(scene)
               .m_matrices),
-        orthoCamera);
+        orthoCamera.getEntity());
     orthoCamera.withScript<OrthoCameraScript>(scene);
 
     scene.withImGuiScript<ImGuiLauncher>(ImGuiLauncher(
@@ -174,11 +174,10 @@ Application *createLauncher()
   const char *title = "Settings";
   const int width = 500;
   const int height = 200;
+  const float zoom = 1.f;
   Application *settingsApp =
       Application::createApplication(title, width, height, true);
-
-  // Scene *pscene = settingsApp->createScenePtr<SettingsScene>(
-  //     "settingsMain", width, height, 1.0f, settingsApp);
+  ImGuiLauncher::createScriptScene(width, height, zoom, settingsApp);
 
   return settingsApp;
 }
