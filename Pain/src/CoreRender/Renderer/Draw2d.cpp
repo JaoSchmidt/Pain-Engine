@@ -211,7 +211,6 @@ Renderer2d Renderer2d::createRenderer2d()
   gridShader->uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
   gridShader->uploadUniformFloat("u_CellSize", 0.2f);
   gridShader->uploadUniformFloat("u_Thickness", 0.05f);
-  gridShader->uploadUniformFloat3("u_Center", glm::vec3(0.0f, 0.0f, 0.0f));
   // =============================================================== //
   // Create Renderer
   // =============================================================== //
@@ -260,13 +259,13 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   // =============================================================== //
   // =============================================================== //
 
-  // if (m_seeGrid) {
-  m_gridVertexArray.bind();
-  m_gridVertexBuffer.bind();
-  m_gridShader.bind();
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-  // glBindTexture(GL_TEXTURE_2D, 0);
-  // }
+  // TODO: Need to fix this
+  if (m_seeGrid) {
+    m_gridVertexArray.bind();
+    m_gridVertexBuffer.bind();
+    m_gridShader.bind();
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+  }
   // =============================================================== //
   // =============================================================== //
   // BATCH ONLY
@@ -277,9 +276,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   // Quads
   // =============================================================== //
   // PLOG_I("bind texture id = {}", m_textureSlots[i]->getRendererId());
-  if (m_quadIndexCount && false) {
-    m_quadIB.bind(); // TODO: this fixed the issue, but why?
+  if (m_quadIndexCount) {
     m_quadVertexArray.bind();
+    m_quadIB.bind();
+    m_quadVertexBuffer.bind();
     const uint32_t quadDataSize =
         (uint8_t *)m_quadVertexBufferPtr - (uint8_t *)m_quadVertexBufferBase;
     m_quadVertexBuffer.setData((void *)m_quadVertexBufferBase, quadDataSize);
@@ -320,8 +320,8 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   // Spray Particles
   // =============================================================== //
   if (m_sprayIndexCount) {
-    m_sprayIB.bind();
     m_sprayVertexArray.bind();
+    m_sprayIB.bind();
     const uint32_t sprayDataSize =
         (uint8_t *)m_sprayVertexBufferPtr - (uint8_t *)m_sprayVertexBufferBase;
     m_sprayVertexBuffer.setData((void *)m_sprayVertexBufferBase, sprayDataSize);

@@ -3,6 +3,7 @@
 
 #include "Assets/DefaultTexture.h"
 #include "Asteroid.h"
+#include "GUI/ImGuiComponent.h"
 #include "Player.h"
 #include "Stars.h"
 #include <glm/ext/matrix_transform.hpp>
@@ -10,13 +11,67 @@
 #include <memory>
 #include <vector>
 
+class ImGuiQuickMenu : public pain::ExtendedEntity
+{
+public:
+  void onRender(pain::Renderer2d &renderer, bool isMinimized,
+                double currentTime)
+  {
+    ImGui::Begin("Debug info");
+    auto &cam =
+        m_scene.get().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
+
+    ImGui::Text("Camera zoom: %.3f", cam.m_zoomLevel);
+    ImGui::Text("cellSize %.3f", m_app->getCellSize());
+    float cellScreenPixels = (m_app->getCellSize() / cam.m_zoomLevel) *
+                             cam.m_matrices->getResolution().y;
+    ImGui::Text("cellScreenPixels %.3f", cellScreenPixels);
+
+    ImGui::End();
+  }
+
+  static void createScript(pain::Scene &scene, pain::Application *settingsApp,
+                           reg::Entity cameraEntity)
+  {
+    scene.withImGuiScript<ImGuiQuickMenu>(
+        ImGuiQuickMenu(scene.getEntity(), scene, settingsApp, cameraEntity));
+  }
+
+  ImGuiQuickMenu(reg::Entity entity, pain::Scene &scene, pain::Application *app,
+                 reg::Entity cameraEntity)
+      : ExtendedEntity(entity, scene), //
+        m_cameraEntity(cameraEntity),  //
+        m_app(app)
+  {
+    PLOG_I("m_Camera entity is {}", m_cameraEntity);
+    PLOG_I("Camera entity is {}", cameraEntity);
+  };
+
+  ImGuiQuickMenu(ImGuiQuickMenu &&other) noexcept
+      : ExtendedEntity(std::move(other)), m_cameraEntity(other.m_cameraEntity),
+        m_app(std::exchange(other.m_app, nullptr)) {};
+  ImGuiQuickMenu &operator=(ImGuiQuickMenu &&other) noexcept
+  {
+    if (this != &other) {
+      ExtendedEntity::operator=(std::move(other));
+      m_app = std::exchange(other.m_app, nullptr);
+      m_cameraEntity = other.m_cameraEntity;
+    }
+    return *this;
+  }
+
+private:
+  reg::Entity m_cameraEntity;
+  pain::Application *m_app = nullptr;
+};
+
 class MainScript : public pain::ExtendedEntity
 {
 public:
-  static pain::Scene &createScriptScene(int resWeight, int resHeight,
-                                        float zoom, pain::Application *app)
+  static reg::Entity createScriptScene(pain::Scene &scene, int resWeight,
+                                       int resHeight, float zoom,
+                                       pain::Application *app)
   {
-    pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{});
 
     // create the camera
     pain::OrthoCamera orthocamera = {&scene, resWeight, resHeight, zoom};
@@ -25,7 +80,7 @@ public:
         *(std::as_const(orthocamera)
               .getComponent<pain::OrthoCameraComponent>(scene)
               .m_matrices),
-        orthocamera);
+        orthocamera.getEntity());
 
     // dummy.reset(new Dummy(&scene, {0.23f, 0.54f}, {1.f, 1.f},
     //                       {9.f, 0.f, 5.f, 1.f}, &m_texture, 1.f));
@@ -64,7 +119,7 @@ public:
     pain::GridManager gm;
     for (short i = 0; i < asteroidAmount; i++) {
       glm::vec2 randomPos(dist(gen), dist(gen));
-      glm::vec2 randomVel(dist(gen), dist(gen));
+      glm::vec2 randomVel(dist(gen) * 0.1, dist(gen) * 0.1);
       Asteroid ast = {scene,                                        //
                       gm,                                           //
                       asteroidSheet,                                //
@@ -74,9 +129,11 @@ public:
       asteroids.emplace_back(std::move(ast));
       // scene.insertStaticCollider(ast.getEntity());
     }
+    reg::Entity cameraEntity = orthocamera.getEntity();
     scene.withScript<MainScript>(std::move(stars), std::move(orthocamera),
                                  std::move(asteroids));
-    return scene;
+
+    return cameraEntity;
   }
   void onRender(pain::Renderer2d &renderer, bool minimazed, double deltatime)
   {
@@ -111,11 +168,16 @@ pain::Application *pain::createApplication()
 
   LOG_T("Creating app");
   const char *title = "Developing Pain - Example 2d";
-  const int width = 1280;
+  const int width = 1000;
   const int height = 1000;
   Application *app = Application::createApplication(title, width, height);
 
-  MainScript::createScriptScene(width, height, 2.0f, app);
+  pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{},
+                                        pain::ImGuiComponent{});
+  reg::Entity cameraEntity =
+      MainScript::createScriptScene(scene, width, height, 2.0f, app);
+
+  ImGuiQuickMenu::createScript(scene, app, cameraEntity);
   // Scene *scene = new MainScene(app->getLuaState());
   // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
 
