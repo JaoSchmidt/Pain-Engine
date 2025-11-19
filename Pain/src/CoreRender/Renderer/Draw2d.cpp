@@ -210,7 +210,7 @@ Renderer2d Renderer2d::createRenderer2d()
   gridShader->bind();
   gridShader->uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
   gridShader->uploadUniformFloat("u_CellSize", 0.2f);
-  gridShader->uploadUniformFloat("u_Thickness", 0.05f);
+  gridShader->uploadUniformFloat("u_Thickness", 0.005f);
   // =============================================================== //
   // Create Renderer
   // =============================================================== //
@@ -410,11 +410,12 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
   m_textTextureShader.uploadUniformMat4("u_Transform", transform);
 
   m_gridShader.bind();
-  // m_gridShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
-  // m_gridShader.uploadUniformMat4("u_Transform", transform);
-  m_gridShader.uploadUniformFloat2("u_cameraPos", glm::vec2(cameraPos));
   m_gridShader.uploadUniformFloat("u_zoomLevel", zoomLevel);
-  m_gridShader.uploadUniformFloat2("u_resolution", glm::vec2(resolution));
+  m_gridShader.uploadUniformFloat2("u_cameraPos", cameraPos);
+  m_gridShader.uploadUniformFloat("u_resolution_y", resolution.y);
+  m_gridShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
+  // m_gridShader.uploadUniformMat4("u_Transform", transform);
+  // m_gridShader.uploadUniformFloat2("u_resolution", glm::vec2(resolution));
 
   // float cellScreenPixels = (1.f / zoomLevel) * resolution.y;
   // PLOG_I("cellScreenPixels inside BasicUniform= {}", cellScreenPixels);

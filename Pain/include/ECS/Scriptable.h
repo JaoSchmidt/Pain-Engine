@@ -118,6 +118,7 @@ public:
   }
   explicit operator bool() const { return m_entity != -1; }
   inline reg::Entity getEntity() const { return m_entity; }
+  inline Scene &getScene() const { return m_scene.get(); }
 
   // ------------------------------------------------------------ //
   // MOVE CONSTRUCTORS AND ASSGINMENT

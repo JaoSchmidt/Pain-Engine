@@ -60,7 +60,7 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
     auto [tItEnd, sItEnd] = end<TransformComponent, SpritelessComponent>();
     for (; tIt != tItEnd; ++tIt, ++sIt) {
       renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                        resources::getDefaultTexture(resources::BLANK));
+                        resources::getDefaultTexture(resources::BLANK, false));
     }
   }
   {

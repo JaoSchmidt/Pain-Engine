@@ -14,7 +14,7 @@ OrthoCamera::OrthoCamera(Scene *scene, int resolutionHeight,
 {
   // clang-format off
   createComponents(*scene,
-      MovementComponent{},
+      MovementComponent{glm::vec3(0.f), 1.f},
       RotationComponent{},
       TransformComponent{},
       OrthoCameraComponent{(float)resolutionWeigh/resolutionHeight, zoomLevel, resolutionWeigh, resolutionHeight},

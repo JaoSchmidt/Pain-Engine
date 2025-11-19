@@ -21,8 +21,7 @@ struct MovementComponent {
   float m_rotationSpeed = 0.0f;
   MovementComponent() = default;
   MovementComponent(const glm::vec3 &velocity) : m_velocity(velocity) {}
-  MovementComponent(const glm::vec3 &velocity, float translationSpeed,
-                    float rotationSpeed)
+  MovementComponent(const glm::vec3 &velocity, float rotationSpeed)
       : m_velocity(velocity), m_rotationSpeed(rotationSpeed)
   {
   }
