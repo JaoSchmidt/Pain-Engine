@@ -4,7 +4,9 @@
 #include "Assets/DefaultTexture.h"
 #include "Asteroid.h"
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Components/Movement.h"
 #include "GUI/ImGuiComponent.h"
+#include "MousePointer.h"
 #include "Player.h"
 #include "Stars.h"
 #include "Wall.h"
@@ -20,15 +22,17 @@ public:
                 double currentTime)
   {
     ImGui::Begin("Debug info");
-    auto &cam =
-        m_scene.get().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
+    auto &camCC =
+        getScene().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
+    auto &mpTC =
+        getScene().getComponent<pain::TransformComponent>(m_mousePointerEntity);
 
-    ImGui::Text("Camera zoom: %.3f", cam.m_zoomLevel);
+    ImGui::Text("Camera zoom: %.3f", camCC.m_zoomLevel);
     ImGui::Text("Mouse Pos: (%d,%d)", TP_VEC2(m_mousePos));
-    ImGui::Text("Mouse World Pos: (%.2f,%.2f)", TP_VEC2(m_mouseWorldPos));
+    ImGui::Text("Mouse World Pos: (%.2f,%.2f)", TP_VEC2(mpTC.m_position));
     ImGui::Text("cellSize %.3f", m_app->getCellSize());
-    float cellScreenPixels = (m_app->getCellSize() / cam.m_zoomLevel) *
-                             cam.m_matrices->getResolution().y;
+    float cellScreenPixels = (m_app->getCellSize() / camCC.m_zoomLevel) *
+                             camCC.m_matrices->getResolution().y;
     ImGui::Text("cellScreenPixels %.3f", cellScreenPixels);
 
     ImGui::End();
@@ -39,50 +43,22 @@ public:
       int mouseX = event.motion.x;
       int mouseY = event.motion.y;
       m_mousePos = glm::ivec2(mouseX, mouseY);
-      m_mouseWorldPos = screenToWorld(mouseX, mouseY);
     }
-  }
-  glm::vec2 screenToWorld(int mouseX, int mouseY)
-  {
-    auto &cc =
-        m_scene.get().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
-    auto &tc =
-        m_scene.get().getComponent<pain::TransformComponent>(m_cameraEntity);
-    auto &rc =
-        m_scene.get().getComponent<pain::RotationComponent>(m_cameraEntity);
-
-    // 1. screen → NDC
-    float ndcX = (2.0f * mouseX) / cc.m_matrices->getResolution().x - 1.0f;
-    float ndcY = 1.0f - (2.0f * mouseY) / cc.m_matrices->getResolution().y;
-
-    // 2. NDC → camera local
-    float camLocalX = ndcX * (cc.m_aspectRatio * cc.m_zoomLevel);
-    float camLocalY = ndcY * cc.m_zoomLevel;
-
-    // 3. camera rotation vectors
-    float angle = rc.m_rotationAngle;
-    glm::vec2 forward = glm::vec2(cos(angle), sin(angle));
-    glm::vec2 right = glm::vec2(-sin(angle), cos(angle));
-
-    // 4. camera local → world
-    return glm::vec2(tc.m_position) + forward * camLocalY + right * camLocalX;
-  }
-
-  static void createScript(pain::Scene &scene, pain::Application *settingsApp,
-                           reg::Entity cameraEntity)
-  {
-    scene.withImGuiScript<ImGuiQuickMenu>(
-        ImGuiQuickMenu(scene.getEntity(), scene, settingsApp, cameraEntity));
   }
 
   ImGuiQuickMenu(reg::Entity entity, pain::Scene &scene, pain::Application *app,
-                 reg::Entity cameraEntity)
+                 reg::Entity cameraEntity, reg::Entity mp)
       : ExtendedEntity(entity, scene), //
         m_cameraEntity(cameraEntity),  //
-        m_app(app) {};
+        m_mousePointerEntity(mp), m_app(app)
+  {
+
+    PLOG_I("mp ent = {}", mp);
+  };
 
   ImGuiQuickMenu(ImGuiQuickMenu &&other) noexcept
       : ExtendedEntity(std::move(other)), m_cameraEntity(other.m_cameraEntity),
+        m_mousePointerEntity(other.m_mousePointerEntity),
         m_app(std::exchange(other.m_app, nullptr)) {};
   ImGuiQuickMenu &operator=(ImGuiQuickMenu &&other) noexcept
   {
@@ -90,13 +66,14 @@ public:
       ExtendedEntity::operator=(std::move(other));
       m_app = std::exchange(other.m_app, nullptr);
       m_cameraEntity = other.m_cameraEntity;
+      m_mousePointerEntity = other.m_mousePointerEntity;
     }
     return *this;
   }
 
 private:
-  reg::Entity m_cameraEntity;
-  glm::vec2 m_mouseWorldPos;
+  reg::Entity m_cameraEntity = reg::Entity{-2};
+  reg::Entity m_mousePointerEntity = reg::Entity{-2};
   glm::ivec2 m_mousePos;
   pain::Application *m_app = nullptr;
 };
@@ -117,6 +94,7 @@ public:
               .getComponent<pain::OrthoCameraComponent>(scene)
               .m_matrices),
         orthocamera.getEntity());
+    reg::Entity cameraEntity = orthocamera.getEntity();
 
     // dummy.reset(new Dummy(&scene, {0.23f, 0.54f}, {1.f, 1.f},
     //                       {9.f, 0.f, 5.f, 1.f}, &m_texture, 1.f));
@@ -145,19 +123,11 @@ public:
     std::vector<Wall> walls;
     walls.reserve(4);
     pain::GridManager gm;
-    // const glm::vec2 v1 = glm::vec2(-1.f, 1.f);
-    // const glm::vec2 v2 = glm::vec2(1.f, 1.f);
-    // const glm::vec2 v3 = glm::vec2(-1.f, -1.f);
-    // const glm::vec2 v4 = glm::vec2(1.f, -1.f);
-    walls.emplace_back(scene, gm, glm::vec2(-2.f, 2.f), glm::vec2(5.f, 1.f));
-    walls.emplace_back(scene, gm, glm::vec2(2.f, 2.f), glm::vec2(1.f, 5.f));
-    walls.emplace_back(scene, gm, glm::vec2(-2.f, -2.f), glm::vec2(1.f, 5.f));
-    walls.emplace_back(scene, gm, glm::vec2(2.f, -2.f), glm::vec2(5.f, 1.f));
-    // walls.emplace_back(std::move(w));
-    // walls.emplace_back(std::move(w2));
-    // walls.emplace_back(std::move(w3));
-    // walls.emplace_back(std::move(w4));
-    // scene.insertStaticCollider(ast.getEntity());
+    // walls.emplace_back(scene, gm, glm::vec2(-2.f, 2.f), glm::vec2(5.f, 1.f));
+    // walls.emplace_back(scene, gm, glm::vec2(2.f, 2.f), glm::vec2(1.f, 5.f));
+    // walls.emplace_back(scene, gm, glm::vec2(-2.f, -2.f),
+    // glm::vec2(1.f, 5.f)); walls.emplace_back(scene, gm, glm::vec2(2.f, -2.f),
+    // glm::vec2(5.f, 1.f));
 
     // PLAYER ---------------------------------------------------------------
     // pain::Texture &shipTex =
@@ -183,10 +153,17 @@ public:
       asteroids.emplace_back(std::move(ast));
       // scene.insertStaticCollider(ast.getEntity());
     }
-    reg::Entity cameraEntity = orthocamera.getEntity();
+    // MOUSE POINTER
+    // ---------------------------------------------------------------
+    MousePointer mp(scene);
+    PLOG_I("ent = {}", mp.getEntity());
+    mp.withScript<MousePointerScript>(scene, cameraEntity);
+
+    scene.withImGuiScript<ImGuiQuickMenu>(ImGuiQuickMenu(
+        scene.getEntity(), scene, app, cameraEntity, mp.getEntity()));
     scene.withScript<MainScript>(std::move(stars), std::move(orthocamera),
                                  std::move(asteroids), std::move(walls),
-                                 std::move(gm));
+                                 std::move(gm), std::move(mp));
 
     return cameraEntity;
   }
@@ -199,10 +176,15 @@ public:
 
   MainScript(reg::Entity entity, pain::Scene &scene, std::vector<Stars> &&stars,
              pain::OrthoCamera &&orthocamera, std::vector<Asteroid> &&ast,
-             std::vector<Wall> &&walls, pain::GridManager &&gm)
+             std::vector<Wall> &&walls, pain::GridManager &&gm,
+             MousePointer &&mp)
       : ExtendedEntity(entity, scene), m_orthocamera(std::move(orthocamera)),
         m_stars(std::move(stars)), m_asteroids(std::move(ast)),
-        m_walls(std::move(walls)), m_gridManager(std::move(gm)) {};
+        m_walls(std::move(walls)), m_mousePointer(std::move(mp)),
+        m_gridManager(std::move(gm))
+  {
+    m_orthocamera.getEntity();
+  };
 
   std::vector<std::vector<int>> m_backgroundMap;
   pain::OrthoCamera m_orthocamera;
@@ -210,6 +192,7 @@ public:
   std::vector<Stars> m_stars;
   std::vector<Asteroid> m_asteroids;
   std::vector<Wall> m_walls;
+  MousePointer m_mousePointer;
   // Player m_player;
   pain::GridManager m_gridManager;
   const static unsigned starAmout = 12;
@@ -232,10 +215,8 @@ pain::Application *pain::createApplication()
 
   pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{},
                                         pain::ImGuiComponent{});
-  reg::Entity cameraEntity =
-      MainScript::createScriptScene(scene, width, height, 2.0f, app);
+  MainScript::createScriptScene(scene, width, height, 2.0f, app);
 
-  ImGuiQuickMenu::createScript(scene, app, cameraEntity);
   // Scene *scene = new MainScene(app->getLuaState());
   // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);
 

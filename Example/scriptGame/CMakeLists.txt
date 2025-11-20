@@ -4,7 +4,7 @@ set(PROJECT_NAME "Painful Script Game Example")
 project(${PROJECT_NAME})
 set(TARGET_NAME "scriptGame")
 
-file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_executable(${TARGET_NAME} ${SOURCES})
 target_compile_options(${TARGET_NAME} PRIVATE -g -Wall)
 

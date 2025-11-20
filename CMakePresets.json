@@ -1,0 +1,56 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default (Clang + Ninja + Debug)",
+      "generator": "Ninja",
+      "binaryDir": "build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=mold"
+      }
+    },
+
+    {
+      "name": "mingw",
+      "displayName": "MinGW (Cross-Compile)",
+      "binaryDir": "build-mingw",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/x86_64-w64-mingw32/bin/g++",
+        "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=mold",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+
+    {
+      "name": "ci",
+      "displayName": "CI/CD (GCC + Makefiles + Release)",
+      "generator": "Unix Makefiles",
+      "binaryDir": "dkr_build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default"
+    },
+    {
+      "name": "mingw",
+      "configurePreset": "mingw"
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci"
+    }
+  ]
+}

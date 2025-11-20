@@ -1,3 +1,4 @@
+// NativeScript.h
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
@@ -38,38 +39,93 @@ concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
 };
 
 // --------------------------------------------------------------- //
+// This was suggested by claude to check for privates. I.e. sometimes I forgot
+// the public keyword
+// &T::onFunction will be true even if the function is private
+// --------------------------------------------------------------- //
+
+template <typename T>
+concept has_private_onCreate =
+    requires { sizeof(&T::onCreate); } && !has_onCreate_method<T>;
+
+template <typename T>
+concept has_private_onUpdate =
+    requires { sizeof(&T::onUpdate); } && !has_onUpdate_method<T>;
+
+template <typename T>
+concept has_private_onRender =
+    requires { sizeof(&T::onRender); } && !has_onRender_method<T>;
+
+template <typename T>
+concept has_private_onEvent =
+    requires { sizeof(&T::onEvent); } && !has_onEvent_method<T>;
+
+template <typename T>
+concept has_private_onDestroy =
+    requires { sizeof(&T::onDestroy); } && !has_onDestroy_method<T>;
+
+// --------------------------------------------------------------- //
 // concepts for static asserts. Use this to check if you or other developers are
 // defining incorrect functions
 // --------------------------------------------------------------- //
 template <typename T>
-concept has_any_onRender_signature = requires(T t) {
-  { t.onRender };
-};
+concept has_any_callable_onRender = requires(T t) { &T::onRender; };
+
 template <typename T>
-concept has_any_onUpdate_signature = requires(T t) {
-  { t.onUpdate };
-};
+concept has_any_callable_onUpdate = requires(T t) { &T::onUpdate; };
+
 template <typename T>
-concept has_any_onEvent_signature = requires(T t) {
-  { t.onEvent };
-};
+concept has_any_callable_onEvent = requires(T t) { &T::onEvent; };
+
+template <typename T>
+concept has_any_callable_onCreate = requires(T t) { &T::onCreate; };
+
+template <typename T>
+concept has_any_callable_onDestroy = requires(T t) { &T::onDestroy; };
 
 template <typename T> void check_script_methods()
 {
-  if constexpr (has_any_onRender_signature<T> && !has_onRender_method<T>) {
-    static_assert(false,
-                  "Warning: onRender() detected with no arguments! Should be "
-                  "onRender(const Renderer&, bool, double).");
+  // Check for wrong signatures
+  if constexpr (has_any_callable_onRender<T> && !has_onRender_method<T>) {
+    static_assert(false, "Error: onRender() has wrong signature! Should be "
+                         "onRender(Renderer2d&, bool, double).");
   }
-  if constexpr (has_any_onUpdate_signature<T> && !has_onUpdate_method<T>) {
-    static_assert(false,
-                  "Warning: onUpdate() detected with no arguments! Should be "
-                  "onUpdate(double).");
+  if constexpr (has_any_callable_onUpdate<T> && !has_onUpdate_method<T>) {
+    static_assert(false, "Error: onUpdate() has wrong signature! Should be "
+                         "onUpdate(double).");
   }
-  if constexpr (has_any_onEvent_signature<T> && !has_onEvent_method<T>) {
-    static_assert(false,
-                  "Warning: onEvent() detected with no arguments! Should be "
-                  "onEvent(const SDL_Event&).");
+  if constexpr (has_any_callable_onEvent<T> && !has_onEvent_method<T>) {
+    static_assert(false, "Error: onEvent() has wrong signature! Should be "
+                         "onEvent(const SDL_Event&).");
+  }
+  if constexpr (has_any_callable_onCreate<T> && !has_onCreate_method<T>) {
+    static_assert(false, "Error: onCreate() has wrong signature! Should be "
+                         "onCreate() with no parameters.");
+  }
+  if constexpr (has_any_callable_onDestroy<T> && !has_onDestroy_method<T>) {
+    static_assert(false, "Error: onDestroy() has wrong signature! Should be "
+                         "onDestroy() with no parameters.");
+  }
+  // Check for private methods
+  if constexpr (has_private_onCreate<T>) {
+    static_assert(false, "Error: onCreate() exists but is not public! Make "
+                         "sure it's in the public section.");
+  }
+  if constexpr (has_private_onUpdate<T>) {
+    static_assert(false, "Error: onUpdate() exists but is not public! Make "
+                         "sure it's in the public section.");
+  }
+  if constexpr (has_private_onRender<T>) {
+    static_assert(false, "Error: onRender() exists but is not public! Make "
+                         "sure it's in the public section.");
+  }
+  if constexpr (has_private_onEvent<T>) {
+    static_assert(false, "Error: onEvent() exists but is not public! Make sure "
+                         "it's in the public section.");
+  }
+  if constexpr (has_private_onDestroy<T>) {
+    static_assert(false, "Error: onDestroy() exists but is not public! Make "
+                         "sure it's in the public section.");
   }
 }
 

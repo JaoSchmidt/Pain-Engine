@@ -39,18 +39,9 @@ TextureSheet TextureSheet::createTextureSheet(
   float spriteH = texH / nlinesX;
   PLOG_I("TextureSheet - Each texture is (SpriteW, SpriteH) = ({},{})", spriteW,
          spriteH);
-  int idx = 0;
   for (auto [x, y] : coords) {
     auto texCoords = createVecFromCoord(texture, spriteW, spriteH, x, y);
     textureIds.push_back(texCoords);
-
-    PLOG_I("TexId[{}] ({}, {}) -> "
-           "({:.3f}, {:.3f}), ({:.3f}, {:.3f}), "
-           "({:.3f}, {:.3f}), ({:.3f}, {:.3f})",
-           idx, x, y, texCoords[0].x, texCoords[0].y, texCoords[1].x,
-           texCoords[1].y, texCoords[2].x, texCoords[2].y, texCoords[3].x,
-           texCoords[3].y);
-    ++idx;
   }
   return TextureSheet(texture, spriteW, spriteH, textureIds, coords.size());
 }

@@ -11,17 +11,19 @@ class MousePointer : public pain::NormalEntity<pain::TransformComponent, //
                                                pain::NativeScriptComponent>
 {
 public:
-  MousePointer(pain::Scene &scene, reg::Entity cameraEntity);
+  MousePointer(pain::Scene &scene);
 };
 
 class MousePointerScript : public pain::ExtendedEntity
 {
-  using ExtendedEntity::ExtendedEntity;
+public:
+  MousePointerScript(reg::Entity entity, pain::Scene &scene,
+                     reg::Entity m_cameraEntity);
   void onUpdate(double deltaTimeSec);
   void onEvent(const SDL_Event &e);
   void onCreate();
 
 private:
-  reg::Entity m_cameraEntity;
+  reg::Entity m_cameraEntity = reg::Entity{-2};
   glm::vec2 screenToWorld(int mouseX, int mouseY);
 };
