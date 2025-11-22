@@ -4,7 +4,9 @@
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Rotation.h"
+#include "GUI/ImGuiDebugRegistry.h"
 #include "glm/fwd.hpp"
+#include "imgui.h"
 namespace pain
 {
 
@@ -22,6 +24,10 @@ OrthoCamera::OrthoCamera(Scene *scene, int resolutionHeight,
   );
   // clang-format on
 };
+void OrthoCameraScript::onCreate()
+{
+  getComponent<MovementComponent>().m_rotationSpeed = 1.f;
+}
 // OrthoCameraScript inherits ExtendedEntity
 inline void OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
                                                    const float rotation)
@@ -93,5 +99,6 @@ void OrthoCameraScript::onWindowResized(const SDL_Event &event,
   cc.m_matrices->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
                                cc.m_aspectRatio * cc.m_zoomLevel,
                                -cc.m_zoomLevel, cc.m_zoomLevel);
+  cc.m_matrices->setResolution(event.window.data1, event.window.data2);
 }
 } // namespace pain

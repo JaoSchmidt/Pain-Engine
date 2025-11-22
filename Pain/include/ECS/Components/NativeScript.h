@@ -220,12 +220,11 @@ struct NativeScriptComponent {
   template <typename T, typename... Args> void bindAndInitiate(Args &&...args)
   {
     check_script_methods<T>();
-    // static_assert(
-    //     std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
-    //     "Error: You are binding a function whose constructor doesn't
-    //     implement " "ExtendedEntity constructor: (Scene&, Entity, Bitmask).
-    //     Pherhaps you " "are using the defualt constructor instead of coding
-    //     `using " "ExtendedEntity::ExtendedEntity;`?");
+    static_assert(std::is_constructible_v<T, Args...>,
+                  "Error: You are binding a function whose constructor doesn't "
+                  "implement ExtendedEntity constructor: (Scene&, Entity, "
+                  "Bitmask). Pherhaps you are using the defualt constructor "
+                  "instead of coding `using ExtendedEntity::ExtendedEntity;`?");
     instance = new T(std::forward<Args>(args)...);
     // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
     // }

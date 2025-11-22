@@ -1,7 +1,10 @@
 #include "MousePointer.h"
 #include "ECS/Scriptable.h"
+#include "GUI/ImGuiDebugRegistry.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "Physics/Collision/GridManager.h"
+#include "SDL_events.h"
+#include "imgui.h"
 #include <pain.h>
 
 MousePointer::MousePointer(pain::Scene &scene) : NormalEntity(scene)
@@ -16,45 +19,68 @@ MousePointerScript::MousePointerScript(reg::Entity entity, pain::Scene &scene,
 
     : pain::ExtendedEntity(entity, scene), m_cameraEntity(cameraEntity) {};
 
-void MousePointerScript::onEvent(const SDL_Event &event) {}
-
 void MousePointerScript::onCreate()
 {
-  getComponent<pain::TransformComponent>().m_position = {0.f, 0.0f, 0.f};
+  pain::OrthoCameraComponent &camCC =
+      getScene().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
+  PLOG_I("Resolution x {}", camCC.m_matrices->getResolution().x);
+  PLOG_I("Resolution y {}", camCC.m_matrices->getResolution().y);
+  PLOG_I("Zoom Level {}", camCC.m_zoomLevel);
 }
 
 glm::vec2 MousePointerScript::screenToWorld(int mouseX, int mouseY)
 {
   // 1. Get the active OrthoCamera
-  pain::OrthoCameraComponent &camCC =
-      getScene().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
-  pain::TransformComponent &camTC =
-      getScene().getComponent<pain::TransformComponent>(m_cameraEntity);
-  pain::RotationComponent &camRC =
-      getScene().getComponent<pain::RotationComponent>(m_cameraEntity);
+  auto [camCC, camTC, camRC] =
+      getScene()
+          .getComponents<pain::OrthoCameraComponent, pain::TransformComponent,
+                         pain::RotationComponent>(m_cameraEntity);
 
-  // 2. Convert screen -> NDC space
-  float ndcX = (2.0f * mouseX) / camCC.m_matrices->getResolution().x - 1.0f;
-  float ndcY = 1.0f - (2.0f * mouseY) / camCC.m_matrices->getResolution().y;
+  // 2. Convert screen -> NDC space from -1 to 1
+  float ndcX = (2.f * mouseX) / camCC.m_matrices->getResolution().x - 1.f;
+  float ndcY = 1.f - (2.f * mouseY) / camCC.m_matrices->getResolution().y;
 
   // 3. Convert NDC -> camera local coordinates
-  float camLocalX = ndcX * (camCC.m_aspectRatio * camCC.m_zoomLevel);
-  float camLocalY = ndcY * camCC.m_zoomLevel;
+  glm::vec2 localCoord = glm::vec2(
+      ndcX * camCC.m_zoomLevel * camCC.m_aspectRatio, ndcY * camCC.m_zoomLevel);
 
+  IMGUI_PLOG([=]() {
+    ImGui::Text("Aspect Ratio (world)  %.3f", camCC.m_aspectRatio);
+    ImGui::Text("Resolution (world) %dx%d ",
+                TP_VEC2(camCC.m_matrices->getResolution()));
+  });
   // 4. Convert camera local -> world coordinates using rotation
-  float angle = camRC.m_rotationAngle;
-  glm::vec2 forward = glm::vec2(std::cos(angle), std::sin(angle));
-  glm::vec2 right = glm::vec2(-std::sin(angle), std::cos(angle));
-
-  return glm::vec2(camTC.m_position.x, camTC.m_position.y) + right * camLocalY +
-         forward * camLocalX;
+  float angle = glm::radians(camRC.m_rotationAngle);
+  glm::mat2 rotation = glm::mat2(std::cos(angle), -std::sin(angle),
+                                 std::sin(angle), std::cos(angle));
+  return glm::vec2(camTC.m_position.x, camTC.m_position.y) +
+         rotation * localCoord;
 }
 void MousePointerScript::onUpdate(double deltaTimeSec)
 {
-  int mx, my;
-  SDL_GetMouseState(&mx, &my);
+  int x, y;
+  SDL_GetMouseState(&x, &y);
+  glm::vec2 world = screenToWorld(x, y);
+  IMGUI_PLOG_NAME("world_pos", [=]() {
+    ImGui::Text("World position (%.3f, %.3f)", TP_VEC2(world));
+  });
+  IMGUI_PLOG([=]() { ImGui::Text("Mouse pos (%d, %d)", x, y); });
+  getComponent<pain::TransformComponent>().m_position = glm::vec3(world, 0.f);
+}
 
-  auto &tc = getComponent<pain::TransformComponent>();
-  glm::vec2 world = screenToWorld(mx, my);
-  tc.m_position = glm::vec3(world, 0.f);
+void MousePointerScript::onEvent(const SDL_Event &event)
+{
+  if (event.type == SDL_MOUSEMOTION) {
+    glm::vec2 world = screenToWorld(event.motion.x, event.motion.y);
+    IMGUI_PLOG_NAME("world_pos", [=]() {
+      ImGui::Text("World position (%.3f, %.3f)", TP_VEC2(world));
+    });
+    getComponent<pain::TransformComponent>().m_position = glm::vec3(world, 0.f);
+  } else if (event.type == SDL_MOUSEWHEEL) {
+    glm::vec2 world = screenToWorld(event.wheel.mouseX, event.wheel.mouseY);
+    IMGUI_PLOG_NAME("world_pos", [=]() {
+      ImGui::Text("World position (%.3f, %.3f)", TP_VEC2(world));
+    });
+    getComponent<pain::TransformComponent>().m_position = glm::vec3(world, 0.f);
+  }
 }

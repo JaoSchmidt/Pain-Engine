@@ -41,7 +41,7 @@ public:
   // ---------------------------------------------------- //
   // Scripts
   // ---------------------------------------------------- //
-  template <typename T> void withScript(T &&t)
+  template <typename T> void emplaceScript(T &&t)
   {
     NativeScriptComponent &nsc =
         m_registry.getComponent<NativeScriptComponent>(m_entity);
@@ -49,7 +49,9 @@ public:
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
   }
-  template <typename T, typename... Args> void withScript(Args &&...args)
+  template <typename T, typename... Args>
+    requires std::constructible_from<T, reg::Entity, Scene &, Args...>
+  void emplaceScript(Args &&...args)
   {
     NativeScriptComponent &nsc =
         m_registry.getComponent<NativeScriptComponent>(m_entity);
@@ -58,14 +60,16 @@ public:
       nsc.onCreateFunction(nsc.instance);
   }
 
-  template <typename T> void withImGuiScript(T &&t)
+  template <typename T> void emplaceImGuiScript(T &&t)
   {
     ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
     nsc.bindAndInitiate<T>(std::move(t));
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
   }
-  template <typename T, typename... Args> void withImGuiScript(Args &&...args)
+  template <typename T, typename... Args>
+    requires std::constructible_from<T, reg::Entity, Scene &, Args...>
+  void emplaceImGuiScript(Args &&...args)
   {
     ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
     nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);

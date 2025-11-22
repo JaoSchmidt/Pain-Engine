@@ -6,6 +6,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/Movement.h"
 #include "GUI/ImGuiComponent.h"
+#include "GUI/ImGuiDebugMenu.h"
 #include "MousePointer.h"
 #include "Player.h"
 #include "Stars.h"
@@ -14,69 +15,6 @@
 #include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
-
-class ImGuiQuickMenu : public pain::ExtendedEntity
-{
-public:
-  void onRender(pain::Renderer2d &renderer, bool isMinimized,
-                double currentTime)
-  {
-    ImGui::Begin("Debug info");
-    auto &camCC =
-        getScene().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
-    auto &mpTC =
-        getScene().getComponent<pain::TransformComponent>(m_mousePointerEntity);
-
-    ImGui::Text("Camera zoom: %.3f", camCC.m_zoomLevel);
-    ImGui::Text("Mouse Pos: (%d,%d)", TP_VEC2(m_mousePos));
-    ImGui::Text("Mouse World Pos: (%.2f,%.2f)", TP_VEC2(mpTC.m_position));
-    ImGui::Text("cellSize %.3f", m_app->getCellSize());
-    float cellScreenPixels = (m_app->getCellSize() / camCC.m_zoomLevel) *
-                             camCC.m_matrices->getResolution().y;
-    ImGui::Text("cellScreenPixels %.3f", cellScreenPixels);
-
-    ImGui::End();
-  }
-  void onEvent(const SDL_Event &event)
-  {
-    if (event.type == SDL_MOUSEMOTION) {
-      int mouseX = event.motion.x;
-      int mouseY = event.motion.y;
-      m_mousePos = glm::ivec2(mouseX, mouseY);
-    }
-  }
-
-  ImGuiQuickMenu(reg::Entity entity, pain::Scene &scene, pain::Application *app,
-                 reg::Entity cameraEntity, reg::Entity mp)
-      : ExtendedEntity(entity, scene), //
-        m_cameraEntity(cameraEntity),  //
-        m_mousePointerEntity(mp), m_app(app)
-  {
-
-    PLOG_I("mp ent = {}", mp);
-  };
-
-  ImGuiQuickMenu(ImGuiQuickMenu &&other) noexcept
-      : ExtendedEntity(std::move(other)), m_cameraEntity(other.m_cameraEntity),
-        m_mousePointerEntity(other.m_mousePointerEntity),
-        m_app(std::exchange(other.m_app, nullptr)) {};
-  ImGuiQuickMenu &operator=(ImGuiQuickMenu &&other) noexcept
-  {
-    if (this != &other) {
-      ExtendedEntity::operator=(std::move(other));
-      m_app = std::exchange(other.m_app, nullptr);
-      m_cameraEntity = other.m_cameraEntity;
-      m_mousePointerEntity = other.m_mousePointerEntity;
-    }
-    return *this;
-  }
-
-private:
-  reg::Entity m_cameraEntity = reg::Entity{-2};
-  reg::Entity m_mousePointerEntity = reg::Entity{-2};
-  glm::ivec2 m_mousePos;
-  pain::Application *m_app = nullptr;
-};
 
 class MainScript : public pain::ExtendedEntity
 {
@@ -88,7 +26,7 @@ public:
 
     // create the camera
     pain::OrthoCamera orthocamera = {&scene, resWeight, resHeight, zoom};
-    orthocamera.withScript<pain::OrthoCameraScript>(scene);
+    orthocamera.emplaceScript<pain::OrthoCameraScript>(scene);
     app->setRendererCamera(
         *(std::as_const(orthocamera)
               .getComponent<pain::OrthoCameraComponent>(scene)
@@ -156,14 +94,13 @@ public:
     // MOUSE POINTER
     // ---------------------------------------------------------------
     MousePointer mp(scene);
-    PLOG_I("ent = {}", mp.getEntity());
-    mp.withScript<MousePointerScript>(scene, cameraEntity);
+    mp.emplaceScript<MousePointerScript>(scene, cameraEntity);
 
-    scene.withImGuiScript<ImGuiQuickMenu>(ImGuiQuickMenu(
-        scene.getEntity(), scene, app, cameraEntity, mp.getEntity()));
-    scene.withScript<MainScript>(std::move(stars), std::move(orthocamera),
-                                 std::move(asteroids), std::move(walls),
-                                 std::move(gm), std::move(mp));
+    scene.emplaceImGuiScript<pain::ImGuiDebugMenu>(app, cameraEntity,
+                                                   mp.getEntity());
+    scene.emplaceScript<MainScript>(std::move(stars), std::move(orthocamera),
+                                    std::move(asteroids), std::move(walls),
+                                    std::move(gm), std::move(mp));
 
     return cameraEntity;
   }
@@ -211,11 +148,12 @@ pain::Application *pain::createApplication()
   const char *title = "Developing Pain - Example 2d";
   const int width = 1000;
   const int height = 1000;
+  const float zoom = 1.f;
   Application *app = Application::createApplication(title, width, height);
 
   pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{},
                                         pain::ImGuiComponent{});
-  MainScript::createScriptScene(scene, width, height, 2.0f, app);
+  MainScript::createScriptScene(scene, width, height, zoom, app);
 
   // Scene *scene = new MainScene(app->getLuaState());
   // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);

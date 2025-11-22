@@ -52,9 +52,7 @@ Application *Application::createApplication(const char *title, int w, int h,
   SDL_GetVersion(&sdl_version);
   PLOG_T("SDL version: {}.{}.{}", sdl_version.major, sdl_version.minor,
          sdl_version.patch);
-  // =========================================================================//
-  //
-  // =========================================================================//
+
   // =========================================================================//
   // OpenGL Initial setup
   // =========================================================================//

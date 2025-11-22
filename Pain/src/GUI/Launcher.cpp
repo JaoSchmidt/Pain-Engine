@@ -1,15 +1,12 @@
 #include "GUI/Launcher.h"
-#include "Assets/IniWrapper.h"
 #include "Assets/ResourceManager.h"
 #include "Core.h"
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/NativeScript.h"
-#include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Scene.h"
 #include "ECS/Scriptable.h"
-#include "GUI/ImGuiComponent.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
@@ -35,9 +32,9 @@ public:
               .getComponent<OrthoCameraComponent>(scene)
               .m_matrices),
         orthoCamera.getEntity());
-    orthoCamera.withScript<OrthoCameraScript>(scene);
+    orthoCamera.emplaceScript<OrthoCameraScript>(scene);
 
-    scene.withImGuiScript<ImGuiLauncher>(ImGuiLauncher(
+    scene.emplaceImGuiScript<ImGuiLauncher>(ImGuiLauncher(
         scene.getEntity(), scene, settingsApp, std::move(orthoCamera)));
     return scene;
   }

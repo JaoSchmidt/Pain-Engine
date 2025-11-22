@@ -31,26 +31,37 @@ public:
   {
     return scene.getComponent<T>(m_entity);
   }
+  NormalEntity(Scene &scene) { m_entity = scene.createEntity(); }
+  inline reg::Entity getEntity() const { return m_entity; }
 
+  // ------------------------------------------------------------ //
+  // EMPLACE SCRIPT VARIANTS
+  // ------------------------------------------------------------ //
+
+  // This serves to quickly emplace a native script object inside the
+  // NativeScriptComponent, it can also have arguments inside. Useful for
+  // compile check
   template <typename T, typename... Args>
-  void withScript(Scene &scene, Args... args)
+    requires std::constructible_from<T, reg::Entity, Scene &, Args...>
+  void emplaceScript(Scene &scene, Args... args)
   {
     NativeScriptComponent &nsc = getComponent<NativeScriptComponent>(scene);
     nsc.bindAndInitiate<T>(m_entity, scene, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
   }
+  // This serves to quickly emplace a native script object inside the
+  // ImGuiScriptComponent, it can also have arguments inside. Useful for
+  // compile check.
   template <typename T, typename... Args>
-  void withImGuiScript(Scene &scene, Args... args)
+    requires std::constructible_from<T, reg::Entity, Scene &, Args...>
+  void emplaceImGuiScript(Scene &scene, Args... args)
   {
     ImGuiComponent &nsc = getComponent<ImGuiComponent>(scene);
     nsc.bindAndInitiate<T>(m_entity, scene, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
   }
-
-  NormalEntity(Scene &scene) { m_entity = scene.createEntity(); }
-  inline reg::Entity getEntity() const { return m_entity; }
 
   // ------------------------------------------------------------ //
   // MOVE CONSTRUCTORS AND ASSGINMENT

@@ -17,6 +17,7 @@ public:
     return m_ViewProjectionCacheMatrix;
   }
   const glm::ivec2 &getResolution() const { return m_resolution; };
+  void setResolution(int w, int h) { m_resolution = glm::ivec2(w, h); };
 
   CameraMatrices() = default;
   CameraMatrices(float left, float right, float bottom, float top, int resWidth,
@@ -24,7 +25,7 @@ public:
       : m_ProjectionMatrix{glm::ortho(left, right, bottom, top, -1.0f, 1.0f)},
         m_ViewMatrix{glm::mat4(1.0f)},
         m_ViewProjectionCacheMatrix{m_ProjectionMatrix * m_ViewMatrix},
-        m_resolution{1920, 1080} {};
+        m_resolution{resWidth, resHeight} {};
 
 protected:
   glm::mat4 m_ProjectionMatrix;
