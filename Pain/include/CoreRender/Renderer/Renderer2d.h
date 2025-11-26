@@ -115,6 +115,7 @@ struct Renderer2d {
                                const glm::vec2 &size);
 
   void removeTexture(const Texture &texture);
+  void setCellGridSize(float size);
 
 private:
   // quads initializer

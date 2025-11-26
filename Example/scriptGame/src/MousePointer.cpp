@@ -15,9 +15,10 @@ MousePointer::MousePointer(pain::Scene &scene) : NormalEntity(scene)
 }
 
 MousePointerScript::MousePointerScript(reg::Entity entity, pain::Scene &scene,
-                                       reg::Entity cameraEntity)
+                                       reg::Entity cameraEntity, float cellsize)
 
-    : pain::ExtendedEntity(entity, scene), m_cameraEntity(cameraEntity) {};
+    : pain::ExtendedEntity(entity, scene), m_cellsize(cellsize),
+      m_cameraEntity(cameraEntity) {};
 
 void MousePointerScript::onCreate()
 {
@@ -64,7 +65,11 @@ void MousePointerScript::onUpdate(double deltaTimeSec)
   IMGUI_PLOG_NAME("world_pos", [=]() {
     ImGui::Text("World position (%.3f, %.3f)", TP_VEC2(world));
   });
-  IMGUI_PLOG([=]() { ImGui::Text("Mouse pos (%d, %d)", x, y); });
+  ImGuiDebugRegistry::add("aaaa", [=, this]() {
+    ImGui::Text("Mouse pos (%d, %d)", x, y);
+    ImGui::Text("Cell (%d, %d)", static_cast<int>(world.x / m_cellsize),
+                static_cast<int>(world.y / m_cellsize));
+  });
   getComponent<pain::TransformComponent>().m_position = glm::vec3(world, 0.f);
 }
 

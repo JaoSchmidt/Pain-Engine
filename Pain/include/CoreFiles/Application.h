@@ -52,10 +52,12 @@ public:
         std::make_unique<Scene>(m_luaState, std::forward<Components>(args)...);
     m_worldSceneSys = std::make_unique<WorldSystems>(
         m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
+    m_renderer.setCellGridSize(collisionGridSize);
 
     return *m_worldScene;
   }
   float getCellSize() const { return m_worldSceneSys->getCellSize(); };
+  GridManager &getGridManager() { return m_worldSceneSys->getGridManager(); };
 
 private:
   Application(sol::state &&luaState, SDL_Window *window, void *context);

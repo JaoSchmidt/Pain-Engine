@@ -23,6 +23,11 @@ public:
     return scene.createComponents<Components...>(
         m_entity, std::forward<Components>(args)...);
   }
+  NormalEntity(Scene &scene) { m_entity = scene.createEntity(); }
+  inline reg::Entity getEntity() const { return m_entity; }
+  // ---------------------------------------------------- //
+  // Get components from archetypes
+  // ---------------------------------------------------- //
   template <typename T> T &getComponent(Scene &scene)
   {
     return scene.getComponent<T>(m_entity);
@@ -31,8 +36,16 @@ public:
   {
     return scene.getComponent<T>(m_entity);
   }
-  NormalEntity(Scene &scene) { m_entity = scene.createEntity(); }
-  inline reg::Entity getEntity() const { return m_entity; }
+  template <typename... TargetComponents>
+  std::tuple<TargetComponents &...> getComponents(Scene &scene)
+  {
+    return scene.getComponents<TargetComponents...>(m_entity);
+  }
+  template <typename... TargetComponents>
+  std::tuple<TargetComponents &...> getComponents(const Scene &scene) const
+  {
+    return std::as_const(scene).getComponents<TargetComponents...>(m_entity);
+  }
 
   // ------------------------------------------------------------ //
   // EMPLACE SCRIPT VARIANTS

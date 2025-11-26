@@ -209,7 +209,7 @@ Renderer2d Renderer2d::createRenderer2d()
            "The grid shader could not be created, something went wrong");
   gridShader->bind();
   gridShader->uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
-  gridShader->uploadUniformFloat("u_CellSize", 0.2f);
+  gridShader->uploadUniformFloat("u_CellSize", 1.f);
   gridShader->uploadUniformFloat("u_Thickness", 0.005f);
   // =============================================================== //
   // Create Renderer
@@ -547,6 +547,13 @@ void Renderer2d::allocateCharacter(
   }
   m_textIndexCount += 6;
 }
+
+void Renderer2d::setCellGridSize(float cellsize)
+{
+  m_gridShader.bind();
+  m_gridShader.uploadUniformFloat("u_CellSize", 2 * cellsize);
+}
+
 Renderer2d::~Renderer2d()
 {
   delete[] m_quadVertexBufferBase;

@@ -26,6 +26,20 @@ struct GridCell {
                          MovementComponent *>>::const_iterator
   end() const;
 };
+struct GridCellStatic {
+  std::vector<std::tuple<const ColliderComponent *, TransformComponent *>>
+      m_components;
+  GridCellStatic(int reserved);
+  void clear();
+  void push_back(const ColliderComponent &cc, TransformComponent &tc);
+
+  std::vector<std::tuple<const ColliderComponent *,
+                         TransformComponent *>>::const_iterator
+  begin() const;
+  std::vector<std::tuple<const ColliderComponent *,
+                         TransformComponent *>>::const_iterator
+  end() const;
+};
 
 using Chunk = GridCell;
 

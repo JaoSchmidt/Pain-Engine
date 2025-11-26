@@ -59,13 +59,12 @@ public:
 
     // WALLS ---------------------------------------------------------------
     std::vector<Wall> walls;
+    pain::GridManager &gm = app->getGridManager();
     walls.reserve(4);
-    pain::GridManager gm;
-    // walls.emplace_back(scene, gm, glm::vec2(-2.f, 2.f), glm::vec2(5.f, 1.f));
-    // walls.emplace_back(scene, gm, glm::vec2(2.f, 2.f), glm::vec2(1.f, 5.f));
-    // walls.emplace_back(scene, gm, glm::vec2(-2.f, -2.f),
-    // glm::vec2(1.f, 5.f)); walls.emplace_back(scene, gm, glm::vec2(2.f, -2.f),
-    // glm::vec2(5.f, 1.f));
+    walls.emplace_back(scene, gm, glm::vec2(-2.f, 2.f), glm::vec2(5.f, 1.f));
+    walls.emplace_back(scene, gm, glm::vec2(2.f, 2.f), glm::vec2(1.f, 5.f));
+    walls.emplace_back(scene, gm, glm::vec2(-2.f, -2.f), glm::vec2(1.f, 5.f));
+    walls.emplace_back(scene, gm, glm::vec2(2.f, -2.f), glm::vec2(5.f, 1.f));
 
     // PLAYER ---------------------------------------------------------------
     // pain::Texture &shipTex =
@@ -94,7 +93,7 @@ public:
     // MOUSE POINTER
     // ---------------------------------------------------------------
     MousePointer mp(scene);
-    mp.emplaceScript<MousePointerScript>(scene, cameraEntity);
+    mp.emplaceScript<MousePointerScript>(scene, cameraEntity, gm.getCellSize());
 
     scene.emplaceImGuiScript<pain::ImGuiDebugMenu>(app, cameraEntity,
                                                    mp.getEntity());

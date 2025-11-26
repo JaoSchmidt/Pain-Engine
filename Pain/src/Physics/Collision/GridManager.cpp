@@ -21,6 +21,14 @@ int64_t GridManager::getKey(int32_t x, int32_t y) const
 GridCell &GridManager::getCell(int32_t x, int32_t y,
                                std::unordered_map<int64_t, GridCell> &grid)
 {
+  auto [it, inserted] = m_grid.try_emplace(getKey(x, y), m_defaultReserved);
+  return it->second;
+}
+
+GridCellStatic &
+GridManager::getCellStatic(int32_t x, int32_t y,
+                           std::unordered_map<int64_t, GridCellStatic> &grid)
+{
   auto [it, inserted] =
       m_staticGrid.try_emplace(getKey(x, y), m_defaultReserved);
   return it->second;
@@ -47,13 +55,13 @@ void GridManager::clearDynamic(const glm::vec3 &pos)
   getCell(x, y, m_grid).clear();
 }
 void GridManager::insertStatic(const ColliderComponent &cc,
-                               TransformComponent &tc, MovementComponent &mc)
+                               TransformComponent &tc)
 {
   // TODO: Calculate using size to check the case a single entity is inside
   // multiple cells
   int x = static_cast<int>(tc.m_position.x / m_cellSize);
   int y = static_cast<int>(tc.m_position.y / m_cellSize);
-  getCell(x, y, m_staticGrid).push_back(cc, tc, mc);
+  getCellStatic(x, y, m_staticGrid).push_back(cc, tc);
 }
 
 void GridManager::insertDynamic(const ColliderComponent &cc,

@@ -31,8 +31,9 @@
       "name": "ci",
       "displayName": "CI/CD (GCC + Makefiles + Release)",
       "generator": "Unix Makefiles",
-      "binaryDir": "dkr_build",
+      "binaryDir": "build-ci",
       "cacheVariables": {
+        "CMAKE_BUILD_PARALLEL_LEVEL": 8,
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "g++"
       }

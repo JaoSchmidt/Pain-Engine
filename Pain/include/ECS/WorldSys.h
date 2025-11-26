@@ -5,7 +5,7 @@
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Scene.h"
 #include "GUI/ImGuiSys.h"
-#include "Physics/Collision/CollisionSys.h"
+#include "Physics/Collision/CollisionNaiveSys.h"
 #include "Physics/KinematicsSys.h"
 #include "Scripting/LuaScriptSys.h"
 #include "Scripting/NativeSystem.h"
@@ -23,6 +23,7 @@ public:
                float collisionGridSize, void *context, SDL_Window *window);
 
   double getCellSize() const { return m_collisionSystem.getCellSize(); }
+  GridManager &getGridManager() { return m_collisionSystem.m_gridManager; };
 
 private:
   reg::ArcheRegistry<ComponentManager> &m_registry;
@@ -31,7 +32,7 @@ private:
   Systems::NativeScript m_nativeScriptSystem = {m_registry};
   Systems::ImGuiSys m_imGuiSystem;
   Systems::LuaScript m_luaSystem = {m_registry};
-  Systems::CollisionSystem m_collisionSystem = {16.f, m_registry};
+  Systems::CollisionSystem m_collisionSystem;
 };
 
 } // namespace pain

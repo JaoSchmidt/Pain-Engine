@@ -27,4 +27,30 @@ GridCell::end() const
   return m_components.end();
 }
 
+// =======================================================
+// Same as the above, but static
+// =======================================================
+
+GridCellStatic::GridCellStatic(int reserved) { m_components.reserve(reserved); }
+
+void GridCellStatic::clear() { m_components.clear(); }
+
+void GridCellStatic::push_back(const ColliderComponent &cc,
+                               TransformComponent &tc)
+{
+  m_components.push_back(std::make_tuple(&cc, &tc));
+}
+
+std::vector<
+    std::tuple<const ColliderComponent *, TransformComponent *>>::const_iterator
+GridCellStatic::begin() const
+{
+  return m_components.begin();
+}
+std::vector<
+    std::tuple<const ColliderComponent *, TransformComponent *>>::const_iterator
+GridCellStatic::end() const
+{
+  return m_components.end();
+}
 } // namespace pain

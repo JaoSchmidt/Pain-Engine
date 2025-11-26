@@ -22,9 +22,9 @@ void renderAll();
 #define IMGUI_DEBUG_AUTO_NAME __FUNCTION__
 #endif
 /// Add log to IMGUI debug menu, automatically add the function name
-#define IMGUI_PLOG(func) ::ImGuiDebugRegistry::add(IMGUI_DEBUG_AUTO_NAME, func)
+#define IMGUI_PLOG(func) ::ImGuiDebugRegistry::add(IMGUI_DEBUG_AUTO_NAME, func);
 /// Add log to IMGUI debug menu
-#define IMGUI_PLOG_NAME(name, func) ::ImGuiDebugRegistry::add(name, func)
+#define IMGUI_PLOG_NAME(name, func) ::ImGuiDebugRegistry::add(name, func);
 #else
 #define IMGUI_DEBUG_ADD(func)
 #endif
