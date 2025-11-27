@@ -9,7 +9,7 @@ struct CirleShape {
   float radius;
 };
 struct AABBShape {
-  glm::vec2 halfSize;
+  glm::vec2 halfSize; // half of a size of the rectangle
 };
 struct CapsuleShape {
   float height;

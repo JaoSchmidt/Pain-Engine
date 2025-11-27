@@ -19,10 +19,6 @@ void ImGuiDebugMenu::onRender(pain::Renderer2d &renderer, bool isMinimized,
       getScene().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
 
   ImGui::Text("Camera zoom: %.3f", camCC.m_zoomLevel);
-  ImGui::Text("cellSize %.3f", m_app->getCellSize());
-  float cellScreenPixels = (m_app->getCellSize() / camCC.m_zoomLevel) *
-                           camCC.m_matrices->getResolution().y;
-  ImGui::Text("cellScreenPixels %.3f", cellScreenPixels);
   ImGuiDebugRegistry::renderAll();
   ImGui::End();
 }

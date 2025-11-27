@@ -22,9 +22,6 @@ public:
   WorldSystems(reg::ArcheRegistry<ComponentManager> &m_registry,
                float collisionGridSize, void *context, SDL_Window *window);
 
-  double getCellSize() const { return m_collisionSystem.getCellSize(); }
-  GridManager &getGridManager() { return m_collisionSystem.m_gridManager; };
-
 private:
   reg::ArcheRegistry<ComponentManager> &m_registry;
   Systems::Render m_renderSystem = {m_registry};

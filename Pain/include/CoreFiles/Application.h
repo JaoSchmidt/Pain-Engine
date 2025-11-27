@@ -56,8 +56,6 @@ public:
 
     return *m_worldScene;
   }
-  float getCellSize() const { return m_worldSceneSys->getCellSize(); };
-  GridManager &getGridManager() { return m_worldSceneSys->getGridManager(); };
 
 private:
   Application(sol::state &&luaState, SDL_Window *window, void *context);

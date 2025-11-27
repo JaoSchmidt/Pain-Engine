@@ -14,7 +14,6 @@ class Player : public pain::NormalEntity<pain::TransformComponent,         //
                                          pain::MovementComponent,          //
                                          pain::ParticleSprayComponent,     //
                                          pain::OrthoCameraComponent,       //
-                                         pain::ColliderComponent,          //
                                          pain::CollisionCallbackComponent, //
                                          pain::LuaScriptComponent>
 {

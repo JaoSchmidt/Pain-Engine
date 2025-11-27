@@ -8,12 +8,11 @@
 Player::Player(pain::Scene &scene, pain::Texture &tex) : NormalEntity(scene)
 {
   createComponents(
-      scene, pain::TransformComponent{},         //
-      pain::SpriteComponent{tex},                //
-      pain::MovementComponent{},                 //
-      pain::ParticleSprayComponent{},            //
-      pain::OrthoCameraComponent{},              //
-      pain::ColliderComponent::createCollider(), //
-      pain::CollisionCallbackComponent{},        //
+      scene, pain::TransformComponent{},  //
+      pain::SpriteComponent{tex},         //
+      pain::MovementComponent{},          //
+      pain::ParticleSprayComponent{},     //
+      pain::OrthoCameraComponent{},       //
+      pain::CollisionCallbackComponent{}, //
       pain::LuaScriptComponent{m_entity, scene, scene.getSharedLuaState()});
 }

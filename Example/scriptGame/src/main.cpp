@@ -59,7 +59,8 @@ public:
 
     // WALLS ---------------------------------------------------------------
     std::vector<Wall> walls;
-    pain::GridManager &gm = app->getGridManager();
+    // pain::GridManager &gm = app->getGridManager();
+    pain::GridManager gm;
     walls.reserve(4);
     walls.emplace_back(scene, gm, glm::vec2(-2.f, 2.f), glm::vec2(5.f, 1.f));
     walls.emplace_back(scene, gm, glm::vec2(2.f, 2.f), glm::vec2(1.f, 5.f));

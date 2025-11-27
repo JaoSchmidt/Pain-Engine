@@ -1,6 +1,7 @@
 #include "Physics/Collision/CollisionNaiveSys.h"
 
 #include "Debugging/Profiling.h"
+#include "Physics/Collision/ColDetection.h"
 #include "Physics/Collision/Collider.h"
 #include "Scripting/CollisionCallback.h"
 #include "Scripting/Component.h"
@@ -96,48 +97,6 @@ void solidCollisionStatic(glm::vec3 &pos1, glm::vec3 &vel1,
 // COLLISION DETECTION
 // =============================================================
 // Between same capulses
-bool checkAABBCollision(const glm::vec3 &pos1, const glm::vec2 &size1,
-                        const glm::vec3 &pos2, const glm::vec2 &size2)
-{
-  // think as pos = left and pos + size = right
-  return (pos1.x < pos2.x + size2.x && pos1.x + size1.x > pos2.x &&
-          pos1.y < pos2.y + size2.y && pos1.y + size1.y > pos2.y);
-}
-bool checkCapsuleCollision(const glm::vec3 &pos1, float height1, float radius1,
-                           const glm::vec3 &pos2, float height2, float radius2)
-{
-  // think as pos = left and pos + size = right
-  return false;
-}
-bool checkCircleCollision(const glm::vec3 &pos1, float radius1,
-                          const glm::vec3 &pos2, float radius2)
-{
-  // think as pos = left and pos + size = right
-  return glm::distance(pos1, pos2) < radius1 + radius2;
-}
-// Between different capulses: n * (n-1)/2 cases. Most likely 3 or 6 or 10
-bool checkCapsuleCircleCollision(const glm::vec3 &pos1, float height1,
-                                 float radius1, const glm::vec3 &pos2,
-                                 float height2, float radius2)
-{
-  // think as pos = left and pos + size = right
-  return false;
-}
-bool checkAABBCircleCollision(const glm::vec3 &pos1, float height1,
-                              float radius1, const glm::vec3 &pos2,
-                              float height2, float radius2)
-{
-  // think as pos = left and pos + size = right
-  return false;
-}
-bool checkAABBCapsuleCollision(const glm::vec3 &pos1, float height1,
-                               float radius1, const glm::vec3 &pos2,
-                               float height2, float radius2)
-{
-  // think as pos = left and pos + size = right
-  return false;
-}
-
 void CollisionSystem::onUpdate(double deltaTime)
 {
 
@@ -179,24 +138,16 @@ void CollisionSystem::onUpdate(double deltaTime)
             if constexpr (std::is_same_v<T1, AABBShape> &&
                           std::is_same_v<T2, AABBShape>) {
 
-              collisionHappened =
-                  checkAABBCollision(pos1, shape1.size, pos2, shape2.size);
-            } else if constexpr (std::is_same_v<T1, CapsuleShape> &&
-                                 std::is_same_v<T2, CapsuleShape>) {
-              collisionHappened =
-                  checkAABBCollision(pos1, shape1.size, pos2, shape2.size);
+              collisionHappened = ColDet::checkAABBCollision(
+                  pos1, shape1.halfSize, pos2, shape2.halfSize);
             } else if constexpr (std::is_same_v<T1, CirleShape> &&
                                  std::is_same_v<T2, CirleShape>) {
-              collisionHappened =
-                  checkAABBCollision(pos1, shape1.size, pos2, shape2.size);
-            } else if constexpr (std::is_same_v<T1, AABBShape> &&
-                                 std::is_same_v<T2, CapsuleShape>) {
-              collisionHappened =
-                  checkAABBCollision(pos1, shape1.size, pos2, shape2.size);
-            } else if constexpr (std::is_same_v<T1, CapsuleShape> &&
+              collisionHappened = ColDet::checkCircleCollision(
+                  pos1, shape1.radius, pos2, shape2.radius);
+            } else if constexpr (std::is_same_v<T1, CirleShape> &&
                                  std::is_same_v<T2, AABBShape>) {
-              collisionHappened =
-                  checkAABBCollision(pos1, shape1.size, pos2, shape2.size);
+              collisionHappened = ColDet::checkAABBCollisionCircle(
+                  pos2, shape2.halfSize, pos1, shape1.radius);
             }
           },
           collider1->m_shape, collider2->m_shape);
@@ -230,8 +181,31 @@ void CollisionSystem::onUpdate(double deltaTime)
       glm::vec3 pos2 =
           transform2->m_position + glm::vec3(collider2->m_offset, 0.f);
 
-      const bool collisionHappened =
-          checkAABBCollision(pos1, collider1->m_size, pos2, collider2->m_size);
+      bool collisionHappened = false;
+      std::visit(
+          [&](auto &&shape1, auto &&shape2) {
+            using T1 = std::decay_t<decltype(shape1)>;
+            using T2 = std::decay_t<decltype(shape2)>;
+            if constexpr (std::is_same_v<T1, AABBShape> &&
+                          std::is_same_v<T2, AABBShape>) {
+
+              collisionHappened = ColDet::checkAABBCollision(
+                  pos1, shape1.halfSize, pos2, shape2.halfSize);
+            } else if constexpr (std::is_same_v<T1, CirleShape> &&
+                                 std::is_same_v<T2, CirleShape>) {
+              collisionHappened = ColDet::checkCircleCollision(
+                  pos1, shape1.radius, pos2, shape2.radius);
+            } else if constexpr (std::is_same_v<T1, CirleShape> &&
+                                 std::is_same_v<T2, AABBShape>) {
+              collisionHappened = ColDet::checkAABBCollisionCircle(
+                  pos2, shape2.halfSize, pos1, shape1.radius);
+            } else if constexpr (std::is_same_v<T1, AABBShape> &&
+                                 std::is_same_v<T2, CirleShape>) {
+              collisionHappened = ColDet::checkAABBCollisionCircle(
+                  pos1, shape1.halfSize, pos2, shape2.radius);
+            }
+          },
+          collider1->m_shape, collider2->m_shape);
 
       // --- Perform Collision Reaction on Entities with Collision Scripts
       if (collisionHappened) {
