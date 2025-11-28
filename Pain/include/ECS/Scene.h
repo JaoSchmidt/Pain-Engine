@@ -12,6 +12,15 @@
 
 namespace pain
 {
+namespace Systems
+{
+struct Render;
+struct Kinematics;
+struct ImGuiSys;
+struct LuaScript;
+struct NaiveCollisionSystem;
+} // namespace Systems
+
 class Scene
 {
 private:
@@ -173,5 +182,13 @@ public:
   {
     return m_registry.end<Components...>();
   }
+
+private:
+  std::unique_ptr<Systems::Render> m_renderSystem;
+  std::unique_ptr<Systems::Kinematics> m_kinematicsSystem;
+  std::unique_ptr<Systems::NativeScript> m_nativeScriptSystem;
+  std::unique_ptr<Systems::ImGuiSys> m_imGuiSystem;
+  std::unique_ptr<Systems::LuaScript> m_luaSystem;
+  std::unique_ptr<Systems::NaiveCollisionSystem> m_collisionSystem;
 };
 } // namespace pain

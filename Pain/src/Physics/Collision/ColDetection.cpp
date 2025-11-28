@@ -24,12 +24,28 @@ std::tuple<float, float> projectionMinMax(const glm::vec2 &axis,
   return projectionMinMaxImpl(axis, pts, std::make_index_sequence<N>{});
 };
 
-bool ColDet::checkAABBCollision(const glm::vec2 &pos1, const glm::vec2 &size1,
-                                const glm::vec2 &pos2, const glm::vec2 &size2)
+// ---------------------------------------------------------------------------
+// Different collision detection between same shapes
+// ---------------------------------------------------------------------------
+
+bool ColDet::checkAABBCollision(const glm::vec2 &center1,
+                                const glm::vec2 &halfSize1,
+                                const glm::vec2 &center2,
+                                const glm::vec2 &halfSize2)
 {
+  const float minAABB1x = center1.x - halfSize1.x;
+  const float maxAABB1x = center1.x + halfSize1.x;
+  const float minAABB1y = center1.y - halfSize1.y;
+  const float maxAABB1y = center1.y + halfSize1.y;
+
+  const float minAABB2x = center1.x - halfSize1.x;
+  const float maxAABB2x = center1.x + halfSize1.x;
+  const float minAABB2y = center1.y - halfSize1.y;
+  const float maxAABB2y = center1.y + halfSize1.y;
+
   // think as pos = left and pos + size = right
-  return (pos1.x < pos2.x + size2.x && pos1.x + size1.x > pos2.x &&
-          pos1.y < pos2.y + size2.y && pos1.y + size1.y > pos2.y);
+  return minAABB1x < maxAABB2x && maxAABB1x > minAABB2x &&
+         minAABB1y < maxAABB2y && maxAABB1y > minAABB2y;
 }
 
 bool ColDet::checkCircleCollision(const glm::vec2 &pos1, float radius1,
@@ -38,26 +54,41 @@ bool ColDet::checkCircleCollision(const glm::vec2 &pos1, float radius1,
   // think as pos = left and pos + size = right
   return glm::distance(pos1, pos2) < radius1 + radius2;
 }
-bool ColDet::checkAABBCollisionCircle(const glm::vec2 &pos1,
-                                      const glm::vec2 &size1,
+bool ColDet::checkAABBCollisionCircle(const glm::vec2 &center1,
+                                      const glm::vec2 &halfSize1,
                                       const glm::vec2 &circleCenter2,
                                       float radius2)
 {
-  glm::vec2 closestPoint = glm::clamp(circleCenter2, pos1, pos1 + size1);
+  const glm::vec2 topLeft = center1 + glm::vec2(-halfSize1.x, halfSize1.y);
+  const glm::vec2 bottomRight = center1 + glm::vec2(halfSize1.x, -halfSize1.y);
+  const glm::vec2 closestPoint =
+      glm::clamp(circleCenter2, topLeft, bottomRight);
   return glm::distance(circleCenter2, closestPoint) <= radius2;
 }
+
+// ---------------------------------------------------------------------------
+// Between different shapes n * (n-1)/2 cases. Most likely 3 or 6 or 10
+// ---------------------------------------------------------------------------
+
 bool ColDet::checkAABBCollisionOBB( // AABB
-    const glm::vec2 &pos1, const glm::vec2 &size1,
+    const glm::vec2 &center1, const glm::vec2 &halfSize1,
     // OBB
     const glm::vec2 &center2, const glm::vec2 &halfSize2,
     const glm::mat2 &normalizedRotMat2)
 {
+  // NOTE: no idea why this isn't working
+  // const std::array<glm::vec2, 4> aabbCorners = {
+  //     {-halfSize1.x, halfSize1.y}, // top left
+  //     halfSize1,                   // top right
+  //     {halfSize1.x, -halfSize1.y}, // bottom right
+  //     -halfSize1,                  // bottom left
+  // };
 
   const std::array<glm::vec2, 4> aabbCorners = {
-      pos1,                         // top left
-      pos1 + glm::vec2(size1.x, 0), // top right
-      pos1 + size1,                 // bottom right
-      pos1 + glm::vec2(0, size1.y), // bottom left
+      glm::vec2(-halfSize1.x, halfSize1.y), // top left
+      halfSize1,                            // top right
+      {halfSize1.x, -halfSize1.y},          // bottom right
+      -halfSize1,                           // bottom left
   };
   const glm::vec2 obbLocalCorners[4] = {
       {-halfSize2.x, halfSize2.y}, // top left
@@ -75,10 +106,10 @@ bool ColDet::checkAABBCollisionOBB( // AABB
   };
 
   // For every axis, see if there is an interval that intercepts.
-  const float minAABBx = pos1.x;
-  const float maxAABBx = pos1.x + size1.x;
-  const float minAABBy = pos1.y;
-  const float maxAABBy = pos1.y + size1.y;
+  const float minAABBx = center1.x - halfSize1.x;
+  const float maxAABBx = center1.x + halfSize1.x;
+  const float minAABBy = center1.y - halfSize1.y;
+  const float maxAABBy = center1.y + halfSize1.y;
 
   // ----- SAT Implemented -----
   {
