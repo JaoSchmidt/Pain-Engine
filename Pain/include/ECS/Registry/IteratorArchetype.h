@@ -35,12 +35,26 @@ template <typename T> struct Iterator {
     }
     return *this;
   }
+  Iterator &operator+=(std::ptrdiff_t n)
+  {
+    while (n > 0) {
+      ++(*this);
+      --n;
+    }
+    return *this;
+  }
 
   bool operator==(const Iterator &o)
   {
     return m_outerIndex == o.m_outerIndex && m_innerIndex == o.m_innerIndex;
   };
   bool operator!=(const Iterator &o) { return !(*this == o); };
+
+  friend Iterator operator+(Iterator it, std::ptrdiff_t n)
+  {
+    it += n;
+    return it;
+  }
 
 protected:
   std::vector<std::vector<T> *> m_vectors;

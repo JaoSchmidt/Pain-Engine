@@ -2,17 +2,16 @@
 
 #include "ECS/Components/Movement.h"
 #include "ECS/Systems.h"
-#include "Physics/Collision/GridManager.h"
 namespace pain
 {
 
 namespace Systems
 {
-struct CollisionSystem : public System<ComponentManager> {
+struct NaiveCollisionSystem : public System<ComponentManager> {
   template <typename... Args>
-  CollisionSystem(float cellSize, Args &&...args)
+  NaiveCollisionSystem(float cellSize, Args &&...args)
       : System(std::forward<Args>(args)...){};
-  CollisionSystem() = delete;
+  NaiveCollisionSystem() = delete;
   void onUpdate(double dt);
   std::vector<std::tuple<const ColliderComponent *, TransformComponent *,
                          MovementComponent *>>

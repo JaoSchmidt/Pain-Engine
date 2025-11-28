@@ -29,7 +29,7 @@ private:
   Systems::NativeScript m_nativeScriptSystem = {m_registry};
   Systems::ImGuiSys m_imGuiSystem;
   Systems::LuaScript m_luaSystem = {m_registry};
-  Systems::CollisionSystem m_collisionSystem;
+  Systems::NaiveCollisionSystem m_collisionSystem;
 };
 
 } // namespace pain
