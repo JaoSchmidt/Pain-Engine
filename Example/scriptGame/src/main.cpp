@@ -81,7 +81,7 @@ public:
     asteroids.reserve(asteroidAmount);
     for (short i = 0; i < asteroidAmount / 2; i++) {
       glm::vec2 randomPos(dist(gen), dist(gen));
-      glm::vec2 randomVel(dist(gen) * 0.5, dist(gen) * 0.5);
+      glm::vec2 randomVel(dist(gen), dist(gen));
       asteroids.emplace_back(                           //
           scene,                                        //
           asteroidSheet,                                //
@@ -91,7 +91,7 @@ public:
     }
     for (short i = asteroidAmount / 2; i < asteroidAmount; i++) {
       glm::vec2 randomPos(dist(gen), dist(gen));
-      glm::vec2 randomVel(dist(gen) * 0.5, dist(gen) * 0.5);
+      glm::vec2 randomVel(dist(gen), dist(gen));
       asteroids.emplace_back(                           //
           scene,                                        //
           asteroidSheet,                                //
@@ -143,7 +143,7 @@ public:
     // renderer.drawQuad(
     //     {0.0f, 0.0f}, {0.2f, 0.2f}, {0.2f, 0.9f, 0.6f, 1.f},
     //     pain::resources::getDefaultTexture(pain::resources::BLANK, false));
-    renderer.drawCircle({0.0f, 0.0f}, 0.2f, {0.2f, 0.3f, 0.9f, 1.f});
+    // renderer.drawCircle({0.0f, 0.0f}, 0.2f, {0.2f, 0.3f, 0.9f, 1.f});
   }
 
   MainScript(reg::Entity entity, pain::Scene &scene, std::vector<Stars> &&stars,
@@ -165,7 +165,7 @@ public:
   MousePointer m_mousePointer;
   // Player m_player;
   const static unsigned starAmout = 12;
-  const static unsigned asteroidAmount = 12;
+  const static unsigned asteroidAmount = 20;
 };
 
 pain::Application *pain::createApplication()

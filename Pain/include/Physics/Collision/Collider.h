@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ECS/Registry/Entity.h"
 #include "Misc/BasicShape.h"
 #include <variant>
 namespace pain
@@ -31,7 +32,7 @@ struct ColliderComponent {
                              isTrigger);
   }
 
-private:
+protected:
   ColliderComponent() = default;
   ColliderComponent(const glm::vec2 &halfSize, const glm::vec2 &offset,
                     bool isTrigger)
@@ -45,6 +46,10 @@ private:
       : m_offset(offset),
         m_shape(CapsuleShape{capsuleHeigh, capsuleSemiCircleRadius}),
         m_isTrigger(isTrigger) {};
+};
+
+struct SAPCollider : public ColliderComponent {
+  reg::Entity id;
 };
 
 } // namespace pain

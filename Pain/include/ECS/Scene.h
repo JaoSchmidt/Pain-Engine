@@ -19,6 +19,7 @@ struct ImGuiSys;
 struct LuaScript;
 struct NativeScript;
 struct NaiveCollisionSys;
+struct SweepAndPruneSys;
 } // namespace Systems
 
 class Scene
@@ -173,5 +174,6 @@ private:
   Systems::ImGuiSys *m_imGuiSystem;
   Systems::LuaScript *m_luaSystem;
   Systems::NaiveCollisionSys *m_collisionSystem;
+  Systems::SweepAndPruneSys *m_sweepAndPruneSystem;
 };
 } // namespace pain
