@@ -18,4 +18,4 @@ jobs:
       - name: Build from Docker Image
         run: docker build -f ./.github/dockerfiles/Ubuntu -t pain-ubuntu .
       - name: Run in Docker Container
-        run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace pain-ubuntu:latest bash -c "cmake --preset ci && mkdir build-ci && make -j6"
+        run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace pain-ubuntu:latest bash -c "cmake --preset ci && cd build-ci && make -j6"
