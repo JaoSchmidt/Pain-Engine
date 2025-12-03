@@ -1,7 +1,9 @@
 #include "Physics/Collision/CollisionNaiveSys.h"
 
 #include "Debugging/Profiling.h"
+#include "GUI/ImGuiDebugRegistry.h"
 #include "Physics/Collision/ColDetection.h"
+#include "Physics/Collision/ColReaction.h"
 #include "Physics/Collision/Collider.h"
 #include "Scripting/CollisionCallback.h"
 #include "Scripting/Component.h"
@@ -14,58 +16,63 @@ namespace Systems
 // COLLISION DETECTION
 // =============================================================
 // Between same capulses
-void NaiveCollisionSystem::onUpdate(double deltaTime)
+void NaiveCollisionSys::onUpdate(double deltaTime)
 {
 
   // NOTE: testing without callbacks for now
+  // NOTE: also, testing without rotation for now too. If you introduce rotation
+  // in this system, it will break
   {
     PROFILE_SCOPE("Scene::updateSystems - collision detection");
     auto [tIt_i, cIt_i, mIt_i] =
-        begin<TransformComponent, ColliderComponent, MovementComponent>();
-    auto [tIt_j, cIt_j, mIt_j] =
-        begin<TransformComponent, ColliderComponent, MovementComponent>();
+        begin<Transform2dComponent, ColliderComponent, Movement2dComponent>();
     auto [tItEnd, cItEnd, mItEnd] =
-        end<TransformComponent, ColliderComponent, MovementComponent>();
+        end<Transform2dComponent, ColliderComponent, Movement2dComponent>();
 
     for (; tIt_i != tItEnd; ++tIt_i, ++cIt_i, ++mIt_i) {
+      auto tIt_j = tIt_i + 1;
+      auto cIt_j = cIt_i + 1;
+      auto mIt_j = mIt_i + 1;
+      for (; tIt_j != tItEnd; ++tIt_j, ++cIt_j, ++mIt_j) {
+        glm::vec2 center1 = tIt_i->m_position + cIt_i->m_offset;
+        glm::vec2 center2 = tIt_j->m_position + cIt_j->m_offset;
+        ColDet::Result collisionHappened = {false};
 
-      for (auto tIt_j = tIt_i + 1; tIt_j != tItEnd; ++tIt_j, ++cIt_j, ++mIt_j) {
-        glm::vec3 pos1 = tIt_i->m_position + glm::vec3(cIt_i->m_offset, 0.f);
-        glm::vec3 pos2 = tIt_j->m_position + glm::vec3(cIt_j->m_offset, 0.f);
-        bool collisionHappened = false;
-
+        // -------------------------------------------------------------
+        // Collision detection on movable vs movable objects
+        // -------------------------------------------------------------
         std::visit(
             [&](auto &&shape1, auto &&shape2) {
               using T1 = std::decay_t<decltype(shape1)>;
               using T2 = std::decay_t<decltype(shape2)>;
               if constexpr (std::is_same_v<T1, AABBShape> &&
                             std::is_same_v<T2, AABBShape>) {
-
                 collisionHappened = ColDet::checkAABBCollision(
-                    pos1, shape1.halfSize, pos2, shape2.halfSize);
+                    center1, shape1.halfSize, center2, shape2.halfSize);
               } else if constexpr (std::is_same_v<T1, CirleShape> &&
                                    std::is_same_v<T2, CirleShape>) {
                 collisionHappened = ColDet::checkCircleCollision(
-                    pos1, shape1.radius, pos2, shape2.radius);
+                    center1, shape1.radius, center2, shape2.radius);
               } else if constexpr (std::is_same_v<T1, CirleShape> &&
                                    std::is_same_v<T2, AABBShape>) {
                 collisionHappened = ColDet::checkAABBCollisionCircle(
-                    pos2, shape2.halfSize, pos1, shape1.radius);
+                    center2, shape2.halfSize, center1, shape1.radius);
               }
             },
             cIt_i->m_shape, cIt_j->m_shape);
 
         // --- Perform Collision Reaction on Entities with Collision Scripts
-        if (collisionHappened) {
+        if (collisionHappened.isDetected) {
           if (cIt_i->m_isTrigger || cIt_j->m_isTrigger) {
             // TODO: perform trigger callback
             PLOG_I("Trigger collision happened despite being WIP");
           } else {
-            solidCollision(pos1,              //
-                           mIt_i->m_velocity, //
-                           pos2,              //
-                           mIt_j->m_velocity  //
-            );
+            ColReaction::solidCollisionDynamic( //
+                tIt_i->m_position,              //
+                mIt_i->m_velocity,              //
+                tIt_j->m_position,              //
+                mIt_j->m_velocity, collisionHappened.normal,
+                collisionHappened.penetration);
           }
         }
       }
@@ -75,164 +82,63 @@ void NaiveCollisionSystem::onUpdate(double deltaTime)
     PROFILE_SCOPE(
         "Scene::updateSystems - collision detection vs static objects");
     auto [tIt_i, cIt_i, mIt_i] =
-        begin<TransformComponent, ColliderComponent, MovementComponent>();
-    auto [tIt_j, cIt_j] = begin<TransformComponent, ColliderComponent>();
+        begin<Transform2dComponent, ColliderComponent, Movement2dComponent>();
     auto [tItEnd, cItEnd, mItEnd] =
-        end<TransformComponent, ColliderComponent, MovementComponent>();
+        end<Transform2dComponent, ColliderComponent, Movement2dComponent>();
+    auto [tIt_jEnd, cIt_jEnd] = end<Transform2dComponent, ColliderComponent>(
+        exclude<Movement2dComponent>);
 
     for (; tIt_i != tItEnd; ++tIt_i, ++cIt_i, ++mIt_i) {
+      auto [tIt_j, cIt_j] = begin<Transform2dComponent, ColliderComponent>(
+          exclude<Movement2dComponent>);
+      for (; tIt_j != tIt_jEnd; ++tIt_j, ++cIt_j) {
+        glm::vec2 center1 = tIt_i->m_position + cIt_i->m_offset;
+        glm::vec2 center2 = tIt_j->m_position + cIt_j->m_offset;
+        ColDet::Result collisionHappened = {false};
 
-      for (auto tIt_j = tIt_i + 1; tIt_j != tItEnd; ++tIt_j, ++cIt_j) {
-        glm::vec3 pos1 = tIt_i->m_position + glm::vec3(cIt_i->m_offset, 0.f);
-        glm::vec3 pos2 = tIt_j->m_position + glm::vec3(cIt_j->m_offset, 0.f);
-        bool collisionHappened = false;
-
+        // -------------------------------------------------------------
+        // Collision detection on movable vs static objects
+        // -------------------------------------------------------------
         std::visit(
             [&](auto &&shape1, auto &&shape2) {
               using T1 = std::decay_t<decltype(shape1)>;
               using T2 = std::decay_t<decltype(shape2)>;
               if constexpr (std::is_same_v<T1, AABBShape> &&
                             std::is_same_v<T2, AABBShape>) {
-
                 collisionHappened = ColDet::checkAABBCollision(
-                    pos1, shape1.halfSize, pos2, shape2.halfSize);
+                    center1, shape1.halfSize, center2, shape2.halfSize);
               } else if constexpr (std::is_same_v<T1, CirleShape> &&
                                    std::is_same_v<T2, CirleShape>) {
                 collisionHappened = ColDet::checkCircleCollision(
-                    pos1, shape1.radius, pos2, shape2.radius);
+                    center1, shape1.radius, center2, shape2.radius);
               } else if constexpr (std::is_same_v<T1, CirleShape> &&
                                    std::is_same_v<T2, AABBShape>) {
                 collisionHappened = ColDet::checkAABBCollisionCircle(
-                    pos2, shape2.halfSize, pos1, shape1.radius);
+                    center2, shape2.halfSize, center1, shape1.radius);
               }
             },
             cIt_i->m_shape, cIt_j->m_shape);
 
         // --- Perform Collision Reaction on Entities with Collision Scripts
-        if (collisionHappened) {
+        if (collisionHappened.isDetected) {
           if (cIt_i->m_isTrigger || cIt_j->m_isTrigger) {
             // TODO: perform trigger callback
             PLOG_I("Trigger collision happened despite being WIP");
           } else {
-            solidCollisionStatic(pos1,              //
-                                 mIt_i->m_velocity, //
-                                 pos2               //
-            );
+            // PLOG_I("Static Collision between ({},{}) and ({},{})",
+            //        TP_VEC2(tIt_i->m_position), TP_VEC2(tIt_j->m_position));
+            ColReaction::solidCollisionStatic(tIt_i->m_position,
+                                              mIt_i->m_velocity, //
+                                              tIt_j->m_position, //
+                                              collisionHappened.normal,
+                                              collisionHappened.penetration);
           }
         }
       }
     }
   }
+}
 
-  // // Step 3: Detect collisions for entities with callbacks
-  // {
-  //   PROFILE_SCOPE("Scene::updateSystems - collision detection");
-  //
-  //   // Get all entities with colliders
-  //   std::vector<std::tuple<TransformComponent *, ColliderComponent *,
-  //   Entity>>
-  //       allColliders;
-  //
-  //   auto [tIt, cIt] = begin<TransformComponent, ColliderComponent>();
-  //   auto [tItEnd, cItEnd] = end<TransformComponent, ColliderComponent>();
-  //   for (; tIt != tItEnd; ++tIt, ++cIt) {
-  //     allColliders.push_back({&(*tIt), &(*cIt), tIt.getEntity()});
-  //   }
-  //
-  //   // Check entities that have callbacks for collisions
-  //   auto [calTr, calCo, calCCC] = begin<TransformComponent,
-  //   ColliderComponent,
-  //                                       CollisionCallbackComponent>();
-  //   auto [calTrEnd, calCoEnd, calCCCEnd] =
-  //       end<TransformComponent, ColliderComponent,
-  //           CollisionCallbackComponent>();
-  //
-  //   for (; callTr != tIt2End; ++tIt2, ++cIt2, ++ccIt) {
-  //     glm::vec3 pos1 = tIt2->m_position + glm::vec3(cIt2->m_offset, 0.0f);
-  //     Entity selfId = tIt2.getEntity();
-  //
-  //     // Query nearby entities from spatial grid
-  //     auto nearby = m_gridManager.query(tIt2->m_position, cIt2->m_size);
-  //
-  //     for (size_t idx : nearby) {
-  //       if (idx >= allColliders.size())
-  //         continue;
-  //
-  //       auto &[otherTransform, otherCollider, otherId] = allColliders[idx];
-  //       if (selfId == otherId)
-  //         continue; // Skip self
-  //
-  //       glm::vec3 pos2 = otherTransform->m_position +
-  //                        glm::vec3(otherCollider->m_offset, 0.0f);
-  //
-  //       if (checkAABBCollision(pos1, cIt2->m_size, pos2,
-  //                              otherCollider->m_size)) {
-  //         ccIt->addCurrentCollision(otherId);
-  //       }
-  //     }
-  //   }
-  // }
-  // // NOTE: if you are thinking this is slow because of thet getEntity,
-  // remember
-  // // that this only happens when a collision happens, which is (hopefully)
-  // very
-  // // little
-  // {
-  //   PROFILE_SCOPE("Scene::updateSystems - collision callbacks");
-  //
-  //   for (auto it = begin<CollisionCallbackComponent>();
-  //        it != end<CollisionCallbackComponent>(); ++it) {
-  //     CollisionCallbackComponent &ccc = *it;
-  //     if (!ccc.instance)
-  //       continue;
-  //
-  //     // Check for new collisions (Enter)
-  //     if (ccc.onCollisionEnterFunction) {
-  //       for (Entity other : ccc.m_currentCollisions) {
-  //         if (!ccc.wasCollidingLastFrame(other)) {
-  //           ccc.onCollisionEnterFunction(ccc.instance, other);
-  //         }
-  //       }
-  //     }
-  //
-  //     // Check for ongoing collisions (Stay)
-  //     if (ccc.onCollisionStayFunction) {
-  //       for (Entity other : ccc.m_currentCollisions) {
-  //         if (ccc.wasCollidingLastFrame(other)) {
-  //           ccc.onCollisionStayFunction(ccc.instance, other);
-  //         }
-  //       }
-  //     }
-  //
-  //     // Check for ended collisions (Exit)
-  //     if (ccc.onCollisionExitFunction) {
-  //       for (Entity other : ccc.m_previousCollisions) {
-  //         if (!ccc.isCollidingThisFrame(other)) {
-  //           ccc.onCollisionExitFunction(ccc.instance, other);
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-  // {
-  //   PROFILE_SCOPE("Scene::updateSystems - collision Lua callbacks");
-  //   for (auto it = begin<LuaScriptComponent>(); it !=
-  //   end<LuaScriptComponent>();
-  //        ++it) {
-  //     LuaScriptComponent &lsc = *it;
-  //     // Check collisions
-  //     if (lsc.m_onCollisionEnter) {
-  //       for (Entity other : lsc.m_currentCollisions) {
-  //         sol::protected_function_result result =
-  //             (*lsc.m_onCollisionEnter)(lsc, other);
-  //         if (!result.valid()) {
-  //           PLOG_E("Lua error (m_onRenderFunction): {}",
-  //                  result.get<sol::error>().what());
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
 } // namespace Systems
 
 } // namespace pain

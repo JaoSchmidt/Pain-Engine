@@ -27,8 +27,8 @@ void Systems::Kinematics::onUpdate(double deltaTime)
   // =============================================================== //
   {
     PROFILE_SCOPE("Scene::updateSystems - movement");
-    auto [tIt, mIt] = begin<TransformComponent, MovementComponent>();
-    auto [tItEnd, mItEnd] = end<TransformComponent, MovementComponent>();
+    auto [tIt, mIt] = begin<Transform2dComponent, Movement2dComponent>();
+    auto [tItEnd, mItEnd] = end<Transform2dComponent, Movement2dComponent>();
     for (; tIt != tItEnd; ++tIt, ++mIt) {
       tIt->m_position += mIt->m_velocity * static_cast<float>(deltaTime);
     }

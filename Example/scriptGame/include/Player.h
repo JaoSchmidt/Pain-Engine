@@ -9,9 +9,9 @@
 #include "ECS/Scriptable.h"
 #include "Scripting/Component.h"
 
-class Player : public pain::NormalEntity<pain::TransformComponent,         //
+class Player : public pain::NormalEntity<pain::Transform2dComponent,       //
                                          pain::SpriteComponent,            //
-                                         pain::MovementComponent,          //
+                                         pain::Movement2dComponent,        //
                                          pain::ParticleSprayComponent,     //
                                          pain::OrthoCameraComponent,       //
                                          pain::CollisionCallbackComponent, //

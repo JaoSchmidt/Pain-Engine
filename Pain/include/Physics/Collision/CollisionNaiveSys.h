@@ -7,17 +7,16 @@ namespace pain
 
 namespace Systems
 {
-struct NaiveCollisionSystem : public System<ComponentManager> {
+struct NaiveCollisionSys : public System<ComponentManager> {
   template <typename... Args>
-  NaiveCollisionSystem(float cellSize, Args &&...args)
-      : System(std::forward<Args>(args)...){};
-  NaiveCollisionSystem() = delete;
+  NaiveCollisionSys(Args &&...args) : System(std::forward<Args>(args)...){};
+  NaiveCollisionSys() = delete;
   void onUpdate(double dt);
-  std::vector<std::tuple<const ColliderComponent *, TransformComponent *,
-                         MovementComponent *>>
-      m_movingObjects;
-  std::vector<std::tuple<const ColliderComponent *, TransformComponent *>>
-      m_staticObjects;
+  // std::vector<std::tuple<const ColliderComponent *, Transform2dComponent *,
+  //                        Movement2dComponent *>>
+  //     m_movingObjects;
+  // std::vector<std::tuple<const ColliderComponent *, Transform2dComponent *>>
+  //     m_staticObjects;
 };
 
 } // namespace Systems

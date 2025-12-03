@@ -16,8 +16,7 @@ public:
 };
 namespace Systems
 {
-class ImGuiSys : public System<ComponentManager>
-{
+struct ImGuiSys : public System<ComponentManager> {
 public:
   // HACK: The singleton (static) approach assumes that there
   // will be only one context necessary for Dear ImGui to work.

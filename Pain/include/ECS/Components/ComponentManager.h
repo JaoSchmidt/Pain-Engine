@@ -11,8 +11,8 @@ struct NativeScriptComponent;
 struct CollisionCallbackComponent;
 struct ColliderComponent;
 struct OrthoCameraComponent;
-struct TransformComponent;
-struct MovementComponent;
+struct Transform2dComponent;
+struct Movement2dComponent;
 struct ParticleSprayComponent;
 struct RotationComponent;
 struct SpriteComponent;
@@ -23,7 +23,7 @@ struct CollisionComponent;
 struct ImGuiComponent;
 
 using ComponentManager = reg::CompileTimeBitMask<
-    OrthoCameraComponent, TransformComponent, MovementComponent,
+    OrthoCameraComponent, Transform2dComponent, Movement2dComponent,
     NativeScriptComponent, ParticleSprayComponent, RotationComponent,
     SpriteComponent, SpritelessComponent, TrianguleComponent,
     LuaScriptComponent, onUpdateLuaFunction, ImGuiComponent,

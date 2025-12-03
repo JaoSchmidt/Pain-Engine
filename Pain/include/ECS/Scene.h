@@ -5,7 +5,6 @@
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Registry/Entity.h"
 #include "GUI/ImGuiComponent.h"
-#include "Scripting/NativeSystem.h"
 
 #include <sol/sol.hpp>
 #include <utility>
@@ -18,17 +17,16 @@ struct Render;
 struct Kinematics;
 struct ImGuiSys;
 struct LuaScript;
-struct NaiveCollisionSystem;
+struct NativeScript;
+struct NaiveCollisionSys;
 } // namespace Systems
 
 class Scene
 {
-private:
-  reg::ArcheRegistry<ComponentManager> m_registry;
-  sol::state &m_luaState;
-  reg::Entity m_entity;
 
 public:
+  Scene(sol::state &solState, float collisionGridSize, void *context,
+        SDL_Window *window);
   reg::ArcheRegistry<ComponentManager> &getRegistry() { return m_registry; };
   reg::Entity getEntity() const { return m_entity; }
   void insertStaticCollider(reg::Entity entity);
@@ -37,64 +35,69 @@ public:
   // ---------------------------------------------------- //
   // Constructors
   // ---------------------------------------------------- //
-  template <typename... Components>
-  Scene(sol::state &solState)
-      : m_registry(), m_luaState(solState), m_entity(createEntity()){};
-  template <typename... Components>
-  Scene(sol::state &luaState, Components &&...args)
-      : m_registry(), m_luaState(luaState), m_entity(createEntity())
-  {
-    createComponents<Components...>(m_entity,
-                                    std::forward<Components>(args)...);
-  };
+
+  Scene(sol::state &solState, void *context, SDL_Window *window);
+
   // ---------------------------------------------------- //
-  // Scripts
+  // Helper function to "emplace" Scripts
   // ---------------------------------------------------- //
-  template <typename T> void emplaceScript(T &&t)
+
+  // Move already made script to the registry
+  template <typename T> T &emplaceScript(T &&t)
   {
     NativeScriptComponent &nsc =
         m_registry.getComponent<NativeScriptComponent>(m_entity);
     nsc.bindAndInitiate<T>(std::move(t));
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
+    return static_cast<T &>(*nsc.instance);
   }
+
+  // Emplace script inside the registry
   template <typename T, typename... Args>
     requires std::constructible_from<T, reg::Entity, Scene &, Args...>
-  void emplaceScript(Args &&...args)
+  T &emplaceScript(Args &&...args)
   {
     NativeScriptComponent &nsc =
         m_registry.getComponent<NativeScriptComponent>(m_entity);
     nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
+    return static_cast<T &>(*nsc.instance);
   }
 
-  template <typename T> void emplaceImGuiScript(T &&t)
+  // Move already made script to the registry
+  template <typename T> T &emplaceImGuiScript(T &&t)
   {
     ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
     nsc.bindAndInitiate<T>(std::move(t));
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
+    return static_cast<T &>(*nsc.instance);
   }
   template <typename T, typename... Args>
     requires std::constructible_from<T, reg::Entity, Scene &, Args...>
-  void emplaceImGuiScript(Args &&...args)
+  T &emplaceImGuiScript(Args &&...args)
   {
     ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
     nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
+    return static_cast<T &>(*nsc.instance);
   }
 
   // ---------------------------------------------------- //
-  // Component Archetype stuff
+  // Create components for the Archetype
   // ---------------------------------------------------- //
-  template <typename... Components, typename... Args>
+
+  // Move multiple components at once and create a single archetype in the
+  // process
+  template <typename... Components>
   std::tuple<Components &...> createComponents(reg::Entity entity,
-                                               Args &&...args)
+                                               Components &&...components)
   {
     return m_registry.createComponents<Components...>(
-        entity, std::forward<Args>(args)...);
+        entity, std::forward<Components>(components)...);
   }
   template <typename T, typename... Args>
   T &createComponent(reg::Entity entity, Args &&...args)
@@ -105,6 +108,7 @@ public:
   // ---------------------------------------------------- //
   // Get components from archetypes
   // ---------------------------------------------------- //
+
   // get multiple components together as a tuple
   template <typename... Components>
   std::tuple<Components &...> getComponents(reg::Entity entity)
@@ -154,41 +158,20 @@ public:
   //   m_registry->remove<TargetComponents..., ObjectComponents...>(entity);
   // }
 
-  // ---------------------------------------------------- //
-  // Iterate archetypes
-  // ---------------------------------------------------- //
-
-  template <typename T>
-    requires reg::IsSingleType<T>
-  reg::Iterator<T> end()
-  {
-    return m_registry.end<T>();
-  }
-  template <typename T>
-    requires reg::IsSingleType<T>
-  reg::Iterator<T> begin()
-  {
-    return m_registry.begin<T>();
-  }
-  template <typename... Components>
-    requires reg::IsMultipleTypes<Components...>
-  std::tuple<reg::Iterator<Components>...> begin()
-  {
-    return m_registry.begin<Components...>();
-  }
-  template <typename... Components>
-    requires reg::IsMultipleTypes<Components...>
-  std::tuple<reg::Iterator<Components>...> end()
-  {
-    return m_registry.end<Components...>();
-  }
+  void updateSystems(double deltaTime);
+  void updateSystems(const SDL_Event &event);
+  void renderSystems(Renderer2d &renderer, bool isMinimized,
+                     double currentTime);
 
 private:
-  std::unique_ptr<Systems::Render> m_renderSystem;
-  std::unique_ptr<Systems::Kinematics> m_kinematicsSystem;
-  std::unique_ptr<Systems::NativeScript> m_nativeScriptSystem;
-  std::unique_ptr<Systems::ImGuiSys> m_imGuiSystem;
-  std::unique_ptr<Systems::LuaScript> m_luaSystem;
-  std::unique_ptr<Systems::NaiveCollisionSystem> m_collisionSystem;
+  reg::ArcheRegistry<ComponentManager> m_registry;
+  sol::state &m_luaState;
+  reg::Entity m_entity;
+  Systems::Render *m_renderSystem;
+  Systems::Kinematics *m_kinematicsSystem;
+  Systems::NativeScript *m_nativeScriptSystem;
+  Systems::ImGuiSys *m_imGuiSystem;
+  Systems::LuaScript *m_luaSystem;
+  Systems::NaiveCollisionSys *m_collisionSystem;
 };
 } // namespace pain

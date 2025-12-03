@@ -5,7 +5,7 @@
 
 Bullet::Bullet(pain::Scene *scene) : NormalEntity(*scene)
 {
-  createComponents(*scene, pain::TransformComponent{}, //
-                   pain::SpriteComponent{},            //
-                   pain::MovementComponent{});
+  createComponents(*scene, pain::Transform2dComponent{}, //
+                   pain::SpriteComponent{},              //
+                   pain::Movement2dComponent{});
 }

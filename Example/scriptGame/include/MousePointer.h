@@ -4,10 +4,9 @@
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
-#include "Physics/Collision/GridManager.h"
 
-class MousePointer : public pain::NormalEntity<pain::TransformComponent, //
-                                               pain::SpriteComponent,    //
+class MousePointer : public pain::NormalEntity<pain::Transform2dComponent, //
+                                               pain::SpriteComponent,      //
                                                pain::NativeScriptComponent>
 {
 public:
@@ -18,13 +17,12 @@ class MousePointerScript : public pain::ExtendedEntity
 {
 public:
   MousePointerScript(reg::Entity entity, pain::Scene &scene,
-                     reg::Entity m_cameraEntity, float cellsize);
+                     reg::Entity m_cameraEntity);
   void onEvent(const SDL_Event &e);
   void onUpdate(double deltaTimeSec);
   void onCreate();
 
 private:
-  float m_cellsize = 1.f;
   reg::Entity m_cameraEntity = reg::Entity{-2};
   glm::vec2 screenToWorld(int mouseX, int mouseY);
 };

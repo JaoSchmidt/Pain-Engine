@@ -39,7 +39,7 @@ class OrthographicMatrices : public CameraMatrices
 public:
   OrthographicMatrices(float left, float right, float bottom, float top,
                        int resWidth, int resHeight);
-  void RecalculateViewMatrix(const glm::vec3 &m_position,
+  void RecalculateViewMatrix(const glm::vec2 &m_position,
                              const float m_rotation);
   void SetProjection(float left, float right, float bottom, float top);
 };

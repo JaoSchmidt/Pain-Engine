@@ -42,7 +42,7 @@ void Renderer2d::beginScene(float globalTime, const Scene &scene,
   uploadBasicUniforms(
       m_cameraMatrices->getViewProjectionMatrix(), globalTime, transform,
       m_cameraMatrices->getResolution(),
-      scene.getComponent<TransformComponent>(m_orthoCameraEntity).m_position,
+      scene.getComponent<Transform2dComponent>(m_orthoCameraEntity).m_position,
       scene.getComponent<OrthoCameraComponent>(m_orthoCameraEntity)
           .m_zoomLevel);
   goBackToFirstVertex();
@@ -71,6 +71,21 @@ void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
       indexCount ? indexCount : vertexArray->getIndexBuffer().getCount();
   glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+// ================================================================= //
+// Draw Circles
+// ================================================================= //
+
+void Renderer2d::drawCircle(const glm::vec2 &position, const float radius,
+                            const glm::vec4 &tintColor,
+                            const std::array<glm::vec2, 4> &textureCoordinate)
+{
+  PROFILE_FUNCTION();
+  const float diameter = 2.f * radius;
+  const glm::mat4 transform =
+      getTransform(position, glm::vec2(diameter, diameter));
+  allocateCircle(transform, tintColor, textureCoordinate);
 }
 
 // ================================================================= //

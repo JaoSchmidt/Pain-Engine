@@ -1,138 +1,213 @@
 #include "Physics/Collision/ColReaction.h"
+#include "CoreFiles/LogWrapper.h"
+// Some of the stuff was taking from here
+// https://github.com/OneLoneCoder/Javidx9/blob/0c8ec20a9ed3b2daf76a925034ac5e7e6f4096e0/ConsoleGameEngine/BiggerProjects/Balls/OneLoneCoder_Balls1.cpp#L205
 
 namespace pain
 {
+constexpr float percent = 0.5f; // correction strength (50%)
+// constexpr float slop = 0.01f;   // small tolerance
 
-void basicImpulseStatic(glm::vec2 &vel1, const glm::vec2 normal)
+void basicImpulse(glm::vec2 &center1, //
+                  glm::vec2 &vel1,    //
+                  float mass1,        //
+                  glm::vec2 &center2, //
+                  glm::vec2 &vel2,    //
+                  float mass2,        //
+                  const glm::vec2 normal, float penetration,
+                  float restitution = 1.f)
 {
-  // Ensure the normal is normalized
-  const glm::vec2 relVel = -vel1;
+  const float invMass1 = 1.f / mass1;
+  const float invMass2 = 1.f / mass2;
+  // -------------------------------------------------
+  // 1. POSITIONAL CORRECTION (using penetration)
+  // -------------------------------------------------
+  float correctionMag =
+      std::max(penetration, 0.0f) / (invMass1 + invMass2) * percent;
 
-  // If the dynamic object is already moving away, no response
-  const float relNormVel = glm::dot(relVel, normal);
+  // fix normal direction to be center1 -> center2 direction
+  const glm::vec2 correctNormal =
+      glm::dot(center2 - center1, normal) < 0 ? -normal : normal;
+
+  glm::vec2 correction = correctionMag * correctNormal;
+
+  center1 -= correction * invMass1;
+  center2 += correction * invMass2;
+
+  // -------------------------------------------------
+  // 2. Velocity correction (using penetration)
+  // -------------------------------------------------
+  const glm::vec2 relVel = vel2 - vel1;
+
+  // If the objects are already moving away, cancel
+  const float relNormVel = glm::dot(relVel, correctNormal);
   if (relNormVel > 0.f)
     return;
 
-  // Static object = infinite mass → only object 1 reacts
-  // Restitution: 1.0 means perfectly elastic
-  const float restitution = 1.0f;
-
-  // Impulse scalar (since invMass2 = 0)
-  const float j = -(1.f + restitution) * relNormVel;
-
-  // Apply impulse to velocity
-  const glm::vec2 impulse = j * normal;
-  vel1 += impulse;
-}
-
-void basicImpulse(glm::vec2 &vel1,        //
-                  glm::vec2 &vel2,        //
-                  const glm::vec2 normal, //
-                  float mass1, float mass2)
-{
-  // Relative velocity
-  const glm::vec2 relVel = vel2 - vel1;
-
-  // Check if they are already moving apart along the collision normal
-  const float relNormVel = glm::dot(relVel, normal);
-  if (relNormVel > 0.f)
-    return; // no reaction needed
-
-  // Elastic collision impulse
-  const float invMass1 = 1.f / mass1;
-  const float invMass2 = 1.f / mass2;
-
-  const float restitution = 1.0f; // NOTE: restitution ∈ [0,1]
-
+  // NOTE: restitution ∈ [0,1]
   float j = -(1.f + restitution) * relNormVel;
-  j /= (1.f / mass1 + 1.f / mass2);
+  j /= (invMass1 + invMass2);
 
-  const glm::vec2 impulse = j * normal;
+  const glm::vec2 impulse = j * correctNormal;
   vel1 -= impulse * invMass1;
   vel2 += impulse * invMass2;
 }
+
+void basicImpulseStatic(glm::vec2 &center1, glm ::vec2 &vel1,
+                        const glm::vec2 &center2, const glm::vec2 normal,
+                        float penetration, const float restitution)
+{
+  // -------------------------------------------------
+  // 1. POSITIONAL CORRECTION (using penetration)
+  // -------------------------------------------------
+  float correctionMag = std::max(penetration, 0.0f) * percent;
+
+  // fix normal direction to be center1 -> center2 direction
+  const glm::vec2 correctNormal =
+      glm::dot(center2 - center1, normal) < 0 ? -normal : normal;
+
+  glm::vec2 correction = correctionMag * correctNormal;
+
+  center1 -= correction;
+  // -------------------------------------------------
+  // 2. Velocity correction (using impulse)
+  // -------------------------------------------------
+  // Ensure the normal is normalized
+  const glm::vec2 relVel = -vel1;
+
+  // If the dynamic object is already moving away, cancel
+
+  const float relNormVel = glm::dot(relVel, correctNormal);
+  if (relNormVel > 0.f) {
+    return;
+  }
+
+  // NOTE: restitution ∈ [0,1]
+  float j = -(1.f + restitution) * relNormVel;
+
+  // Apply impulse to velocity
+  const glm::vec2 impulse = j * correctNormal;
+  vel1 -= impulse;
+}
+
+void ColReaction::solidCollisionDynamic(  //
+    glm::vec2 &center1,                   //
+    glm::vec2 &vel1,                      //
+    glm::vec2 &center2,                   //
+    glm::vec2 &vel2,                      //
+    const glm::vec2 &collisionNormal,     //
+    const float penetration,              //
+    const float mass1, const float mass2, //
+    const float restitution)
+{
+  basicImpulse(center1, vel1, mass1, center2, vel2, mass2, collisionNormal,
+               penetration);
+}
+
+void ColReaction::solidCollisionStatic( //
+    glm::vec2 &center1,                 //
+    glm::vec2 &vel1,                    //
+    const glm::vec2 &center2,           //
+    const glm::vec2 &collisionNormal,   //
+    const float penetration,            //
+    const float restitution             //
+)
+{
+  basicImpulseStatic(center1, vel1, center2, collisionNormal, penetration,
+                     restitution);
+}
+
 // ==========================================================
 // AABB = Axis Aligned Bounding Box
 // ----------------------------------------------------------
 
-void ColReaction::solidCollisionAABB(const glm::vec2 &pos1,      //
-                                     glm::vec2 &vel1,            //
-                                     const glm::vec2 &halfSize1, //
-                                     const glm::vec2 &pos2,      //
-                                     glm::vec2 &vel2,            //
-                                     const glm::vec2 &halfSize2, //
-                                     float mass1, float mass2)
+void ColReaction::solidCollisionAABB(glm::vec2 &center1,                   //
+                                     glm::vec2 &vel1,                      //
+                                     glm::vec2 &center2,                   //
+                                     glm::vec2 &vel2,                      //
+                                     const glm::vec2 &collisionNormal,     //
+                                     const float penetration,              //
+                                     const float mass1, const float mass2, //
+                                     const float restitution)
 {
-  // Relative position
-  const glm::vec2 diff = pos2 - pos1;
-
-  // Overlaps on each axis
-  const float overlapX = (halfSize1.x + halfSize2.x) - std::fabs(diff.x);
-  const float overlapY = (halfSize1.y + halfSize2.y) - std::fabs(diff.y);
-
-  // Determine collision normal = axis of minimum penetration
-  glm::vec2 normal(0.f);
-
-  if (overlapX < overlapY) {
-    normal.x = (diff.x < 0.f) ? -1.f : 1.f;
-  } else {
-    normal.y = (diff.y < 0.f) ? -1.f : 1.f;
-  }
-  basicImpulse(vel1, vel2, normal, mass1, mass2);
+  basicImpulse(center1, vel1, mass1, center2, vel2, mass2, collisionNormal,
+               penetration);
 }
 
-void ColReaction::solidCollisionAABBxStaticAABB(glm::vec2 &center1,
-                                                glm::vec2 &vel1,
-                                                const glm::vec2 &center2)
+void ColReaction::solidCollisionAABBxStaticAABB( //
+    glm::vec2 &center1,                          //
+    glm::vec2 &vel1,                             //
+    const glm::vec2 &center2,                    //
+    const glm::vec2 &collisionNormal,            //
+    const float penetration,                     //
+    const float restitution                      //
+)
 {
-  const glm::vec2 normal = glm::normalize(center2 - center1);
-  const float v1n = glm::dot(vel1, normal);
-  if (v1n > 0.0f) // already moving away
-    return;
-
-  vel1 -= 2.0f * v1n * normal;
+  basicImpulseStatic(center1, vel1, center2, collisionNormal, penetration,
+                     restitution);
 }
 
 // ==========================================================
 // OBB = Oriented Bounding Box
 // ----------------------------------------------------------
 
-void ColReaction::solidCollisionOBB(glm::vec2 &vel1,                  //
-                                    glm::vec2 &vel2,                  //
-                                    const glm::vec2 &collisionNormal, //
-                                    float mass1, float mass2)
+void ColReaction::solidCollisionOBB(  //
+    glm::vec2 &center1,               //
+    glm::vec2 &vel1,                  //
+    glm::vec2 &center2,               //
+    glm::vec2 &vel2,                  //
+    const glm::vec2 &collisionNormal, //
+    const float penetration,          //
+    float mass1, float mass2,         //
+    const float restitution)
 {
-  basicImpulse(vel1, vel2, collisionNormal, mass1, mass2);
+  basicImpulse(center1, vel1, mass1, center2, vel2, mass2, collisionNormal,
+               penetration, restitution);
 }
-void solidCollisionStaticOBBxOBB(glm::vec2 &vel1,
-                                 const glm::vec2 &collisionNormal)
+void ColReaction::solidCollisionStaticOBBxOBB( //
+    glm::vec2 &center1,                        //
+    glm::vec2 &vel1,                           //
+    const glm::vec2 &center2,                  //
+    const glm::vec2 &collisionNormal,          //
+    const float penetration,                   //
+    const float restitution                    //
+)
 {
-  basicImpulseStatic(vel1, collisionNormal);
+  basicImpulseStatic(center1, vel1, center2, collisionNormal, penetration,
+                     restitution);
 }
 
 // ==========================================================
 // CIRCLE = a circle, duh
 // ----------------------------------------------------------
 
-void ColReaction::solidCollisionCIRCLE(const glm::vec2 &center1, //
-                                       glm::vec2 &vel1,          //
-                                       const glm::vec2 &center2, //
-                                       glm::vec2 &vel2,          //
-                                       float mass1, float mass2)
+void ColReaction::solidCollisionCIRCLE( //
+    glm::vec2 &center1,                 //
+    glm::vec2 &vel1,                    //
+    glm::vec2 &center2,                 //
+    glm::vec2 &vel2,                    //
+    const glm::vec2 &collisionNormal,   //
+    const float penetration,            //
+    float mass1, float mass2,           //
+    const float restitution)
 {
   const glm::vec2 diff = center2 - center1;
   const glm::vec2 normal = glm::normalize(diff);
-  basicImpulse(vel1, vel2, normal, mass1, mass2);
+  basicImpulse(center1, vel1, mass1, center2, vel2, mass2, normal, penetration,
+               restitution);
 }
 
 // Solid collision between a static circle and a circle shapes
-void solidCollisionStaticCIRCLExCIRCLE(const glm::vec2 &center1, //
-                                       glm::vec2 &vel1,          //
-                                       const glm::vec2 &center2)
+void ColReaction::solidCollisionStaticCIRCLExCIRCLE(
+    glm::vec2 &center1,               //
+    glm::vec2 &vel1,                  //
+    const glm::vec2 &center2,         //
+    const glm::vec2 &collisionNormal, //
+    const float penetration,          //
+    const float restitution)
 {
-  const glm::vec2 diff = center2 - center1;
-  const glm::vec2 normal = glm::normalize(diff);
-  basicImpulseStatic(vel1, normal);
+  basicImpulseStatic(center1, vel1, center2, collisionNormal, penetration,
+                     restitution);
 }
 
 // ==========================================================
@@ -140,117 +215,99 @@ void solidCollisionStaticCIRCLExCIRCLE(const glm::vec2 &center1, //
 // ----------------------------------------------------------
 
 // Solid collision between OBB and AABB shapes
-void ColReaction::solidCollisionAABBxOBB(glm::vec2 &vel1,                  //
-                                         glm::vec2 &vel2,                  //
-                                         const glm::vec2 &collisionNormal, //
-                                         float mass1, float mass2)
+void ColReaction::solidCollisionAABBxOBB( //
+    glm::vec2 &center1,                   //
+    glm::vec2 &vel1,                      //
+    glm::vec2 &center2,                   //
+    glm::vec2 &vel2,                      //
+    const glm::vec2 &collisionNormal,     //
+    const float penetration,              //
+    float mass1, float mass2,             //
+    const float restitution)
 {
-  basicImpulse(vel1, vel2, collisionNormal, mass1, mass2);
+  basicImpulse(center1, vel1, mass1, center2, vel2, mass2, collisionNormal,
+               penetration, restitution);
 }
 // Solid collision between OBB and AABB shapes
-void solidCollisionStaticAABBxOBB(glm::vec2 &vel2, //
-                                  const glm::vec2 &collisionnormal)
+void ColReaction::solidCollisionStaticAABBxOBB( //
+    const glm::vec2 &center1,                   //
+    glm::vec2 &center2,                         //
+    glm::vec2 &vel2,                            //
+    const glm::vec2 &collisionNormal,           //
+    const float penetration,                    //
+    const float restitution)
 {
-  basicImpulseStatic(vel2, collisionnormal);
+  basicImpulseStatic(center2, vel2, center1, collisionNormal, penetration,
+                     restitution);
 }
 
 // Solid collision between OBB and AABB shapes
-void solidCollisionAABBxStaticOBB(glm::vec2 &vel1, //
-                                  const glm::vec2 &collisionNormal)
+void ColReaction::solidCollisionAABBxStaticOBB(
+    glm::vec2 &center1,               //
+    glm::vec2 &vel1,                  //
+    const glm::vec2 &center2,         //
+    const glm::vec2 &collisionNormal, //
+    const float penetration,          //
+    const float restitution           //
+)
 {
-  basicImpulseStatic(vel1, collisionNormal);
+  basicImpulseStatic(center1, vel1, center2, collisionNormal, penetration,
+                     restitution);
 }
 
 // ==========================================================
 // Mixed stuff, but involves a circle
 // ----------------------------------------------------------
-void ColReaction::solidCollisionOBBxCIRCLE(
-    const glm::vec2 &center1, //
-    glm::vec2 &vel1,          //
-    const glm::vec2 &halfSize1,
-    const glm::mat2 &normalizedRotMat1, //
-    const glm::vec2 &center2,           //
-    glm::vec2 &vel2,                    //
-    float radius2,                      //
-    float mass1, float mass2)
+void ColReaction::solidCollisionOBBxCIRCLE( //
+    glm::vec2 &center1,                     //
+    glm::vec2 &vel1,                        //
+    glm::vec2 &center2,                     //
+    glm::vec2 &vel2,                        //
+    const glm::vec2 &collisionNormal,       //
+    const float penetration,                //
+    float mass1, float mass2,               //
+    const float restitution)
 {
-  // Transform circle center into OBB local space
-  const glm::vec2 diff = center2 - center1;
-  const glm::vec2 local = glm::transpose(normalizedRotMat1) * diff;
-
-  // Clamp to OBB extents
-  const glm::vec2 clamped = glm::clamp(local, -halfSize1, halfSize1);
-
-  // Closest point back to world space
-  const glm::vec2 closest = center1 + normalizedRotMat1 * clamped;
-
-  // Normal from closest point to circle center
-  const glm::vec2 normal = center2 - closest;
-  basicImpulse(vel1, vel2, normal, mass1, mass2);
+  basicImpulse(center1, vel1, mass1, center2, vel2, mass2, collisionNormal,
+               penetration, restitution);
 }
 
 // Solid collision between static AABB and Circle shape
-void ColReaction::solidCollisionStaticAABBxCIRCLE(glm::vec2 &center1,       //
-                                                  glm::vec2 &vel1,          //
-                                                  float radius1,            //
-                                                  const glm::vec2 &center2, //
-                                                  const glm::vec2 &halfSize2)
+void ColReaction::solidCollisionStaticAABBxCIRCLE( //
+    const glm::vec2 &center1,                      //
+    glm::vec2 &center2,                            //
+    glm::vec2 &vel2,                               //
+    const glm::vec2 &collisionNormal,              //
+    const float penetration,                       //
+    const float restitution)
 {
-  const glm::vec2 diff = center1 - center2;
-
-  // Clamp to AABB extents
-  const glm::vec2 closestLocal = glm::clamp(diff, -halfSize2, halfSize2);
-
-  // Convert back to world position
-  const glm::vec2 closestPoint = center2 + closestLocal;
-
-  // Normal from closest point to circle center
-  const glm::vec2 normal = glm::normalize(center1 - closestPoint);
-  basicImpulseStatic(vel1, normal);
+  basicImpulseStatic(center2, vel2, center1, collisionNormal, penetration,
+                     restitution);
 }
 
 // Solid collision between a OBB and static Circle shape
-void solidCollisionOBBxStaticCIRCLE(const glm::vec2 &center1,           //
-                                    glm::vec2 &vel1,                    //
-                                    const glm::vec2 &halfSize1,         //
-                                    const glm::mat2 &normalizedRotMat1, //
-                                    const glm::vec2 &center2,           //
-                                    float radius2)
+void ColReaction::solidCollisionOBBxStaticCIRCLE(
+    glm::vec2 &center1,               //
+    glm::vec2 &vel1,                  //
+    const glm::vec2 &center2,         //
+    const glm::vec2 &collisionNormal, //
+    const float penetration,          //
+    const float restitution)
 {
-  // Transform circle center into OBB local space
-  const glm::vec2 diff = center2 - center1;
-  const glm::vec2 local = glm::transpose(normalizedRotMat1) * diff;
-
-  // Clamp to OBB extents
-  const glm::vec2 clamped = glm::clamp(local, -halfSize1, halfSize1);
-
-  // Closest point back to world space
-  const glm::vec2 closest = center1 + normalizedRotMat1 * clamped;
-
-  // Normal from closest point to circle center
-  const glm::vec2 normal = center2 - closest;
-  basicImpulseStatic(vel1, normal);
+  basicImpulseStatic(center1, vel1, center2, collisionNormal, penetration,
+                     restitution);
 }
 
 // Solid collision between a static OBB and Circle shape
-void solidCollisionStaticOBBxCIRCLE(const glm::vec2 &center1,           //
-                                    const glm::vec2 &halfSize1,         //
-                                    const glm::mat2 &normalizedRotMat1, //
-                                    const glm::vec2 &center2,           //
-                                    glm::vec2 &vel2,                    //
-                                    float radius2)
-{ // Transform circle center into OBB local space
-  const glm::vec2 diff = center2 - center1;
-  const glm::vec2 local = glm::transpose(normalizedRotMat1) * diff;
-
-  // Clamp to OBB extents
-  const glm::vec2 clamped = glm::clamp(local, -halfSize1, halfSize1);
-
-  // Closest point back to world space
-  const glm::vec2 closest = center1 + normalizedRotMat1 * clamped;
-
-  // Normal from closest point to circle center
-  const glm::vec2 normal = center2 - closest;
-  basicImpulseStatic(vel2, normal);
+void ColReaction::solidCollisionStaticOBBxCIRCLE(
+    const glm::vec2 &center1,         //
+    glm::vec2 &center2,               //
+    glm::vec2 &vel2,                  //
+    const glm::vec2 &collisionNormal, //
+    const float penetration,          //
+    const float restitution)
+{
+  basicImpulseStatic(center2, vel2, center1, collisionNormal, penetration,
+                     restitution);
 }
 } // namespace pain

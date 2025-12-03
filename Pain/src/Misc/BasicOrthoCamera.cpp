@@ -16,9 +16,9 @@ OrthoCamera::OrthoCamera(Scene *scene, int resolutionHeight,
 {
   // clang-format off
   createComponents(*scene,
-      MovementComponent{glm::vec3(0.f), 1.f},
+      Movement2dComponent{glm::vec2(0.f), 1.f},
       RotationComponent{},
-      TransformComponent{},
+      Transform2dComponent{},
       OrthoCameraComponent{(float)resolutionWeigh/resolutionHeight, zoomLevel, resolutionWeigh, resolutionHeight},
       NativeScriptComponent{}
   );
@@ -26,10 +26,10 @@ OrthoCamera::OrthoCamera(Scene *scene, int resolutionHeight,
 };
 void OrthoCameraScript::onCreate()
 {
-  getComponent<MovementComponent>().m_rotationSpeed = 1.f;
+  getComponent<Movement2dComponent>().m_rotationSpeed = 1.f;
 }
 // OrthoCameraScript inherits ExtendedEntity
-inline void OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
+inline void OrthoCameraScript::recalculatePosition(const glm::vec2 &position,
                                                    const float rotation)
 {
   getComponent<OrthoCameraComponent>().m_matrices->RecalculateViewMatrix(
@@ -40,8 +40,8 @@ void OrthoCameraScript::onUpdate(double deltaTimeSec)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   auto [mc, tc, cc, rc] =
-      getComponents<MovementComponent, TransformComponent, OrthoCameraComponent,
-                    RotationComponent>();
+      getComponents<Movement2dComponent, Transform2dComponent,
+                    OrthoCameraComponent, RotationComponent>();
 
   glm::vec3 moveDir{0.0f};
 

@@ -6,7 +6,6 @@
 #include "CoreFiles/EndGameFlags.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/DebuggingImGui.h"
-#include "ECS/WorldSys.h"
 #include "GUI/ImGuiSys.h"
 #include <sol/state.hpp>
 
@@ -48,10 +47,11 @@ public:
   template <typename... Components>
   Scene &createScene(float collisionGridSize, Components... args)
   {
-    m_worldScene =
-        std::make_unique<Scene>(m_luaState, std::forward<Components>(args)...);
-    m_worldSceneSys = std::make_unique<WorldSystems>(
-        m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
+    m_worldScene = std::make_unique<Scene>(m_luaState, m_context, m_window);
+    m_worldScene->createComponents(m_worldScene->getEntity(),
+                                   std::forward<Components>(args)...);
+    // m_worldSceneSys = std::make_unique<WorldSystems>(
+    //     m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
     m_renderer.setCellGridSize(collisionGridSize);
 
     return *m_worldScene;
@@ -63,7 +63,6 @@ private:
   // OWNED CLASSES
   // =============================================================== //
   std::unique_ptr<Scene> m_worldScene;
-  std::unique_ptr<WorldSystems> m_worldSceneSys;
 
   Renderer2d m_renderer;
 

@@ -8,8 +8,8 @@
 #include "Scripting/Component.h"
 
 class Dummy
-    : public pain::NormalEntity<pain::TransformComponent, pain::SpriteComponent,
-                                pain::LuaScriptComponent>
+    : public pain::NormalEntity<pain::Transform2dComponent,
+                                pain::SpriteComponent, pain::LuaScriptComponent>
 {
 public:
   Dummy(pain::Scene *scene, const glm::vec2 &position, const glm::vec2 &size,

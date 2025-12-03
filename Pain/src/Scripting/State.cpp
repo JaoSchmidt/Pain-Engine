@@ -50,23 +50,24 @@ sol::state createLuaState()
       // NOTE: not going to put texture right now because too much work
   );
   // type returned by get_movement(self)
-  lua.new_usertype<MovementComponent>(
-      "MovementComponent", sol::no_constructor,     //
-      "m_velocity", &MovementComponent::m_velocity, //
-      "m_rotationSpeed", &MovementComponent::m_rotationSpeed);
+  lua.new_usertype<Movement2dComponent>(
+      "Movement2dComponent", sol::no_constructor,     //
+      "m_velocity", &Movement2dComponent::m_velocity, //
+      "m_rotationSpeed", &Movement2dComponent::m_rotationSpeed);
 
   // type returned by get_position(self)
-  lua.new_usertype<TransformComponent>(             //
-      "TransformComponent", sol::no_constructor,    //
-      "m_position", &TransformComponent::m_position //
+  lua.new_usertype<Transform2dComponent>(             //
+      "Transform2dComponent", sol::no_constructor,    //
+      "m_position", &Transform2dComponent::m_position //
   );
 
   lua.new_usertype<LuaScriptComponent>(
       "LuaScriptComponent", "get_position",
       [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<TransformComponent>())
+        if (c.hasAnyComponents<Transform2dComponent>())
           return sol::make_reference(
-              c.getLuaState(), std::ref(c.getComponent<TransformComponent>()));
+              c.getLuaState(),
+              std::ref(c.getComponent<Transform2dComponent>()));
         return sol::nil;
       },
       "get_sprite",
@@ -78,9 +79,9 @@ sol::state createLuaState()
       },
       "get_movement",
       [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<MovementComponent>())
+        if (c.hasAnyComponents<Movement2dComponent>())
           return sol::make_reference(
-              c.getLuaState(), std::ref(c.getComponent<MovementComponent>()));
+              c.getLuaState(), std::ref(c.getComponent<Movement2dComponent>()));
         return sol::nil;
       });
 

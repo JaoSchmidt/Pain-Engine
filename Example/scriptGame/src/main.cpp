@@ -19,7 +19,7 @@
 class MainScript : public pain::ExtendedEntity
 {
 public:
-  static reg::Entity createScriptScene(pain::Scene &scene, int resWeight,
+  static MainScript &createScriptScene(pain::Scene &scene, int resWeight,
                                        int resHeight, float zoom,
                                        pain::Application *app)
   {
@@ -59,13 +59,13 @@ public:
 
     // WALLS ---------------------------------------------------------------
     std::vector<Wall> walls;
-    // pain::GridManager &gm = app->getGridManager();
-    pain::GridManager gm;
+    // walls.reserve(1);
+    // walls.emplace_back(scene, glm::vec2(0.0f, 0.0f), glm::vec2(0.2f, 6.2f));
     walls.reserve(4);
-    walls.emplace_back(scene, gm, glm::vec2(-2.f, 2.f), glm::vec2(5.f, 1.f));
-    walls.emplace_back(scene, gm, glm::vec2(2.f, 2.f), glm::vec2(1.f, 5.f));
-    walls.emplace_back(scene, gm, glm::vec2(-2.f, -2.f), glm::vec2(1.f, 5.f));
-    walls.emplace_back(scene, gm, glm::vec2(2.f, -2.f), glm::vec2(5.f, 1.f));
+    walls.emplace_back(scene, glm::vec2(-2.f, 2.f), glm::vec2(8.f, 1.f));
+    walls.emplace_back(scene, glm::vec2(2.f, 2.f), glm::vec2(1.f, 8.f));
+    walls.emplace_back(scene, glm::vec2(-2.f, -2.f), glm::vec2(1.f, 8.f));
+    walls.emplace_back(scene, glm::vec2(2.f, -2.f), glm::vec2(8.f, 1.f));
 
     // PLAYER ---------------------------------------------------------------
     // pain::Texture &shipTex =
@@ -79,46 +79,79 @@ public:
         {{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}});
     std::vector<Asteroid> asteroids;
     asteroids.reserve(asteroidAmount);
-    for (short i = 0; i < asteroidAmount; i++) {
+    for (short i = 0; i < asteroidAmount / 2; i++) {
       glm::vec2 randomPos(dist(gen), dist(gen));
-      glm::vec2 randomVel(dist(gen) * 0.1, dist(gen) * 0.1);
-      Asteroid ast = {scene,                                        //
-                      gm,                                           //
-                      asteroidSheet,                                //
-                      static_cast<short>(i % asteroidSheet.size()), //
-                      randomPos,                                    //
-                      randomVel};
-      asteroids.emplace_back(std::move(ast));
-      // scene.insertStaticCollider(ast.getEntity());
+      glm::vec2 randomVel(dist(gen) * 0.5, dist(gen) * 0.5);
+      asteroids.emplace_back(                           //
+          scene,                                        //
+          asteroidSheet,                                //
+          static_cast<short>(i % asteroidSheet.size()), //
+          std::move(randomPos),                         //
+          std::move(randomVel), 0.1f);
     }
+    for (short i = asteroidAmount / 2; i < asteroidAmount; i++) {
+      glm::vec2 randomPos(dist(gen), dist(gen));
+      glm::vec2 randomVel(dist(gen) * 0.5, dist(gen) * 0.5);
+      asteroids.emplace_back(                           //
+          scene,                                        //
+          asteroidSheet,                                //
+          static_cast<short>(i % asteroidSheet.size()), //
+          std::move(randomPos),                         //
+          std::move(randomVel),                         //
+          glm::vec2{0.2f, 0.2f});                       //
+    }
+
+    //
+    // asteroids.emplace_back(                           //
+    //     scene,                                        //
+    //     asteroidSheet,                                //
+    //     static_cast<short>(0 % asteroidSheet.size()), //
+    //     glm::vec2(-0.21f, -0.8f),                     //
+    //     glm::vec2(0.01f, 0.1f),                       //
+    //     0.1f                                          //
+    // );
+    // asteroids.emplace_back(                           //
+    //     scene,                                        //
+    //     asteroidSheet,                                //
+    //     static_cast<short>(0 % asteroidSheet.size()), //
+    //     glm::vec2{0.5f, 0.0f},                        //
+    //     glm::vec2{-0.2f, 0.f},                        //
+    //     0.1f                                          //
+    // );
+    // asteroids.emplace_back(                           //
+    //     scene,                                        //
+    //     asteroidSheet,                                //
+    //     static_cast<short>(0 % asteroidSheet.size()), //
+    //     glm::vec2(-0.21f, 0.8f),                      //
+    //     glm::vec2(0.01f, -0.1f),                      //
+    //     glm::vec2{0.2f, 0.2f}                         //
+    // );
+    //
     // MOUSE POINTER
     // ---------------------------------------------------------------
     MousePointer mp(scene);
-    mp.emplaceScript<MousePointerScript>(scene, cameraEntity, gm.getCellSize());
+    mp.emplaceScript<MousePointerScript>(scene, cameraEntity);
 
     scene.emplaceImGuiScript<pain::ImGuiDebugMenu>(app, cameraEntity,
                                                    mp.getEntity());
-    scene.emplaceScript<MainScript>(std::move(stars), std::move(orthocamera),
-                                    std::move(asteroids), std::move(walls),
-                                    std::move(gm), std::move(mp));
-
-    return cameraEntity;
+    return scene.emplaceScript<MainScript>(
+        std::move(stars), std::move(orthocamera), std::move(asteroids),
+        std::move(walls), std::move(mp));
   }
   void onRender(pain::Renderer2d &renderer, bool minimazed, double deltatime)
   {
-    renderer.drawQuad(
-        {0.2f, -0.2f}, {0.3f, 0.4f}, {0.2f, 0.3f, 0.9f, 1.f},
-        pain::resources::getDefaultTexture(pain::resources::BLANK, false));
+    // renderer.drawQuad(
+    //     {0.0f, 0.0f}, {0.2f, 0.2f}, {0.2f, 0.9f, 0.6f, 1.f},
+    //     pain::resources::getDefaultTexture(pain::resources::BLANK, false));
+    renderer.drawCircle({0.0f, 0.0f}, 0.2f, {0.2f, 0.3f, 0.9f, 1.f});
   }
 
   MainScript(reg::Entity entity, pain::Scene &scene, std::vector<Stars> &&stars,
              pain::OrthoCamera &&orthocamera, std::vector<Asteroid> &&ast,
-             std::vector<Wall> &&walls, pain::GridManager &&gm,
-             MousePointer &&mp)
+             std::vector<Wall> &&walls, MousePointer &&mp)
       : ExtendedEntity(entity, scene), m_orthocamera(std::move(orthocamera)),
         m_stars(std::move(stars)), m_asteroids(std::move(ast)),
-        m_walls(std::move(walls)), m_mousePointer(std::move(mp)),
-        m_gridManager(std::move(gm))
+        m_walls(std::move(walls)), m_mousePointer(std::move(mp))
   {
     m_orthocamera.getEntity();
   };
@@ -131,7 +164,6 @@ public:
   std::vector<Wall> m_walls;
   MousePointer m_mousePointer;
   // Player m_player;
-  pain::GridManager m_gridManager;
   const static unsigned starAmout = 12;
   const static unsigned asteroidAmount = 12;
 };

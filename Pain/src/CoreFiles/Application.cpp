@@ -7,10 +7,8 @@
 #include "Debugging/OpenGLDebugger.h"
 #include "GUI/ImGuiSys.h"
 #include "Scripting/State.h"
-#include "glm/fwd.hpp"
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_version.h>
-#include <cmath>
 #include <memory>
 #include <thread>
 
@@ -161,7 +159,7 @@ EndGameFlags Application::run()
 
       // renderAccumulator += deltaSeconds;
       while (accumulator >= m_fixedUpdateTime) {
-        m_worldSceneSys->updateSystems(m_fixedUpdateTime);
+        m_worldScene->updateSystems(m_fixedUpdateTime);
         accumulator -= m_fixedUpdateTime;
       }
     }
@@ -193,7 +191,7 @@ EndGameFlags Application::run()
         default:
           break;
         }
-        m_worldSceneSys->updateSystems(event);
+        m_worldScene->updateSystems(event);
       }
     }
     // =============================================================== //
@@ -209,7 +207,7 @@ EndGameFlags Application::run()
 
       double globalTime = lastFrameTime.GetSeconds();
       m_renderer.beginScene(globalTime, *m_worldScene);
-      m_worldSceneSys->renderSystems(m_renderer, m_isMinimized, globalTime);
+      m_worldScene->renderSystems(m_renderer, m_isMinimized, globalTime);
       m_renderer.endScene();
       P_ASSERT(m_window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_window);

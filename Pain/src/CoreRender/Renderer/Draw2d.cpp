@@ -33,12 +33,15 @@ constexpr glm::vec2 SprayVertexPositions[4] = {
 constexpr uint32_t MaxQuads = 40000;
 constexpr uint32_t MaxQuadVertices = MaxQuads * 4;
 constexpr uint32_t MaxQuadIndices = MaxQuads * 6;
-constexpr uint32_t MaxTri = 2000;
+constexpr uint32_t MaxTri = 1000;
 constexpr uint32_t MaxTriVertices = MaxTri * 3;
 constexpr uint32_t MaxTriIndices = MaxTri * 3;
-constexpr uint32_t MaxSprayParticles = 10000;
+constexpr uint32_t MaxSprayParticles = 1000;
 constexpr uint32_t MaxSprayVertices = MaxSprayParticles * 4;
 constexpr uint32_t MaxSprayIndices = MaxSprayParticles * 6;
+constexpr uint32_t MaxCircles = 1000;
+constexpr uint32_t MaxCircleVertices = MaxCircles * 4;
+constexpr uint32_t MaxCircleIndices = MaxCircles * 6;
 } // namespace
 
 Renderer2d Renderer2d::createRenderer2d()
@@ -123,6 +126,42 @@ Renderer2d Renderer2d::createRenderer2d()
   P_ASSERT(triShader, "Triangule shader wasn't initialized");
   auto triVertexArray =
       VertexArray::createVertexArray(*triVertexBuffer, *triIB);
+  // =============================================================== //
+  // Circles
+  // =============================================================== //
+
+  auto circleVertexBuffer = VertexBuffer::createVertexBuffer(
+      MaxCircleVertices * sizeof(CircleVertex),
+      {{ShaderDataType::Float3, "a_Position"}, //
+       {ShaderDataType::Float4, "a_Color"},
+       {ShaderDataType::Float2, "a_Coord"}});
+
+  P_ASSERT(circleVertexBuffer, "Could not create Circle Vertex BUffer");
+  CircleVertex *circleVertexBufferBase = new CircleVertex[MaxCircleVertices];
+
+  // indices
+  uint32_t *circleIndices = new uint32_t[MaxCircleIndices];
+  for (uint32_t i = 0, offset = 0; i < MaxCircleIndices; i += 6, offset += 4) {
+    circleIndices[i + 0] = offset + 0;
+    circleIndices[i + 1] = offset + 1;
+    circleIndices[i + 2] = offset + 2;
+
+    circleIndices[i + 3] = offset + 2;
+    circleIndices[i + 4] = offset + 3;
+    circleIndices[i + 5] = offset + 0;
+  }
+  auto circleIB =
+      IndexBuffer::createIndexBuffer(circleIndices, MaxCircleIndices);
+  P_ASSERT(circleIB, "Could not create Circle Vertex BUffer");
+  delete[] circleIndices;
+  auto circleVertexArray =
+      VertexArray::createVertexArray(circleVertexBuffer.value(), *circleIB);
+  P_ASSERT(circleVertexArray, "Circle Vertex Array wasn't initialized");
+
+  auto circleShader =
+      Shader::createFromFile("resources/default/shaders/Circles.glsl");
+  P_ASSERT(circleShader, "Circle shader wasn't initialized");
+
   // =============================================================== //
   // Text
   // =============================================================== //
@@ -222,6 +261,7 @@ Renderer2d Renderer2d::createRenderer2d()
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   return Renderer2d(std::move(*quadIB),            //
+                    std::move(*circleIB),          //
                     std::move(*triIB),             //
                     std::move(*sprayIB),           //
                     std::move(*gridIB),            //
@@ -234,6 +274,11 @@ Renderer2d Renderer2d::createRenderer2d()
                     std::move(*textVertexBuffer),  //
                     std::move(*textTextureShader), //
                     textVertexBufferBase,
+                    // circle initializer
+                    std::move(*circleVertexArray),
+                    std::move(*circleVertexBuffer), //
+                    std::move(*circleShader),       //
+                    circleVertexBufferBase,
                     // tri initializer
                     std::move(*triVertexArray),
                     std::move(*triVertexBuffer), //
@@ -355,6 +400,24 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
     glDrawElements(GL_TRIANGLES, triCount, GL_UNSIGNED_INT, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
+  // =============================================================== //
+  // Circles
+  // =============================================================== //
+  if (m_circleIndexCount) {
+    m_circleIB.bind();
+    m_circleVertexArray.bind();
+    const uint32_t circleDataSize = (uint8_t *)m_circleVertexBufferPtr -
+                                    (uint8_t *)m_circleVertexBufferBase;
+    m_circleVertexBuffer.setData((void *)m_circleVertexBufferBase,
+                                 circleDataSize);
+
+    m_circleShader.bind();
+    const uint32_t circleCount =
+        m_circleIndexCount ? m_circleIndexCount
+                           : m_circleVertexArray.getIndexBuffer().getCount();
+    glDrawElements(GL_TRIANGLES, circleCount, GL_UNSIGNED_INT, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
 }
 
 void Renderer2d::bindTextures()
@@ -369,6 +432,9 @@ void Renderer2d::goBackToFirstVertex()
   PROFILE_FUNCTION();
   m_quadIndexCount = 0;
   m_quadVertexBufferPtr = m_quadVertexBufferBase;
+
+  m_circleIndexCount = 0;
+  m_circleVertexBufferPtr = m_circleVertexBufferBase;
 
   m_triIndexCount = 0;
   m_triVertexBufferPtr = m_triVertexBufferBase;
@@ -386,7 +452,7 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                                      float globalTime,
                                      const glm::mat4 &transform,
                                      const glm::ivec2 &resolution,
-                                     const glm::vec3 &cameraPos,
+                                     const glm::vec2 &cameraPos,
                                      float zoomLevel)
 {
   PROFILE_FUNCTION();
@@ -419,6 +485,9 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
 
   // float cellScreenPixels = (1.f / zoomLevel) * resolution.y;
   // PLOG_I("cellScreenPixels inside BasicUniform= {}", cellScreenPixels);
+  m_circleShader.bind();
+  m_circleShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
+  m_circleShader.uploadUniformMat4("u_Transform", transform);
 }
 
 float Renderer2d::allocateTextures(Texture &texture)
@@ -492,6 +561,20 @@ void Renderer2d::allocateQuad(const glm::mat4 &transform,
   m_quadIndexCount += 6;
 }
 
+void Renderer2d::allocateCircle(const glm::mat4 &transform,
+                                const glm::vec4 &tintColor,
+                                const std::array<glm::vec2, 4> &coordinate)
+{
+  PROFILE_FUNCTION();
+  for (int i = 0; i < 4; i++) {
+    m_circleVertexBufferPtr->position = transform * QuadVertexPositions[i];
+    m_circleVertexBufferPtr->color = tintColor;
+    m_circleVertexBufferPtr->coord = coordinate[i];
+    m_circleVertexBufferPtr++;
+  }
+  m_circleIndexCount += 6;
+}
+
 void Renderer2d::allocateTri(const glm::mat4 &transform,
                              const glm::vec4 &tintColor)
 {
@@ -515,6 +598,7 @@ void Renderer2d::beginSprayParticle(const float globalTime,
   m_sprayShader.uploadUniformFloat("u_SizeChangeSpeed", psc.m_sizeChangeSpeed);
   m_sprayShader.uploadUniformFloat("u_randomSizeFactor", psc.m_randSizeFactor);
 }
+
 void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
                                         const glm::vec2 &offset,
                                         const glm::vec2 &normal,
@@ -562,9 +646,10 @@ Renderer2d::~Renderer2d()
   delete[] m_sprayVertexBufferBase;
 }
 
-Renderer2d::Renderer2d(IndexBuffer quadIB,  //
-                       IndexBuffer triIB,   //
-                       IndexBuffer sprayIB, //
+Renderer2d::Renderer2d(IndexBuffer quadIB,   //
+                       IndexBuffer circleIB, //
+                       IndexBuffer triIB,    //
+                       IndexBuffer sprayIB,  //
                        IndexBuffer gridIB,
                        VertexArray quadVertexArray,   //
                        VertexBuffer quadVertexBuffer, //
@@ -575,6 +660,11 @@ Renderer2d::Renderer2d(IndexBuffer quadIB,  //
                        VertexBuffer textVertexBuffer, //
                        Shader textTextureShader,
                        TextQuadVertex *textVertexBufferBase,
+                       // Circle initializer
+                       VertexArray circleVertexArray,        //
+                       VertexBuffer circleVertexBuffer,      //
+                       Shader circleShader,                  //
+                       CircleVertex *circleVertexBufferBase, //
                        // tri initializer
                        VertexArray triVertexArray,
                        VertexBuffer triVertexBuffer, //
@@ -599,6 +689,11 @@ Renderer2d::Renderer2d(IndexBuffer quadIB,  //
       m_textTextureShader(std::move(textTextureShader)),                 //
       m_textVertexBufferBase(textVertexBufferBase),                      //
                                                                          //
+      m_circleVertexArray(std::move(circleVertexArray)),                 //
+      m_circleVertexBuffer(std::move(circleVertexBuffer)),               //
+      m_circleShader(std::move(circleShader)),                           //
+      m_circleVertexBufferBase(circleVertexBufferBase),                  //
+                                                                         //
       m_triVertexArray(std::move(triVertexArray)),                       //
       m_triVertexBuffer(std::move(triVertexBuffer)),                     //
       m_triShader(std::move(triShader)),                                 //
@@ -615,6 +710,7 @@ Renderer2d::Renderer2d(IndexBuffer quadIB,  //
                                                                          //
       m_textureSlots({&resources::getDefaultTexture(resources::BLANK)}), //
       m_quadIB(std::move(quadIB)),                                       //
+      m_circleIB(std::move(circleIB)),                                   //
       m_triIB(std::move(triIB)),                                         //
       m_sprayIB(std::move(sprayIB)),                                     //
       m_gridIB(std::move(gridIB)                                         //
@@ -640,6 +736,13 @@ Renderer2d &Renderer2d::operator=(Renderer2d &&other) noexcept
   m_textVertexBufferPtr = other.m_textVertexBufferPtr;
   m_textIndexCount = other.m_textIndexCount;
 
+  m_circleVertexArray = std::move(other.m_circleVertexArray);
+  m_circleVertexBuffer = std::move(other.m_circleVertexBuffer);
+  m_circleShader = std::move(other.m_circleShader);
+  m_circleVertexBufferBase = other.m_circleVertexBufferBase;
+  m_circleVertexBufferPtr = other.m_circleVertexBufferPtr;
+  m_circleIndexCount = other.m_circleIndexCount;
+
   m_triVertexArray = std::move(other.m_triVertexArray);
   m_triVertexBuffer = std::move(other.m_triVertexBuffer);
   m_triShader = std::move(other.m_triShader);
@@ -661,6 +764,7 @@ Renderer2d &Renderer2d::operator=(Renderer2d &&other) noexcept
 
   // Index buffers
   m_quadIB = std::move(other.m_quadIB);
+  m_circleIB = std::move(other.m_circleIB);
   m_triIB = std::move(other.m_triIB);
   m_sprayIB = std::move(other.m_sprayIB);
 

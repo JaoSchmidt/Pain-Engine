@@ -23,8 +23,10 @@ public:
   template <typename... Targets>
   static constexpr Bitmask multiComponentBitmask()
   {
-    static_assert(sizeof...(Targets) > 0, "At least one component is required");
-    return getComponentsBitmask<Targets...>();
+    if constexpr (sizeof...(Targets) > 0)
+      return getComponentsBitmask<Targets...>();
+    else
+      return Bitmask{0};
   }
 
   // Get total number of registered components

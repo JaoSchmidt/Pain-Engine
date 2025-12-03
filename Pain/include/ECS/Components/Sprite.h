@@ -2,6 +2,7 @@
 
 #include "Assets/DefaultTexture.h"
 #include "CoreRender/Texture.h"
+#include "Misc/BasicShape.h"
 #include "Misc/TextureSheet.h"
 
 namespace pain
@@ -100,11 +101,16 @@ struct SpriteComponent {
 };
 
 struct SpritelessComponent {
-  glm::vec2 m_size{0.1f, 0.1f};
-  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  std::variant<CirleShape, QuadShape> m_shape = QuadShape();
+  glm::vec4 m_color{0.8f, 0.2f, 0.1f, 0.8f};
   SpritelessComponent() = default;
+  SpritelessComponent(const glm::vec2 &size) : m_shape(QuadShape(size)) {};
+  SpritelessComponent(const float radius) : m_shape(CirleShape(radius)) {};
+
+  SpritelessComponent(const float radius, const glm::vec4 &color)
+      : m_shape(CirleShape(radius)) {};
   SpritelessComponent(const glm::vec2 &size, const glm::vec4 &color)
-      : m_size(size), m_color(color) {};
+      : m_shape(QuadShape(size)), m_color(color) {};
 };
 
 struct TrianguleComponent {
