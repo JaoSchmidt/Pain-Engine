@@ -1,0 +1,65 @@
+name: Build (Ubuntu – No Docker)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on Ubuntu (No Docker)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install base dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            g++ \
+            rsync \
+            ccache \
+            git \
+            make \
+            pkg-config \
+            zlib1g \
+            bzip2 \
+            gzip \
+            libtool \
+            autoconf \
+            unzip \
+            wget
+
+      - name: Install CMake 3.31.7 manually
+        run: |
+          wget https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7-linux-x86_64.tar.gz
+          tar -xvzf cmake-3.31.7-linux-x86_64.tar.gz
+          sudo rsync -a cmake-3.31.7-linux-x86_64/ /usr/local/
+          cmake --version
+
+      - name: Install additional library dependencies
+        run: |
+          sudo apt-get install -y \
+            libpng-dev \
+            libbz2-dev \
+            libharfbuzz-dev \
+            libbrotli-dev \
+            mesa-utils \
+            libglu1-mesa-dev \
+            mesa-common-dev \
+            libasound2-dev \
+            libxext-dev
+
+      # GitHub runners don't need the apt/method bzip2 workaround
+
+      - name: Configure build
+        run: cmake --preset ci
+
+      - name: Build
+        run: |
+          cd build-ci
+          make -j6
