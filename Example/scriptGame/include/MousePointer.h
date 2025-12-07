@@ -5,9 +5,7 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
 
-class MousePointer : public pain::NormalEntity<pain::Transform2dComponent, //
-                                               pain::SpriteComponent,      //
-                                               pain::NativeScriptComponent>
+class MousePointer : public pain::NormalEntity
 {
 public:
   MousePointer(pain::Scene &scene);

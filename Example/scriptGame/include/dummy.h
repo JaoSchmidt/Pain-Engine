@@ -7,9 +7,7 @@
 #include "ECS/Scriptable.h"
 #include "Scripting/Component.h"
 
-class Dummy
-    : public pain::NormalEntity<pain::Transform2dComponent,
-                                pain::SpriteComponent, pain::LuaScriptComponent>
+class Dummy : public pain::NormalEntity
 {
 public:
   Dummy(pain::Scene *scene, const glm::vec2 &position, const glm::vec2 &size,

@@ -6,8 +6,7 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
 
-class Stars : public pain::NormalEntity<pain::Transform2dComponent, //
-                                        pain::SpriteComponent>      //
+class Stars : public pain::NormalEntity //
 
 {
 public:

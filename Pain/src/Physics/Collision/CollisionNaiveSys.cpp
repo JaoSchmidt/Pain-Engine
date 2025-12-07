@@ -49,11 +49,11 @@ void NaiveCollisionSys::onUpdate(double deltaTime)
                             std::is_same_v<T2, AABBShape>) {
                 collisionHappened = ColDet::checkAABBCollision(
                     center1, shape1.halfSize, center2, shape2.halfSize);
-              } else if constexpr (std::is_same_v<T1, CirleShape> &&
-                                   std::is_same_v<T2, CirleShape>) {
+              } else if constexpr (std::is_same_v<T1, CircleShape> &&
+                                   std::is_same_v<T2, CircleShape>) {
                 collisionHappened = ColDet::checkCircleCollision(
                     center1, shape1.radius, center2, shape2.radius);
-              } else if constexpr (std::is_same_v<T1, CirleShape> &&
+              } else if constexpr (std::is_same_v<T1, CircleShape> &&
                                    std::is_same_v<T2, AABBShape>) {
                 collisionHappened = ColDet::checkAABBCollisionCircle(
                     center2, shape2.halfSize, center1, shape1.radius);
@@ -107,11 +107,11 @@ void NaiveCollisionSys::onUpdate(double deltaTime)
                             std::is_same_v<T2, AABBShape>) {
                 collisionHappened = ColDet::checkAABBCollision(
                     center1, shape1.halfSize, center2, shape2.halfSize);
-              } else if constexpr (std::is_same_v<T1, CirleShape> &&
-                                   std::is_same_v<T2, CirleShape>) {
+              } else if constexpr (std::is_same_v<T1, CircleShape> &&
+                                   std::is_same_v<T2, CircleShape>) {
                 collisionHappened = ColDet::checkCircleCollision(
                     center1, shape1.radius, center2, shape2.radius);
-              } else if constexpr (std::is_same_v<T1, CirleShape> &&
+              } else if constexpr (std::is_same_v<T1, CircleShape> &&
                                    std::is_same_v<T2, AABBShape>) {
                 collisionHappened = ColDet::checkAABBCollisionCircle(
                     center2, shape2.halfSize, center1, shape1.radius);

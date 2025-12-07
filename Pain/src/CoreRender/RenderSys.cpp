@@ -66,7 +66,7 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
               renderer.drawQuad(
                   tIt->m_position, shape1.size, sIt->m_color,
                   resources::getDefaultTexture(resources::BLANK, false));
-            } else if constexpr (std::is_same_v<T1, CirleShape>) {
+            } else if constexpr (std::is_same_v<T1, CircleShape>) {
               renderer.drawCircle(tIt->m_position, shape1.radius, sIt->m_color);
             }
           },

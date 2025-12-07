@@ -86,8 +86,10 @@ ColDet::Result ColDet::checkCircleCollision(const glm::vec2 &center1,
   const float collisionDistance = glm::distance(center1, center2);
   if (collisionDistance < radius1 + radius2) {
     const glm::vec2 normal = center2 - center1;
+    const glm::vec2 normalized =
+        glm::length(normal) > 0.0f ? glm::normalize(normal) : glm::vec2(0.0f);
     const float overlay = radius1 + radius2 - collisionDistance;
-    return {true, overlay, glm::normalize(normal)};
+    return {true, overlay, normalized};
   } else {
     return {false};
   }
@@ -104,9 +106,10 @@ ColDet::Result ColDet::checkAABBCollisionCircle(const glm::vec2 &center1,
 
   const float collisionDistance = glm::distance(center2, closestPoint);
   if (collisionDistance <= radius2) {
-
-    return {true, radius2 - collisionDistance,
-            glm::normalize(center2 - closestPoint)};
+    const glm::vec2 normal = center2 - closestPoint;
+    const glm::vec2 normalized =
+        glm::length(normal) > 0.0f ? glm::normalize(normal) : glm::vec2(0.0f);
+    return {true, radius2 - collisionDistance, normalized};
   } else {
     return {false};
   }

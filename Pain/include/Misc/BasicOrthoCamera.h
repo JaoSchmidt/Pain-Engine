@@ -10,10 +10,7 @@ namespace pain
 {
 
 class Scene;
-class OrthoCamera
-    : public NormalEntity<Movement2dComponent, RotationComponent,
-                          Transform2dComponent, OrthoCameraComponent,
-                          NativeScriptComponent>
+class OrthoCamera : public NormalEntity
 {
 public:
   MOVABLE(OrthoCamera)

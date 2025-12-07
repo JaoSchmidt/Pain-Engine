@@ -209,7 +209,7 @@ private:
     vectors.reserve(m_archetypes.size());
 
     // TODO: It is possible to cache this result so it doesn't have to be made
-    // every time
+    // every time, altough it is made very rarely
     for (auto &pair : m_archetypes) {
       if (((pair.first & bitMask) == bitMask) &&
           (pair.first & excludeBitMask) == 0) {
@@ -222,6 +222,24 @@ private:
     const int size =
         vectors.size(); // attention to evaluation order, do not replace below
     return reg::Iterator<ParticularComponent>(std::move(vectors), size, 0);
+  }
+
+  template <typename FirstComponent, typename... Rest>
+  size_t sizeOfComponent(int bitMask, int excludeBitMask)
+  {
+    size_t totalSize = 0;
+    // TODO: It is possible to cache this result so it doesn't have to be made
+    // every time, altough it is made very rarely
+    for (auto &pair : m_archetypes) {
+      if (((pair.first & bitMask) == bitMask) &&
+          (pair.first & excludeBitMask) == 0) {
+        Archetype &archetype = pair.second;
+        const std::vector<FirstComponent> *v =
+            &archetype.getComponent<FirstComponent>();
+        totalSize += v->size();
+      }
+    }
+    return totalSize;
   }
 
 public:
@@ -272,6 +290,21 @@ public:
     return std::make_tuple(
         createEndIteratorFromComponent<Components>(bitMask, excludeBitMask)...);
   }
+  // ==================================================== //
+  // size
+  // ==================================================== //
+
+  // return the size of the iterators
+  template <typename... Components, typename... ExcludeComponents>
+    requires IsMultipleTypes<Components...>
+  size_t iteratorSize(exclude_t<ExcludeComponents...> = {})
+  {
+    int bitMask = getMultipleBitmask<Components...>();
+    int excludeBitMask = getMultipleBitmask<ExcludeComponents...>();
+    // NOTE: altough all components are necessary for the bitmasks, we only need
+    // to see one for the size
+    return sizeOfComponent<Components...>(bitMask, excludeBitMask);
+  }
 
   // ==================================================== //
   // get
@@ -279,6 +312,9 @@ public:
   template <typename... TargetComponents>
   std::tuple<TargetComponents &...> getComponents(Entity entity)
   {
+    static_assert(hasAllBitmask<TargetComponents...>(),
+                  "When using getComponent some component didn't exist inside  "
+                  "the CompileTimeBitMask");
     Archetype &archetype = m_archetypes.at(m_entities[entity].bitmask);
     return archetype.extractColumn<TargetComponents...>(
         m_entities[entity].column);
@@ -286,6 +322,9 @@ public:
   template <typename... TargetComponents>
   const std::tuple<TargetComponents &...> getComponents(Entity entity) const
   {
+    static_assert(hasAllBitmask<TargetComponents...>(),
+                  "When using getComponent some component didn't exist inside "
+                  "the CompileTimeBitMask");
     const Archetype &archetype = m_archetypes.at(m_entities[entity].bitmask);
     return archetype.extractColumn<TargetComponents...>(
         m_entities[entity].column);
@@ -301,9 +340,9 @@ public:
     return archetype.fetchComponent<T>(m_entities[entity].column);
   }
 
-  // ---------------------------------------------------- //
+  // ==================================================== //
   // has
-  // ---------------------------------------------------- //
+  // ==================================================== //
 
   // Are all components inside the targetBitMask?
   template <typename... ObjectComponents>
@@ -326,9 +365,9 @@ public:
     }
   }
 
-  // ---------------------------------------------------- //
+  // ==================================================== //
   // remove
-  // ---------------------------------------------------- //
+  // ==================================================== //
 
   // Removal of a single entity can be O(n) in worst case (because we need to
   // update the last element's Record). If possible, prefer to batch
@@ -407,6 +446,10 @@ private:
   template <typename Component> static constexpr Bitmask getSingleBitmask()
   {
     return ComponentManagerT::template singleComponentBitmask<Component>();
+  }
+  template <typename... Component> static constexpr bool hasAllBitmask()
+  {
+    return ComponentManagerT::template allRegistered<Component...>();
   }
   void addRecord(Bitmask bitmask, Column column)
   {

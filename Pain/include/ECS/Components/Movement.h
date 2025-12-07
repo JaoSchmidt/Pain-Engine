@@ -12,6 +12,7 @@ struct Transform2dComponent {
   Transform2dComponent(const glm::vec2 &position) : m_position(position) {}
   operator glm::vec2 &() { return m_position; }
   operator const glm::vec2 &() const { return m_position; }
+  Transform2dComponent clone() const { return Transform2dComponent(*this); };
 };
 
 struct Movement2dComponent {

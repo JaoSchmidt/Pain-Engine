@@ -6,7 +6,7 @@
 namespace pain
 {
 
-struct CirleShape {
+struct CircleShape {
   float radius = 0.1f;
 };
 struct AABBShape {

@@ -5,9 +5,7 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
 
-class Bullet : public pain::NormalEntity<pain::Transform2dComponent, //
-                                         pain::SpriteComponent,      //
-                                         pain::Movement2dComponent>  //
+class Bullet : public pain::NormalEntity //
 {
 public:
   Bullet(pain::Scene *scene);

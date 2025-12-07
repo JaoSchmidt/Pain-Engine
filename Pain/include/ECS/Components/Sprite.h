@@ -101,14 +101,14 @@ struct SpriteComponent {
 };
 
 struct SpritelessComponent {
-  std::variant<CirleShape, QuadShape> m_shape = QuadShape();
+  std::variant<CircleShape, QuadShape> m_shape = QuadShape();
   glm::vec4 m_color{0.8f, 0.2f, 0.1f, 0.8f};
   SpritelessComponent() = default;
   SpritelessComponent(const glm::vec2 &size) : m_shape(QuadShape(size)) {};
-  SpritelessComponent(const float radius) : m_shape(CirleShape(radius)) {};
+  SpritelessComponent(const float radius) : m_shape(CircleShape(radius)) {};
 
   SpritelessComponent(const float radius, const glm::vec4 &color)
-      : m_shape(CirleShape(radius)) {};
+      : m_shape(CircleShape(radius)) {};
   SpritelessComponent(const glm::vec2 &size, const glm::vec4 &color)
       : m_shape(QuadShape(size)), m_color(color) {};
 };

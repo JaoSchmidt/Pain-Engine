@@ -7,7 +7,7 @@ namespace pain
 
 namespace Systems
 {
-struct NaiveCollisionSys : public System<ComponentManager> {
+struct NaiveCollisionSys : public System<CMNaiveCollision> {
   template <typename... Args>
   NaiveCollisionSys(Args &&...args) : System(std::forward<Args>(args)...){};
   NaiveCollisionSys() = delete;

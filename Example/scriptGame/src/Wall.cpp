@@ -1,11 +1,17 @@
 #include "Wall.h"
 #include <pain.h>
 
-Wall::Wall(pain::Scene &scene, const glm::vec2 &pos, const glm::vec2 &size)
-    : NormalEntity(scene)
+namespace Wall
 {
-  createComponents(
-      scene, pain::Transform2dComponent{pos},                            //
-      pain::SpritelessComponent{size, glm::vec4(0.8f, 0.2f, 0.1f, 1.f)}, //
-      pain::ColliderComponent::createCollider(size));
+
+reg::Entity create(pain::Scene &scene, const glm::vec2 &pos,
+                   const glm::vec2 &size)
+{
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(
+      entity, pain::Transform2dComponent{pos},                            //
+      pain::SpritelessComponent{size, glm::vec4(0.6f, 0.6f, 0.6f, 0.4f)}, //
+      pain::SAPCollider::createCollider(entity, size));
+  return entity;
 }
+} // namespace Wall

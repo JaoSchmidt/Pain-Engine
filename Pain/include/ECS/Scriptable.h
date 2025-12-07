@@ -11,9 +11,9 @@ namespace pain
 {
 
 // this function will replace GameObject, please remove GameObject later
-template <typename... Components> class NormalEntity
-{
+struct NormalEntity {
 public:
+  template <typename... Components>
   std::tuple<Components &...> createComponents(Scene &scene,
                                                Components &&...args)
   {
@@ -77,7 +77,7 @@ public:
   }
 
   // ------------------------------------------------------------ //
-  // MOVE CONSTRUCTORS AND ASSGINMENT
+  // Move constructors and assginment
   // ------------------------------------------------------------ //
   NormalEntity(NormalEntity &&other) noexcept
       : m_entity(std::exchange(other.m_entity, reg::Entity{-1})) {};

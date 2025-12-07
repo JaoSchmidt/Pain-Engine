@@ -69,6 +69,19 @@ protected:
   }
 
   // ---------------------------------------------------- //
+  // Sizes
+  // ---------------------------------------------------- //
+
+  // return the size of the iterators
+  template <typename... Components, typename... ExcludeComponents>
+    requires reg::IsMultipleTypes<Components...>
+  size_t iteratorSize(exclude_t<ExcludeComponents...> = {})
+  {
+    return m_registry.template iteratorSize<Components...>(
+        exclude<ExcludeComponents...>);
+  }
+
+  // ---------------------------------------------------- //
   // Get components from archetypes
   // ---------------------------------------------------- //
   template <typename... Components>

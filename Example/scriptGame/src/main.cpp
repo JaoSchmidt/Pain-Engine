@@ -58,15 +58,19 @@ public:
     }
 
     // WALLS ---------------------------------------------------------------
-    std::vector<Wall> walls;
-    // walls.reserve(1);
+    std::vector<reg::Entity> walls;
     // walls.emplace_back(scene, glm::vec2(0.0f, 0.0f), glm::vec2(0.2f, 6.2f));
-    walls.reserve(4);
-    walls.emplace_back(scene, glm::vec2(-2.f, 2.f), glm::vec2(8.f, 1.f));
-    walls.emplace_back(scene, glm::vec2(2.f, 2.f), glm::vec2(1.f, 8.f));
-    walls.emplace_back(scene, glm::vec2(-2.f, -2.f), glm::vec2(1.f, 8.f));
-    walls.emplace_back(scene, glm::vec2(2.f, -2.f), glm::vec2(8.f, 1.f));
-
+    walls.reserve(5);
+    walls.emplace_back(
+        Wall::create(scene, glm::vec2(6.f, 4.f), glm::vec2(36.f, 1.f)));
+    walls.emplace_back(
+        Wall::create(scene, glm::vec2(0.f, 2.f), glm::vec2(36.f, 1.f)));
+    walls.emplace_back(
+        Wall::create(scene, glm::vec2(2.f, 0), glm::vec2(1.f, 36.f)));
+    walls.emplace_back(
+        Wall::create(scene, glm::vec2(-2.f, 0), glm::vec2(1.f, 36.f)));
+    walls.emplace_back(
+        Wall::create(scene, glm::vec2(0, -2.f), glm::vec2(36.f, 1.f)));
     // PLAYER ---------------------------------------------------------------
     // pain::Texture &shipTex =
     //     pain::resources::getTexture("resources/textures/ship_H.png");
@@ -77,56 +81,127 @@ public:
     pain::TextureSheet &asteroidSheet = pain::resources::createTextureSheet(
         "asteroids", "resources/textures/asteroid.png", 1, 5,
         {{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}});
-    std::vector<Asteroid> asteroids;
+    std::vector<reg::Entity> asteroids;
     asteroids.reserve(asteroidAmount);
+    // for (short i = 0; i < asteroidAmount / 2; i++) {
+    //   glm::vec2 randomPos(dist(gen), dist(gen));
+    //   glm::vec2 randomVel(dist(gen), dist(gen));
+    //   asteroids.emplace_back(Asteroid::create(          //
+    //       scene,                                        //
+    //       asteroidSheet,                                //
+    //       static_cast<short>(i % asteroidSheet.size()), //
+    //       std::move(randomPos),                         //
+    //       std::move(randomVel), 0.1f));
+    // }
+    // for (short i = asteroidAmount / 2; i < asteroidAmount; i++) {
+    //   glm::vec2 randomPos(dist(gen), dist(gen));
+    //   glm::vec2 randomVel(dist(gen), dist(gen));
+    //   asteroids.emplace_back(Asteroid::create(          //
+    //       scene,                                        //
+    //       asteroidSheet,                                //
+    //       static_cast<short>(i % asteroidSheet.size()), //
+    //       std::move(randomPos),                         //
+    //       std::move(randomVel),                         //
+    //       glm::vec2{0.2f, 0.2f}));                      //
+    // }
+
     for (short i = 0; i < asteroidAmount / 2; i++) {
-      glm::vec2 randomPos(dist(gen), dist(gen));
-      glm::vec2 randomVel(dist(gen), dist(gen));
-      asteroids.emplace_back(                           //
+      asteroids.emplace_back(Asteroid::create(          //
           scene,                                        //
           asteroidSheet,                                //
           static_cast<short>(i % asteroidSheet.size()), //
-          std::move(randomPos),                         //
-          std::move(randomVel), 0.1f);
+          glm::vec2{-1.f + 0.3f * i, 0.2f},             //
+          glm::vec2{0.5f, 1.0f},                        //
+          0.1f                                          //
+          ));
+      // glm::vec2{0.2f, 0.2f})); //
     }
     for (short i = asteroidAmount / 2; i < asteroidAmount; i++) {
-      glm::vec2 randomPos(dist(gen), dist(gen));
-      glm::vec2 randomVel(dist(gen), dist(gen));
-      asteroids.emplace_back(                           //
+      asteroids.emplace_back(Asteroid::create(          //
           scene,                                        //
           asteroidSheet,                                //
           static_cast<short>(i % asteroidSheet.size()), //
-          std::move(randomPos),                         //
-          std::move(randomVel),                         //
-          glm::vec2{0.2f, 0.2f});                       //
+          glm::vec2{0.3f * i, 0.2f},                    //
+          glm::vec2{0.5f, 1.0f},                        //
+          glm::vec2{0.2f, 0.2f}                         //
+          ));                                           //
     }
 
-    //
-    // asteroids.emplace_back(                           //
+    // ---------------------------------
+    // asteroids.emplace_back(Asteroid::create(          //
     //     scene,                                        //
     //     asteroidSheet,                                //
     //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2(-0.21f, -0.8f),                     //
-    //     glm::vec2(0.01f, 0.1f),                       //
+    //     glm::vec2(0.8f, 0.8f),                        //
+    //     glm::vec2(0.00f, -0.2f),                      //
     //     0.1f                                          //
-    // );
-    // asteroids.emplace_back(                           //
+    //     ));
+    // asteroids.emplace_back(Asteroid::create(          //
     //     scene,                                        //
     //     asteroidSheet,                                //
     //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2{0.5f, 0.0f},                        //
+    //     glm::vec2{0.8f, 0.2f},                        //
+    //     glm::vec2{0.0f, 0.2f},                        //
+    //     glm::vec2{0.2f, 0.2f}                         //
+    //     ));
+    //
+    // // ---------------------------------
+    // asteroids.emplace_back(Asteroid::create(          //
+    //     scene,                                        //
+    //     asteroidSheet,                                //
+    //     static_cast<short>(0 % asteroidSheet.size()), //
+    //     glm::vec2(-0.8f, 0.2f),                       //
+    //     glm::vec2(0.00f, 0.2f),                       //
+    //     0.1f                                          //
+    //     ));
+    // asteroids.emplace_back(Asteroid::create(          //
+    //     scene,                                        //
+    //     asteroidSheet,                                //
+    //     static_cast<short>(0 % asteroidSheet.size()), //
+    //     glm::vec2{-0.8f, 0.8f},                       //
+    //     glm::vec2{0.0f, -0.2f},                       //
+    //     glm::vec2{0.2f, 0.2f}                         //
+    //     ));
+    // // ---------------------------------
+    // asteroids.emplace_back(Asteroid::create(          //
+    //     scene,                                        //
+    //     asteroidSheet,                                //
+    //     static_cast<short>(0 % asteroidSheet.size()), //
+    //     glm::vec2(-0.4f, 0.4f),                       //
+    //     glm::vec2(0.2f, 0.0f),                        //
+    //     0.1f                                          //
+    //     ));
+    // asteroids.emplace_back(Asteroid::create(          //
+    //     scene,                                        //
+    //     asteroidSheet,                                //
+    //     static_cast<short>(0 % asteroidSheet.size()), //
+    //     glm::vec2{0.4f, 0.4f},                        //
+    //     glm::vec2{-0.2f, 0.f},                        //
+    //     glm::vec2{0.2f, 0.2f}                         //
+    //     ));
+
+    // ---------------------------------
+    // asteroids.emplace_back(Asteroid::create(          //
+    //     scene,                                        //
+    //     asteroidSheet,                                //
+    //     static_cast<short>(0 % asteroidSheet.size()), //
+    //     glm::vec2{0.4f, 0.0f},                        //
     //     glm::vec2{-0.2f, 0.f},                        //
     //     0.1f                                          //
-    // );
-    // asteroids.emplace_back(                           //
+    //     ));
+    // asteroids.emplace_back(Asteroid::create(          //
     //     scene,                                        //
     //     asteroidSheet,                                //
     //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2(-0.21f, 0.8f),                      //
-    //     glm::vec2(0.01f, -0.1f),                      //
+    //     glm::vec2(-0.4f, 0.f),                        //
+    //     glm::vec2(0.2f, 0.0f),                        //
     //     glm::vec2{0.2f, 0.2f}                         //
-    // );
-    //
+    //     ));
+
+    // add objects to collision System
+    scene.insertColliders(asteroids);
+    scene.insertColliders(walls);
+
     // MOUSE POINTER
     // ---------------------------------------------------------------
     MousePointer mp(scene);
@@ -147,10 +222,11 @@ public:
   }
 
   MainScript(reg::Entity entity, pain::Scene &scene, std::vector<Stars> &&stars,
-             pain::OrthoCamera &&orthocamera, std::vector<Asteroid> &&ast,
-             std::vector<Wall> &&walls, MousePointer &&mp)
+             pain::OrthoCamera &&orthocamera,
+             std::vector<reg::Entity> &&asteroid,
+             std::vector<reg::Entity> &&walls, MousePointer &&mp)
       : ExtendedEntity(entity, scene), m_orthocamera(std::move(orthocamera)),
-        m_stars(std::move(stars)), m_asteroids(std::move(ast)),
+        m_stars(std::move(stars)), m_asteroids(std::move(asteroid)),
         m_walls(std::move(walls)), m_mousePointer(std::move(mp))
   {
     m_orthocamera.getEntity();
@@ -160,11 +236,11 @@ public:
   pain::OrthoCamera m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::vector<Stars> m_stars;
-  std::vector<Asteroid> m_asteroids;
-  std::vector<Wall> m_walls;
+  std::vector<reg::Entity> m_asteroids;
+  std::vector<reg::Entity> m_walls;
   MousePointer m_mousePointer;
   // Player m_player;
-  const static unsigned starAmout = 12;
+  const static unsigned starAmout = 0;
   const static unsigned asteroidAmount = 20;
 };
 
@@ -180,7 +256,7 @@ pain::Application *pain::createApplication()
   const char *title = "Developing Pain - Example 2d";
   const int width = 1000;
   const int height = 1000;
-  const float zoom = 1.f;
+  const float zoom = 7.f;
   Application *app = Application::createApplication(title, width, height);
 
   pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{},

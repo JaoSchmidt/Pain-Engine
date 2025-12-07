@@ -35,7 +35,6 @@ public:
     return m_comp_num;
   }
 
-private:
   // Check if a component type is registered
   template <typename Target> static constexpr bool isRegistered()
   {
@@ -44,6 +43,12 @@ private:
     return typenameContainsType<CleanTarget, Components...>();
   }
 
+  template <typename... Ts> static constexpr bool allRegistered()
+  {
+    return (isRegistered<Ts>() && ...);
+  }
+
+private:
   static constexpr std::size_t m_comp_num = sizeof...(Components);
   // Recursive helper to check if a type exists in the parameter pack
   template <typename Target, typename First, typename... Rest>

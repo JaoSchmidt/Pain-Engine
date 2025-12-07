@@ -22,17 +22,20 @@ struct NaiveCollisionSys;
 struct SweepAndPruneSys;
 } // namespace Systems
 
+struct NormalEntity;
+
 class Scene
 {
 
 public:
-  Scene(sol::state &solState, float collisionGridSize, void *context,
-        SDL_Window *window);
   reg::ArcheRegistry<ComponentManager> &getRegistry() { return m_registry; };
   reg::Entity getEntity() const { return m_entity; }
-  void insertStaticCollider(reg::Entity entity);
   sol::state &getSharedLuaState() { return m_luaState; }
   inline reg::Entity createEntity() { return m_registry.createEntity(); }
+
+  // insert an object batch into the collider
+  void insertColliders(const std::vector<reg::Entity> &entities);
+
   // ---------------------------------------------------- //
   // Constructors
   // ---------------------------------------------------- //
@@ -107,6 +110,39 @@ public:
   }
 
   // ---------------------------------------------------- //
+  // Iterate archetypes
+  // ---------------------------------------------------- //
+
+  template <typename T>
+    requires reg::IsSingleType<T>
+  inline reg::Iterator<T> end()
+  {
+    return m_registry.template end<T>();
+  }
+  template <typename T>
+    requires reg::IsSingleType<T>
+  inline reg::Iterator<T> begin()
+  {
+    return m_registry.template begin<T>();
+  }
+  template <typename... Components, typename... ExcludeComponents>
+    requires reg::IsMultipleTypes<Components...>
+  inline std::tuple<reg::Iterator<Components>...>
+  begin(exclude_t<ExcludeComponents...> = {})
+  {
+    return m_registry.template begin<Components...>(
+        exclude<ExcludeComponents...>);
+  }
+  template <typename... Components, typename... ExcludeComponents>
+    requires reg::IsMultipleTypes<Components...>
+  inline std::tuple<reg::Iterator<Components>...>
+  end(exclude_t<ExcludeComponents...> = {})
+  {
+    return m_registry.template end<Components...>(
+        exclude<ExcludeComponents...>);
+  }
+
+  // ---------------------------------------------------- //
   // Get components from archetypes
   // ---------------------------------------------------- //
 
@@ -173,7 +209,6 @@ private:
   Systems::NativeScript *m_nativeScriptSystem;
   Systems::ImGuiSys *m_imGuiSystem;
   Systems::LuaScript *m_luaSystem;
-  Systems::NaiveCollisionSys *m_collisionSystem;
   Systems::SweepAndPruneSys *m_sweepAndPruneSystem;
 };
 } // namespace pain
