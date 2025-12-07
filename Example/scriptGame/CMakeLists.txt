@@ -33,8 +33,8 @@ if(UNIX OR APPLE)
 else()
   add_custom_target(
     sync_resources_game
-    COMMAND Copy-Item -Path "${PROJECT_SOURCE_DIR}\\resources\\*" -Destination
-            "${CMAKE_BINARY_DIR}\\${GAME_FOLDER}\\resources\\" -Recurse
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resources"
+            "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources"
     COMMENT "Syncing resources folder")
 
   add_dependencies(${LIBRARY_NAME} sync_resources_game)

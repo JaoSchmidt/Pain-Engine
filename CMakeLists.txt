@@ -295,8 +295,8 @@ else()
   add_custom_target(
     sync_resources
     COMMAND
-      Copy-Item -Path "${PROJECT_SOURCE_DIR}\\Pain\\resources\\*" -Destination
-      "${CMAKE_BINARY_DIR}\\${GAME_FOLDER}\\resources\\" -Recurse
+      ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Pain/resources"
+      "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources"
     COMMENT "Syncing resources folder")
 
   add_dependencies(${LIBRARY_NAME} sync_resources)
