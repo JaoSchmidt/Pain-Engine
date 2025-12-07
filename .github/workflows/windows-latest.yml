@@ -6,9 +6,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-
 jobs:
   build:
     name: Build on Windows (MSVC Debug)
@@ -25,29 +22,18 @@ jobs:
         with:
           arch: x64
 
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: "a42af01b72c28a8e1d7b48107b33e4f286a55ef6"
-
-      - name: Install dependencies via vcpkg
         run: |
-          ${{ github.workspace }}/vcpkg/vcpkg install freetype:x64-windows-static libpng:x64-windows-static harfbuzz:x64-windows-static bzip2:x64-windows-static zlib:x64-windows-static --clean-after-build
+          git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+          C:/vcpkg/bootstrap-vcpkg.bat -disableMetrics
 
       - name: Configure build
-        run: cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        run: cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Show vcpkg logs on failure
         if: failure()
         run: |
-          Get-ChildItem -Path "${{ github.workspace }}/vcpkg/buildtrees" -Recurse -Filter "*.log" | ForEach-Object {
+          Get-ChildItem -Path "C:/vcpkg/buildtrees" -Recurse -Filter "*.log" | ForEach-Object {
             Write-Host "=== $($_.FullName) ==="
             Get-Content $_.FullName -ErrorAction SilentlyContinue
             Write-Host ""
@@ -56,4 +42,4 @@ jobs:
       - name: Build
         run: |
           cd build-ci-windows
-          cmake --build . --config Debug -j 6
+          cmake --build . --config Debug
