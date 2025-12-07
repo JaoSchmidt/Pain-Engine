@@ -1,5 +1,5 @@
-# windows-msvc-build.yml
-name: Build (Windows MSVC)
+# windows-msvc-build-minimal.yml
+name: Build (Windows MSVC - Minimal)
 
 on:
   push:
@@ -23,19 +23,17 @@ jobs:
           arch: x64
 
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: "a42af01b72c28a8e1d7b48107b33e4f286a55ef6"
-
-      - name: Install CMake
         run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          cmake --version
+          git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+          C:/vcpkg/bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Install Freetype only (others might be optional)
+        run: C:/vcpkg/vcpkg install freetype:x64-windows-static --recurse
 
       - name: Configure build
-        run: cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        run: cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
         run: |
           cd build-ci-windows
-          cmake --build . --config Debug -j 6
+          cmake --build . --config Debug -j 4
