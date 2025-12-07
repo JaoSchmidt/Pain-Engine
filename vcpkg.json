@@ -1,0 +1,5 @@
+{
+  "name": "pain-engine",
+  "version": "0.1.0",
+  "dependencies": ["freetype", "libpng", "bzip2", "zlib", "harfbuzz"]
+}

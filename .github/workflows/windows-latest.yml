@@ -22,13 +22,18 @@ jobs:
         with:
           arch: x64
 
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: "a42af01b72c28a8e1d7b48107b33e4f286a55ef6"
+
       - name: Install CMake
         run: |
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
           cmake --version
 
       - name: Configure build
-        run: cmake --preset ci-windows
+        run: cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
         run: |
