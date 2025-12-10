@@ -1,6 +1,7 @@
 // NativeScript.h
 #pragma once
 
+#include "Assets/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Registry/Entity.h"
 #include "spdlog/fmt/bundled/format.h"
@@ -22,11 +23,11 @@ concept has_onCreate_method = requires(T &&t) {
 };
 template <typename T>
 concept has_onRender_method =
-    requires(T &&t, pain::Renderer2d &r, bool m, double d) {
+    requires(T &&t, pain::Renderer2d &r, bool m, pain::DeltaTime d) {
       { t.onRender(r, m, d) };
     };
 template <typename T>
-concept has_onUpdate_method = requires(T &&t, double d) {
+concept has_onUpdate_method = requires(T &&t, pain::DeltaTime d) {
   { t.onUpdate(d) };
 };
 template <typename T>
@@ -88,11 +89,11 @@ template <typename T> void check_script_methods()
   // Check for wrong signatures
   if constexpr (has_any_callable_onRender<T> && !has_onRender_method<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
-                         "onRender(Renderer2d&, bool, double).");
+                         "onRender(Renderer2d&, bool, DeltaTime).");
   }
   if constexpr (has_any_callable_onUpdate<T> && !has_onUpdate_method<T>) {
     static_assert(false, "Error: onUpdate() has wrong signature! Should be "
-                         "onUpdate(double).");
+                         "onUpdate(DeltaTime).");
   }
   if constexpr (has_any_callable_onEvent<T> && !has_onEvent_method<T>) {
     static_assert(false, "Error: onEvent() has wrong signature! Should be "
@@ -145,8 +146,8 @@ struct NativeScriptComponent {
   void (*onCreateFunction)(ExtendedEntity *) = nullptr;
   void (*onDestroyFunction)(ExtendedEntity *) = nullptr;
   void (*onRenderFunction)(ExtendedEntity *, Renderer2d &, bool,
-                           double) = nullptr;
-  void (*onUpdateFunction)(ExtendedEntity *, double) = nullptr;
+                           DeltaTime) = nullptr;
+  void (*onUpdateFunction)(ExtendedEntity *, DeltaTime) = nullptr;
   void (*onEventFunction)(ExtendedEntity *, const SDL_Event &) = nullptr;
 
   template <typename T> void bindAndInitiate(T &&t)
@@ -187,7 +188,7 @@ struct NativeScriptComponent {
 
     if constexpr (has_onRender_method<T>) {
       onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
-                            bool isMinimized, double realTime) {
+                            bool isMinimized, DeltaTime realTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
       };
     } else {
@@ -197,7 +198,7 @@ struct NativeScriptComponent {
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
     if constexpr (has_onUpdate_method<T>) {
-      onUpdateFunction = [](ExtendedEntity *instance, double deltaTime) {
+      onUpdateFunction = [](ExtendedEntity *instance, DeltaTime deltaTime) {
         static_cast<T *>(instance)->onUpdate(deltaTime);
       };
     } else {
@@ -254,7 +255,7 @@ struct NativeScriptComponent {
 
     if constexpr (has_onRender_method<T>) {
       onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
-                            bool isMinimized, double realTime) {
+                            bool isMinimized, DeltaTime realTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
       };
     } else {
@@ -264,7 +265,7 @@ struct NativeScriptComponent {
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
     if constexpr (has_onUpdate_method<T>) {
-      onUpdateFunction = [](ExtendedEntity *instance, double deltaTime) {
+      onUpdateFunction = [](ExtendedEntity *instance, DeltaTime deltaTime) {
         static_cast<T *>(instance)->onUpdate(deltaTime);
       };
     } else {

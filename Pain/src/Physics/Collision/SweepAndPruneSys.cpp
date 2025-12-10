@@ -156,14 +156,14 @@ void insertEndPoint(std::vector<EndPoint> &vecX, std::vector<EndPoint> &vecY,
 
 // insert a non moving entity into the static entities array, then sort the
 // array
-void SweepAndPruneSys::insertStaticEntity(reg::Entity entity,
+void SweepAndPruneSys::insertStaticEntity(UNUSED reg::Entity entity,
                                           const Transform2dComponent &tc,
                                           SAPCollider &sc)
 {
   insertEndPoint(m_staticEndPointsX, m_staticEndPointsY, m_staticEndPointKeys,
                  tc, sc);
 }
-void SweepAndPruneSys::insertEntity(reg::Entity entity,
+void SweepAndPruneSys::insertEntity(UNUSED reg::Entity entity,
                                     const Transform2dComponent &tc,
                                     SAPCollider &sc)
 {
@@ -177,7 +177,7 @@ void SweepAndPruneSys::sortAfterInsertion()
   sortSAP(m_staticEndPointsY, m_staticEndPointKeys, false);
 }
 
-void SweepAndPruneSys::onUpdate(double deltaTime)
+void SweepAndPruneSys::onUpdate(UNUSED DeltaTime deltaTime)
 {
   // Step 1: Update all moving endpoints with new data from the components
   auto [tIt, cIt, mIt] =
@@ -272,9 +272,8 @@ void SweepAndPruneSys::onUpdate(double deltaTime)
           // some min x is overlaping with an active overlap, store it
           potential_pairs.emplace_back(dynEndPoint->key, active_object);
         }
-
-        m_activeList.push_back(
-            dynEndPoint->key); // activate the new overlap as well
+        // activate the new overlap as well
+        m_activeList.push_back(static_cast<long>(dynEndPoint->key));
 
       } else {
         // FIX: debug only part, nothing happening here
@@ -327,7 +326,7 @@ void SweepAndPruneSys::onUpdate(double deltaTime)
         if (it != m_activeList.end()) {
           m_activeList.erase(it);
         } else {
-          PLOG_E("could not delete static {}", clearMSB(staticEndPoint->key));
+          PLOG_E("could not delete static key {}", staticEndPoint->key);
         }
       }
       staticIdx++;
@@ -357,7 +356,7 @@ void SweepAndPruneSys::onUpdate(double deltaTime)
       minY2 = m_staticEndPointsY[entityProxy2.index_minY].valueOnAxis;
       maxY2 = m_staticEndPointsY[entityProxy2.index_maxY].valueOnAxis;
     }else{
-      EndPointKey &entityProxy2 = m_endPointKeys[pair.second];
+      EndPointKey &entityProxy2 = m_endPointKeys[static_cast<size_t>(pair.second)];
       minY2 = m_endPointsY[entityProxy2.index_minY].valueOnAxis;
       maxY2 = m_endPointsY[entityProxy2.index_maxY].valueOnAxis;
     }
@@ -375,7 +374,8 @@ void SweepAndPruneSys::onUpdate(double deltaTime)
     // Dynamic vs Dynamic narrow collision
     if (pair.second >= 0) {
       const reg::Entity entity1 = m_endPointKeys[pair.first].entity;
-      const reg::Entity entity2 = m_endPointKeys[pair.second].entity;
+      const reg::Entity entity2 =
+          m_endPointKeys[static_cast<size_t>(pair.second)].entity;
       auto [tIt_i, cIt_i, mIt_i] =
           getComponents<Transform2dComponent, SAPCollider, Movement2dComponent>(
               entity1);

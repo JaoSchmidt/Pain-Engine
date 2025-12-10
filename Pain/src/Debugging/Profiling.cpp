@@ -63,18 +63,22 @@ void writeProfile(const ProfileResult &result)
   std::string name = result.m_name;
   std::replace(name.begin(), name.end(), '"', '\'');
   double freq = (double)SDL_GetPerformanceFrequency();
-  double duration =
-      (double)(result.m_end - result.m_start) * 1'000'000.0 / freq;
-  double start = (double)(result.m_start - m_zeroTime) * 1'000'000.0 / freq;
+  const DeltaTime duration = result.m_end - result.m_start;
+  const DeltaTime start = result.m_start - m_zeroTime;
+
+  const double durationMili =
+      (double)(duration.getNanoSeconds() * 1'000'000.0 / freq);
+  const double startMili =
+      (double)(start.getNanoSeconds() * 1'000'000.0 / freq);
 
   m_outputStream << "{";
   m_outputStream << "\"cat\":\"function\",";
-  m_outputStream << "\"dur\":" << duration << ',';
+  m_outputStream << "\"dur\":" << durationMili << ',';
   m_outputStream << "\"name\":\"" << name << "\",";
   m_outputStream << "\"ph\":\"X\",";
   m_outputStream << "\"pid\":0,";
   m_outputStream << "\"tid\":" << result.m_threadID << ",";
-  m_outputStream << "\"ts\":" << start;
+  m_outputStream << "\"ts\":" << startMili;
   m_outputStream << "}";
 
   m_outputStream.flush();

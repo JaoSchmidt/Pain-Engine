@@ -71,7 +71,7 @@ const std::string &resources::getLuaScriptSource(const char *filepath)
 
 // start the stuff to run settings app
 
-void resources::initiateDefaultScript(const sol::state &solstate)
+void resources::initiateDefaultScript()
 {
   getLuaScriptSource(getDefaultLuaFile());
 }
@@ -103,16 +103,18 @@ std::string resources::getCurrentWorkingDir()
   return currentDir;
 }
 
-void resources::defaultNativeScript::onUpdate(double deltaTimeSec)
+void resources::defaultNativeScript::onUpdate(UNUSED DeltaTime deltaTimeSec)
 {
   PLOG_W("You are updating a script that hasn't been initialized!");
 }
 
-void resources::defaultNativeScript::onEvent(const SDL_Event &e)
+void resources::defaultNativeScript::onEvent(UNUSED const SDL_Event &e)
 {
   PLOG_W("You are updating a script that hasn't been initialized!");
 }
-void resources::defaultNativeScript::onRender()
+void resources::defaultNativeScript::onRender(UNUSED Renderer2d &renderer,
+                                              UNUSED bool isMinimized,
+                                              UNUSED DeltaTime currentTime)
 {
   PLOG_W("You are trying to render a script that hasn't been initialized!");
 }

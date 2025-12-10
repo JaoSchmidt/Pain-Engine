@@ -19,19 +19,19 @@ PerspectiveCameraController::PerspectiveCameraController(
   m_zoomSpeed = 10.0f;
   m_windowWidth = windowWidth;
   m_windowHeight = windowHeight;
-  Renderer3d::setViewport(0, 0, windowWidth, windowHeight);
+  Renderer3d::setViewport(0, 0, (int)windowWidth, (int)windowHeight);
   setFrontVector({0.0f, 0.0f, 1.0f});
   setPosition({0.0f, 0.0f, 0.0f});
   SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
-void PerspectiveCameraController::onUpdate(double deltaTimeSec)
+void PerspectiveCameraController::onUpdate(DeltaTime deltaTimeSec)
 {
   if (!m_isMovementEnable)
     return;
 
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-  float moveAmount = (float)(deltaTimeSec * m_translationSpeed *
+  float moveAmount = (float)(deltaTimeSec.getSecondsf() * m_translationSpeed *
                              (1.0 + 10.0 * state[SDL_SCANCODE_LSHIFT]));
   if (state[SDL_SCANCODE_W])
     m_position += m_cameraFront * moveAmount;
@@ -98,8 +98,8 @@ void PerspectiveCameraController::onMouseMoved(const SDL_Event &e)
   if (!m_isMovementEnable)
     return;
 
-  float xoffset = e.motion.xrel * m_sensitivitySpeed;
-  float yoffset = e.motion.yrel * m_sensitivitySpeed;
+  float xoffset = static_cast<float>(e.motion.xrel) * m_sensitivitySpeed;
+  float yoffset = static_cast<float>(e.motion.yrel) * m_sensitivitySpeed;
 
   m_yaw += xoffset;
   m_pitch -= yoffset;
@@ -122,7 +122,7 @@ void PerspectiveCameraController::onMouseScrolled(const SDL_Event &event)
   if (!m_isMovementEnable)
     return;
 
-  m_fieldOfViewDegrees += event.wheel.y * m_zoomSpeed;
+  m_fieldOfViewDegrees += static_cast<float>(event.wheel.y) * m_zoomSpeed;
   if (m_fieldOfViewDegrees < 1.0f)
     m_fieldOfViewDegrees = 1.0f;
   else if (m_fieldOfViewDegrees > 100.0f)

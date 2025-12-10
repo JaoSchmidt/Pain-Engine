@@ -35,7 +35,7 @@ void Renderer2d::changeCamera(const OrthographicMatrices &cameraMatrices,
   m_orthoCameraEntity = cameraEntity;
 }
 
-void Renderer2d::beginScene(float globalTime, const Scene &scene,
+void Renderer2d::beginScene(DeltaTime globalTime, const Scene &scene,
                             const glm::mat4 &transform)
 {
   PROFILE_FUNCTION();
@@ -161,8 +161,8 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
   double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
   double y = 0.0;
   float lineHeightOffset = 0.0f;
-  for (const char *t = string; *t != '\0'; t++) {
-    switch (*t) {
+  for (const char *letter = string; *letter != '\0'; letter++) {
+    switch (*letter) {
     case '\r':
       continue;
       break;
@@ -176,9 +176,9 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
       x += 4.0f * (fsScale * spaceGlyphAdvance);
       break;
     default:
-      auto glyph = fontGeometry.getGlyph(*t);
+      auto glyph = fontGeometry.getGlyph(static_cast<unsigned>(*letter));
       if (!glyph) {
-        PLOG_E("Glyph '{}' not available on font family", *t);
+        PLOG_E("Glyph '{}' not available on font family", *letter);
       }
 
       double atlasLeft, atlasBottom, atlasRight, atlasTop;
@@ -196,8 +196,10 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
       // offset
       quadMin += glm::vec2(x, y);
       quadMax += glm::vec2(x, y);
-      float texelWidth = 1.0f / m_fontAtlasTexture->getWidth();
-      float texelHeight = 1.0f / m_fontAtlasTexture->getHeight();
+      float texelWidth =
+          1.0f / static_cast<float>(m_fontAtlasTexture->getWidth());
+      float texelHeight =
+          1.0f / static_cast<float>(m_fontAtlasTexture->getHeight());
       texCoordMin *= glm::vec2(texelWidth, texelHeight);
       texCoordMax *= glm::vec2(texelWidth, texelHeight);
 
@@ -211,10 +213,11 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
                          glm::vec4{quadMax, 0.f, 1.f},
                          glm::vec4{quadMax.x, quadMin.y, 0.f, 1.f}});
 
-      if (*t != '\0') {
+      if (*letter != '\0') {
         double advance = glyph->getAdvance();
-        char nextCharacter = *(t + 1);
-        fontGeometry.getAdvance(advance, *t, nextCharacter);
+        unsigned nextCharacter = static_cast<unsigned>(*(letter + 1));
+        fontGeometry.getAdvance(advance, static_cast<unsigned>(*letter),
+                                nextCharacter);
         float kerningOffset = 0.0f;
         x += fsScale * advance + kerningOffset;
       }

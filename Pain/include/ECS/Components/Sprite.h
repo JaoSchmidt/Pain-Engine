@@ -7,97 +7,86 @@
 
 namespace pain
 {
-struct SpriteComponent {
-  // clang-format off
-  glm::vec2 m_size{0.1f, 0.1f};
+struct SheetStruct {
+  TextureSheet *sheet;
+  unsigned short id;
+};
 
-  glm::vec4 m_color{1.0f, 1.0f, 1.0f,1.0f}; // HACK: perhaps I could map colors?
-  float m_tilingFactor = 1.f; // HACK: perhaps this could be inside every texture? or perhaps I could also map this?
-  short m_textureSheetId = -1; // check
-  union {
-    TextureSheet *m_textureSheet;
-    Texture *m_texture = &resources::getDefaultTexture(resources::ERROR, false);
-  };
-  // clang-format on
+struct SpriteComponent {
+  using TextureVariant = std::variant<Texture *, SheetStruct>;
+
+  glm::vec2 m_size{0.1f, 0.1f};
+  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  float m_tilingFactor = 1.f;
+  TextureVariant m_tex =
+      TextureVariant{&resources::getDefaultTexture(resources::ERROR, false)};
+
   void printptr(const char *a) const
   {
-    PLOG_I("texsheet id = {} on {}", fmt::ptr(m_textureSheet), a);
-  };
-  void setTexture(const char *filepath)
-  {
-    m_texture = &resources::getTexture(filepath);
-  };
-  const std::array<glm::vec2, 4> &getCoords() const
-  {
-    return (*m_textureSheet)[m_textureSheetId];
-  }
-  Texture &getTexture() const
-  {
-    P_ASSERT_W(m_textureSheetId == -1,
-               "You are trying to call getTexture of an atlas. Try calling"
-               "getSheetTexture instead");
-    return *m_texture;
-  };
-  Texture &getTextureFromTextureSheet() const
-  {
-    P_ASSERT_W(
-        m_textureSheetId != -1,
-        "You are trying to call getTextureSheet of an object that doesn't "
-        "have a defined index inside that textureSheet."
-        "Perhaps you need to call getTexture instead?");
-    return m_textureSheet->getTexture();
-  };
-  void setTextureSheet(TextureSheet &textureSheet, int id)
-  {
-    m_textureSheetId = id;
-    m_textureSheet = &textureSheet;
+    std::visit(
+        [&](auto &&obj) {
+          using T = std::decay_t<decltype(obj)>;
+          if constexpr (std::is_same_v<T, SheetStruct>) {
+            PLOG_I("ptr = {} on {}", fmt::ptr(obj.sheet), a);
+          } else {
+            PLOG_I("ptr = {} on {}", fmt::ptr(obj), a);
+          }
+        },
+        m_tex);
   }
 
-  // Constructors
+  // ------------------------------------------------------------
+  //  GETTERS with type-enforced stuff
+  // ------------------------------------------------------------
+
+  // Assuming sprite is part of a Texture Atlas, get its coordinates
+  const std::array<glm::vec2, 4> &getCoords() const
+  {
+    SheetStruct sheet = std::get<SheetStruct>(m_tex);
+    return (*sheet.sheet)[sheet.id];
+  }
+  Texture &getTexture() const { return *std::get<Texture *>(m_tex); }
+  Texture &getTextureFromTextureSheet() const
+  {
+    return std::get<SheetStruct>(m_tex).sheet->getTexture();
+  }
+
+  // ------------------------------------------------------------
+  //  SETTERS
+  // ------------------------------------------------------------
+
+  // set a single texture
+  void setTexture(Texture &texture) { m_tex = TextureVariant{&texture}; }
+  void setTexture(const char *filepath)
+  {
+    m_tex = TextureVariant{&resources::getTexture(filepath)};
+  }
+  void setTextureSheet(TextureSheet &sheet, unsigned short id)
+  {
+    m_tex = TextureVariant{SheetStruct{&sheet, id}};
+  }
+
+  // --- Constructors ---
   SpriteComponent(const glm::vec2 &size, const glm::vec4 &color,
                   float tilingFactor, Texture &texture)
       : m_size(size), m_color(color), m_tilingFactor(tilingFactor),
-        m_texture(&texture) {};
+        m_tex(&texture) {};
+
   SpriteComponent(Texture &texture, glm::vec2 size = {0.1f, 0.1f})
-      : m_size(size), m_texture(&texture) {};
-  SpriteComponent(TextureSheet &texSheet, short id,
+      : m_size(size), m_tex(&texture) {};
+
+  SpriteComponent(TextureSheet &sheet, unsigned short id,
                   glm::vec2 size = {0.1f, 0.1f})
-      : m_size(size), m_textureSheetId(id), m_textureSheet(&texSheet) {};
-  SpriteComponent(const char *filePath)
-      : m_texture(&resources::getTexture(filePath)) {};
+      : m_size(size), m_tex(SheetStruct{&sheet, id}) {};
+
+  SpriteComponent(const char *filepath)
+      : m_tex(&resources::getTexture(filepath)) {};
+
   SpriteComponent() = default;
 
-  // Move
-  SpriteComponent(SpriteComponent &&other) noexcept
-      : m_size(std::move(other.m_size)), m_color(std::move(other.m_color)),
-        m_tilingFactor(other.m_tilingFactor),
-        m_textureSheetId(other.m_textureSheetId)
-  {
-    if (m_textureSheetId == -1) {
-      m_texture = other.m_texture;
-      other.m_texture = nullptr;
-    } else {
-      m_textureSheet = other.m_textureSheet;
-      other.m_textureSheet = nullptr;
-    }
-  }
-
-  // Move assignment
-  SpriteComponent &operator=(SpriteComponent &&other) noexcept
-  {
-    if (this != &other) {
-      m_size = std::move(other.m_size);
-      m_color = std::move(other.m_color);
-      m_tilingFactor = other.m_tilingFactor;
-      m_textureSheetId = other.m_textureSheetId;
-
-      if (m_textureSheetId == -1)
-        m_texture = other.m_texture;
-      else
-        m_textureSheet = other.m_textureSheet;
-    }
-    return *this;
-  }
+  // --- Move semantics are fully handled by std::variant ---
+  SpriteComponent(SpriteComponent &&) noexcept = default;
+  SpriteComponent &operator=(SpriteComponent &&) noexcept = default;
 };
 
 struct SpritelessComponent {
@@ -108,7 +97,7 @@ struct SpritelessComponent {
   SpritelessComponent(const float radius) : m_shape(CircleShape(radius)) {};
 
   SpritelessComponent(const float radius, const glm::vec4 &color)
-      : m_shape(CircleShape(radius)) {};
+      : m_shape(CircleShape(radius)), m_color(color) {};
   SpritelessComponent(const glm::vec2 &size, const glm::vec4 &color)
       : m_shape(QuadShape(size)), m_color(color) {};
 };

@@ -70,7 +70,8 @@ public:
     }
     // clang-format on
   }
-  void onRender(Renderer2d &renderer, bool isMinimized, double currentTime)
+  void onRender(UNUSED Renderer2d &renderer, UNUSED bool isMinimized,
+                UNUSED DeltaTime currentTime)
   {
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -173,7 +174,7 @@ Application *createLauncher()
   const int height = 200;
   const float zoom = 1.f;
   Application *settingsApp =
-      Application::createApplication(title, width, height, true);
+      Application::createApplication(title, width, height);
   ImGuiLauncher::createScriptScene(width, height, zoom, settingsApp);
 
   return settingsApp;

@@ -91,7 +91,7 @@ Renderer2d Renderer2d::createRenderer2d()
 
   int32_t samplers[MaxTextureSlots];
   for (uint32_t i = 0; i < MaxTextureSlots; i++) {
-    samplers[i] = i;
+    samplers[i] = (int32_t)i;
   }
 
   auto quadTextureShader =
@@ -295,7 +295,7 @@ Renderer2d Renderer2d::createRenderer2d()
                     std::move(*gridShader));      //
 }
 
-void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
+void Renderer2d::draw(UNUSED const glm::mat4 &viewProjectionMatrix)
 {
   PROFILE_FUNCTION();
   // =============================================================== //
@@ -325,9 +325,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
     m_quadVertexArray.bind();
     m_quadIB.bind();
     m_quadVertexBuffer.bind();
-    const uint32_t quadDataSize =
-        (uint8_t *)m_quadVertexBufferPtr - (uint8_t *)m_quadVertexBufferBase;
-    m_quadVertexBuffer.setData((void *)m_quadVertexBufferBase, quadDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_quadVertexBufferPtr - m_quadVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(QuadVertex);
+    m_quadVertexBuffer.setData((void *)m_quadVertexBufferBase, numBytes);
 
     // bind textures
     for (uint32_t i = 0; i < m_textureSlotIndex; i++) {
@@ -346,9 +347,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   // =============================================================== //
   if (m_textIndexCount) {
     m_textVertexArray.bind();
-    const uint32_t textDataSize =
-        (uint8_t *)m_textVertexBufferPtr - (uint8_t *)m_textVertexBufferBase;
-    m_textVertexBuffer.setData((void *)m_textVertexBufferBase, textDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_textVertexBufferPtr - m_textVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(TextQuadVertex);
+    m_textVertexBuffer.setData((void *)m_textVertexBufferBase, numBytes);
 
     m_fontAtlasTexture->bind();
     m_textTextureShader.bind();
@@ -367,9 +369,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   if (m_sprayIndexCount) {
     m_sprayVertexArray.bind();
     m_sprayIB.bind();
-    const uint32_t sprayDataSize =
-        (uint8_t *)m_sprayVertexBufferPtr - (uint8_t *)m_sprayVertexBufferBase;
-    m_sprayVertexBuffer.setData((void *)m_sprayVertexBufferBase, sprayDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_sprayVertexBufferPtr - m_sprayVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(ParticleVertex);
+    m_sprayVertexBuffer.setData((void *)m_sprayVertexBufferBase, numBytes);
 
     // FIX: I don't really need to bind textures here, right?
     // TODO: make it possible to bind textures for spray particles
@@ -389,9 +392,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   if (m_triIndexCount) {
     m_triIB.bind();
     m_triVertexArray.bind();
-    const uint32_t triDataSize =
-        (uint8_t *)m_triVertexBufferPtr - (uint8_t *)m_triVertexBufferBase;
-    m_triVertexBuffer.setData((void *)m_triVertexBufferBase, triDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_sprayVertexBufferPtr - m_sprayVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(ParticleVertex);
+    m_triVertexBuffer.setData((void *)m_triVertexBufferBase, numBytes);
 
     m_triShader.bind();
     const uint32_t triCount =
@@ -406,10 +410,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   if (m_circleIndexCount) {
     m_circleIB.bind();
     m_circleVertexArray.bind();
-    const uint32_t circleDataSize = (uint8_t *)m_circleVertexBufferPtr -
-                                    (uint8_t *)m_circleVertexBufferBase;
-    m_circleVertexBuffer.setData((void *)m_circleVertexBufferBase,
-                                 circleDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_sprayVertexBufferPtr - m_sprayVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(ParticleVertex);
+    m_circleVertexBuffer.setData((void *)m_circleVertexBufferBase, numBytes);
 
     m_circleShader.bind();
     const uint32_t circleCount =
@@ -449,7 +453,7 @@ void Renderer2d::goBackToFirstVertex()
 }
 
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                                     float globalTime,
+                                     DeltaTime globalTime,
                                      const glm::mat4 &transform,
                                      const glm::ivec2 &resolution,
                                      const glm::vec2 &cameraPos,
@@ -468,7 +472,7 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
   m_sprayShader.bind();
   m_sprayShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
   m_sprayShader.uploadUniformMat4("u_Transform", transform);
-  m_sprayShader.uploadUniformFloat("u_Time", globalTime);
+  m_sprayShader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
 
   m_textTextureShader.bind();
   m_textTextureShader.uploadUniformMat4("u_ViewProjection",
@@ -478,7 +482,7 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
   m_gridShader.bind();
   m_gridShader.uploadUniformFloat("u_zoomLevel", zoomLevel);
   m_gridShader.uploadUniformFloat2("u_cameraPos", cameraPos);
-  m_gridShader.uploadUniformFloat("u_resolution_y", resolution.y);
+  m_gridShader.uploadUniformFloat("u_resolution_y", (float)resolution.y);
   m_gridShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
   // m_gridShader.uploadUniformMat4("u_Transform", transform);
   // m_gridShader.uploadUniformFloat2("u_resolution", glm::vec2(resolution));
@@ -550,7 +554,7 @@ void Renderer2d::allocateQuad(const glm::mat4 &transform,
                               const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
-  for (int i = 0; i < 4; i++) {
+  for (unsigned i = 0; i < 4; i++) {
     m_quadVertexBufferPtr->position = transform * QuadVertexPositions[i];
     m_quadVertexBufferPtr->color = tintColor;
     m_quadVertexBufferPtr->texCoord = textureCoordinate[i];
@@ -566,7 +570,7 @@ void Renderer2d::allocateCircle(const glm::mat4 &transform,
                                 const std::array<glm::vec2, 4> &coordinate)
 {
   PROFILE_FUNCTION();
-  for (int i = 0; i < 4; i++) {
+  for (unsigned i = 0; i < 4; i++) {
     m_circleVertexBufferPtr->position = transform * QuadVertexPositions[i];
     m_circleVertexBufferPtr->color = tintColor;
     m_circleVertexBufferPtr->coord = coordinate[i];
@@ -579,7 +583,7 @@ void Renderer2d::allocateTri(const glm::mat4 &transform,
                              const glm::vec4 &tintColor)
 {
   PROFILE_FUNCTION();
-  for (int i = 0; i < 3; i++) {
+  for (unsigned i = 0; i < 3; i++) {
     m_triVertexBufferPtr->position = transform * TriVertexPositions[i];
     m_triVertexBufferPtr->color = tintColor;
     m_triVertexBufferPtr++;
@@ -587,30 +591,30 @@ void Renderer2d::allocateTri(const glm::mat4 &transform,
   m_triIndexCount += 3;
 }
 
-void Renderer2d::beginSprayParticle(const float globalTime,
+void Renderer2d::beginSprayParticle(const DeltaTime globalTime,
                                     const ParticleSprayComponent &psc)
 {
   PROFILE_FUNCTION();
   m_sprayShader.bind();
-  m_sprayShader.uploadUniformFloat("u_Time", globalTime);
+  m_sprayShader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
   m_sprayShader.uploadUniformFloat("u_ParticleVelocity", psc.m_velocity);
-  m_sprayShader.uploadUniformFloat("u_LifeTime", psc.m_lifeTime);
+  m_sprayShader.uploadUniformFloat("u_LifeTime", (float)psc.m_lifeTime);
   m_sprayShader.uploadUniformFloat("u_SizeChangeSpeed", psc.m_sizeChangeSpeed);
   m_sprayShader.uploadUniformFloat("u_randomSizeFactor", psc.m_randSizeFactor);
 }
 
-void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
+void Renderer2d::allocateSprayParticles(UNUSED const glm::vec2 &position,
                                         const glm::vec2 &offset,
                                         const glm::vec2 &normal,
-                                        const float startTime,
+                                        const DeltaTime startTime,
                                         const float rotationSpeed)
 {
   PROFILE_FUNCTION();
-  for (int i = 0; i < 4; i++) {
+  for (unsigned i = 0; i < 4; i++) {
     m_sprayVertexBufferPtr->position = SprayVertexPositions[i];
     m_sprayVertexBufferPtr->offset = offset;
     m_sprayVertexBufferPtr->normal = normal;
-    m_sprayVertexBufferPtr->time = startTime;
+    m_sprayVertexBufferPtr->time = startTime.getSecondsf();
     m_sprayVertexBufferPtr->rotationSpeed = rotationSpeed;
     m_sprayVertexBufferPtr++;
   }
@@ -623,7 +627,7 @@ void Renderer2d::allocateCharacter(
     const std::array<glm::vec4, 4> &textVertexPositions)
 {
   PROFILE_FUNCTION();
-  for (int i = 0; i < 4; i++) {
+  for (unsigned i = 0; i < 4; i++) {
     m_textVertexBufferPtr->position = transform * textVertexPositions[i];
     m_textVertexBufferPtr->color = tintColor;
     m_textVertexBufferPtr->texCoord = textureCoordinate[i];

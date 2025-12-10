@@ -23,7 +23,7 @@ class OrthoCameraScript : public ExtendedEntity
 {
 public:
   using ExtendedEntity::ExtendedEntity;
-  void onUpdate(double deltaTimeSec);
+  void onUpdate(DeltaTime deltaTimeSec);
   void onCreate();
   void onEvent(const SDL_Event &e);
   inline void recalculatePosition(const glm::vec2 &position, float rotation);

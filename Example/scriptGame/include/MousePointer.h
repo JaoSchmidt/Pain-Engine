@@ -17,7 +17,7 @@ public:
   MousePointerScript(reg::Entity entity, pain::Scene &scene,
                      reg::Entity m_cameraEntity);
   void onEvent(const SDL_Event &e);
-  void onUpdate(double deltaTimeSec);
+  void onUpdate(pain::DeltaTime deltaTime);
   void onCreate();
 
 private:

@@ -54,7 +54,7 @@ void Scene::insertColliders(const std::vector<reg::Entity> &entities)
       // m_luaSystem{std::make_unique<Systems::LuaScript>(m_registry)},
       // m_collisionSystem{std::make_unique<Systems::NaiveCollisionSys>(m_registry)} {};
 
-void Scene::updateSystems(double deltaTime)
+void Scene::updateSystems(DeltaTime deltaTime)
 {
   PROFILE_FUNCTION();
   m_kinematicsSystem->onUpdate(deltaTime);
@@ -78,7 +78,7 @@ void Scene::updateSystems(const SDL_Event &event)
 // }
 
 void Scene::renderSystems(Renderer2d &renderer, bool isMinimized,
-                          double currentTime)
+                          DeltaTime currentTime)
 {
   m_renderSystem->onRender(renderer, isMinimized, currentTime);
   m_nativeScriptSystem->onRender(renderer, isMinimized, currentTime);

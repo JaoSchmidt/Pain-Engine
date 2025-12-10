@@ -16,8 +16,7 @@ class Application
 {
 public:
   static constexpr std::string configIniFile = "config.ini";
-  static Application *createApplication(const char *title, int w, int h,
-                                        bool isSettingsApp = false);
+  static Application *createApplication(const char *title, int w, int h);
   ~Application();
 
   // TODO: This is useful to mess with time e.g. set speed to as high as

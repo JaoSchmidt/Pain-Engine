@@ -2,6 +2,9 @@
 # generated ini
 imgui.ini
 config.ini
+# syncthing stuff
+.stfolder
+.stfolder
 
 
 CMakeDoxyfile.in

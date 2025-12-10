@@ -1,6 +1,7 @@
 // Scene.h
 #pragma once
 
+#include "Assets/DeltaTime.h"
 #include "Core.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Registry/Entity.h"
@@ -195,10 +196,10 @@ public:
   //   m_registry->remove<TargetComponents..., ObjectComponents...>(entity);
   // }
 
-  void updateSystems(double deltaTime);
+  void updateSystems(DeltaTime deltaTime);
   void updateSystems(const SDL_Event &event);
   void renderSystems(Renderer2d &renderer, bool isMinimized,
-                     double currentTime);
+                     DeltaTime currentTime);
 
 private:
   reg::ArcheRegistry<ComponentManager> m_registry;

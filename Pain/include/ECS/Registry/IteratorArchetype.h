@@ -8,8 +8,8 @@ template <typename T> struct Iterator {
   // https://internalpointers.com/post/writing-custom-iterators-modern-cpp
   using iterator_category = std::forward_iterator_tag;
 
-  Iterator(std::vector<std::vector<T> *> vectors, int outerIndex,
-           int innerIndex)
+  Iterator(std::vector<std::vector<T> *> vectors, size_t outerIndex,
+           size_t innerIndex)
       : m_vectors(vectors), m_outerIndex(outerIndex),
         m_innerIndex(innerIndex) {};
 

@@ -1,6 +1,7 @@
 // SweepAndPruneSys.h
 #pragma once
 
+#include "Assets/DeltaTime.h"
 #include "ECS/Systems.h"
 namespace pain
 {
@@ -26,7 +27,7 @@ struct SweepAndPruneSys : public System<ComponentManager> {
   template <typename... Args>
   SweepAndPruneSys(Args &&...args) : System(std::forward<Args>(args)...){};
   SweepAndPruneSys() = delete;
-  void onUpdate(double deltaTime);
+  void onUpdate(DeltaTime deltaTime);
   void insertStaticEntity(reg::Entity entity, const Transform2dComponent &tc,
                           SAPCollider &sc);
   void insertEntity(reg::Entity entitiy, const Transform2dComponent &tc,
@@ -49,16 +50,16 @@ private:
   std::vector<long> m_activeList = {};
   std::vector<long> m_activeStaticList = {};
 
-  static inline long staticMSB(long x)
+  static inline long staticMSB(size_t x)
   {
-    x |= (1UL << ((sizeof(long) * 8) - 1));
-    return x;
+    long lx = static_cast<long>(x);
+    lx |= (1UL << ((sizeof(long) * 8) - 1));
+    return lx;
   }
-
-  static inline long clearMSB(long x)
+  static inline size_t clearMSB(long x)
   {
     x &= ~(1UL << ((sizeof(long) * 8) - 1));
-    return x;
+    return static_cast<size_t>(x);
   }
 };
 

@@ -21,7 +21,7 @@ public:
   inline std::array<glm::vec2, 4> &operator[](ushort i)
   {
 #ifndef NDEBUG
-    if ((int)i > m_textureIds.size()) {
+    if (i > m_textureIds.size()) {
       PLOG_E("You are tyring to call an out of bounds texture id {} inside a "
              "textureSheeet",
              i);
@@ -33,15 +33,15 @@ public:
 
   const std::vector<std::vector<int>> &getDefaultMap() const;
   const std::vector<std::vector<int>> &getSceneryMap() const;
-  const std::array<glm::vec2, 4> getTexCoord(int id) const
+  const std::array<glm::vec2, 4> getTexCoord(unsigned id) const
   {
     return m_textureIds.at(id);
   };
   const Texture &getTexture() const { return m_texture; }
   Texture &getTexture() { return m_texture; }
-  const float getSpriteWidth() const { return m_spriteSize.x; }
-  const float getSpriteHeight() const { return m_spriteSize.y; }
-  const size_t size() const { return m_size; }
+  float getSpriteWidth() const { return m_spriteSize.x; }
+  float getSpriteHeight() const { return m_spriteSize.y; }
+  size_t size() const { return m_size; }
   MOVABLE(TextureSheet);
   NONCOPYABLE(TextureSheet)
   ~TextureSheet() = default;

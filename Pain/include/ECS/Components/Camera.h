@@ -7,7 +7,7 @@ namespace pain
 {
 
 struct OrthoCameraComponent {
-  float m_aspectRatio = 800.0 / 600.0;
+  float m_aspectRatio = 800.f / 600.f;
   float m_zoomLevel = 1.0f;
   OrthographicMatrices *m_matrices = nullptr;
   OrthoCameraComponent() = default;

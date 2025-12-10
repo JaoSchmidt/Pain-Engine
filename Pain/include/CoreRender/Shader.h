@@ -22,7 +22,7 @@ public:
   NONCOPYABLE(Shader);
   Shader(Shader &&o);
   Shader &operator=(Shader &&o);
-  const uint32_t getId() const { return m_programId; }
+  uint32_t getId() const { return m_programId; }
 
   void bind() const;
   void unbind() const;

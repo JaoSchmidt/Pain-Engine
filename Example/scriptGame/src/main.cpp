@@ -46,15 +46,15 @@ public:
         "resources/textures/star_animation_strip.png", 1, 4,
         {{0, 0}, {1, 0}, {2, 0}, {3, 0}});
 
-    std::vector<Stars> stars;
+    std::vector<reg::Entity> stars;
     std::mt19937 gen(1337);
     std::uniform_real_distribution<float> dist(-1.f, 1.f);
     stars.reserve(starAmout);
-    for (short i = 0; i < starAmout; i++) {
+    for (unsigned short i = 0; i < starAmout; i++) {
       glm::vec2 randomPos(dist(gen), dist(gen));
-      Stars s = {scene, texSheet, static_cast<short>(i % texSheet.size()),
-                 randomPos};
-      stars.emplace_back(std::move(s));
+      stars.emplace_back(Stars::create(
+          scene, texSheet, static_cast<unsigned short>(i % texSheet.size()),
+          randomPos));
     }
 
     // WALLS ---------------------------------------------------------------
@@ -105,26 +105,26 @@ public:
     //       glm::vec2{0.2f, 0.2f}));                      //
     // }
 
-    for (short i = 0; i < asteroidAmount / 2; i++) {
-      asteroids.emplace_back(Asteroid::create(          //
-          scene,                                        //
-          asteroidSheet,                                //
-          static_cast<short>(i % asteroidSheet.size()), //
-          glm::vec2{-1.f + 0.3f * i, 0.2f},             //
-          glm::vec2{0.5f, 1.0f},                        //
-          0.1f                                          //
+    for (unsigned short i = 0; i < asteroidAmount / 2; i++) {
+      asteroids.emplace_back(Asteroid::create( //
+          scene,                               //
+          asteroidSheet,                       //
+          i % asteroidSheet.size(),            //
+          glm::vec2{-1.f + 0.3f * i, 0.2f},    //
+          glm::vec2{0.5f, 1.0f},               //
+          0.1f                                 //
           ));
       // glm::vec2{0.2f, 0.2f})); //
     }
-    for (short i = asteroidAmount / 2; i < asteroidAmount; i++) {
-      asteroids.emplace_back(Asteroid::create(          //
-          scene,                                        //
-          asteroidSheet,                                //
-          static_cast<short>(i % asteroidSheet.size()), //
-          glm::vec2{0.3f * i, 0.2f},                    //
-          glm::vec2{0.5f, 1.0f},                        //
-          glm::vec2{0.2f, 0.2f}                         //
-          ));                                           //
+    for (unsigned short i = asteroidAmount / 2; i < asteroidAmount; i++) {
+      asteroids.emplace_back(Asteroid::create( //
+          scene,                               //
+          asteroidSheet,                       //
+          i % asteroidSheet.size(),            //
+          glm::vec2{0.3f * i, 0.2f},           //
+          glm::vec2{0.5f, 1.0f},               //
+          glm::vec2{0.2f, 0.2f}                //
+          ));                                  //
     }
 
     // ---------------------------------
@@ -213,7 +213,8 @@ public:
         std::move(stars), std::move(orthocamera), std::move(asteroids),
         std::move(walls), std::move(mp));
   }
-  void onRender(pain::Renderer2d &renderer, bool minimazed, double deltatime)
+  void onRender(pain::Renderer2d &renderer, bool minimazed,
+                pain::DeltaTime deltatime)
   {
     // renderer.drawQuad(
     //     {0.0f, 0.0f}, {0.2f, 0.2f}, {0.2f, 0.9f, 0.6f, 1.f},
@@ -221,8 +222,8 @@ public:
     // renderer.drawCircle({0.0f, 0.0f}, 0.2f, {0.2f, 0.3f, 0.9f, 1.f});
   }
 
-  MainScript(reg::Entity entity, pain::Scene &scene, std::vector<Stars> &&stars,
-             pain::OrthoCamera &&orthocamera,
+  MainScript(reg::Entity entity, pain::Scene &scene,
+             std::vector<reg::Entity> &&stars, pain::OrthoCamera &&orthocamera,
              std::vector<reg::Entity> &&asteroid,
              std::vector<reg::Entity> &&walls, MousePointer &&mp)
       : ExtendedEntity(entity, scene), m_orthocamera(std::move(orthocamera)),
@@ -235,7 +236,7 @@ public:
   std::vector<std::vector<int>> m_backgroundMap;
   pain::OrthoCamera m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
-  std::vector<Stars> m_stars;
+  std::vector<reg::Entity> m_stars;
   std::vector<reg::Entity> m_asteroids;
   std::vector<reg::Entity> m_walls;
   MousePointer m_mousePointer;

@@ -6,7 +6,6 @@
 #include "Physics/Collision/ColReaction.h"
 #include "Physics/Collision/Collider.h"
 #include "Scripting/CollisionCallback.h"
-#include "Scripting/Component.h"
 namespace pain
 {
 namespace Systems
@@ -16,7 +15,7 @@ namespace Systems
 // COLLISION DETECTION
 // =============================================================
 // Between same capulses
-void NaiveCollisionSys::onUpdate(double deltaTime)
+void NaiveCollisionSys::onUpdate(UNUSED DeltaTime deltaTime)
 {
 
   // NOTE: testing without callbacks for now

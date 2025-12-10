@@ -55,7 +55,7 @@ glm::vec2 MousePointerScript::screenToWorld(int mouseX, int mouseY)
   return glm::vec2(camTC.m_position.x, camTC.m_position.y) +
          rotation * localCoord;
 }
-void MousePointerScript::onUpdate(double deltaTimeSec)
+void MousePointerScript::onUpdate(pain::DeltaTime deltaTimeSec)
 {
   int x, y;
   SDL_GetMouseState(&x, &y);

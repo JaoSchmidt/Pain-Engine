@@ -11,8 +11,9 @@ namespace pain
 // - add onImGuiRender inside the NativeScript
 // - create dynamic updates inside the mousepointer for testing
 
-void ImGuiDebugMenu::onRender(pain::Renderer2d &renderer, bool isMinimized,
-                              double currentTime)
+void ImGuiDebugMenu::onRender(UNUSED pain::Renderer2d &renderer,
+                              UNUSED bool isMinimized,
+                              UNUSED DeltaTime currentTime)
 {
   ImGui::Begin("Debug info");
   auto &camCC =

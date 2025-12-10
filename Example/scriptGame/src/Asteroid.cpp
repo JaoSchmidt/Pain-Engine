@@ -3,7 +3,7 @@
 #include <pain.h>
 
 reg::Entity Asteroid::create(pain::Scene &scene, pain::TextureSheet &texSheet,
-                             short id, glm::vec2 pos, glm::vec2 vel,
+                             unsigned short id, glm::vec2 pos, glm::vec2 vel,
                              const float radius)
 {
   // assuming size of quad sprite = diameter
@@ -18,7 +18,7 @@ reg::Entity Asteroid::create(pain::Scene &scene, pain::TextureSheet &texSheet,
   return entity;
 }
 reg::Entity Asteroid::create(pain::Scene &scene, pain::TextureSheet &texSheet,
-                             short id, glm::vec2 pos, glm::vec2 vel,
+                             unsigned short id, glm::vec2 pos, glm::vec2 vel,
                              glm::vec2 size)
 {
   reg::Entity entity = scene.createEntity();

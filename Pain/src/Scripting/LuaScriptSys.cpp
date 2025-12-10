@@ -10,7 +10,7 @@ namespace pain
 namespace Systems
 {
 
-void LuaScript::onUpdate(double deltaTime)
+void LuaScript::onUpdate(DeltaTime deltaTime)
 {
   PROFILE_SCOPE("onUpdate - LuaScripts");
   for (auto it = begin<LuaScriptComponent>(); it != end<LuaScriptComponent>();
@@ -42,7 +42,7 @@ void LuaScript::onEvent(const SDL_Event &e)
   }
 }
 void LuaScript::onRender(Renderer2d &renderer, bool isMinimized,
-                         double currentTime)
+                         DeltaTime currentTime)
 {
   PROFILE_SCOPE("onRender - LuaScripts");
   for (auto it = begin<LuaScriptComponent>(); it != end<LuaScriptComponent>();

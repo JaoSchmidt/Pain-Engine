@@ -13,8 +13,8 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render::onRender(Renderer2d &renderer, bool isMinimized,
-                      double currentTime)
+void Render::onRender(Renderer2d &renderer, UNUSED bool isMinimized,
+                      DeltaTime currentTime)
 {
   PROFILE_FUNCTION();
   {
@@ -22,13 +22,19 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
     auto [tIt, sIt] = begin<Transform2dComponent, SpriteComponent>();
     const auto &[tItEnd, sItEnd] = end<Transform2dComponent, SpriteComponent>();
     for (; tIt != tItEnd; ++tIt, ++sIt) {
-      if (sIt->m_textureSheetId == -1)
-        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                          sIt->getTexture(), sIt->m_tilingFactor);
-      else
-        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                          sIt->getTextureFromTextureSheet(),
-                          sIt->m_tilingFactor, sIt->getCoords());
+      std::visit(
+          [&](auto &&tex) {
+            using T = std::decay_t<decltype(tex)>;
+            if constexpr (std::is_same_v<T, SheetStruct>) {
+              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                                sIt->getTextureFromTextureSheet(),
+                                sIt->m_tilingFactor, sIt->getCoords());
+            } else {
+              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                                sIt->getTexture(), sIt->m_tilingFactor);
+            }
+          },
+          sIt->m_tex);
     }
   }
   {
@@ -39,19 +45,26 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
         end<Transform2dComponent, SpriteComponent, RotationComponent>();
 
     for (; tIt != tItEnd; ++tIt, ++rIt, ++sIt) {
-      // renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-      //                   rIt->m_rotationAngle, sIt->getTexture(),
-      //                   sIt->m_tilingFactor);
-      if (sIt->m_textureSheetId == -1)
-        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                          sIt->getTexture(), sIt->m_tilingFactor);
-      else
-        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                          sIt->getTextureFromTextureSheet(),
-                          sIt->m_tilingFactor, sIt->getCoords());
       // TODO: Remove m_rotation of rc... should only
       // have angle, in the case of the camera
       // inclune rot direction in its script
+      std::visit(
+          [&](auto &&tex) {
+            using T = std::decay_t<decltype(tex)>;
+            if constexpr (std::is_same_v<T, SheetStruct>) {
+              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                                sIt->getTextureFromTextureSheet(),
+                                sIt->m_tilingFactor, sIt->getCoords());
+            } else {
+              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                                sIt->getTexture(), sIt->m_tilingFactor);
+            }
+          },
+          sIt->m_tex);
+
+      // renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+      //                   rIt->m_rotationAngle, sIt->getTexture(),
+      //                   sIt->m_tilingFactor);
     }
   }
   {
@@ -89,7 +102,7 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
     for (auto it = begin<ParticleSprayComponent>();
          it != end<ParticleSprayComponent>(); ++it) {
       ParticleSprayComponent &psc = *it;
-      renderer.beginSprayParticle((float)currentTime, psc);
+      renderer.beginSprayParticle(currentTime, psc);
       for (Particle &pa : psc.m_particles) {
         if (pa.m_alive)
           renderer.drawSprayParticle(pa);

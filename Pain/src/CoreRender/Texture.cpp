@@ -15,8 +15,8 @@ SDL_Surface flipVertical(const SDL_Surface &surface)
       surface.flags, surface.w, surface.h, surface.format->BytesPerPixel * 8,
       surface.format->Rmask, surface.format->Gmask, surface.format->Bmask,
       surface.format->Amask);
-  const auto pitch = surface.pitch;
-  const auto pxlength = pitch * (surface.h - 1);
+  const size_t pitch = (unsigned long)surface.pitch;
+  const size_t pxlength = pitch * ((unsigned long)surface.h - 1);
   auto pixels = static_cast<unsigned char *>(surface.pixels) + pxlength;
   auto rpixels = static_cast<unsigned char *>(result.pixels);
   for (auto line = 0; line < surface.h; ++line) {
@@ -88,8 +88,8 @@ std::optional<Texture> Texture::createTexture(const char *path,
   glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, surface->w, surface->h, 0,
                dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
   PLOG_I("Texture created id = {}, path = {}", textureId, path);
-  return Texture(path, surface->w, surface->h, dataFormat, internalFormat,
-                 textureId);
+  return Texture(path, (unsigned)surface->w, (unsigned)surface->h, dataFormat,
+                 internalFormat, textureId);
 }
 
 void Texture::setData(const void *data, uint32_t size)

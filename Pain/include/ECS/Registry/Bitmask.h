@@ -64,7 +64,7 @@ private:
   }
 
   template <typename Target, typename First, typename... Rest>
-  static constexpr std::size_t getComponentIndex(int n = 0)
+  static constexpr std::size_t getComponentIndex(size_t n = 0)
   {
     if constexpr (std::is_same_v<First, Target>) {
       return n;

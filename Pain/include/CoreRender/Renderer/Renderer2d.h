@@ -68,7 +68,7 @@ struct Renderer2d {
   // ================================================================= //
 
   void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
-  void beginScene(float globalTime, const Scene &scene,
+  void beginScene(DeltaTime globalTime, const Scene &scene,
                   const glm::mat4 &transform = glm::mat4(1.0f));
   void endScene();
   void setViewport(int x, int y, int width, int height);
@@ -119,7 +119,7 @@ struct Renderer2d {
                const glm::vec4 &tintColor, const float rotationRadians);
 
   /** Draws a bunch of particles in a spray format */
-  void beginSprayParticle(const float globalTime,
+  void beginSprayParticle(const DeltaTime globalTime,
                           const ParticleSprayComponent &particleSprayComponent);
   void drawSprayParticle(const Particle &p);
 
@@ -201,7 +201,7 @@ private:
 
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                           float globalTime, const glm::mat4 &transform,
+                           DeltaTime globalTime, const glm::mat4 &transform,
                            const glm::ivec2 &resolution,
                            const glm::vec2 &cameraPos, const float zoomLevel);
   void draw(const glm::mat4 &viewProjectionMatrix);
@@ -216,7 +216,8 @@ private:
                       const std::array<glm::vec2, 4> &coordinate);
   void allocateSprayParticles(const glm::vec2 &position,
                               const glm::vec2 &offset, const glm::vec2 &normal,
-                              const float startTime, const float rotationSpeed);
+                              const DeltaTime startTime,
+                              const float rotationSpeed);
   void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
                          const std::array<glm::vec2, 4> &textureCoordinate,
                          const std::array<glm::vec4, 4> &textVertexPositions);

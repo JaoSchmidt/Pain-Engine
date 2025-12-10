@@ -19,8 +19,7 @@ unsigned Application::getProcessorCount()
   return std::thread::hardware_concurrency();
 }
 
-Application *Application::createApplication(const char *title, int w, int h,
-                                            bool isSettingsApp)
+Application *Application::createApplication(const char *title, int w, int h)
 {
   PLOG_T(resources::getCurrentWorkingDir());
   // =========================================================================//
@@ -95,7 +94,7 @@ Application *Application::createApplication(const char *title, int w, int h,
   // =========================================================================//
   // Default Values to increase redundancy
   // =========================================================================//
-  resources::initiateDefaultScript(luaState);
+  resources::initiateDefaultScript();
   resources::initiateDefaultTexture();
   // =========================================================================//
   // config.ini file
@@ -122,7 +121,7 @@ void Application::stopLoop(bool restartFlag)
 EndGameFlags Application::run()
 {
   DeltaTime deltaTime;
-  double accumulator = 0.0;
+  DeltaTime accumulator = 0.0;
   // double renderAccumulator = 0.0;
 
   DeltaTime lastFrameTime = SDL_GetPerformanceCounter();
@@ -138,7 +137,8 @@ EndGameFlags Application::run()
     // The purpose of this is to calculate the fps inside as an average of the
     // previous "FPS_SAMPLE_COUNT" measurements
     m_fpsSamples[m_currentSample] =
-        SDL_GetPerformanceFrequency() / deltaTime.GetNanoseconds();
+        static_cast<double>(SDL_GetPerformanceFrequency()) /
+        deltaTime.getNanoSeconds();
     m_currentSample = (m_currentSample + 1) % FPS_SAMPLE_COUNT;
     if (m_currentSample % 64 == 0) { // update displayed fps
       m_defaultImGuiInstance->m_currentTPS = 0.0;
@@ -152,15 +152,15 @@ EndGameFlags Application::run()
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Updates");
-      double deltaSeconds = deltaTime.GetSeconds() * m_timeMultiplier;
+      DeltaTime deltaSeconds = deltaTime * m_timeMultiplier;
       // Uncomment this to create an accumulator cap
       // accumulator = fmod(accumulator + deltaSeconds, 15.0);
       accumulator += deltaSeconds;
 
       // renderAccumulator += deltaSeconds;
-      while (accumulator >= m_fixedUpdateTime) {
-        m_worldScene->updateSystems(m_fixedUpdateTime);
-        accumulator -= m_fixedUpdateTime;
+      while (accumulator >= m_maxFrameRate) {
+        m_worldScene->updateSystems(m_maxFrameRate);
+        accumulator -= m_maxFrameRate;
       }
     }
 
@@ -205,9 +205,8 @@ EndGameFlags Application::run()
       m_renderer.setClearColor(m_clearColor);
       m_renderer.clear();
 
-      double globalTime = lastFrameTime.GetSeconds();
-      m_renderer.beginScene(globalTime, *m_worldScene);
-      m_worldScene->renderSystems(m_renderer, m_isMinimized, globalTime);
+      m_renderer.beginScene(lastFrameTime, *m_worldScene);
+      m_worldScene->renderSystems(m_renderer, m_isMinimized, lastFrameTime);
       m_renderer.endScene();
       P_ASSERT(m_window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_window);
@@ -217,10 +216,12 @@ EndGameFlags Application::run()
     // Fix clock if it's too ahead
     // =============================================================== //
     uint64_t end = SDL_GetPerformanceCounter();
-    double frameDuration =
-        static_cast<double>(end - start) / SDL_GetPerformanceFrequency();
-    if (frameDuration < m_fixedFPS) {
-      SDL_Delay(static_cast<uint32_t>((m_fixedFPS - frameDuration) * 1000.0));
+    double frameDurationSeconds =
+        static_cast<double>(end - start) /
+        static_cast<double>(SDL_GetPerformanceFrequency());
+    if (frameDurationSeconds < m_fixedFPS) {
+      SDL_Delay(
+          static_cast<uint32_t>((m_fixedFPS - frameDurationSeconds) * 1000.0));
     }
   };
   PLOG_I("Reaching the end of run");

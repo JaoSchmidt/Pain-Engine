@@ -57,9 +57,11 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL
     PRIVATE -Wall
             -g
             -O0
-            # -Wextra -Wpedantic -Wconversion -Wno-unused-parameter
-            # -Wmissing-field-initializers -Wno-sign-conversion -fmodules
-            # -fmodules-cache-path=./module-cache
+            -Wextra
+            -Wpedantic
+            -Wconversion
+            # -Wno-unused-parameter -Wmissing-field-initializers
+            # -Wno-sign-conversion -fmodules -fmodules-cache-path=./module-cache
             -ftemplate-backtrace-limit=0
             -fcolor-diagnostics
             -std=c++20
@@ -256,6 +258,15 @@ else()
 endif()
 
 find_package(OpenGL REQUIRED)
+
+# SURPRESS WARNINGS INSIDE SOME LIBRARIES
+set_target_properties(
+  msdf-atlas-gen
+  PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+             $<TARGET_PROPERTY:msdf-atlas-gen,INTERFACE_INCLUDE_DIRECTORIES>)
+set_target_properties(
+  mINI PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                  $<TARGET_PROPERTY:mINI,INTERFACE_INCLUDE_DIRECTORIES>)
 
 target_link_libraries(
   ${LIBRARY_NAME}

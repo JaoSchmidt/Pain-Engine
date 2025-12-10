@@ -24,7 +24,7 @@ public:
   void bind() const;
   void unbind() const;
 
-  const uint32_t getId() const { return m_bufferId; }
+  uint32_t getId() const { return m_bufferId; }
   inline const BufferLayout &getLayout() const { return m_layout; }
   void setData(const void *data, uint32_t size);
 
@@ -47,7 +47,7 @@ public:
   ~IndexBuffer();
   void bind() const;
   void unbind() const;
-  const uint32_t getCount() const { return m_count; };
+  uint32_t getCount() const { return m_count; };
 
 private:
   IndexBuffer(uint32_t bufferId, uint32_t count);
