@@ -30,7 +30,9 @@ target_include_directories(
 set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20
                                                  CXX_STANDARD_REQUIRED ON)
 target_compile_features(${LIBRARY_NAME} PUBLIC cxx_std_20)
-# set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 remove_definitions("-DNDEBUG")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")

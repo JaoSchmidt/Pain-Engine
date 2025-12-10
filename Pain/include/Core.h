@@ -13,7 +13,6 @@
 #endif
 
 #ifndef NDEBUG
-#if defined(__GNUC__) || defined(__clang__)
 #define P_ASSERT(x, s, ...)                                                    \
   {                                                                            \
     if (!(x)) {                                                                \
@@ -27,24 +26,6 @@
       PLOG_W("Assertion Failed: " s __VA_OPT__(, ) __VA_ARGS__);               \
     }                                                                          \
   }
-#elif defined(_MSC_VER)
-#define P_ASSERT(x, s, ...)                                                    \
-  {                                                                            \
-    if (!(x)) {                                                                \
-      PLOG_E("Assertion Failed: " s, ##__VA_ARGS__);                           \
-      assert(x);                                                               \
-    }                                                                          \
-  }
-#define P_ASSERT_W(x, s, ...)                                                  \
-  {                                                                            \
-    if (!(x)) {                                                                \
-      PLOG_W("Assertion Failed: " s, ##__VA_ARGS__);                           \
-    }                                                                          \
-  }
-#else
-#define P_ASSERT(x, ...)
-#define P_ASSERT_W(x, ...)
-#endif
 #else
 #define P_ASSERT(x, ...)
 #define P_ASSERT_W(x, ...)
