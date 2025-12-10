@@ -27,9 +27,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            C:\vcpkg\installed
-            C:\vcpkg\buildtrees
-            C:\vcpkg\packages
+            vcpkg/installed
+            vcpkg/buildtrees
+            vcpkg/packages
           key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             vcpkg-${{ runner.os }}-
@@ -38,8 +38,8 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgDirectory: C:\vcpkg
-          vcpkgGitCommitId: master # or lock to a specific commit
+          vcpkgJsonGlob: vcpkg.json
+          vcpkgDirectory: ${{ github.workspace }}/vcpkg
           runVcpkgInstall: true # runs `vcpkg install` based on your vcpkg.json manifest
 
       # --- Configure & build ---
