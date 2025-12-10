@@ -24,7 +24,7 @@ std::map<std::string, TextureSheet> m_textureSheetMap = {};
 // ---------------------------------------------------------- //
 TextureSheet &
 resources::createTextureSheet(const char *name, const char *texturePath,
-                              uint nlinesX, uint ncolumnsY,
+                              unsigned nlinesX, unsigned ncolumnsY,
                               std::initializer_list<std::pair<int, int>> coords)
 {
   auto search = m_textureSheetMap.find(name);

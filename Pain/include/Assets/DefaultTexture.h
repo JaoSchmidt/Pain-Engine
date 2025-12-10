@@ -18,8 +18,8 @@ enum DEFAULT_TEXTURE {
 // TextureSheet
 // ---------------------------------------------------------- //
 TextureSheet &
-createTextureSheet(const char *name, const char *texturePath, uint nlinesX,
-                   uint ncolumnsY,
+createTextureSheet(const char *name, const char *texturePath, unsigned nlinesX,
+                   unsigned ncolumnsY,
                    std::initializer_list<std::pair<int, int>> coords);
 // ---------------------------------------------------------- //
 // Texture

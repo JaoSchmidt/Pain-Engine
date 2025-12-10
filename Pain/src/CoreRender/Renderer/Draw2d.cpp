@@ -393,8 +393,8 @@ void Renderer2d::draw(UNUSED const glm::mat4 &viewProjectionMatrix)
     m_triIB.bind();
     m_triVertexArray.bind();
     const uint32_t numElem =
-        static_cast<uint32_t>(m_sprayVertexBufferPtr - m_sprayVertexBufferBase);
-    const uint32_t numBytes = numElem * sizeof(ParticleVertex);
+        static_cast<uint32_t>(m_triVertexBufferPtr - m_triVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(TriVertex);
     m_triVertexBuffer.setData((void *)m_triVertexBufferBase, numBytes);
 
     m_triShader.bind();
@@ -410,9 +410,10 @@ void Renderer2d::draw(UNUSED const glm::mat4 &viewProjectionMatrix)
   if (m_circleIndexCount) {
     m_circleIB.bind();
     m_circleVertexArray.bind();
-    const uint32_t numElem =
-        static_cast<uint32_t>(m_sprayVertexBufferPtr - m_sprayVertexBufferBase);
-    const uint32_t numBytes = numElem * sizeof(ParticleVertex);
+
+    const uint32_t numElem = static_cast<uint32_t>(m_circleVertexBufferPtr -
+                                                   m_circleVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(CircleVertex);
     m_circleVertexBuffer.setData((void *)m_circleVertexBufferBase, numBytes);
 
     m_circleShader.bind();

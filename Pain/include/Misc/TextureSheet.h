@@ -18,7 +18,7 @@ public:
   createTextureSheet(Texture &texture, float spriteWidth, float spriteHeight,
                      std::initializer_list<std::pair<int, int>> coords);
   void updateSurroundingChunks(glm::vec3 &playerPos);
-  inline std::array<glm::vec2, 4> &operator[](ushort i)
+  inline std::array<glm::vec2, 4> &operator[](unsigned short i)
   {
 #ifndef NDEBUG
     if (i > m_textureIds.size()) {
