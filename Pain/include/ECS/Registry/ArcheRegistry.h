@@ -7,6 +7,7 @@
 #include "ECS/Registry/IteratorArchetype.h"
 
 #include <queue>
+#include <span>
 #include <typeindex>
 
 namespace reg

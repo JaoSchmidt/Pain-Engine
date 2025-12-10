@@ -28,7 +28,7 @@ TextureSheet TextureSheet::createTextureSheet(
 // 1. the atlas is a matrix
 // 2. you know how much columns and lines inside the atlas
 TextureSheet TextureSheet::createTextureSheet(
-    Texture &texture, uint nlinesX, uint ncolumnsY,
+    Texture &texture, unsigned nlinesX, unsigned ncolumnsY,
     std::initializer_list<std::pair<int, int>> coords)
 {
   std::vector<std::array<glm::vec2, 4>> textureIds = {};
