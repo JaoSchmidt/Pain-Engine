@@ -1,5 +1,4 @@
 # windows-msvc-build.yml
-name: Build (Windows MSVC)
 
 on:
   push:
@@ -13,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           submodules: recursive
 
@@ -22,38 +21,21 @@ jobs:
         with:
           arch: x64
 
-      - name: Cache vcpkg
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ github.workspace }}/vcpkg/installed
-            ${{ github.workspace }}/vcpkg/buildtrees
-            ${{ github.workspace }}/vcpkg/packages
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-
-
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgDirectory: ${{ github.workspace }}/vcpkg
-          vcpkgJsonGlob: vcpkg.json
-          runVcpkgInstall: true
-
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+          C:/vcpkg/bootstrap-vcpkg.bat -disableMetrics
       - name: Configure build
-        run: >
-          cmake --preset ci-windows
-          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        run: cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Show vcpkg logs on failure
         if: failure()
         run: |
-          Get-ChildItem -Path "${{ github.workspace }}/vcpkg/buildtrees" -Recurse -Filter "*.log" | ForEach-Object {
+          Get-ChildItem -Path "C:/vcpkg/buildtrees" -Recurse -Filter "*.log" | ForEach-Object {
             Write-Host "=== $($_.FullName) ==="
             Get-Content $_.FullName -ErrorAction SilentlyContinue
             Write-Host ""
           }
-
       - name: Build
         run: |
           cmake --build build-ci-windows --config Debug

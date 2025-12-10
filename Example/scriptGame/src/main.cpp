@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
   }
   return 0;
 }
-#elif PLATFORM_IS_WINDOWS
+#elif defined PLATFORM_IS_WINDOWS
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
                    int nCmdShow)
 {

@@ -7,7 +7,6 @@
 #elif defined _WIN64
 #define PLATFORM_IS_WINDOWS
 #define EXPORT __declspec(dllexport)
-#define UNUSED(x) (void)(x);
 #else
 #error "Only Windows, Linux or MacOS support Pain"
 #endif
