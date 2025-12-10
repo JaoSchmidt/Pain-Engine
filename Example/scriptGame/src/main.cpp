@@ -270,9 +270,8 @@ pain::Application *pain::createApplication()
   return app;
 }
 
-#ifdef _WIN64
-INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
-                   INT nCmdShow)
+#ifdef PLATFORM_IS_LINUX
+int main(int argc, char *argv[])
 {
   bool isSettingsGuiNeeded = pain::Pain::initiate();
   EndGameFlags flags;
@@ -287,8 +286,9 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
   }
   return 0;
 }
-#else
-int main(int argc, char *argv[])
+#elif PLATFORM_IS_WINDOWS
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
+                   int nCmdShow)
 {
   bool isSettingsGuiNeeded = pain::Pain::initiate();
   EndGameFlags flags;
