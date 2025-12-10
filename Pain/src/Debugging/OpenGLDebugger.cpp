@@ -9,9 +9,11 @@ namespace Debug
 // this servers to be used as OpenGL callback. Automatic. Only works with
 // OpenGL 4.3+
 void glErrorHandler(unsigned int source, unsigned int type, unsigned int id,
-                    unsigned int severity, UNUSED int lenght,
-                    const char *message, UNUSED const void *userParam)
+                    unsigned int severity, int lenght, const char *message,
+                    const void *userParam)
 {
+  UNUSED(lenght)
+  UNUSED(userParam)
   // uncomment this if your gpu being too educated with warnings
   // notification warnings are usually just optimizations anyway
   if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)

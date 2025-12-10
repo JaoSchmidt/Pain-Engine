@@ -74,7 +74,7 @@ elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     PRIVATE /W4 # Warning level 4 (high)
             /WX- # Don't treat warnings as errors
             /std:c++20 # C++20 standard
-            /permissive- # Standards conformance mode
+            # /permissive- # Standards conformance mode
             /Zi # Generate debug info
             /Zc:preprocessor # Required for __VA_OPT__
             /Od # Disable optimization

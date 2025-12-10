@@ -156,17 +156,19 @@ void insertEndPoint(std::vector<EndPoint> &vecX, std::vector<EndPoint> &vecY,
 
 // insert a non moving entity into the static entities array, then sort the
 // array
-void SweepAndPruneSys::insertStaticEntity(UNUSED reg::Entity entity,
+void SweepAndPruneSys::insertStaticEntity(reg::Entity entity,
                                           const Transform2dComponent &tc,
                                           SAPCollider &sc)
 {
+  UNUSED(entity)
   insertEndPoint(m_staticEndPointsX, m_staticEndPointsY, m_staticEndPointKeys,
                  tc, sc);
 }
-void SweepAndPruneSys::insertEntity(UNUSED reg::Entity entity,
+void SweepAndPruneSys::insertEntity(reg::Entity entity,
                                     const Transform2dComponent &tc,
                                     SAPCollider &sc)
 {
+  UNUSED(entity)
   insertEndPoint(m_endPointsX, m_endPointsY, m_endPointKeys, tc, sc);
 }
 void SweepAndPruneSys::sortAfterInsertion()
@@ -177,8 +179,9 @@ void SweepAndPruneSys::sortAfterInsertion()
   sortSAP(m_staticEndPointsY, m_staticEndPointKeys, false);
 }
 
-void SweepAndPruneSys::onUpdate(UNUSED DeltaTime deltaTime)
+void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
 {
+  UNUSED(deltaTime)
   // Step 1: Update all moving endpoints with new data from the components
   auto [tIt, cIt, mIt] =
       begin<Transform2dComponent, SAPCollider, Movement2dComponent>();

@@ -70,9 +70,11 @@ public:
     }
     // clang-format on
   }
-  void onRender(UNUSED Renderer2d &renderer, UNUSED bool isMinimized,
-                UNUSED DeltaTime currentTime)
+  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime)
   {
+    UNUSED(renderer)
+    UNUSED(currentTime)
+    UNUSED(isMinimized)
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);

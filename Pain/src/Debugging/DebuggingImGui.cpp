@@ -50,9 +50,11 @@ void EngineController::onImGuiUpdate()
   ImGui::End();
 }
 
-std::string EngineController::generateTimestampedFilename(
-    const std::string &prefix, UNUSED const std::string &extension)
+std::string
+EngineController::generateTimestampedFilename(const std::string &prefix,
+                                              const std::string &extension)
 {
+  UNUSED(extension)
   std::ostringstream oss;
   auto now = std::chrono::system_clock::now();
   auto in_time = std::chrono::system_clock::to_time_t(now);

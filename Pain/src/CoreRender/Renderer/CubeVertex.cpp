@@ -1,4 +1,5 @@
 #include "CoreRender/Renderer/CubeVertex.h"
+#include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 
 namespace pain
@@ -22,6 +23,7 @@ void CubeVertexBatch::sendAllDataToOpenGL()
 void CubeVertexBatch::drawBatch(const glm::vec3 &position,
                                 const glm::vec3 &size, const glm::vec4 &color)
 {
+  UNUSED(color)
   glm::vec4 Color = glm::vec4(0.9f, 0.3f, 0.2f, 1.0f);
   // first quad
   m_vertexBufferPtr->Position = {position.x, position.y, position.z};

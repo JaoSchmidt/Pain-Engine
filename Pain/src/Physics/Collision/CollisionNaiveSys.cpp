@@ -15,9 +15,9 @@ namespace Systems
 // COLLISION DETECTION
 // =============================================================
 // Between same capulses
-void NaiveCollisionSys::onUpdate(UNUSED DeltaTime deltaTime)
+void NaiveCollisionSys::onUpdate(DeltaTime deltaTime)
 {
-
+  UNUSED(deltaTime)
   // NOTE: testing without callbacks for now
   // NOTE: also, testing without rotation for now too. If you introduce rotation
   // in this system, it will break

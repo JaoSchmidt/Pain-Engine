@@ -112,19 +112,24 @@ std::string resources::getCurrentWorkingDir()
   return currentDir;
 }
 
-void resources::defaultNativeScript::onUpdate(UNUSED DeltaTime deltaTimeSec)
+void resources::defaultNativeScript::onUpdate(DeltaTime deltaTimeSec)
 {
+  UNUSED(deltaTimeSec)
   PLOG_W("You are updating a script that hasn't been initialized!");
 }
 
-void resources::defaultNativeScript::onEvent(UNUSED const SDL_Event &e)
+void resources::defaultNativeScript::onEvent(const SDL_Event &e)
 {
+  UNUSED(e)
   PLOG_W("You are updating a script that hasn't been initialized!");
 }
-void resources::defaultNativeScript::onRender(UNUSED Renderer2d &renderer,
-                                              UNUSED bool isMinimized,
-                                              UNUSED DeltaTime currentTime)
+void resources::defaultNativeScript::onRender(Renderer2d &renderer,
+                                              bool isMinimized,
+                                              DeltaTime currentTime)
 {
+  UNUSED(renderer)
+  UNUSED(isMinimized)
+  UNUSED(currentTime)
   PLOG_W("You are trying to render a script that hasn't been initialized!");
 }
 void resources::defaultNativeScript::onDestroy()

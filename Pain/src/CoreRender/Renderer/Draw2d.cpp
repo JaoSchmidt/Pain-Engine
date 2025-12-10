@@ -295,8 +295,9 @@ Renderer2d Renderer2d::createRenderer2d()
                     std::move(*gridShader));      //
 }
 
-void Renderer2d::draw(UNUSED const glm::mat4 &viewProjectionMatrix)
+void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
 {
+  UNUSED(viewProjectionMatrix)
   PROFILE_FUNCTION();
   // =============================================================== //
   // =============================================================== //
@@ -604,12 +605,13 @@ void Renderer2d::beginSprayParticle(const DeltaTime globalTime,
   m_sprayShader.uploadUniformFloat("u_randomSizeFactor", psc.m_randSizeFactor);
 }
 
-void Renderer2d::allocateSprayParticles(UNUSED const glm::vec2 &position,
+void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
                                         const glm::vec2 &offset,
                                         const glm::vec2 &normal,
                                         const DeltaTime startTime,
                                         const float rotationSpeed)
 {
+  UNUSED(position)
   PROFILE_FUNCTION();
   for (unsigned i = 0; i < 4; i++) {
     m_sprayVertexBufferPtr->position = SprayVertexPositions[i];

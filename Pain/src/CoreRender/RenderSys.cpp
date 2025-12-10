@@ -13,9 +13,10 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render::onRender(Renderer2d &renderer, UNUSED bool isMinimized,
+void Render::onRender(Renderer2d &renderer, bool isMinimized,
                       DeltaTime currentTime)
 {
+  UNUSED(isMinimized)
   PROFILE_FUNCTION();
   {
     PROFILE_SCOPE("Scene::renderSystems - texture quads");
