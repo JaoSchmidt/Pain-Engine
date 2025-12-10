@@ -2,5 +2,5 @@
   "name": "pain-engine",
   "version": "0.1.0",
   "dependencies": ["freetype", "libpng", "bzip2", "zlib", "harfbuzz"],
-  "builtin-baseline": "2025-12-10"
+  "builtin-baseline": "bf02a3800b06f17cdbd0c358632b07b295dda935"
 }
