@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -22,11 +22,27 @@ jobs:
         with:
           arch: x64
 
-      - name: Setup vcpkg
-        run: |
-          git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
-          C:/vcpkg/bootstrap-vcpkg.bat -disableMetrics
+      # --- vcpkg cache ---
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\vcpkg\installed
+            C:\vcpkg\buildtrees
+            C:\vcpkg\packages
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
 
+      # --- vcpkg setup (auto-bootstraps + integrates with CMake) ---
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: C:\vcpkg
+          vcpkgGitCommitId: master # or lock to a specific commit
+          runVcpkgInstall: true # runs `vcpkg install` based on your vcpkg.json manifest
+
+      # --- Configure & build ---
       - name: Configure build
         run: cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
@@ -41,5 +57,4 @@ jobs:
 
       - name: Build
         run: |
-          cd build-ci-windows
-          cmake --build . --config Debug
+          cmake --build build-ci-windows --config Debug

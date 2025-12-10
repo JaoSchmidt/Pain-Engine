@@ -274,8 +274,17 @@ pain::Application *pain::createApplication()
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
                    INT nCmdShow)
 {
-  pain::Pain::initiate();
-  pain::Pain::runApplication(pain::CreateApplication());
+  bool isSettingsGuiNeeded = pain::Pain::initiate();
+  EndGameFlags flags;
+  flags.restartGame = !isSettingsGuiNeeded;
+  if (isSettingsGuiNeeded) {
+    pain::Application *app = pain::createLauncher();
+    flags = pain::Pain::runAndDeleteApplication(app);
+  }
+  while (flags.restartGame) {
+    pain::Application *app = pain::createApplication();
+    flags = pain::Pain::runAndDeleteApplication(app);
+  }
   return 0;
 }
 #else
