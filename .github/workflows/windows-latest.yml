@@ -22,34 +22,33 @@ jobs:
         with:
           arch: x64
 
-      # --- vcpkg cache ---
       - name: Cache vcpkg
         uses: actions/cache@v4
         with:
           path: |
-            vcpkg/installed
-            vcpkg/buildtrees
-            vcpkg/packages
+            ${{ github.workspace }}/vcpkg/installed
+            ${{ github.workspace }}/vcpkg/buildtrees
+            ${{ github.workspace }}/vcpkg/packages
           key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             vcpkg-${{ runner.os }}-
 
-      # --- vcpkg setup (auto-bootstraps + integrates with CMake) ---
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgJsonGlob: vcpkg.json
           vcpkgDirectory: ${{ github.workspace }}/vcpkg
-          runVcpkgInstall: true # runs `vcpkg install` based on your vcpkg.json manifest
+          vcpkgJsonGlob: vcpkg.json
+          runVcpkgInstall: true
 
-      # --- Configure & build ---
       - name: Configure build
-        run: cmake --preset ci-windows -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+        run: >
+          cmake --preset ci-windows
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Show vcpkg logs on failure
         if: failure()
         run: |
-          Get-ChildItem -Path "C:/vcpkg/buildtrees" -Recurse -Filter "*.log" | ForEach-Object {
+          Get-ChildItem -Path "${{ github.workspace }}/vcpkg/buildtrees" -Recurse -Filter "*.log" | ForEach-Object {
             Write-Host "=== $($_.FullName) ==="
             Get-Content $_.FullName -ErrorAction SilentlyContinue
             Write-Host ""

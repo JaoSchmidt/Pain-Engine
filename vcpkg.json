@@ -1,5 +1,6 @@
 {
   "name": "pain-engine",
   "version": "0.1.0",
-  "dependencies": ["freetype", "libpng", "bzip2", "zlib", "harfbuzz"]
+  "dependencies": ["freetype", "libpng", "bzip2", "zlib", "harfbuzz"],
+  "builtin-baseline": "2025-12-10"
 }
