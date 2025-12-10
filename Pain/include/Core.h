@@ -48,3 +48,11 @@
 #define NONMOVABLE(m)                                                          \
   m(m &&o) = delete;                                                           \
   m &operator=(m &&o) = delete;
+
+#if defined(__GNUC__) || defined(__clang__)
+#define PAIN_FUNC_SIG __PRETTY_FUNCTION__
+#elif defined(_MSC_VER)
+#define PAIN_FUNC_SIG __FUNCSIG__
+#else
+#define PAIN_FUNC_SIG __FUNCTION__
+#endif
