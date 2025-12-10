@@ -713,13 +713,13 @@ Renderer2d::Renderer2d(IndexBuffer quadIB,   //
       m_gridVertexArray(std::move(gridVertexArray)),       //
       m_gridVertexBuffer(std::move(gridVertexBuffer)),     //
                                                            //
-      m_textureSlots({&resources::getDefaultTexture(
-          resources::DEFAULT_TEXTURE::BLANK)}), //
-      m_quadIB(std::move(quadIB)),              //
-      m_circleIB(std::move(circleIB)),          //
-      m_triIB(std::move(triIB)),                //
-      m_sprayIB(std::move(sprayIB)),            //
-      m_gridIB(std::move(gridIB)                //
+      m_textureSlots(
+          {&resources::getDefaultTexture(resources::DefaultTexture::Blank)}), //
+      m_quadIB(std::move(quadIB)),                                            //
+      m_circleIB(std::move(circleIB)),                                        //
+      m_triIB(std::move(triIB)),                                              //
+      m_sprayIB(std::move(sprayIB)),                                          //
+      m_gridIB(std::move(gridIB)                                              //
       ) {};
 
 Renderer2d &Renderer2d::operator=(Renderer2d &&other) noexcept

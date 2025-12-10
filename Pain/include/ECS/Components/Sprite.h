@@ -19,7 +19,7 @@ struct SpriteComponent {
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   float m_tilingFactor = 1.f;
   TextureVariant m_tex = TextureVariant{
-      &resources::getDefaultTexture(resources::DEFAULT_TEXTURE::ERROR, false)};
+      &resources::getDefaultTexture(resources::DefaultTexture::Error, false)};
 
   void printptr(const char *a) const
   {
