@@ -87,6 +87,7 @@ elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
             /Zi # Generate debug info
             /std:c++20 # C++20 standard
   )
+  set_target_properties(${LIBRARY_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
 else()
   target_compile_options(
     ${LIBRARY_NAME} PRIVATE -std=c++20 -Wall # -lGLU -lGL -lglm -lm
