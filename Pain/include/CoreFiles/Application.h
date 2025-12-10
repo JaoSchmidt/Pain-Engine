@@ -15,7 +15,7 @@ namespace pain
 class Application
 {
 public:
-  static constexpr std::string configIniFile = "config.ini";
+  static constexpr const char *configIniFile = "config.ini";
   static Application *createApplication(const char *title, int w, int h);
   ~Application();
 

@@ -76,9 +76,9 @@ void Render::onRender(Renderer2d &renderer, UNUSED bool isMinimized,
           [&](auto &&shape1) {
             using T1 = std::decay_t<decltype(shape1)>;
             if constexpr (std::is_same_v<T1, QuadShape>) {
-              renderer.drawQuad(
-                  tIt->m_position, shape1.size, sIt->m_color,
-                  resources::getDefaultTexture(resources::BLANK, false));
+              renderer.drawQuad(tIt->m_position, shape1.size, sIt->m_color,
+                                resources::getDefaultTexture(
+                                    resources::DEFAULT_TEXTURE::BLANK, false));
             } else if constexpr (std::is_same_v<T1, CircleShape>) {
               renderer.drawCircle(tIt->m_position, shape1.radius, sIt->m_color);
             }

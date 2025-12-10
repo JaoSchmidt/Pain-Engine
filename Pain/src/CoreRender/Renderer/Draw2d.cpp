@@ -684,41 +684,42 @@ Renderer2d::Renderer2d(IndexBuffer quadIB,   //
                        VertexArray gridVertexArray,   //
                        VertexBuffer gridVertexBuffer, //
                        Shader gridShader)
-    : m_quadVertexArray(std::move(quadVertexArray)),                     //
-      m_quadVertexBuffer(std::move(quadVertexBuffer)),                   //
-      m_quadTextureShader(std::move(quadTextureShader)),                 //
-      m_quadVertexBufferBase(quadVertexBufferBase),                      //
-                                                                         //
-      m_textVertexArray(std::move(textVertexArray)),                     //
-      m_textVertexBuffer(std::move(textVertexBuffer)),                   //
-      m_textTextureShader(std::move(textTextureShader)),                 //
-      m_textVertexBufferBase(textVertexBufferBase),                      //
-                                                                         //
-      m_circleVertexArray(std::move(circleVertexArray)),                 //
-      m_circleVertexBuffer(std::move(circleVertexBuffer)),               //
-      m_circleShader(std::move(circleShader)),                           //
-      m_circleVertexBufferBase(circleVertexBufferBase),                  //
-                                                                         //
-      m_triVertexArray(std::move(triVertexArray)),                       //
-      m_triVertexBuffer(std::move(triVertexBuffer)),                     //
-      m_triShader(std::move(triShader)),                                 //
-      m_triVertexBufferBase(triVertexBufferBase),                        //
-                                                                         //
-      m_sprayVertexArray(std::move(sprayVertexArray)),                   //
-      m_sprayVertexBuffer(std::move(sprayVertexBuffer)),                 //
-      m_sprayShader(std::move(sprayShader)),                             //
-      m_sprayVertexBufferBase(sprayVertexBufferBase),                    //
-                                                                         //
-      m_gridShader(std::move(gridShader)),                               //
-      m_gridVertexArray(std::move(gridVertexArray)),                     //
-      m_gridVertexBuffer(std::move(gridVertexBuffer)),                   //
-                                                                         //
-      m_textureSlots({&resources::getDefaultTexture(resources::BLANK)}), //
-      m_quadIB(std::move(quadIB)),                                       //
-      m_circleIB(std::move(circleIB)),                                   //
-      m_triIB(std::move(triIB)),                                         //
-      m_sprayIB(std::move(sprayIB)),                                     //
-      m_gridIB(std::move(gridIB)                                         //
+    : m_quadVertexArray(std::move(quadVertexArray)),       //
+      m_quadVertexBuffer(std::move(quadVertexBuffer)),     //
+      m_quadTextureShader(std::move(quadTextureShader)),   //
+      m_quadVertexBufferBase(quadVertexBufferBase),        //
+                                                           //
+      m_textVertexArray(std::move(textVertexArray)),       //
+      m_textVertexBuffer(std::move(textVertexBuffer)),     //
+      m_textTextureShader(std::move(textTextureShader)),   //
+      m_textVertexBufferBase(textVertexBufferBase),        //
+                                                           //
+      m_circleVertexArray(std::move(circleVertexArray)),   //
+      m_circleVertexBuffer(std::move(circleVertexBuffer)), //
+      m_circleShader(std::move(circleShader)),             //
+      m_circleVertexBufferBase(circleVertexBufferBase),    //
+                                                           //
+      m_triVertexArray(std::move(triVertexArray)),         //
+      m_triVertexBuffer(std::move(triVertexBuffer)),       //
+      m_triShader(std::move(triShader)),                   //
+      m_triVertexBufferBase(triVertexBufferBase),          //
+                                                           //
+      m_sprayVertexArray(std::move(sprayVertexArray)),     //
+      m_sprayVertexBuffer(std::move(sprayVertexBuffer)),   //
+      m_sprayShader(std::move(sprayShader)),               //
+      m_sprayVertexBufferBase(sprayVertexBufferBase),      //
+                                                           //
+      m_gridShader(std::move(gridShader)),                 //
+      m_gridVertexArray(std::move(gridVertexArray)),       //
+      m_gridVertexBuffer(std::move(gridVertexBuffer)),     //
+                                                           //
+      m_textureSlots({&resources::getDefaultTexture(
+          resources::DEFAULT_TEXTURE::BLANK)}), //
+      m_quadIB(std::move(quadIB)),              //
+      m_circleIB(std::move(circleIB)),          //
+      m_triIB(std::move(triIB)),                //
+      m_sprayIB(std::move(sprayIB)),            //
+      m_gridIB(std::move(gridIB)                //
       ) {};
 
 Renderer2d &Renderer2d::operator=(Renderer2d &&other) noexcept

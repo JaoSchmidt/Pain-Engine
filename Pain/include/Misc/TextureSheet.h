@@ -12,7 +12,7 @@ class TextureSheet
 
 public:
   static TextureSheet
-  createTextureSheet(Texture &texture, uint nlinesX, uint ncolumnsY,
+  createTextureSheet(Texture &texture, unsigned nlinesX, unsigned ncolumnsY,
                      std::initializer_list<std::pair<int, int>> coords);
   static TextureSheet
   createTextureSheet(Texture &texture, float spriteWidth, float spriteHeight,
@@ -60,8 +60,8 @@ private:
                                                      float spriteHeight, int x,
                                                      int y);
   static std::array<glm::vec2, 4> createVecFromCoord(pain::Texture &texture,
-                                                     uint ndivisionX,
-                                                     uint ndivisionY, int x,
+                                                     unsigned ndivisionX,
+                                                     unsigned ndivisionY, int x,
                                                      int y);
   static std::array<glm::vec2, 4>
   createVecFromCoord(const char *atlasFilenameXML, int SubTextureId);

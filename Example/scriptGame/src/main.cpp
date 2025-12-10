@@ -250,7 +250,7 @@ pain::Application *pain::createApplication()
   P_ASSERT(resources::exists_file(Application::configIniFile),
            "config.ini file must exist at the beginning");
   IniConfig ini;
-  ini.readAndUpdate(Application::configIniFile.c_str());
+  ini.readAndUpdate(Application::configIniFile);
   resources::setDefaultPath(ini.assetsPath.value.c_str());
 
   LOG_T("Creating app");

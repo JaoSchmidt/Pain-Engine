@@ -23,6 +23,15 @@ static std::map<std::string, std::string> m_luaScriptSource = {};
 } // namespace
 namespace pain
 {
+bool resources::exists_file(const std::string_view &name)
+{
+  return std::filesystem::exists(std::filesystem::path{name});
+}
+bool resources::exists_file(const char *name)
+{
+  struct stat buffer;
+  return (stat(name, &buffer) == 0);
+}
 bool resources::exists_file(const std::string &name)
 {
   struct stat buffer;

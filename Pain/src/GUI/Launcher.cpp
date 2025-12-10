@@ -66,7 +66,7 @@ public:
   void onCreate()
   {
     if (resources::exists_file(m_app->configIniFile)) {
-      m_init.readAndUpdate(m_app->configIniFile.c_str());
+      m_init.readAndUpdate(m_app->configIniFile);
     }
     // clang-format on
   }
@@ -134,14 +134,14 @@ public:
     ImGui::SetCursorPosX(windowWidth - totalWidth);
 
     if (ImGui::Button("Exit", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(m_app->configIniFile.c_str());
+      m_init.write(m_app->configIniFile);
       m_app->stopLoop();
     }
 
     ImGui::SameLine(0.0f, spacing);
 
     if (ImGui::Button("Play", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(m_app->configIniFile.c_str());
+      m_init.write(m_app->configIniFile);
       m_app->stopLoop(true);
     }
 

@@ -21,7 +21,9 @@ const std::string &getLuaScriptSource(const char *filepath);
 void initiateDefaultScript();
 std::string getCurrentWorkingDir();
 std::string getCurrentWorkingDir(std::string append);
+bool exists_file(const char *name);
 bool exists_file(const std::string &name);
+bool exists_file(const std::string_view &name);
 void clearScript();
 
 class defaultNativeScript : public ExtendedEntity

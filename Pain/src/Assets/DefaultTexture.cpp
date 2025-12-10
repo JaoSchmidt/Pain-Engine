@@ -108,7 +108,7 @@ Texture &resources::createDumpTexture(const char *name, uint32_t width,
     return it->second;
   } else {
     PLOG_W("Using a default Texture instead of {}", name);
-    return getDefaultTexture(GENERAL, isError);
+    return getDefaultTexture(DEFAULT_TEXTURE::GENERAL, isError);
   }
 }
 Texture &resources::getDefaultTexture(resources::DEFAULT_TEXTURE defTex,
@@ -119,14 +119,14 @@ Texture &resources::getDefaultTexture(resources::DEFAULT_TEXTURE defTex,
            "initiateDefaultTexture?")
 
   switch (defTex) {
-  case GENERAL:
-  case ERROR: {
+  case DEFAULT_TEXTURE::GENERAL:
+  case DEFAULT_TEXTURE::ERROR: {
     auto t = getFullPath("resources/default/textures/defaultTexture.png");
     if (isError)
       PLOG_E("Using a default ERROR texture {}", t);
     return m_textureMap.at(t);
   }
-  case BLANK:
+  case DEFAULT_TEXTURE::BLANK:
     if (isError)
       PLOG_W("Using a default blank texture");
     return m_textureMap.at("BLANK");
@@ -151,7 +151,7 @@ const Texture &resources::getConstTexture(const char *pathOrName, bool isPath)
     return std::as_const(it->second);
   } else {
     PLOG_W("Using a default Texture instead of {}", key);
-    return std::as_const(getDefaultTexture(GENERAL));
+    return std::as_const(getDefaultTexture(DEFAULT_TEXTURE::GENERAL));
   }
 }
 Texture &resources::getTexture(const char *pathOrName, bool gl_clamp_to_edge,
@@ -172,7 +172,7 @@ Texture &resources::getTexture(const char *pathOrName, bool gl_clamp_to_edge,
     return it->second;
   } else {
     PLOG_W("Using a default Texture instead of {}", key);
-    return getDefaultTexture(GENERAL);
+    return getDefaultTexture(DEFAULT_TEXTURE::GENERAL);
   }
 }
 

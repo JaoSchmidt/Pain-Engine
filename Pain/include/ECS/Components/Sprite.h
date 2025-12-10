@@ -18,8 +18,8 @@ struct SpriteComponent {
   glm::vec2 m_size{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   float m_tilingFactor = 1.f;
-  TextureVariant m_tex =
-      TextureVariant{&resources::getDefaultTexture(resources::ERROR, false)};
+  TextureVariant m_tex = TextureVariant{
+      &resources::getDefaultTexture(resources::DEFAULT_TEXTURE::ERROR, false)};
 
   void printptr(const char *a) const
   {

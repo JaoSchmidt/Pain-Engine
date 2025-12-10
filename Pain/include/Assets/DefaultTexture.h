@@ -8,7 +8,7 @@ namespace pain
 {
 namespace resources
 {
-enum DEFAULT_TEXTURE {
+enum class DEFAULT_TEXTURE {
   GENERAL = 0, // a chess like texture
   ERROR,       // a very ugly and bright texture representing an error
   BLANK,       // simple 1x1 pixel texture
