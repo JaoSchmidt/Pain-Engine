@@ -68,37 +68,18 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL
             # specific to clang
             -Wreturn-std-move
             -Wself-move)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_BUILD_TYPE STREQUAL
-                                                 "Debug")
-  message(STATUS "Configuring Clang with MSVC-like flags for Linux")
-
+elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_options(
     ${LIBRARY_NAME}
-    PRIVATE # MSVC compatibility flags for Clang
-            -fms-extensions # Enable Microsoft extensions
-            -fms-compatibility # Enable MSVC compatibility mode
-            # Standard flags
-            -std=c++20
-            -g # Debug info
-            -O0 # No optimization
-            # Warning flags (MSVC /W4 equivalent)
-            -Wall
-            -Wextra
-            # -Wpedantic -Wno-unused-parameter
-            -Wno-microsoft-template # Suppress warnings about MS template
-                                    # extensions
-            -Wno-language-extension-token # Suppress warnings about MS language
-                                          # extensions
-            # Clang-specific useful warnings
-            -Wreturn-std-move
-            -Wself-move
-            -Wpessimizing-move
-            # Diagnostics
-            -ftemplate-backtrace-limit=0
-            -fcolor-diagnostics
-            -fdiagnostics-show-template-tree
-            # NOTE: the following are depreciated -fdelayed-template-parsing #
-            # Parse templates like MSVC does
+    PRIVATE /W4 # Warning level 4 (high)
+            /WX- # Don't treat warnings as errors
+            /std:c++20 # C++20 standard
+            /permissive- # Standards conformance mode
+            /Zi # Generate debug info
+            /Od # Disable optimization
+            /MP # Multi-processor compilation
+            /EHsc # Exception handling model
+            /utf-8 # Set source and execution character sets to UTF-8
   )
 else()
   target_compile_options(
