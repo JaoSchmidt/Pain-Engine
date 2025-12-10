@@ -73,16 +73,19 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL
 elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_options(
     ${LIBRARY_NAME}
+    PUBLIC /Zc:preprocessor # Required for __VA_OPT__
+           /utf-8 # Set source and execution character sets to UTF-8
+  )
+  target_compile_options(
+    ${LIBRARY_NAME}
     PRIVATE /W4 # Warning level 4 (high)
             /WX- # Don't treat warnings as errors
-            /std:c++20 # C++20 standard
             # /permissive- # Standards conformance mode
-            /Zi # Generate debug info
-            /Zc:preprocessor # Required for __VA_OPT__
             /Od # Disable optimization
             /MP # Multi-processor compilation
             /EHsc # Exception handling model
-            /utf-8 # Set source and execution character sets to UTF-8
+            /Zi # Generate debug info
+            /std:c++20 # C++20 standard
   )
 else()
   target_compile_options(

@@ -38,16 +38,14 @@
     {
       "name": "ci-windows",
       "displayName": "CI/CD Windows (MSVC + Debug)",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Ninja",
       "binaryDir": "build-ci-windows",
-      "architecture": {
-        "value": "x64",
-        "strategy": "set"
-      },
       "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "Debug",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static",
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     }
   ],
