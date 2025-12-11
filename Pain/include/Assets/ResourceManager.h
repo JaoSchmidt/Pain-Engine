@@ -3,7 +3,6 @@
 #include "ECS/Scriptable.h"
 #include "mini/ini.h"
 #include "pch.h"
-#include <sol/state.hpp>
 #include <utility>
 
 namespace pain
@@ -19,17 +18,19 @@ SDL_Surface *getSurface(const char *filepath);
 
 const char *getDefaultLuaFile();
 const std::string &getLuaScriptSource(const char *filepath);
-void initiateDefaultScript(const sol::state &solstate);
+void initiateDefaultScript();
 std::string getCurrentWorkingDir();
 std::string getCurrentWorkingDir(std::string append);
+bool exists_file(const char *name);
 bool exists_file(const std::string &name);
+bool exists_file(const std::string_view &name);
 void clearScript();
 
 class defaultNativeScript : public ExtendedEntity
 {
-  void onUpdate(double deltaTimeSec);
+  void onUpdate(DeltaTime deltaTimeSec);
   void onEvent(const SDL_Event &e);
-  void onRender();
+  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);
   void onDestroy();
 };
 

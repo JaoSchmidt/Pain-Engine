@@ -33,12 +33,15 @@ constexpr glm::vec2 SprayVertexPositions[4] = {
 constexpr uint32_t MaxQuads = 40000;
 constexpr uint32_t MaxQuadVertices = MaxQuads * 4;
 constexpr uint32_t MaxQuadIndices = MaxQuads * 6;
-constexpr uint32_t MaxTri = 2000;
+constexpr uint32_t MaxTri = 1000;
 constexpr uint32_t MaxTriVertices = MaxTri * 3;
 constexpr uint32_t MaxTriIndices = MaxTri * 3;
-constexpr uint32_t MaxSprayParticles = 10000;
+constexpr uint32_t MaxSprayParticles = 1000;
 constexpr uint32_t MaxSprayVertices = MaxSprayParticles * 4;
 constexpr uint32_t MaxSprayIndices = MaxSprayParticles * 6;
+constexpr uint32_t MaxCircles = 1000;
+constexpr uint32_t MaxCircleVertices = MaxCircles * 4;
+constexpr uint32_t MaxCircleIndices = MaxCircles * 6;
 } // namespace
 
 Renderer2d Renderer2d::createRenderer2d()
@@ -88,7 +91,7 @@ Renderer2d Renderer2d::createRenderer2d()
 
   int32_t samplers[MaxTextureSlots];
   for (uint32_t i = 0; i < MaxTextureSlots; i++) {
-    samplers[i] = i;
+    samplers[i] = (int32_t)i;
   }
 
   auto quadTextureShader =
@@ -123,6 +126,42 @@ Renderer2d Renderer2d::createRenderer2d()
   P_ASSERT(triShader, "Triangule shader wasn't initialized");
   auto triVertexArray =
       VertexArray::createVertexArray(*triVertexBuffer, *triIB);
+  // =============================================================== //
+  // Circles
+  // =============================================================== //
+
+  auto circleVertexBuffer = VertexBuffer::createVertexBuffer(
+      MaxCircleVertices * sizeof(CircleVertex),
+      {{ShaderDataType::Float3, "a_Position"}, //
+       {ShaderDataType::Float4, "a_Color"},
+       {ShaderDataType::Float2, "a_Coord"}});
+
+  P_ASSERT(circleVertexBuffer, "Could not create Circle Vertex BUffer");
+  CircleVertex *circleVertexBufferBase = new CircleVertex[MaxCircleVertices];
+
+  // indices
+  uint32_t *circleIndices = new uint32_t[MaxCircleIndices];
+  for (uint32_t i = 0, offset = 0; i < MaxCircleIndices; i += 6, offset += 4) {
+    circleIndices[i + 0] = offset + 0;
+    circleIndices[i + 1] = offset + 1;
+    circleIndices[i + 2] = offset + 2;
+
+    circleIndices[i + 3] = offset + 2;
+    circleIndices[i + 4] = offset + 3;
+    circleIndices[i + 5] = offset + 0;
+  }
+  auto circleIB =
+      IndexBuffer::createIndexBuffer(circleIndices, MaxCircleIndices);
+  P_ASSERT(circleIB, "Could not create Circle Vertex BUffer");
+  delete[] circleIndices;
+  auto circleVertexArray =
+      VertexArray::createVertexArray(circleVertexBuffer.value(), *circleIB);
+  P_ASSERT(circleVertexArray, "Circle Vertex Array wasn't initialized");
+
+  auto circleShader =
+      Shader::createFromFile("resources/default/shaders/Circles.glsl");
+  P_ASSERT(circleShader, "Circle shader wasn't initialized");
+
   // =============================================================== //
   // Text
   // =============================================================== //
@@ -222,6 +261,7 @@ Renderer2d Renderer2d::createRenderer2d()
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   return Renderer2d(std::move(*quadIB),            //
+                    std::move(*circleIB),          //
                     std::move(*triIB),             //
                     std::move(*sprayIB),           //
                     std::move(*gridIB),            //
@@ -234,6 +274,11 @@ Renderer2d Renderer2d::createRenderer2d()
                     std::move(*textVertexBuffer),  //
                     std::move(*textTextureShader), //
                     textVertexBufferBase,
+                    // circle initializer
+                    std::move(*circleVertexArray),
+                    std::move(*circleVertexBuffer), //
+                    std::move(*circleShader),       //
+                    circleVertexBufferBase,
                     // tri initializer
                     std::move(*triVertexArray),
                     std::move(*triVertexBuffer), //
@@ -252,6 +297,7 @@ Renderer2d Renderer2d::createRenderer2d()
 
 void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
 {
+  UNUSED(viewProjectionMatrix)
   PROFILE_FUNCTION();
   // =============================================================== //
   // =============================================================== //
@@ -280,9 +326,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
     m_quadVertexArray.bind();
     m_quadIB.bind();
     m_quadVertexBuffer.bind();
-    const uint32_t quadDataSize =
-        (uint8_t *)m_quadVertexBufferPtr - (uint8_t *)m_quadVertexBufferBase;
-    m_quadVertexBuffer.setData((void *)m_quadVertexBufferBase, quadDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_quadVertexBufferPtr - m_quadVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(QuadVertex);
+    m_quadVertexBuffer.setData((void *)m_quadVertexBufferBase, numBytes);
 
     // bind textures
     for (uint32_t i = 0; i < m_textureSlotIndex; i++) {
@@ -301,9 +348,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   // =============================================================== //
   if (m_textIndexCount) {
     m_textVertexArray.bind();
-    const uint32_t textDataSize =
-        (uint8_t *)m_textVertexBufferPtr - (uint8_t *)m_textVertexBufferBase;
-    m_textVertexBuffer.setData((void *)m_textVertexBufferBase, textDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_textVertexBufferPtr - m_textVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(TextQuadVertex);
+    m_textVertexBuffer.setData((void *)m_textVertexBufferBase, numBytes);
 
     m_fontAtlasTexture->bind();
     m_textTextureShader.bind();
@@ -322,9 +370,10 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   if (m_sprayIndexCount) {
     m_sprayVertexArray.bind();
     m_sprayIB.bind();
-    const uint32_t sprayDataSize =
-        (uint8_t *)m_sprayVertexBufferPtr - (uint8_t *)m_sprayVertexBufferBase;
-    m_sprayVertexBuffer.setData((void *)m_sprayVertexBufferBase, sprayDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_sprayVertexBufferPtr - m_sprayVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(ParticleVertex);
+    m_sprayVertexBuffer.setData((void *)m_sprayVertexBufferBase, numBytes);
 
     // FIX: I don't really need to bind textures here, right?
     // TODO: make it possible to bind textures for spray particles
@@ -344,15 +393,35 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
   if (m_triIndexCount) {
     m_triIB.bind();
     m_triVertexArray.bind();
-    const uint32_t triDataSize =
-        (uint8_t *)m_triVertexBufferPtr - (uint8_t *)m_triVertexBufferBase;
-    m_triVertexBuffer.setData((void *)m_triVertexBufferBase, triDataSize);
+    const uint32_t numElem =
+        static_cast<uint32_t>(m_triVertexBufferPtr - m_triVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(TriVertex);
+    m_triVertexBuffer.setData((void *)m_triVertexBufferBase, numBytes);
 
     m_triShader.bind();
     const uint32_t triCount =
         m_triIndexCount ? m_triIndexCount
                         : m_triVertexArray.getIndexBuffer().getCount();
     glDrawElements(GL_TRIANGLES, triCount, GL_UNSIGNED_INT, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+  // =============================================================== //
+  // Circles
+  // =============================================================== //
+  if (m_circleIndexCount) {
+    m_circleIB.bind();
+    m_circleVertexArray.bind();
+
+    const uint32_t numElem = static_cast<uint32_t>(m_circleVertexBufferPtr -
+                                                   m_circleVertexBufferBase);
+    const uint32_t numBytes = numElem * sizeof(CircleVertex);
+    m_circleVertexBuffer.setData((void *)m_circleVertexBufferBase, numBytes);
+
+    m_circleShader.bind();
+    const uint32_t circleCount =
+        m_circleIndexCount ? m_circleIndexCount
+                           : m_circleVertexArray.getIndexBuffer().getCount();
+    glDrawElements(GL_TRIANGLES, circleCount, GL_UNSIGNED_INT, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 }
@@ -370,6 +439,9 @@ void Renderer2d::goBackToFirstVertex()
   m_quadIndexCount = 0;
   m_quadVertexBufferPtr = m_quadVertexBufferBase;
 
+  m_circleIndexCount = 0;
+  m_circleVertexBufferPtr = m_circleVertexBufferBase;
+
   m_triIndexCount = 0;
   m_triVertexBufferPtr = m_triVertexBufferBase;
 
@@ -383,10 +455,10 @@ void Renderer2d::goBackToFirstVertex()
 }
 
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                                     float globalTime,
+                                     DeltaTime globalTime,
                                      const glm::mat4 &transform,
                                      const glm::ivec2 &resolution,
-                                     const glm::vec3 &cameraPos,
+                                     const glm::vec2 &cameraPos,
                                      float zoomLevel)
 {
   PROFILE_FUNCTION();
@@ -402,7 +474,7 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
   m_sprayShader.bind();
   m_sprayShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
   m_sprayShader.uploadUniformMat4("u_Transform", transform);
-  m_sprayShader.uploadUniformFloat("u_Time", globalTime);
+  m_sprayShader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
 
   m_textTextureShader.bind();
   m_textTextureShader.uploadUniformMat4("u_ViewProjection",
@@ -412,13 +484,16 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
   m_gridShader.bind();
   m_gridShader.uploadUniformFloat("u_zoomLevel", zoomLevel);
   m_gridShader.uploadUniformFloat2("u_cameraPos", cameraPos);
-  m_gridShader.uploadUniformFloat("u_resolution_y", resolution.y);
+  m_gridShader.uploadUniformFloat("u_resolution_y", (float)resolution.y);
   m_gridShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
   // m_gridShader.uploadUniformMat4("u_Transform", transform);
   // m_gridShader.uploadUniformFloat2("u_resolution", glm::vec2(resolution));
 
   // float cellScreenPixels = (1.f / zoomLevel) * resolution.y;
   // PLOG_I("cellScreenPixels inside BasicUniform= {}", cellScreenPixels);
+  m_circleShader.bind();
+  m_circleShader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
+  m_circleShader.uploadUniformMat4("u_Transform", transform);
 }
 
 float Renderer2d::allocateTextures(Texture &texture)
@@ -481,7 +556,7 @@ void Renderer2d::allocateQuad(const glm::mat4 &transform,
                               const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
-  for (int i = 0; i < 4; i++) {
+  for (unsigned i = 0; i < 4; i++) {
     m_quadVertexBufferPtr->position = transform * QuadVertexPositions[i];
     m_quadVertexBufferPtr->color = tintColor;
     m_quadVertexBufferPtr->texCoord = textureCoordinate[i];
@@ -492,11 +567,25 @@ void Renderer2d::allocateQuad(const glm::mat4 &transform,
   m_quadIndexCount += 6;
 }
 
+void Renderer2d::allocateCircle(const glm::mat4 &transform,
+                                const glm::vec4 &tintColor,
+                                const std::array<glm::vec2, 4> &coordinate)
+{
+  PROFILE_FUNCTION();
+  for (unsigned i = 0; i < 4; i++) {
+    m_circleVertexBufferPtr->position = transform * QuadVertexPositions[i];
+    m_circleVertexBufferPtr->color = tintColor;
+    m_circleVertexBufferPtr->coord = coordinate[i];
+    m_circleVertexBufferPtr++;
+  }
+  m_circleIndexCount += 6;
+}
+
 void Renderer2d::allocateTri(const glm::mat4 &transform,
                              const glm::vec4 &tintColor)
 {
   PROFILE_FUNCTION();
-  for (int i = 0; i < 3; i++) {
+  for (unsigned i = 0; i < 3; i++) {
     m_triVertexBufferPtr->position = transform * TriVertexPositions[i];
     m_triVertexBufferPtr->color = tintColor;
     m_triVertexBufferPtr++;
@@ -504,29 +593,31 @@ void Renderer2d::allocateTri(const glm::mat4 &transform,
   m_triIndexCount += 3;
 }
 
-void Renderer2d::beginSprayParticle(const float globalTime,
+void Renderer2d::beginSprayParticle(const DeltaTime globalTime,
                                     const ParticleSprayComponent &psc)
 {
   PROFILE_FUNCTION();
   m_sprayShader.bind();
-  m_sprayShader.uploadUniformFloat("u_Time", globalTime);
+  m_sprayShader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
   m_sprayShader.uploadUniformFloat("u_ParticleVelocity", psc.m_velocity);
-  m_sprayShader.uploadUniformFloat("u_LifeTime", psc.m_lifeTime);
+  m_sprayShader.uploadUniformFloat("u_LifeTime", (float)psc.m_lifeTime);
   m_sprayShader.uploadUniformFloat("u_SizeChangeSpeed", psc.m_sizeChangeSpeed);
   m_sprayShader.uploadUniformFloat("u_randomSizeFactor", psc.m_randSizeFactor);
 }
+
 void Renderer2d::allocateSprayParticles(const glm::vec2 &position,
                                         const glm::vec2 &offset,
                                         const glm::vec2 &normal,
-                                        const float startTime,
+                                        const DeltaTime startTime,
                                         const float rotationSpeed)
 {
+  UNUSED(position)
   PROFILE_FUNCTION();
-  for (int i = 0; i < 4; i++) {
+  for (unsigned i = 0; i < 4; i++) {
     m_sprayVertexBufferPtr->position = SprayVertexPositions[i];
     m_sprayVertexBufferPtr->offset = offset;
     m_sprayVertexBufferPtr->normal = normal;
-    m_sprayVertexBufferPtr->time = startTime;
+    m_sprayVertexBufferPtr->time = startTime.getSecondsf();
     m_sprayVertexBufferPtr->rotationSpeed = rotationSpeed;
     m_sprayVertexBufferPtr++;
   }
@@ -539,7 +630,7 @@ void Renderer2d::allocateCharacter(
     const std::array<glm::vec4, 4> &textVertexPositions)
 {
   PROFILE_FUNCTION();
-  for (int i = 0; i < 4; i++) {
+  for (unsigned i = 0; i < 4; i++) {
     m_textVertexBufferPtr->position = transform * textVertexPositions[i];
     m_textVertexBufferPtr->color = tintColor;
     m_textVertexBufferPtr->texCoord = textureCoordinate[i];
@@ -562,9 +653,10 @@ Renderer2d::~Renderer2d()
   delete[] m_sprayVertexBufferBase;
 }
 
-Renderer2d::Renderer2d(IndexBuffer quadIB,  //
-                       IndexBuffer triIB,   //
-                       IndexBuffer sprayIB, //
+Renderer2d::Renderer2d(IndexBuffer quadIB,   //
+                       IndexBuffer circleIB, //
+                       IndexBuffer triIB,    //
+                       IndexBuffer sprayIB,  //
                        IndexBuffer gridIB,
                        VertexArray quadVertexArray,   //
                        VertexBuffer quadVertexBuffer, //
@@ -575,6 +667,11 @@ Renderer2d::Renderer2d(IndexBuffer quadIB,  //
                        VertexBuffer textVertexBuffer, //
                        Shader textTextureShader,
                        TextQuadVertex *textVertexBufferBase,
+                       // Circle initializer
+                       VertexArray circleVertexArray,        //
+                       VertexBuffer circleVertexBuffer,      //
+                       Shader circleShader,                  //
+                       CircleVertex *circleVertexBufferBase, //
                        // tri initializer
                        VertexArray triVertexArray,
                        VertexBuffer triVertexBuffer, //
@@ -589,35 +686,42 @@ Renderer2d::Renderer2d(IndexBuffer quadIB,  //
                        VertexArray gridVertexArray,   //
                        VertexBuffer gridVertexBuffer, //
                        Shader gridShader)
-    : m_quadVertexArray(std::move(quadVertexArray)),                     //
-      m_quadVertexBuffer(std::move(quadVertexBuffer)),                   //
-      m_quadTextureShader(std::move(quadTextureShader)),                 //
-      m_quadVertexBufferBase(quadVertexBufferBase),                      //
-                                                                         //
-      m_textVertexArray(std::move(textVertexArray)),                     //
-      m_textVertexBuffer(std::move(textVertexBuffer)),                   //
-      m_textTextureShader(std::move(textTextureShader)),                 //
-      m_textVertexBufferBase(textVertexBufferBase),                      //
-                                                                         //
-      m_triVertexArray(std::move(triVertexArray)),                       //
-      m_triVertexBuffer(std::move(triVertexBuffer)),                     //
-      m_triShader(std::move(triShader)),                                 //
-      m_triVertexBufferBase(triVertexBufferBase),                        //
-                                                                         //
-      m_sprayVertexArray(std::move(sprayVertexArray)),                   //
-      m_sprayVertexBuffer(std::move(sprayVertexBuffer)),                 //
-      m_sprayShader(std::move(sprayShader)),                             //
-      m_sprayVertexBufferBase(sprayVertexBufferBase),                    //
-                                                                         //
-      m_gridShader(std::move(gridShader)),                               //
-      m_gridVertexArray(std::move(gridVertexArray)),                     //
-      m_gridVertexBuffer(std::move(gridVertexBuffer)),                   //
-                                                                         //
-      m_textureSlots({&resources::getDefaultTexture(resources::BLANK)}), //
-      m_quadIB(std::move(quadIB)),                                       //
-      m_triIB(std::move(triIB)),                                         //
-      m_sprayIB(std::move(sprayIB)),                                     //
-      m_gridIB(std::move(gridIB)                                         //
+    : m_quadVertexArray(std::move(quadVertexArray)),       //
+      m_quadVertexBuffer(std::move(quadVertexBuffer)),     //
+      m_quadTextureShader(std::move(quadTextureShader)),   //
+      m_quadVertexBufferBase(quadVertexBufferBase),        //
+                                                           //
+      m_textVertexArray(std::move(textVertexArray)),       //
+      m_textVertexBuffer(std::move(textVertexBuffer)),     //
+      m_textTextureShader(std::move(textTextureShader)),   //
+      m_textVertexBufferBase(textVertexBufferBase),        //
+                                                           //
+      m_circleVertexArray(std::move(circleVertexArray)),   //
+      m_circleVertexBuffer(std::move(circleVertexBuffer)), //
+      m_circleShader(std::move(circleShader)),             //
+      m_circleVertexBufferBase(circleVertexBufferBase),    //
+                                                           //
+      m_triVertexArray(std::move(triVertexArray)),         //
+      m_triVertexBuffer(std::move(triVertexBuffer)),       //
+      m_triShader(std::move(triShader)),                   //
+      m_triVertexBufferBase(triVertexBufferBase),          //
+                                                           //
+      m_sprayVertexArray(std::move(sprayVertexArray)),     //
+      m_sprayVertexBuffer(std::move(sprayVertexBuffer)),   //
+      m_sprayShader(std::move(sprayShader)),               //
+      m_sprayVertexBufferBase(sprayVertexBufferBase),      //
+                                                           //
+      m_gridShader(std::move(gridShader)),                 //
+      m_gridVertexArray(std::move(gridVertexArray)),       //
+      m_gridVertexBuffer(std::move(gridVertexBuffer)),     //
+                                                           //
+      m_textureSlots(
+          {&resources::getDefaultTexture(resources::DefaultTexture::Blank)}), //
+      m_quadIB(std::move(quadIB)),                                            //
+      m_circleIB(std::move(circleIB)),                                        //
+      m_triIB(std::move(triIB)),                                              //
+      m_sprayIB(std::move(sprayIB)),                                          //
+      m_gridIB(std::move(gridIB)                                              //
       ) {};
 
 Renderer2d &Renderer2d::operator=(Renderer2d &&other) noexcept
@@ -640,6 +744,13 @@ Renderer2d &Renderer2d::operator=(Renderer2d &&other) noexcept
   m_textVertexBufferPtr = other.m_textVertexBufferPtr;
   m_textIndexCount = other.m_textIndexCount;
 
+  m_circleVertexArray = std::move(other.m_circleVertexArray);
+  m_circleVertexBuffer = std::move(other.m_circleVertexBuffer);
+  m_circleShader = std::move(other.m_circleShader);
+  m_circleVertexBufferBase = other.m_circleVertexBufferBase;
+  m_circleVertexBufferPtr = other.m_circleVertexBufferPtr;
+  m_circleIndexCount = other.m_circleIndexCount;
+
   m_triVertexArray = std::move(other.m_triVertexArray);
   m_triVertexBuffer = std::move(other.m_triVertexBuffer);
   m_triShader = std::move(other.m_triShader);
@@ -661,6 +772,7 @@ Renderer2d &Renderer2d::operator=(Renderer2d &&other) noexcept
 
   // Index buffers
   m_quadIB = std::move(other.m_quadIB);
+  m_circleIB = std::move(other.m_circleIB);
   m_triIB = std::move(other.m_triIB);
   m_sprayIB = std::move(other.m_sprayIB);
 

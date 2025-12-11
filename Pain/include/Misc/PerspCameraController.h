@@ -1,4 +1,5 @@
 #pragma once
+#include "Assets/DeltaTime.h"
 #include "pch.h"
 
 #include "Core.h"
@@ -14,7 +15,7 @@ public:
   PerspectiveCameraController(float windowWidth, float windowHeight,
                               float fieldOfViewDegrees);
 
-  void onUpdate(double deltaTimeSec);
+  void onUpdate(DeltaTime deltaTimeSec);
   void onEvent(const SDL_Event &e);
 
   const PerspectiveCamera &getCamera() const { return m_camera; }
@@ -43,9 +44,9 @@ private:
   template <bool IsMoving> void setMovementState();
 
   // window
-  float m_aspectRatio = 800.0 / 600.0;
-  float m_windowWidth = 800.0;
-  float m_windowHeight = 600.0;
+  float m_aspectRatio = 800.f / 600.f;
+  float m_windowWidth = 800.f;
+  float m_windowHeight = 600.f;
   PerspectiveCamera m_camera;
   bool m_isMovementEnable = true;
 

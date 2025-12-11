@@ -1,4 +1,5 @@
 // ImGuiDebugRegistry.h
+#include "Core.h"
 #include <functional>
 #include <string>
 
@@ -16,11 +17,7 @@ void renderAll();
 }; // namespace ImGuiDebugRegistry
 
 #ifndef NDEBUG
-#if defined(__GNUC__) || defined(__clang__)
-#define IMGUI_DEBUG_AUTO_NAME __PRETTY_FUNCTION__
-#else
-#define IMGUI_DEBUG_AUTO_NAME __FUNCTION__
-#endif
+#define IMGUI_DEBUG_AUTO_NAME PAIN_FUNC_SIG
 /// Add log to IMGUI debug menu, automatically add the function name
 #define IMGUI_PLOG(func) ::ImGuiDebugRegistry::add(IMGUI_DEBUG_AUTO_NAME, func);
 /// Add log to IMGUI debug menu

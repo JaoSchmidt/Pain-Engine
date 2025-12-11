@@ -23,6 +23,15 @@ static std::map<std::string, std::string> m_luaScriptSource = {};
 } // namespace
 namespace pain
 {
+bool resources::exists_file(const std::string_view &name)
+{
+  return std::filesystem::exists(std::filesystem::path{name});
+}
+bool resources::exists_file(const char *name)
+{
+  struct stat buffer;
+  return (stat(name, &buffer) == 0);
+}
 bool resources::exists_file(const std::string &name)
 {
   struct stat buffer;
@@ -71,7 +80,7 @@ const std::string &resources::getLuaScriptSource(const char *filepath)
 
 // start the stuff to run settings app
 
-void resources::initiateDefaultScript(const sol::state &solstate)
+void resources::initiateDefaultScript()
 {
   getLuaScriptSource(getDefaultLuaFile());
 }
@@ -103,17 +112,24 @@ std::string resources::getCurrentWorkingDir()
   return currentDir;
 }
 
-void resources::defaultNativeScript::onUpdate(double deltaTimeSec)
+void resources::defaultNativeScript::onUpdate(DeltaTime deltaTimeSec)
 {
+  UNUSED(deltaTimeSec)
   PLOG_W("You are updating a script that hasn't been initialized!");
 }
 
 void resources::defaultNativeScript::onEvent(const SDL_Event &e)
 {
+  UNUSED(e)
   PLOG_W("You are updating a script that hasn't been initialized!");
 }
-void resources::defaultNativeScript::onRender()
+void resources::defaultNativeScript::onRender(Renderer2d &renderer,
+                                              bool isMinimized,
+                                              DeltaTime currentTime)
 {
+  UNUSED(renderer)
+  UNUSED(isMinimized)
+  UNUSED(currentTime)
   PLOG_W("You are trying to render a script that hasn't been initialized!");
 }
 void resources::defaultNativeScript::onDestroy()

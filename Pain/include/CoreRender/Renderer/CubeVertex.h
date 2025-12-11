@@ -44,7 +44,7 @@ private:
   VertexBuffer m_vertexBuffer;
   Shader m_textureShader;
   Texture &m_whiteTexture =
-      resources::getDefaultTexture(resources::DEFAULT_TEXTURE::BLANK);
+      resources::getDefaultTexture(resources::DefaultTexture::Blank);
 
   CubeVertex *m_vertexBufferBase = nullptr;
   CubeVertex *m_vertexBufferPtr = nullptr;

@@ -25,6 +25,8 @@ struct TextQuadVertex {
   glm::vec2 texCoord;
   // NOTE: (jao) you might want to implement `int texIndex` here but one texture
   // is more than fine for now
+  // NOTE: thinking better, you are probably use one texture per font, so
+  // texIndex will need to be implemented in the future
 };
 
 struct QuadVertex {
@@ -38,6 +40,12 @@ struct QuadVertex {
 struct TriVertex {
   glm::vec3 position;
   glm::vec4 color;
+};
+
+struct CircleVertex {
+  glm::vec3 position;
+  glm::vec4 color;
+  glm::vec2 coord;
 };
 
 struct ParticleVertex {
@@ -60,7 +68,7 @@ struct Renderer2d {
   // ================================================================= //
 
   void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
-  void beginScene(float globalTime, const Scene &scene,
+  void beginScene(DeltaTime globalTime, const Scene &scene,
                   const glm::mat4 &transform = glm::mat4(1.0f));
   void endScene();
   void setViewport(int x, int y, int width, int height);
@@ -70,6 +78,16 @@ struct Renderer2d {
                    uint32_t indexCount = 0);
   void clearEntireRenderer();
 
+  // ================================================================= //
+  // Draw Circles
+  // ================================================================= //
+
+  /** Draws a circle */
+  void drawCircle(const glm::vec2 &position, const float radius,
+                  const glm::vec4 &tintColor,
+                  const std::array<glm::vec2, 4> &textureCoordinate = {
+                      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
+                      glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
   // ================================================================= //
   // Draw Quads
   // ================================================================= //
@@ -101,7 +119,7 @@ struct Renderer2d {
                const glm::vec4 &tintColor, const float rotationRadians);
 
   /** Draws a bunch of particles in a spray format */
-  void beginSprayParticle(const float globalTime,
+  void beginSprayParticle(const DeltaTime globalTime,
                           const ParticleSprayComponent &particleSprayComponent);
   void drawSprayParticle(const Particle &p);
 
@@ -134,6 +152,14 @@ private:
   TextQuadVertex *m_textVertexBufferPtr = nullptr;
   uint32_t m_textIndexCount = 0; // at init, there are 0 texts
 
+  // circle initializer
+  VertexArray m_circleVertexArray;
+  VertexBuffer m_circleVertexBuffer;
+  Shader m_circleShader;
+  CircleVertex *m_circleVertexBufferBase = nullptr;
+  CircleVertex *m_circleVertexBufferPtr = nullptr;
+  uint32_t m_circleIndexCount = 0; // at init, there are 0 tirangles
+
   // tri initializer
   VertexArray m_triVertexArray;
   VertexBuffer m_triVertexBuffer;
@@ -164,6 +190,7 @@ private:
   uint32_t m_textureSlotIndex = 1; // at init, there is 1 white texture
   //
   IndexBuffer m_quadIB;
+  IndexBuffer m_circleIB;
   IndexBuffer m_triIB;
   IndexBuffer m_sprayIB;
   IndexBuffer m_gridIB;
@@ -174,9 +201,9 @@ private:
 
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                           float globalTime, const glm::mat4 &transform,
+                           DeltaTime globalTime, const glm::mat4 &transform,
                            const glm::ivec2 &resolution,
-                           const glm::vec3 &cameraPos, const float zoomLevel);
+                           const glm::vec2 &cameraPos, const float zoomLevel);
   void draw(const glm::mat4 &viewProjectionMatrix);
   void bindTextures();
   void goBackToFirstVertex();
@@ -185,15 +212,19 @@ private:
                     const float tilingFactor, const float textureIndex,
                     const std::array<glm::vec2, 4> &textureCoordinate);
   void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor);
+  void allocateCircle(const glm::mat4 &transform, const glm::vec4 &tintColor,
+                      const std::array<glm::vec2, 4> &coordinate);
   void allocateSprayParticles(const glm::vec2 &position,
                               const glm::vec2 &offset, const glm::vec2 &normal,
-                              const float startTime, const float rotationSpeed);
+                              const DeltaTime startTime,
+                              const float rotationSpeed);
   void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
                          const std::array<glm::vec2, 4> &textureCoordinate,
                          const std::array<glm::vec4, 4> &textVertexPositions);
-  Renderer2d(IndexBuffer quadIB,  //
-             IndexBuffer triIB,   //
-             IndexBuffer sprayIB, //
+  Renderer2d(IndexBuffer quadIB,   //
+             IndexBuffer circleIB, //
+             IndexBuffer triIB,    //
+             IndexBuffer sprayIB,  //
              IndexBuffer gridIB,
              VertexArray quadVertexArray,      //
              VertexBuffer quadVertexBuffer,    //
@@ -204,6 +235,11 @@ private:
              VertexBuffer textVertexBuffer,        //
              Shader textTextureShader,             //
              TextQuadVertex *textVertexBufferBase, //
+             // circle initializer
+             VertexArray circleVertexArray,        //
+             VertexBuffer circleVertexBuffer,      //
+             Shader circleShader,                  //
+             CircleVertex *circleVertexBufferBase, //
              // tri initializer
              VertexArray triVertexArray,     //
              VertexBuffer triVertexBuffer,   //

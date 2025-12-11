@@ -1,4 +1,5 @@
 #include "CoreRender/Renderer/CubeVertex.h"
+#include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 
 namespace pain
@@ -10,15 +11,19 @@ void CubeVertexBatch::goBackToFirst()
 }
 void CubeVertexBatch::sendAllDataToOpenGL()
 {
-  uint32_t dataSize =
-      (uint8_t *)m_vertexBufferPtr - (uint8_t *)m_vertexBufferBase;
-  m_vertexBuffer.setData((void *)m_vertexBufferBase, dataSize);
+  const uint32_t numElem =
+      static_cast<uint32_t>(m_vertexBufferPtr - m_vertexBufferBase);
+  const uint32_t numBytes = numElem * sizeof(ParticleVertex);
+  // NOTE: previously the numElements was used instead of numBytes. Keep that in
+  // mind when eventually switch to 3d graphics
+  m_vertexBuffer.setData((void *)m_vertexBufferBase, numBytes);
 }
 
 /* Batch logic mostly in this function */
 void CubeVertexBatch::drawBatch(const glm::vec3 &position,
                                 const glm::vec3 &size, const glm::vec4 &color)
 {
+  UNUSED(color)
   glm::vec4 Color = glm::vec4(0.9f, 0.3f, 0.2f, 1.0f);
   // first quad
   m_vertexBufferPtr->Position = {position.x, position.y, position.z};

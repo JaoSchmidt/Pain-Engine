@@ -2,8 +2,6 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
-#include "SDL_image.h"
-#include "SDL_surface.h"
 
 namespace pain
 {
@@ -79,7 +77,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   packer.setMiterLimit(1.0);
   packer.setScale(emSize);
   // Compute atlas layout - pack glyphs
-  packer.pack(m_glyphs.data(), m_glyphs.size());
+  packer.pack(m_glyphs.data(), (int)m_glyphs.size());
   // Get final atlas dimensions
   int width = 0, height = 0;
   packer.getDimensions(width, height);
@@ -87,7 +85,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   // atlas bitmap.
   Texture texture =
       createAtlasTexture<uint8_t, float, 3, msdf_atlas::msdfGenerator>(
-          textureKey, m_glyphs, m_fontGeometry, width, height, fontFilename);
+          m_glyphs, width, height, fontFilename);
   // Cleanup
   msdfgen::destroyFont(font);
   msdfgen::deinitializeFreetype(ft);
@@ -95,11 +93,11 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
 }
 template <typename T, typename S, int N,
           msdf_atlas::GeneratorFunction<S, N> GenFunc>
-Texture createAtlasTexture(const char *fontName,
-                           const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
-                           const msdf_atlas::FontGeometry &fontGeometry,
-                           const float width, const float height,
-                           const char *fontFilename)
+Texture createAtlasTexture(
+    // const char *fontName,
+    const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
+    // const msdf_atlas::FontGeometry &fontGeometry,
+    const int width, const int height, const char *fontFilename)
 {
   msdf_atlas::GeneratorAttributes attributes;
   attributes.config.overlapSupport = true;

@@ -41,7 +41,7 @@ public:
   template <typename C, typename... Args> Column pushComponent(Args &&...args)
   {
     std::vector<C> &componentArray = createComponent<C>();
-    Column index = Column(componentArray.size());
+    Column index = Column(static_cast<int>(componentArray.size()));
     componentArray.emplace_back(std::forward<Args>(args)...);
     return index;
   }
@@ -50,7 +50,7 @@ public:
   // remove
   // ---------------------------------------------------- //
 
-  template <typename... Components> std::uint32_t remove(Column column)
+  template <typename... Components> std::int32_t remove(Column column)
   {
     static_assert(sizeof...(Components) != 0,
                   "Not allowed to remove from empty archetypes");
@@ -91,7 +91,7 @@ public:
     P_ASSERT((unsigned)entityIndex <= componentArray.size(),
              "Entity index {} out of range on array of size {}",
              entityIndex.value, componentArray.size());
-    return componentArray[entityIndex];
+    return componentArray[(unsigned)entityIndex];
   }
 
   template <typename T> T &fetchComponent(Column entityIndex)
@@ -100,7 +100,7 @@ public:
     P_ASSERT((unsigned)entityIndex <= componentArray.size(),
              "Entity index {} out of range on array of size {}",
              entityIndex.value, componentArray.size());
-    return componentArray[entityIndex];
+    return componentArray[(unsigned)entityIndex];
   }
 
   template <typename C> const std::vector<C> &getComponent() const

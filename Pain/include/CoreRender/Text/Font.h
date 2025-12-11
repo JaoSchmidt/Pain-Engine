@@ -43,12 +43,11 @@ private:
 
   template <typename T, typename S, int N,
             msdf_atlas::GeneratorFunction<S, N> GenFunc>
-  Texture
-  createAtlasTexture(const char *fontName,
-                     const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
-                     const msdf_atlas::FontGeometry &fontGeometry,
-                     const float width, const float height,
-                     const char *fontFilename);
+  Texture createAtlasTexture(
+      // const char *fontName,
+      const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
+      // const msdf_atlas::FontGeometry &fontGeometry,
+      const int width, const int height, const char *fontFilename);
   Font(const char *fontFilename, double emSize);
 };
 

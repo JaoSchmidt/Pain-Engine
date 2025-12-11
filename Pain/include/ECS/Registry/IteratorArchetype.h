@@ -8,8 +8,8 @@ template <typename T> struct Iterator {
   // https://internalpointers.com/post/writing-custom-iterators-modern-cpp
   using iterator_category = std::forward_iterator_tag;
 
-  Iterator(std::vector<std::vector<T> *> vectors, int outerIndex,
-           int innerIndex)
+  Iterator(std::vector<std::vector<T> *> vectors, size_t outerIndex,
+           size_t innerIndex)
       : m_vectors(vectors), m_outerIndex(outerIndex),
         m_innerIndex(innerIndex) {};
 
@@ -35,12 +35,26 @@ template <typename T> struct Iterator {
     }
     return *this;
   }
+  Iterator &operator+=(std::ptrdiff_t n)
+  {
+    while (n > 0) {
+      ++(*this);
+      --n;
+    }
+    return *this;
+  }
 
   bool operator==(const Iterator &o)
   {
     return m_outerIndex == o.m_outerIndex && m_innerIndex == o.m_innerIndex;
   };
   bool operator!=(const Iterator &o) { return !(*this == o); };
+
+  friend Iterator operator+(Iterator it, std::ptrdiff_t n)
+  {
+    it += n;
+    return it;
+  }
 
 protected:
   std::vector<std::vector<T> *> m_vectors;

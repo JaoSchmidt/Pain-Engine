@@ -2,23 +2,21 @@
 #include "ECS/Scriptable.h"
 #include "GUI/ImGuiDebugRegistry.h"
 #include "Misc/BasicOrthoCamera.h"
-#include "Physics/Collision/GridManager.h"
 #include "SDL_events.h"
 #include "imgui.h"
 #include <pain.h>
 
 MousePointer::MousePointer(pain::Scene &scene) : NormalEntity(scene)
 {
-  createComponents(scene, pain::TransformComponent{},                       //
+  createComponents(scene, pain::Transform2dComponent{},                     //
                    pain::SpriteComponent{"resources/textures/pointer.png"}, //
                    pain::NativeScriptComponent{});
 }
 
 MousePointerScript::MousePointerScript(reg::Entity entity, pain::Scene &scene,
-                                       reg::Entity cameraEntity, float cellsize)
+                                       reg::Entity cameraEntity)
 
-    : pain::ExtendedEntity(entity, scene), m_cellsize(cellsize),
-      m_cameraEntity(cameraEntity) {};
+    : pain::ExtendedEntity(entity, scene), m_cameraEntity(cameraEntity) {};
 
 void MousePointerScript::onCreate()
 {
@@ -34,7 +32,7 @@ glm::vec2 MousePointerScript::screenToWorld(int mouseX, int mouseY)
   // 1. Get the active OrthoCamera
   auto [camCC, camTC, camRC] =
       getScene()
-          .getComponents<pain::OrthoCameraComponent, pain::TransformComponent,
+          .getComponents<pain::OrthoCameraComponent, pain::Transform2dComponent,
                          pain::RotationComponent>(m_cameraEntity);
 
   // 2. Convert screen -> NDC space from -1 to 1
@@ -57,7 +55,7 @@ glm::vec2 MousePointerScript::screenToWorld(int mouseX, int mouseY)
   return glm::vec2(camTC.m_position.x, camTC.m_position.y) +
          rotation * localCoord;
 }
-void MousePointerScript::onUpdate(double deltaTimeSec)
+void MousePointerScript::onUpdate(pain::DeltaTime deltaTimeSec)
 {
   int x, y;
   SDL_GetMouseState(&x, &y);
@@ -65,12 +63,8 @@ void MousePointerScript::onUpdate(double deltaTimeSec)
   IMGUI_PLOG_NAME("world_pos", [=]() {
     ImGui::Text("World position (%.3f, %.3f)", TP_VEC2(world));
   });
-  ImGuiDebugRegistry::add("aaaa", [=, this]() {
-    ImGui::Text("Mouse pos (%d, %d)", x, y);
-    ImGui::Text("Cell (%d, %d)", static_cast<int>(world.x / m_cellsize),
-                static_cast<int>(world.y / m_cellsize));
-  });
-  getComponent<pain::TransformComponent>().m_position = glm::vec3(world, 0.f);
+
+  getComponent<pain::Transform2dComponent>().m_position = glm::vec3(world, 0.f);
 }
 
 void MousePointerScript::onEvent(const SDL_Event &event)
@@ -80,12 +74,14 @@ void MousePointerScript::onEvent(const SDL_Event &event)
     IMGUI_PLOG_NAME("world_pos", [=]() {
       ImGui::Text("World position (%.3f, %.3f)", TP_VEC2(world));
     });
-    getComponent<pain::TransformComponent>().m_position = glm::vec3(world, 0.f);
+    getComponent<pain::Transform2dComponent>().m_position =
+        glm::vec3(world, 0.f);
   } else if (event.type == SDL_MOUSEWHEEL) {
     glm::vec2 world = screenToWorld(event.wheel.mouseX, event.wheel.mouseY);
     IMGUI_PLOG_NAME("world_pos", [=]() {
       ImGui::Text("World position (%.3f, %.3f)", TP_VEC2(world));
     });
-    getComponent<pain::TransformComponent>().m_position = glm::vec3(world, 0.f);
+    getComponent<pain::Transform2dComponent>().m_position =
+        glm::vec3(world, 0.f);
   }
 }

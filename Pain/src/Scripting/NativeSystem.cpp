@@ -7,7 +7,7 @@ namespace pain
 namespace Systems
 {
 
-void NativeScript::onUpdate(double deltaTime)
+void NativeScript::onUpdate(DeltaTime deltaTime)
 {
   PROFILE_SCOPE("Scene::updateSystems - native scripts");
   for (auto it = begin<NativeScriptComponent>();
@@ -36,7 +36,7 @@ void NativeScript::onEvent(const SDL_Event &e)
   }
 }
 void NativeScript::onRender(Renderer2d &renderer, bool isMinimized,
-                            double currentTime)
+                            DeltaTime currentTime)
 {
   PROFILE_SCOPE("Scene::renderSystems - NativeScripts");
   for (auto it = begin<NativeScriptComponent>();

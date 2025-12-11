@@ -12,8 +12,11 @@ namespace pain
 // - create dynamic updates inside the mousepointer for testing
 
 void ImGuiDebugMenu::onRender(pain::Renderer2d &renderer, bool isMinimized,
-                              double currentTime)
+                              DeltaTime currentTime)
 {
+  UNUSED(renderer)
+  UNUSED(isMinimized)
+  UNUSED(currentTime)
   ImGui::Begin("Debug info");
   auto &camCC =
       getScene().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);

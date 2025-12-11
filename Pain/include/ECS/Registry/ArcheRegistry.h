@@ -3,9 +3,11 @@
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Registry/Archetype.h"
+#include "ECS/Registry/ExcludeComponents.h"
 #include "ECS/Registry/IteratorArchetype.h"
 
 #include <queue>
+#include <span>
 #include <typeindex>
 
 namespace reg
@@ -38,6 +40,7 @@ public:
     reg::Entity id;
     if (m_availableEntities.empty()) {
       id = reg::Entity(++numberOfEntities);
+      addRecord(Bitmask{-1}, Column{-1});
     } else {
       id = m_availableEntities.front();
       m_availableEntities.pop();
@@ -57,11 +60,17 @@ public:
                                                Components &&...comps)
   {
     Bitmask bitMask = getMultipleBitmask<Components...>();
-    Archetype &archetype = m_archetypes[bitMask];
+    P_ASSERT(m_entities.at((size_t)entity).bitmask == bitMask ||
+                 m_entities.at((size_t)entity).bitmask == -1,
+             "Component reset isn't implemented yet. TODO: need to remove "
+             "component of old archetype");
+    Archetype &archetype =
+        m_archetypes[bitMask]; // this will create an empty map
     Column column = Column{-1};
-    (..., (column = archetype.pushComponent<Components>(
-               std::forward<Components>(comps))));
-    addRecord(bitMask, column);
+    (...,
+     (column = archetype.pushComponent<Components>(std::forward<Components>(
+          comps)))); // and this should create its columns
+    updateRecord(entity, bitMask, column);
 
     return std::tie<Components &...>(
         archetype.fetchComponent<Components>(column)...);
@@ -73,10 +82,14 @@ public:
   Component &createComponent(Entity entity, Component &&args)
   {
     Bitmask bitMask = getSingleBitmask<Component>();
+    P_ASSERT(m_entities.at(entity).bitmask == bitMask ||
+                 m_entities.at((size_t)entity).bitmask == -1,
+             "Component reset isn't implemented yet. TODO: need to remove "
+             "component of old archetype");
     Archetype &archetype = m_archetypes[bitMask];
     size_t column =
         archetype.pushComponent<Component>(std::forward<Component>(args));
-    addRecord(bitMask, column);
+    updateRecord(entity, bitMask, column);
 
     return archetype.fetchComponent<Component>(column);
   }
@@ -137,17 +150,18 @@ public:
   // Slow process because we are also moving all its N components to N new
   // vectors
   template <typename... Components>
-  std::tuple<Components &...> changeComponents(Entity entity,
-                                               Components &&...comps)
+  std::tuple<Components &...> addComponents(Entity entity,
+                                            Components &&...comps)
   {
-    Bitmask oldBitmask = m_entities[entity].bitmask;
-    int oldColumn = m_entities[entity].column;
+    Bitmask oldBitmask = m_entities[static_cast<unsigned>(entity)].bitmask;
+    int oldColumn = m_entities[static_cast<unsigned>(entity)].column;
     Bitmask newBitMask = getMultipleBitmask<Components...>();
     Archetype &archetype = m_archetypes[oldBitmask];
     Archetype &newArchetype = m_archetypes[newBitMask];
 
-    Column newColumn = moveEntity<Components...>(archetype, newArchetype,
-                                                 entity, newBitMask, oldColumn);
+    Column newColumn =
+        moveEntity<Components...>(archetype, newArchetype, entity, newBitMask,
+                                  oldColumn, std::forward(comps)...);
     return std::tie<Components &...>(
         archetype.fetchComponent<Components>(newColumn)...);
   }
@@ -155,40 +169,45 @@ public:
 private:
   template <typename... Components>
   Column moveEntity(Archetype &from, Archetype &to, Entity entity,
-                    Bitmask newBitMask, Column oldColumn)
+                    Bitmask newBitMask, Column oldColumn, Components &&...comps)
   {
-    std::tuple<Components &...> components =
+    std::tuple<Components &...> oldComponents =
         from.extractColumn<Components...>(oldColumn);
 
     Column newColumnIndex;
+    // add old ones
     std::apply(
-        [&](auto &...comps) {
-          newColumnIndex = (to.pushComponent<std::decay_t<decltype(comps)>>(
-                                std::move(comps)),
+        [&](auto &...oldComps) {
+          newColumnIndex = (to.pushComponent<std::decay_t<decltype(oldComps)>>(
+                                std::move(oldComps)),
                             ...);
         },
-        components);
+        oldComponents);
 
-    m_entities[entity].bitmask = newBitMask;
-    m_entities[entity].column = newColumnIndex;
+    // add new ones
+    (..., to.pushComponent<Components>(std::forward<Components>(comps)));
+
+    m_entities[static_cast<unsigned>(entity)].bitmask = newBitMask;
+    m_entities[static_cast<unsigned>(entity)].column = newColumnIndex;
     from.remove<Components...>(oldColumn);
     return newColumnIndex;
   }
 
-  // ---------------------------------------------------- //
+  // ==================================================== //
   // iterate
-  // ---------------------------------------------------- //
+  // ==================================================== //
 
   // Extract all vectors of that particular component from the archetypes
   template <typename ParticularComponent>
   reg::Iterator<ParticularComponent>
-  createIteratorFromComponentBegin(int bitMask)
+  createBeginIteratorFromComponent(int bitMask, int excludeBitMask)
   {
     std::vector<std::vector<ParticularComponent> *> vectors;
     vectors.reserve(m_archetypes.size());
 
     for (auto &pair : m_archetypes) {
-      if ((pair.first & bitMask) == bitMask) {
+      if (((pair.first & bitMask) == bitMask) &&
+          (pair.first & excludeBitMask) == 0) {
         Archetype &archetype = pair.second;
         std::vector<ParticularComponent> *v =
             &archetype.getComponent<ParticularComponent>();
@@ -200,24 +219,44 @@ private:
   }
 
   template <typename ParticularComponent>
-  reg::Iterator<ParticularComponent> createIteratorFromComponentEnd(int bitMask)
+  reg::Iterator<ParticularComponent>
+  createEndIteratorFromComponent(int bitMask, int excludeBitMask)
   {
     std::vector<std::vector<ParticularComponent> *> vectors;
     vectors.reserve(m_archetypes.size());
 
     // TODO: It is possible to cache this result so it doesn't have to be made
-    // every time
+    // every time, altough it is made very rarely
     for (auto &pair : m_archetypes) {
-      if ((pair.first & bitMask) == bitMask) {
+      if (((pair.first & bitMask) == bitMask) &&
+          (pair.first & excludeBitMask) == 0) {
         Archetype &archetype = pair.second;
         std::vector<ParticularComponent> *v =
             &archetype.getComponent<ParticularComponent>();
         vectors.push_back(v);
       }
     }
-    const int size =
-        vectors.size(); // attention to evaluation order, do not replace below
+    // attention to evaluation order, do not replace below, will get UB
+    const size_t size = vectors.size();
     return reg::Iterator<ParticularComponent>(std::move(vectors), size, 0);
+  }
+
+  template <typename FirstComponent, typename... Rest>
+  size_t sizeOfComponent(int bitMask, int excludeBitMask)
+  {
+    size_t totalSize = 0;
+    // TODO: It is possible to cache this result so it doesn't have to be made
+    // every time, altough it is made very rarely
+    for (auto &pair : m_archetypes) {
+      if (((pair.first & bitMask) == bitMask) &&
+          (pair.first & excludeBitMask) == 0) {
+        Archetype &archetype = pair.second;
+        const std::vector<FirstComponent> *v =
+            &archetype.getComponent<FirstComponent>();
+        totalSize += v->size();
+      }
+    }
+    return totalSize;
   }
 
 public:
@@ -228,7 +267,7 @@ public:
   reg::Iterator<T> begin()
   {
     int bitMask = getSingleBitmask<T>();
-    return createIteratorFromComponentBegin<T>(bitMask);
+    return createBeginIteratorFromComponent<T>(bitMask, 0);
   }
 
   // return iterator of component
@@ -237,78 +276,109 @@ public:
   reg::Iterator<T> end()
   {
     int bitMask = getSingleBitmask<T>();
-    return createIteratorFromComponentEnd<T>(bitMask);
+    return createEndIteratorFromComponent<T>(bitMask, 0);
   }
 
   // return tuple of iterators
-  template <typename... Components>
+  template <typename... Components, typename... ExcludeComponents>
     requires IsMultipleTypes<Components...>
-  std::tuple<reg::Iterator<Components>...> begin()
+  std::tuple<reg::Iterator<Components>...>
+  begin(exclude_t<ExcludeComponents...> = {})
   {
     int bitMask = getMultipleBitmask<Components...>();
+    int excludeBitMask = getMultipleBitmask<ExcludeComponents...>();
+    // for each component, extract all vectors of that component in each
+    // Archetype (SoA)
+    // return into a tuple of components
+    return std::make_tuple(createBeginIteratorFromComponent<Components>(
+        bitMask, excludeBitMask)...);
+  }
+  // return tuple of iterators
+  template <typename... Components, typename... ExcludeComponents>
+    requires IsMultipleTypes<Components...>
+  std::tuple<reg::Iterator<Components>...>
+  end(exclude_t<ExcludeComponents...> = {})
+  {
+    int bitMask = getMultipleBitmask<Components...>();
+    int excludeBitMask = getMultipleBitmask<ExcludeComponents...>();
     // for each component, extract all vectors of that component in each
     // Archetype (SoA)
     // return into a tuple of components
     return std::make_tuple(
-        createIteratorFromComponentBegin<Components>(bitMask)...);
+        createEndIteratorFromComponent<Components>(bitMask, excludeBitMask)...);
   }
-  // return tuple of iterators
-  template <typename... Components>
+  // ==================================================== //
+  // size
+  // ==================================================== //
+
+  // return the size of the iterators
+  template <typename... Components, typename... ExcludeComponents>
     requires IsMultipleTypes<Components...>
-  std::tuple<reg::Iterator<Components>...> end()
+  size_t iteratorSize(exclude_t<ExcludeComponents...> = {})
   {
     int bitMask = getMultipleBitmask<Components...>();
-    // for each component, extract all vectors of that component in each
-    // Archetype (SoA)
-    // return into a tuple of components
-    return std::make_tuple(
-        createIteratorFromComponentEnd<Components>(bitMask)...);
+    int excludeBitMask = getMultipleBitmask<ExcludeComponents...>();
+    // NOTE: altough all components are necessary for the bitmasks, we only need
+    // to see one for the size
+    return sizeOfComponent<Components...>(bitMask, excludeBitMask);
   }
 
-  // ---------------------------------------------------- //
+  // ==================================================== //
   // get
-  // ---------------------------------------------------- //
+  // ==================================================== //
   template <typename... TargetComponents>
   std::tuple<TargetComponents &...> getComponents(Entity entity)
   {
-    Archetype &archetype = m_archetypes.at(m_entities[entity].bitmask);
+    static_assert(hasAllBitmask<TargetComponents...>(),
+                  "When using getComponent some component didn't exist inside  "
+                  "the CompileTimeBitMask");
+    Archetype &archetype =
+        m_archetypes.at(m_entities[static_cast<unsigned>(entity)].bitmask);
     return archetype.extractColumn<TargetComponents...>(
-        m_entities[entity].column);
+        m_entities[static_cast<unsigned>(entity)].column);
   }
   template <typename... TargetComponents>
   const std::tuple<TargetComponents &...> getComponents(Entity entity) const
   {
-    const Archetype &archetype = m_archetypes.at(m_entities[entity].bitmask);
+    static_assert(hasAllBitmask<TargetComponents...>(),
+                  "When using getComponent some component didn't exist inside "
+                  "the CompileTimeBitMask");
+    const Archetype &archetype =
+        m_archetypes.at(m_entities[static_cast<unsigned>(entity)].bitmask);
     return archetype.extractColumn<TargetComponents...>(
-        m_entities[entity].column);
+        m_entities[static_cast<unsigned>(entity)].column);
   }
   template <typename T> T &getComponent(Entity entity)
   {
-    Archetype &archetype = m_archetypes.at(m_entities[entity].bitmask);
-    return archetype.fetchComponent<T>(m_entities[entity].column);
+    Archetype &archetype =
+        m_archetypes.at(m_entities[static_cast<unsigned>(entity)].bitmask);
+    return archetype.fetchComponent<T>(
+        m_entities[static_cast<unsigned>(entity)].column);
   }
   template <typename T> const T &getComponent(Entity entity) const
   {
-    const Archetype &archetype = m_archetypes.at(m_entities[entity].bitmask);
-    return archetype.fetchComponent<T>(m_entities[entity].column);
+    const Archetype &archetype =
+        m_archetypes.at(m_entities[static_cast<unsigned>(entity)].bitmask);
+    return archetype.fetchComponent<T>(
+        m_entities[static_cast<unsigned>(entity)].column);
   }
 
-  // ---------------------------------------------------- //
+  // ==================================================== //
   // has
-  // ---------------------------------------------------- //
+  // ==================================================== //
 
   // Are all components inside the targetBitMask?
   template <typename... ObjectComponents>
   constexpr bool containsAll(Entity entity) const
   {
-    Bitmask targetBitMask = m_entities[entity].bitmask;
+    Bitmask targetBitMask = m_entities[static_cast<unsigned>(entity)].bitmask;
     int objectBitMask = getMultipleBitmask<ObjectComponents...>();
     return (targetBitMask | objectBitMask) == objectBitMask;
   }
   // Targeted has at least one component that a specific archetype also has
   template <typename... TargetComponents> bool hasAny(Entity entity) const
   {
-    Bitmask specificBitMask = m_entities[entity].bitmask;
+    Bitmask specificBitMask = m_entities[static_cast<unsigned>(entity)].bitmask;
     if constexpr (sizeof...(TargetComponents) == 1) {
       int targetBitMask = getSingleBitmask<TargetComponents...>();
       return (targetBitMask & specificBitMask) != 0;
@@ -318,16 +388,16 @@ public:
     }
   }
 
-  // ---------------------------------------------------- //
+  // ==================================================== //
   // remove
-  // ---------------------------------------------------- //
+  // ==================================================== //
 
   // Removal of a single entity can be O(n) in worst case (because we need to
   // update the last element's Record). If possible, prefer to batch
   template <typename... ObjectComponents> bool remove(Entity entity)
   {
-    Bitmask targetBitMask = m_entities[entity].bitmask;
-    Column targetColumn = m_entities[entity].column;
+    Bitmask targetBitMask = m_entities[static_cast<unsigned>(entity)].bitmask;
+    Column targetColumn = m_entities[static_cast<unsigned>(entity)].column;
     Archetype &archetype = m_archetypes.at(targetBitMask);
     int lastEntityColumn = archetype.remove<ObjectComponents...>(targetColumn);
     removeEntity(entity);
@@ -367,15 +437,23 @@ public:
     // remove NOTE: for high remove batches, it may be faster to cache
     // archetypes
     for (auto &target : entities) {
-      Bitmask bitmask = m_entities[target].bitmask;
-      Column column = m_entities[target].column;
+      Bitmask &bitmask = m_entities[target].bitmask;
+      Column &column = m_entities[target].column;
       Archetype &archetype = m_archetypes.at(bitmask);
       replacedMap.emplace(bitmask,
                           archetype.remove<ObjectComponents...>(column));
+      bitmask = Bitmask{-1};
+      column = Column{-1};
     }
     // update remaining records columns
     std::size_t updated = 0;
     for (Record &record : m_entities) {
+      // NOTE: there is a possibility that it will find the some invalid record,
+      // in this case, we need to test it to make sure that is the correct
+      // behaviour
+
+      P_ASSERT(record.bitmask != Bitmask{-1} && record.column != Column{-1},
+               "The debug begins");
       if (auto it = replacedMap.find(record); it != replacedMap.end()) {
         record.column = it->second;
         if (++updated == replacedMap.size())
@@ -387,8 +465,8 @@ public:
 private:
   void removeEntity(Entity entity)
   {
-    m_entities[entity].bitmask = Bitmask{0};
-    m_entities[entity].column = Column{0};
+    m_entities[static_cast<unsigned>(entity)].bitmask = Bitmask{0};
+    m_entities[static_cast<unsigned>(entity)].column = Column{0};
     m_availableEntities.push(entity);
   }
   template <typename... Components>
@@ -400,6 +478,10 @@ private:
   {
     return ComponentManagerT::template singleComponentBitmask<Component>();
   }
+  template <typename... Component> static constexpr bool hasAllBitmask()
+  {
+    return ComponentManagerT::template allRegistered<Component...>();
+  }
   void addRecord(Bitmask bitmask, Column column)
   {
     m_entities.emplace_back(bitmask, column);
@@ -407,6 +489,15 @@ private:
   void addRecord(Bitmask bitmask, size_t column)
   {
     m_entities.emplace_back(bitmask, Column{static_cast<int32_t>(column)});
+  }
+  void updateRecord(Entity entity, Bitmask bitmask, Column column)
+  {
+    m_entities[static_cast<unsigned>(entity)] = {bitmask, column};
+  }
+  void updateRecord(Entity entity, Bitmask bitmask, size_t column)
+  {
+    m_entities[static_cast<unsigned>(entity)] = {
+        bitmask, Column{static_cast<int32_t>(column)}};
   }
 };
 } // namespace reg

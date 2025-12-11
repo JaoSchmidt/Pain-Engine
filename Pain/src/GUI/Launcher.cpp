@@ -66,12 +66,15 @@ public:
   void onCreate()
   {
     if (resources::exists_file(m_app->configIniFile)) {
-      m_init.readAndUpdate(m_app->configIniFile.c_str());
+      m_init.readAndUpdate(m_app->configIniFile);
     }
     // clang-format on
   }
-  void onRender(Renderer2d &renderer, bool isMinimized, double currentTime)
+  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime)
   {
+    UNUSED(renderer)
+    UNUSED(currentTime)
+    UNUSED(isMinimized)
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
@@ -133,14 +136,14 @@ public:
     ImGui::SetCursorPosX(windowWidth - totalWidth);
 
     if (ImGui::Button("Exit", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(m_app->configIniFile.c_str());
+      m_init.write(m_app->configIniFile);
       m_app->stopLoop();
     }
 
     ImGui::SameLine(0.0f, spacing);
 
     if (ImGui::Button("Play", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(m_app->configIniFile.c_str());
+      m_init.write(m_app->configIniFile);
       m_app->stopLoop(true);
     }
 
@@ -173,7 +176,7 @@ Application *createLauncher()
   const int height = 200;
   const float zoom = 1.f;
   Application *settingsApp =
-      Application::createApplication(title, width, height, true);
+      Application::createApplication(title, width, height);
   ImGuiLauncher::createScriptScene(width, height, zoom, settingsApp);
 
   return settingsApp;

@@ -10,10 +10,7 @@ namespace pain
 {
 
 class Scene;
-class OrthoCamera
-    : public NormalEntity<MovementComponent, RotationComponent,
-                          TransformComponent, OrthoCameraComponent,
-                          NativeScriptComponent>
+class OrthoCamera : public NormalEntity
 {
 public:
   MOVABLE(OrthoCamera)
@@ -26,10 +23,10 @@ class OrthoCameraScript : public ExtendedEntity
 {
 public:
   using ExtendedEntity::ExtendedEntity;
-  void onUpdate(double deltaTimeSec);
+  void onUpdate(DeltaTime deltaTimeSec);
   void onCreate();
   void onEvent(const SDL_Event &e);
-  inline void recalculatePosition(const glm::vec3 &position, float rotation);
+  inline void recalculatePosition(const glm::vec2 &position, float rotation);
 
 private:
   float m_zoomSpeed = 0.25f;

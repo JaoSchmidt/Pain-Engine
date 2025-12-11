@@ -142,7 +142,7 @@ uint32_t Shader::compileShader(uint32_t type, const std::string &source)
   if (result == GL_FALSE) {
     int length;
     glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-    char *message = (char *)alloca(length * sizeof(char));
+    char *message = (char *)alloca(static_cast<size_t>(length) * sizeof(char));
     glGetShaderInfoLog(id, length, &length, message);
     PLOG_W("Failed to compile {}",
            type == GL_VERTEX_SHADER ? "vertex" : "fragment");
@@ -160,7 +160,8 @@ bool Shader::checkLinkProgram(uint32_t programID)
   if (linkStatus == GL_FALSE) {
     int infoLenght;
     glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLenght);
-    char *buffer = (char *)alloca(infoLenght * sizeof(char));
+    char *buffer =
+        (char *)alloca(static_cast<size_t>(infoLenght) * sizeof(char));
     glGetProgramInfoLog(programID, infoLenght, &infoLenght, buffer);
     PLOG_W("Failed to Link Program {}", programID);
     PLOG_W("{}", buffer);

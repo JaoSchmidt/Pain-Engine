@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Assets/DeltaTime.h"
 #include "Core.h"
 #include "ECS/Systems.h"
 
@@ -16,8 +17,7 @@ public:
 };
 namespace Systems
 {
-class ImGuiSys : public System<ComponentManager>
-{
+struct ImGuiSys : public System<ComponentManager> {
 public:
   // HACK: The singleton (static) approach assumes that there
   // will be only one context necessary for Dear ImGui to work.
@@ -32,14 +32,13 @@ public:
           | ImGuiConfigFlags_ViewportsEnable // Enable Multi-Viewport / Platform
   );
   ~ImGuiSys();
-  void onRender(Renderer2d &renderer, bool isMinimized, double currentTime);
+  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);
   void onEvent(const SDL_Event &e);
 
 private:
   ImGuiIO *m_io = nullptr;
   bool m_showAnotherWindow;
   ImVec4 m_clearColor;
-  ImGuiDockNodeFlags m_dockspace_flags = ImGuiDockNodeFlags_None;
 };
 
 } // namespace Systems

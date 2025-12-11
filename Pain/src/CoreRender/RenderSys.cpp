@@ -14,59 +14,83 @@ namespace Systems
 // Render Components
 // =============================================================== //
 void Render::onRender(Renderer2d &renderer, bool isMinimized,
-                      double currentTime)
+                      DeltaTime currentTime)
 {
+  UNUSED(isMinimized)
   PROFILE_FUNCTION();
   {
     PROFILE_SCOPE("Scene::renderSystems - texture quads");
-    auto [tIt, sIt] = begin<TransformComponent, SpriteComponent>();
-    const auto &[tItEnd, sItEnd] = end<TransformComponent, SpriteComponent>();
+    auto [tIt, sIt] = begin<Transform2dComponent, SpriteComponent>();
+    const auto &[tItEnd, sItEnd] = end<Transform2dComponent, SpriteComponent>();
     for (; tIt != tItEnd; ++tIt, ++sIt) {
-      if (sIt->m_textureSheetId == -1)
-        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                          sIt->getTexture(), sIt->m_tilingFactor);
-      else
-        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                          sIt->getTextureFromTextureSheet(),
-                          sIt->m_tilingFactor, sIt->getCoords());
+      std::visit(
+          [&](auto &&tex) {
+            using T = std::decay_t<decltype(tex)>;
+            if constexpr (std::is_same_v<T, SheetStruct>) {
+              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                                sIt->getTextureFromTextureSheet(),
+                                sIt->m_tilingFactor, sIt->getCoords());
+            } else {
+              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                                sIt->getTexture(), sIt->m_tilingFactor);
+            }
+          },
+          sIt->m_tex);
     }
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");
     auto [tIt, sIt, rIt] =
-        begin<TransformComponent, SpriteComponent, RotationComponent>();
+        begin<Transform2dComponent, SpriteComponent, RotationComponent>();
     const auto &[tItEnd, sItEnd2, rItEnd] =
-        end<TransformComponent, SpriteComponent, RotationComponent>();
+        end<Transform2dComponent, SpriteComponent, RotationComponent>();
 
     for (; tIt != tItEnd; ++tIt, ++rIt, ++sIt) {
-      // renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-      //                   rIt->m_rotationAngle, sIt->getTexture(),
-      //                   sIt->m_tilingFactor);
-      if (sIt->m_textureSheetId == -1)
-        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                          sIt->getTexture(), sIt->m_tilingFactor);
-      else
-        renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                          sIt->getTextureFromTextureSheet(),
-                          sIt->m_tilingFactor, sIt->getCoords());
       // TODO: Remove m_rotation of rc... should only
       // have angle, in the case of the camera
       // inclune rot direction in its script
+      std::visit(
+          [&](auto &&tex) {
+            using T = std::decay_t<decltype(tex)>;
+            if constexpr (std::is_same_v<T, SheetStruct>) {
+              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                                sIt->getTextureFromTextureSheet(),
+                                sIt->m_tilingFactor, sIt->getCoords());
+            } else {
+              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+                                sIt->getTexture(), sIt->m_tilingFactor);
+            }
+          },
+          sIt->m_tex);
+
+      // renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
+      //                   rIt->m_rotationAngle, sIt->getTexture(),
+      //                   sIt->m_tilingFactor);
     }
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - spriteless quads");
-    auto [tIt, sIt] = begin<TransformComponent, SpritelessComponent>();
-    auto [tItEnd, sItEnd] = end<TransformComponent, SpritelessComponent>();
+    auto [tIt, sIt] = begin<Transform2dComponent, SpritelessComponent>();
+    auto [tItEnd, sItEnd] = end<Transform2dComponent, SpritelessComponent>();
     for (; tIt != tItEnd; ++tIt, ++sIt) {
-      renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                        resources::getDefaultTexture(resources::BLANK, false));
+      std::visit(
+          [&](auto &&shape1) {
+            using T1 = std::decay_t<decltype(shape1)>;
+            if constexpr (std::is_same_v<T1, QuadShape>) {
+              renderer.drawQuad(tIt->m_position, shape1.size, sIt->m_color,
+                                resources::getDefaultTexture(
+                                    resources::DefaultTexture::Blank, false));
+            } else if constexpr (std::is_same_v<T1, CircleShape>) {
+              renderer.drawCircle(tIt->m_position, shape1.radius, sIt->m_color);
+            }
+          },
+          sIt->m_shape);
     }
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - triangles");
-    auto [tIt, triIt] = begin<TransformComponent, TrianguleComponent>();
-    auto [tItEnd, triItEnd] = end<TransformComponent, TrianguleComponent>();
+    auto [tIt, triIt] = begin<Transform2dComponent, TrianguleComponent>();
+    auto [tItEnd, triItEnd] = end<Transform2dComponent, TrianguleComponent>();
     for (; tIt != tItEnd; ++tIt, ++triIt) {
       renderer.drawTri(tIt->m_position, triIt->m_height, triIt->m_color);
     }
@@ -79,7 +103,7 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
     for (auto it = begin<ParticleSprayComponent>();
          it != end<ParticleSprayComponent>(); ++it) {
       ParticleSprayComponent &psc = *it;
-      renderer.beginSprayParticle((float)currentTime, psc);
+      renderer.beginSprayParticle(currentTime, psc);
       for (Particle &pa : psc.m_particles) {
         if (pa.m_alive)
           renderer.drawSprayParticle(pa);

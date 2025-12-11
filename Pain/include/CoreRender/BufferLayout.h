@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "pch.h"
 
 namespace pain
 {
@@ -25,12 +26,14 @@ struct BufferElement {
   uint32_t size;
   uint32_t offset;
   bool normalized;
+  std::string name;
+  std::string const &getName() { return name; }
 
   BufferElement() = default;
   BufferElement(ShaderDataType type, const std::string &name,
                 bool normalized = false)
-      : type(type), size(getComponentSize()), offset(0),
-        normalized(normalized) {};
+      : type(type), size(getComponentSize()), offset(0), normalized(normalized),
+        name(name) {};
   MOVABLE(BufferElement);
   COPYABLE(BufferElement);
   ~BufferElement() = default;

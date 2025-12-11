@@ -28,15 +28,12 @@ TextureSheet TextureSheet::createTextureSheet(
 // 1. the atlas is a matrix
 // 2. you know how much columns and lines inside the atlas
 TextureSheet TextureSheet::createTextureSheet(
-    Texture &texture, uint nlinesX, uint ncolumnsY,
+    Texture &texture, unsigned nlinesX, unsigned ncolumnsY,
     std::initializer_list<std::pair<int, int>> coords)
 {
   std::vector<std::array<glm::vec2, 4>> textureIds = {};
-  float texW = texture.getWidth();
-  float texH = texture.getHeight();
-
-  float spriteW = texW / ncolumnsY;
-  float spriteH = texH / nlinesX;
+  float spriteW = (float)texture.getWidth() / (float)ncolumnsY;
+  float spriteH = (float)texture.getHeight() / (float)nlinesX;
   PLOG_I("TextureSheet - Each texture is (SpriteW, SpriteH) = ({},{})", spriteW,
          spriteH);
   for (auto [x, y] : coords) {
@@ -60,17 +57,19 @@ TextureSheet::createVecFromCoord(pain::Texture &texture, float spriteWidth,
                                  float spriteHeight, int x, int y)
 {
   float m_spriteMargin = 1.0f;
-  float texW = texture.getWidth();
-  float texH = texture.getHeight();
+  const float texW = static_cast<float>(texture.getWidth());
+  const float texH = static_cast<float>(texture.getHeight());
 
   float spriteW = spriteWidth;
   float spriteH = spriteHeight;
+  float fx = static_cast<float>(x);
+  float fy = static_cast<float>(y);
 
   // Compute base UVs coordinates (or STs)
-  float uMin = (x * (spriteW + m_spriteMargin)) / texW;
-  float vMin = (y * (spriteH + m_spriteMargin)) / texH;
-  float uMax = ((x + 1) * spriteW + x * m_spriteMargin) / texW;
-  float vMax = ((y + 1) * spriteH + y * m_spriteMargin) / texH;
+  float uMin = (fx * (spriteW + m_spriteMargin)) / texW;
+  float vMin = (fy * (spriteH + m_spriteMargin)) / texH;
+  float uMax = ((fx + 1) * spriteW + fx * m_spriteMargin) / texW;
+  float vMax = ((fy + 1) * spriteH + fy * m_spriteMargin) / texH;
 
   // Small padding inward (half a texel)
   float texelX = 0.5f / texW;
@@ -87,7 +86,9 @@ TextureSheet::createVecFromCoord(pain::Texture &texture, float spriteWidth,
 std::array<glm::vec2, 4> createVecFromCoord(const char *atlasFilenameXML,
                                             int SubTextureId)
 {
-  PLOG_E("A undefined version of the function createVecFromCoord was called");
+  PLOG_E("Arguments are not supported yet: atlasFilenameXML = {}, SubTextureId "
+         "= {}",
+         atlasFilenameXML, SubTextureId);
   return {glm::vec2(0, 0), glm::vec2(0, 0), glm::vec2(0, 0), glm::vec2(0, 0)};
 }
 } // namespace pain

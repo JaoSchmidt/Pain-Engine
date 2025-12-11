@@ -23,8 +23,10 @@ public:
   template <typename... Targets>
   static constexpr Bitmask multiComponentBitmask()
   {
-    static_assert(sizeof...(Targets) > 0, "At least one component is required");
-    return getComponentsBitmask<Targets...>();
+    if constexpr (sizeof...(Targets) > 0)
+      return getComponentsBitmask<Targets...>();
+    else
+      return Bitmask{0};
   }
 
   // Get total number of registered components
@@ -33,7 +35,6 @@ public:
     return m_comp_num;
   }
 
-private:
   // Check if a component type is registered
   template <typename Target> static constexpr bool isRegistered()
   {
@@ -42,6 +43,12 @@ private:
     return typenameContainsType<CleanTarget, Components...>();
   }
 
+  template <typename... Ts> static constexpr bool allRegistered()
+  {
+    return (isRegistered<Ts>() && ...);
+  }
+
+private:
   static constexpr std::size_t m_comp_num = sizeof...(Components);
   // Recursive helper to check if a type exists in the parameter pack
   template <typename Target, typename First, typename... Rest>
@@ -57,7 +64,7 @@ private:
   }
 
   template <typename Target, typename First, typename... Rest>
-  static constexpr std::size_t getComponentIndex(int n = 0)
+  static constexpr std::size_t getComponentIndex(size_t n = 0)
   {
     if constexpr (std::is_same_v<First, Target>) {
       return n;

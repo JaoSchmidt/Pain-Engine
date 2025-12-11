@@ -47,11 +47,7 @@ private:
   ::pain::Profiler::openStream(name, filepath)
 #define PROFILE_CLOSE() ::pain::Profiler::closeStream()
 #define PROFILE_SCOPE(name) ::pain::ProfileTimer timer##__LINE__(name);
-#if defined(__GNUC__) || defined(__clang__)
-#define PROFILE_FUNCTION() PROFILE_SCOPE(__PRETTY_FUNCTION__)
-#else
-#define PROFILE_FUNCTION() PROFILE_SCOPE(__FUNCTION__)
-#endif
+#define PROFILE_FUNCTION() PROFILE_SCOPE(PAIN_FUNC_SIG)
 #else
 #define PROFILE_OPEN(name, filepath)
 #define PROFILE_CLOSE()

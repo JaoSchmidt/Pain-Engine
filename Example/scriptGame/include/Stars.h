@@ -6,12 +6,10 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
 
-class Stars : public pain::NormalEntity<pain::TransformComponent, //
-                                        pain::SpriteComponent>    //
-
+namespace Stars
 {
-public:
-  Stars(pain::Scene &scene, pain::TextureSheet &texSheet, short id,
-        glm::vec2 &pos);
-  Stars(pain::Scene &scene, pain::Texture &tex, short id, glm::vec2 &pos);
-};
+reg::Entity create(pain::Scene &scene, pain::TextureSheet &texSheet,
+                   unsigned short id, glm::vec2 &pos);
+reg::Entity create(pain::Scene &scene, pain::Texture &tex, unsigned short id,
+                   glm::vec2 &pos);
+}; // namespace Stars

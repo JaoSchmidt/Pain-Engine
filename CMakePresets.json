@@ -8,13 +8,12 @@
       "binaryDir": "build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "clang++-20",
+        "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=mold"
       }
     },
-
     {
       "name": "mingw",
       "displayName": "MinGW (Cross-Compile)",
@@ -26,7 +25,6 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
-
     {
       "name": "ci",
       "displayName": "CI/CD (GCC + Makefiles + Release)",
@@ -35,6 +33,19 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "ci-windows",
+      "displayName": "CI/CD Windows (MSVC + Debug)",
+      "generator": "Ninja",
+      "binaryDir": "build-ci-windows",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     }
   ],
@@ -51,6 +62,11 @@
     {
       "name": "ci",
       "configurePreset": "ci"
+    },
+    {
+      "name": "ci-windows",
+      "configurePreset": "ci-windows",
+      "configuration": "Debug"
     }
   ]
 }

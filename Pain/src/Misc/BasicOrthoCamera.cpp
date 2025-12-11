@@ -14,34 +14,36 @@ OrthoCamera::OrthoCamera(Scene *scene, int resolutionHeight,
                          int resolutionWeigh, float zoomLevel)
     : NormalEntity(*scene)
 {
+  const float apsectRatio = static_cast<float>(resolutionWeigh) /
+                            static_cast<float>(resolutionHeight);
   // clang-format off
   createComponents(*scene,
-      MovementComponent{glm::vec3(0.f), 1.f},
+      Movement2dComponent{glm::vec2(0.f), 1.f},
       RotationComponent{},
-      TransformComponent{},
-      OrthoCameraComponent{(float)resolutionWeigh/resolutionHeight, zoomLevel, resolutionWeigh, resolutionHeight},
+      Transform2dComponent{},
+      OrthoCameraComponent{ apsectRatio, zoomLevel, resolutionWeigh, resolutionHeight},
       NativeScriptComponent{}
   );
   // clang-format on
 };
 void OrthoCameraScript::onCreate()
 {
-  getComponent<MovementComponent>().m_rotationSpeed = 1.f;
+  getComponent<Movement2dComponent>().m_rotationSpeed = 1.f;
 }
 // OrthoCameraScript inherits ExtendedEntity
-inline void OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
+inline void OrthoCameraScript::recalculatePosition(const glm::vec2 &position,
                                                    const float rotation)
 {
   getComponent<OrthoCameraComponent>().m_matrices->RecalculateViewMatrix(
       position, rotation);
 }
 
-void OrthoCameraScript::onUpdate(double deltaTimeSec)
+void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   auto [mc, tc, cc, rc] =
-      getComponents<MovementComponent, TransformComponent, OrthoCameraComponent,
-                    RotationComponent>();
+      getComponents<Movement2dComponent, Transform2dComponent,
+                    OrthoCameraComponent, RotationComponent>();
 
   glm::vec3 moveDir{0.0f};
 
@@ -62,11 +64,11 @@ void OrthoCameraScript::onUpdate(double deltaTimeSec)
   mc.m_velocity = moveDir * moveSpeed;
 
   if (state[SDL_SCANCODE_Q])
-    rc.m_rotationAngle += mc.m_rotationSpeed * static_cast<float>(deltaTimeSec);
+    rc.m_rotationAngle += mc.m_rotationSpeed * deltaTime.getSecondsf();
   if (state[SDL_SCANCODE_E])
-    rc.m_rotationAngle -= mc.m_rotationSpeed * static_cast<float>(deltaTimeSec);
+    rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTime.getSecondsf();
 
-  tc.m_position += mc.m_velocity * static_cast<float>(deltaTimeSec);
+  tc.m_position += mc.m_velocity * deltaTime.getSecondsf();
   recalculatePosition(tc.m_position, rc.m_rotationAngle);
 }
 

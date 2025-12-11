@@ -49,7 +49,7 @@ void LuaScriptComponent::bind(const char *scriptPath)
     sol::error err = script;
     PLOG_E("Error loading Lua script: {}", err.what());
   }
-  PLOG_I("has transform? {}", hasAnyComponents<TransformComponent>());
+  PLOG_I("has transform? {}", hasAnyComponents<Transform2dComponent>());
   sol::protected_function_result result =
       script(); // will place everything inside an anonymous function and run
   if (!result.valid()) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Assets/DeltaTime.h"
+#include "Core.h"
 #include "ECS/Systems.h"
 
 namespace pain
@@ -21,7 +23,7 @@ struct Render : public System<ComponentManager> {
     std::cout << "Render move-assigned\n";
     return *this;
   }
-  void onRender(Renderer2d &renderer, bool isMinimized, double currentTime);
+  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);
 };
 } // namespace Systems
 } // namespace pain

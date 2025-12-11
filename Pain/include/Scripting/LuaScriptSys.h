@@ -1,4 +1,5 @@
 #pragma once
+#include "Assets/DeltaTime.h"
 #include "ECS/Systems.h"
 
 namespace pain
@@ -8,9 +9,9 @@ namespace Systems
 {
 struct LuaScript : public System<ComponentManager> {
   using System::System;
-  void onUpdate(double deltaTime);
+  void onUpdate(DeltaTime deltaTime);
   void onEvent(const SDL_Event &e);
-  void onRender(Renderer2d &renderer, bool isMinimized, double currentTime);
+  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);
 };
 } // namespace Systems
 

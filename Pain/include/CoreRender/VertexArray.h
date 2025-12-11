@@ -27,7 +27,7 @@ public:
   {
     return std::as_const(m_indexBuffer);
   }
-  const uint32_t getId() const { return m_rendererId; }
+  uint32_t getId() const { return m_rendererId; }
 
 private:
   static void addVertexBuffer(const VertexBuffer &vertexBuffer,
