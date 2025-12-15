@@ -14,8 +14,12 @@ namespace reg
 // ---------------------------------------------------- //
 class Archetype
 {
+public:
+  using Deleter = void (*)(void *);
+  using ErasedVector = std::unique_ptr<void, Deleter>;
+
 private:
-  std::map<std::type_index, void *> m_componentMap;
+  std::map<std::type_index, ErasedVector> m_componentMap;
   size_t m_count = 0;
 
 public:
@@ -28,13 +32,20 @@ public:
   {
     auto it = m_componentMap.find(std::type_index(typeid(C)));
     if (it != m_componentMap.end()) {
-      return *static_cast<std::vector<C> *>(it->second);
+      return *static_cast<std::vector<C> *>(it->second.get());
     } else {
-      auto [newIt, isInserted] = m_componentMap.emplace(
-          std::type_index(typeid(C)), new std::vector<C>());
+
+      auto deleter = [](void *vector) {
+        delete static_cast<std::vector<C> *>(vector);
+      };
+      auto [newIt, isInserted] =
+          m_componentMap.emplace(std::type_index(typeid(C)),
+                                 ErasedVector{new std::vector<C>(), deleter});
       P_ASSERT(isInserted, "Could not create new component vector");
       PLOG_I("New component bitmask added {}", typeid(C).name());
-      return *static_cast<std::vector<C> *>(newIt->second);
+
+      // store the deleter to use inside the destructor
+      return *static_cast<std::vector<C> *>(newIt->second.get());
     }
   }
 
@@ -126,7 +137,7 @@ public:
       PLOG_E("Missing component type: {}", typeid(C).name());
       std::terminate();
     }
-    return *static_cast<const std::vector<C> *>(it->second);
+    return *static_cast<const std::vector<C> *>(it->second.get());
   }
 
   template <typename C> std::vector<C> &getComponent()
@@ -139,7 +150,7 @@ public:
       PLOG_E("Missing component type: {}", typeid(C).name());
       std::terminate();
     }
-    return *static_cast<std::vector<C> *>(it->second);
+    return *static_cast<std::vector<C> *>(it->second.get());
   }
 
   std::size_t size() const { return m_count; }
