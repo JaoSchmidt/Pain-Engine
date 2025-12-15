@@ -23,16 +23,24 @@ public:
                                        int resHeight, float zoom,
                                        pain::Application *app)
   {
+    // PLAYER ---------------------------------------------------------------
+    pain::Texture &shipTex =
+        pain::resources::getTexture("resources/textures/ship_H.png");
+    reg::Entity player =
+        Player::create(scene, shipTex, resHeight, resWeight, zoom);
+
+    // Player player = {scene, shipTex};
+    // auto lsc = &player.getComponent<pain::LuaScriptComponent>(scene);
+    // lsc->bind("resources/scripts/lua_script.lua");
 
     // create the camera
-    pain::OrthoCamera orthocamera = {&scene, resWeight, resHeight, zoom};
-    orthocamera.emplaceScript<pain::OrthoCameraScript>(scene);
-    app->setRendererCamera(
-        *(std::as_const(orthocamera)
-              .getComponent<pain::OrthoCameraComponent>(scene)
-              .m_matrices),
-        orthocamera.getEntity());
-    reg::Entity cameraEntity = orthocamera.getEntity();
+    pain::OrthoCameraScript &orthocameraScript =
+        scene.emplaceScript<pain::OrthoCameraScript>(player);
+    const pain::OrthoCameraComponent &camComp =
+        std::as_const(orthocameraScript)
+            .getComponent<pain::OrthoCameraComponent>();
+    app->setRendererCamera(*camComp.m_matrices, orthocameraScript.getEntity());
+    reg::Entity cameraEntity = orthocameraScript.getEntity();
 
     // dummy.reset(new Dummy(&scene, {0.23f, 0.54f}, {1.f, 1.f},
     //                       {9.f, 0.f, 5.f, 1.f}, &m_texture, 1.f));
@@ -71,12 +79,6 @@ public:
         Wall::create(scene, glm::vec2(-2.f, 0), glm::vec2(1.f, 36.f)));
     walls.emplace_back(
         Wall::create(scene, glm::vec2(0, -2.f), glm::vec2(36.f, 1.f)));
-    // PLAYER ---------------------------------------------------------------
-    // pain::Texture &shipTex =
-    //     pain::resources::getTexture("resources/textures/ship_H.png");
-    // Player player = {scene, shipTex};
-    // auto lsc = &player.getComponent<pain::LuaScriptComponent>(scene);
-    // lsc->bind("resources/scripts/lua_script.lua");
     // ASTEROID ---------------------------------------------------------------
     pain::TextureSheet &asteroidSheet = pain::resources::createTextureSheet(
         "asteroids", "resources/textures/asteroid.png", 1, 5,
@@ -127,91 +129,20 @@ public:
           ));                                  //
     }
 
-    // ---------------------------------
-    // asteroids.emplace_back(Asteroid::create(          //
-    //     scene,                                        //
-    //     asteroidSheet,                                //
-    //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2(0.8f, 0.8f),                        //
-    //     glm::vec2(0.00f, -0.2f),                      //
-    //     0.1f                                          //
-    //     ));
-    // asteroids.emplace_back(Asteroid::create(          //
-    //     scene,                                        //
-    //     asteroidSheet,                                //
-    //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2{0.8f, 0.2f},                        //
-    //     glm::vec2{0.0f, 0.2f},                        //
-    //     glm::vec2{0.2f, 0.2f}                         //
-    //     ));
-    //
-    // // ---------------------------------
-    // asteroids.emplace_back(Asteroid::create(          //
-    //     scene,                                        //
-    //     asteroidSheet,                                //
-    //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2(-0.8f, 0.2f),                       //
-    //     glm::vec2(0.00f, 0.2f),                       //
-    //     0.1f                                          //
-    //     ));
-    // asteroids.emplace_back(Asteroid::create(          //
-    //     scene,                                        //
-    //     asteroidSheet,                                //
-    //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2{-0.8f, 0.8f},                       //
-    //     glm::vec2{0.0f, -0.2f},                       //
-    //     glm::vec2{0.2f, 0.2f}                         //
-    //     ));
-    // // ---------------------------------
-    // asteroids.emplace_back(Asteroid::create(          //
-    //     scene,                                        //
-    //     asteroidSheet,                                //
-    //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2(-0.4f, 0.4f),                       //
-    //     glm::vec2(0.2f, 0.0f),                        //
-    //     0.1f                                          //
-    //     ));
-    // asteroids.emplace_back(Asteroid::create(          //
-    //     scene,                                        //
-    //     asteroidSheet,                                //
-    //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2{0.4f, 0.4f},                        //
-    //     glm::vec2{-0.2f, 0.f},                        //
-    //     glm::vec2{0.2f, 0.2f}                         //
-    //     ));
-
-    // ---------------------------------
-    // asteroids.emplace_back(Asteroid::create(          //
-    //     scene,                                        //
-    //     asteroidSheet,                                //
-    //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2{0.4f, 0.0f},                        //
-    //     glm::vec2{-0.2f, 0.f},                        //
-    //     0.1f                                          //
-    //     ));
-    // asteroids.emplace_back(Asteroid::create(          //
-    //     scene,                                        //
-    //     asteroidSheet,                                //
-    //     static_cast<short>(0 % asteroidSheet.size()), //
-    //     glm::vec2(-0.4f, 0.f),                        //
-    //     glm::vec2(0.2f, 0.0f),                        //
-    //     glm::vec2{0.2f, 0.2f}                         //
-    //     ));
-
     // add objects to collision System
     scene.insertColliders(asteroids);
     scene.insertColliders(walls);
 
     // MOUSE POINTER
     // ---------------------------------------------------------------
-    MousePointer mp(scene);
-    mp.emplaceScript<MousePointerScript>(scene, cameraEntity);
+    reg::Entity mp = MousePointer::create(scene);
+    scene.emplaceScript<MousePointerScript>(mp, cameraEntity);
 
-    scene.emplaceImGuiScript<pain::ImGuiDebugMenu>(app, cameraEntity,
-                                                   mp.getEntity());
-    return scene.emplaceScript<MainScript>(
-        std::move(stars), std::move(orthocamera), std::move(asteroids),
-        std::move(walls), std::move(mp));
+    scene.emplaceImGuiScript<pain::ImGuiDebugMenu>(scene.getEntity(), app,
+                                                   cameraEntity, mp);
+    return scene.emplaceScript<MainScript>(scene.getEntity(), std::move(stars),
+                                           player, std::move(asteroids),
+                                           std::move(walls), mp);
   }
   void onRender(pain::Renderer2d &renderer, bool minimazed,
                 pain::DeltaTime deltatime)
@@ -223,23 +154,20 @@ public:
   }
 
   MainScript(reg::Entity entity, pain::Scene &scene,
-             std::vector<reg::Entity> &&stars, pain::OrthoCamera &&orthocamera,
+             std::vector<reg::Entity> &&stars, reg::Entity orthocamera,
              std::vector<reg::Entity> &&asteroid,
-             std::vector<reg::Entity> &&walls, MousePointer &&mp)
-      : ExtendedEntity(entity, scene), m_orthocamera(std::move(orthocamera)),
+             std::vector<reg::Entity> &&walls, reg::Entity mp)
+      : ExtendedEntity(entity, scene), m_orthocamera(orthocamera),
         m_stars(std::move(stars)), m_asteroids(std::move(asteroid)),
-        m_walls(std::move(walls)), m_mousePointer(std::move(mp))
-  {
-    m_orthocamera.getEntity();
-  };
+        m_walls(std::move(walls)), m_mousePointer(mp) {};
 
   std::vector<std::vector<int>> m_backgroundMap;
-  pain::OrthoCamera m_orthocamera;
+  reg::Entity m_orthocamera;
   std::shared_ptr<pain::Shader> m_texture_shader;
   std::vector<reg::Entity> m_stars;
   std::vector<reg::Entity> m_asteroids;
   std::vector<reg::Entity> m_walls;
-  MousePointer m_mousePointer;
+  reg::Entity m_mousePointer;
   // Player m_player;
   const static unsigned starAmout = 0;
   const static unsigned asteroidAmount = 20;

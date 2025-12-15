@@ -20,79 +20,87 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
   PROFILE_FUNCTION();
   {
     PROFILE_SCOPE("Scene::renderSystems - texture quads");
-    auto [tIt, sIt] = begin<Transform2dComponent, SpriteComponent>();
-    const auto &[tItEnd, sItEnd] = end<Transform2dComponent, SpriteComponent>();
-    for (; tIt != tItEnd; ++tIt, ++sIt) {
-      std::visit(
-          [&](auto &&tex) {
-            using T = std::decay_t<decltype(tex)>;
-            if constexpr (std::is_same_v<T, SheetStruct>) {
-              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                                sIt->getTextureFromTextureSheet(),
-                                sIt->m_tilingFactor, sIt->getCoords());
-            } else {
-              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                                sIt->getTexture(), sIt->m_tilingFactor);
-            }
-          },
-          sIt->m_tex);
+    auto chunks = queryConst<Transform2dComponent, SpriteComponent>();
+    for (auto &chunk : chunks) {
+      auto *t = std::get<0>(chunk.arrays);
+      auto *s = std::get<1>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        std::visit(
+            [&](auto &&tex) {
+              using T = std::decay_t<decltype(tex)>;
+              if constexpr (std::is_same_v<T, SheetStruct>) {
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                                  s[i].getTextureFromTextureSheet(),
+                                  s[i].m_tilingFactor, s[i].getCoords());
+              } else {
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                                  s[i].getTexture(), s[i].m_tilingFactor);
+              }
+            },
+            s[i].m_tex);
+      }
     }
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");
-    auto [tIt, sIt, rIt] =
-        begin<Transform2dComponent, SpriteComponent, RotationComponent>();
-    const auto &[tItEnd, sItEnd2, rItEnd] =
-        end<Transform2dComponent, SpriteComponent, RotationComponent>();
 
-    for (; tIt != tItEnd; ++tIt, ++rIt, ++sIt) {
-      // TODO: Remove m_rotation of rc... should only
-      // have angle, in the case of the camera
-      // inclune rot direction in its script
-      std::visit(
-          [&](auto &&tex) {
-            using T = std::decay_t<decltype(tex)>;
-            if constexpr (std::is_same_v<T, SheetStruct>) {
-              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                                sIt->getTextureFromTextureSheet(),
-                                sIt->m_tilingFactor, sIt->getCoords());
-            } else {
-              renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-                                sIt->getTexture(), sIt->m_tilingFactor);
-            }
-          },
-          sIt->m_tex);
-
-      // renderer.drawQuad(tIt->m_position, sIt->m_size, sIt->m_color,
-      //                   rIt->m_rotationAngle, sIt->getTexture(),
-      //                   sIt->m_tilingFactor);
+    auto chunks =
+        queryConst<Transform2dComponent, SpriteComponent, RotationComponent>();
+    for (auto &chunk : chunks) {
+      auto *t = std::get<0>(chunk.arrays);
+      auto *s = std::get<1>(chunk.arrays);
+      auto *r = std::get<2>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        std::visit(
+            [&](auto &&tex) {
+              using T = std::decay_t<decltype(tex)>;
+              if constexpr (std::is_same_v<T, SheetStruct>) {
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                                  r[i].m_rotationAngle,
+                                  s[i].getTextureFromTextureSheet(),
+                                  s[i].m_tilingFactor, s[i].getCoords());
+              } else {
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                                  r[i].m_rotationAngle, s[i].getTexture(),
+                                  s[i].m_tilingFactor);
+              }
+            },
+            s[i].m_tex);
+      }
     }
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - spriteless quads");
-    auto [tIt, sIt] = begin<Transform2dComponent, SpritelessComponent>();
-    auto [tItEnd, sItEnd] = end<Transform2dComponent, SpritelessComponent>();
-    for (; tIt != tItEnd; ++tIt, ++sIt) {
-      std::visit(
-          [&](auto &&shape1) {
-            using T1 = std::decay_t<decltype(shape1)>;
-            if constexpr (std::is_same_v<T1, QuadShape>) {
-              renderer.drawQuad(tIt->m_position, shape1.size, sIt->m_color,
-                                resources::getDefaultTexture(
-                                    resources::DefaultTexture::Blank, false));
-            } else if constexpr (std::is_same_v<T1, CircleShape>) {
-              renderer.drawCircle(tIt->m_position, shape1.radius, sIt->m_color);
-            }
-          },
-          sIt->m_shape);
+    auto chunks = queryConst<Transform2dComponent, SpritelessComponent>();
+    for (auto &chunk : chunks) {
+      auto *t = std::get<0>(chunk.arrays);
+      auto *s = std::get<1>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        std::visit(
+            [&](auto &&shape1) {
+              using T1 = std::decay_t<decltype(shape1)>;
+              if constexpr (std::is_same_v<T1, QuadShape>) {
+                renderer.drawQuad(t[i].m_position, shape1.size, s[i].m_color,
+                                  resources::getDefaultTexture(
+                                      resources::DefaultTexture::Blank, false));
+              } else if constexpr (std::is_same_v<T1, CircleShape>) {
+                renderer.drawCircle(t[i].m_position, shape1.radius,
+                                    s[i].m_color);
+              }
+            },
+            s[i].m_shape);
+      }
     }
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - triangles");
-    auto [tIt, triIt] = begin<Transform2dComponent, TrianguleComponent>();
-    auto [tItEnd, triItEnd] = end<Transform2dComponent, TrianguleComponent>();
-    for (; tIt != tItEnd; ++tIt, ++triIt) {
-      renderer.drawTri(tIt->m_position, triIt->m_height, triIt->m_color);
+    auto chunks = queryConst<Transform2dComponent, TrianguleComponent>();
+    for (auto &chunk : chunks) {
+      auto *t = std::get<0>(chunk.arrays);
+      auto *tri = std::get<1>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        renderer.drawTri(t[i].m_position, tri[i].m_height, tri[i].m_color);
+      }
     }
   }
   // =============================================================== //
@@ -100,16 +108,20 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
   // =============================================================== //
   {
     PROFILE_SCOPE("Scene::renderSystems - Particles");
-    for (auto it = begin<ParticleSprayComponent>();
-         it != end<ParticleSprayComponent>(); ++it) {
-      ParticleSprayComponent &psc = *it;
-      renderer.beginSprayParticle(currentTime, psc);
-      for (Particle &pa : psc.m_particles) {
-        if (pa.m_alive)
-          renderer.drawSprayParticle(pa);
-        // Remove dead particles
-        if (currentTime - pa.m_startTime >= psc.m_lifeTime) {
-          pa.m_alive = false;
+
+    auto chunks = query<ParticleSprayComponent>();
+    for (auto &chunk : chunks) {
+      auto *p = std::get<0>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        ParticleSprayComponent &psc = p[i];
+        renderer.beginSprayParticle(currentTime, psc);
+        for (Particle &pa : psc.m_particles) {
+          if (pa.m_alive)
+            renderer.drawSprayParticle(pa);
+          // Remove dead particles
+          if (currentTime - pa.m_startTime >= psc.m_lifeTime) {
+            pa.m_alive = false;
+          }
         }
       }
     }

@@ -10,7 +10,7 @@
 #include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/KinematicsSys.h"
 #include "Scripting/LuaScriptSys.h"
-#include "Scripting/NativeSystem.h"
+#include "Scripting/NativeScriptSys.h"
 
 namespace pain
 {
@@ -84,6 +84,15 @@ void Scene::renderSystems(Renderer2d &renderer, bool isMinimized,
   m_nativeScriptSystem->onRender(renderer, isMinimized, currentTime);
   m_imGuiSystem->onRender(renderer, isMinimized, currentTime);
   m_luaSystem->onRender(renderer, isMinimized, currentTime);
+}
+
+Scene::~Scene(){
+  delete m_renderSystem;
+  delete m_kinematicsSystem;
+  delete m_nativeScriptSystem;
+  delete m_imGuiSystem;
+  delete m_luaSystem;
+  delete m_sweepAndPruneSystem;
 }
 
 } // namespace pain

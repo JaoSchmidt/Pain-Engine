@@ -19,12 +19,12 @@ namespace pain
 class ImGuiLauncher : public ExtendedEntity
 {
 public:
-  static pain::Scene &createScriptScene(int resWeight, int resHeight,
-                                        float zoom,
-                                        pain::Application *settingsApp)
+  static ImGuiLauncher &createScriptScene(int resWeight, int resHeight,
+                                          float zoom,
+                                          pain::Application *settingsApp)
   {
-    pain::Scene &scene =
-        settingsApp->createScene(1.f, pain::NativeScriptComponent{});
+    pain::Scene &scene = settingsApp->createScene(
+        1.f, pain::NativeScriptComponent{}, pain::ImGuiComponent{});
     pain::OrthoCamera orthoCamera = {&scene, resWeight, resHeight, zoom};
 
     settingsApp->setRendererCamera(
@@ -34,9 +34,8 @@ public:
         orthoCamera.getEntity());
     orthoCamera.emplaceScript<OrthoCameraScript>(scene);
 
-    scene.emplaceImGuiScript<ImGuiLauncher>(ImGuiLauncher(
-        scene.getEntity(), scene, settingsApp, std::move(orthoCamera)));
-    return scene;
+    return scene.emplaceImGuiScript<ImGuiLauncher>(
+        scene.getEntity(), settingsApp, std::move(orthoCamera));
   }
   ~ImGuiLauncher() = default;
   NONCOPYABLE(ImGuiLauncher);
@@ -150,13 +149,13 @@ public:
     ImGui::End();
   }
 
-private:
   ImGuiLauncher(reg::Entity entity, Scene &scene, Application *app,
                 OrthoCamera &&camera)
       : ExtendedEntity(entity, scene), m_init(), m_app(app),
         m_orthocamera(std::move(camera)) {};
   std::vector<std::string> m_availableResolutions;
 
+private:
   ImGuiWindowFlags m_windowFlags =
       ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar |
       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |

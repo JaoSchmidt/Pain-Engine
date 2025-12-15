@@ -48,10 +48,10 @@ public:
   // ---------------------------------------------------- //
 
   // Move already made script to the registry
-  template <typename T> T &emplaceScript(T &&t)
+  template <typename T> T &emplaceScript(reg::Entity entity, T &&t)
   {
     NativeScriptComponent &nsc =
-        m_registry.getComponent<NativeScriptComponent>(m_entity);
+        m_registry.getComponent<NativeScriptComponent>(entity);
     nsc.bindAndInitiate<T>(std::move(t));
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
@@ -61,20 +61,20 @@ public:
   // Emplace script inside the registry
   template <typename T, typename... Args>
     requires std::constructible_from<T, reg::Entity, Scene &, Args...>
-  T &emplaceScript(Args &&...args)
+  T &emplaceScript(reg::Entity entity, Args &&...args)
   {
     NativeScriptComponent &nsc =
-        m_registry.getComponent<NativeScriptComponent>(m_entity);
-    nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);
+        m_registry.getComponent<NativeScriptComponent>(entity);
+    nsc.bindAndInitiate<T>(entity, *this, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
     return static_cast<T &>(*nsc.instance);
   }
 
   // Move already made script to the registry
-  template <typename T> T &emplaceImGuiScript(T &&t)
+  template <typename T> T &emplaceImGuiScript(reg::Entity entity, T &&t)
   {
-    ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
+    ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(entity);
     nsc.bindAndInitiate<T>(std::move(t));
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
@@ -82,10 +82,10 @@ public:
   }
   template <typename T, typename... Args>
     requires std::constructible_from<T, reg::Entity, Scene &, Args...>
-  T &emplaceImGuiScript(Args &&...args)
+  T &emplaceImGuiScript(reg::Entity entity, Args &&...args)
   {
-    ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(m_entity);
-    nsc.bindAndInitiate<T>(m_entity, *this, std::forward<Args>(args)...);
+    ImGuiComponent &nsc = m_registry.getComponent<ImGuiComponent>(entity);
+    nsc.bindAndInitiate<T>(entity, *this, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
     return static_cast<T &>(*nsc.instance);
@@ -114,33 +114,17 @@ public:
   // Iterate archetypes
   // ---------------------------------------------------- //
 
-  template <typename T>
-    requires reg::IsSingleType<T>
-  inline reg::Iterator<T> end()
+  template <typename... Components, typename... ExcludeComponents>
+  inline std::vector<reg::ChunkView<Components...>>
+  query(exclude_t<ExcludeComponents...> = {})
   {
-    return m_registry.template end<T>();
-  }
-  template <typename T>
-    requires reg::IsSingleType<T>
-  inline reg::Iterator<T> begin()
-  {
-    return m_registry.template begin<T>();
+    return m_registry.query<Components...>(exclude<ExcludeComponents...>);
   }
   template <typename... Components, typename... ExcludeComponents>
-    requires reg::IsMultipleTypes<Components...>
-  inline std::tuple<reg::Iterator<Components>...>
-  begin(exclude_t<ExcludeComponents...> = {})
+  inline std::vector<reg::ChunkView<const Components...>>
+  queryConst(exclude_t<ExcludeComponents...> = {}) const
   {
-    return m_registry.template begin<Components...>(
-        exclude<ExcludeComponents...>);
-  }
-  template <typename... Components, typename... ExcludeComponents>
-    requires reg::IsMultipleTypes<Components...>
-  inline std::tuple<reg::Iterator<Components>...>
-  end(exclude_t<ExcludeComponents...> = {})
-  {
-    return m_registry.template end<Components...>(
-        exclude<ExcludeComponents...>);
+    return m_registry.queryConst<Components...>(exclude<ExcludeComponents...>);
   }
 
   // ---------------------------------------------------- //
@@ -181,7 +165,7 @@ public:
   template <typename... TargetComponents>
   constexpr bool containsAllComponents(reg::Entity entity) const
   {
-    return std::as_const(m_registry).containsAll<TargetComponents...>(entity);
+    return m_registry.containsAll<TargetComponents...>(entity);
   }
   // remove an entity, alongside its components from it's archetype,
   // NOTE: The caller needs to tell me the components of the entity
@@ -200,6 +184,8 @@ public:
   void updateSystems(const SDL_Event &event);
   void renderSystems(Renderer2d &renderer, bool isMinimized,
                      DeltaTime currentTime);
+
+  ~Scene();
 
 private:
   reg::ArcheRegistry<ComponentManager> m_registry;

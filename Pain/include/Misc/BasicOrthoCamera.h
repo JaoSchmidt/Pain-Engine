@@ -28,7 +28,7 @@ public:
   void onEvent(const SDL_Event &e);
   inline void recalculatePosition(const glm::vec2 &position, float rotation);
 
-private:
+protected:
   float m_zoomSpeed = 0.25f;
   void onMouseScrolled(const SDL_Event &e, OrthoCameraComponent &cc);
   void onWindowResized(const SDL_Event &e, OrthoCameraComponent &cc);

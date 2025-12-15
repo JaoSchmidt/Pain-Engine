@@ -5,11 +5,10 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
 
-class MousePointer : public pain::NormalEntity
+namespace MousePointer
 {
-public:
-  MousePointer(pain::Scene &scene);
-};
+reg::Entity create(pain::Scene &scene);
+}
 
 class MousePointerScript : public pain::ExtendedEntity
 {

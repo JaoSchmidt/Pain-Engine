@@ -4,7 +4,6 @@
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Registry/Archetype.h"
 #include "ECS/Registry/ExcludeComponents.h"
-#include "ECS/Registry/IteratorArchetype.h"
 
 #include <queue>
 #include <span>
@@ -12,6 +11,10 @@
 
 namespace reg
 {
+template <typename... Components> struct ChunkView {
+  std::tuple<Components *...> arrays;
+  size_t count;
+};
 
 template <typename... Ts>
 concept IsNoneType = (sizeof...(Ts) == 0);
@@ -66,10 +69,9 @@ public:
              "component of old archetype");
     Archetype &archetype =
         m_archetypes[bitMask]; // this will create an empty map
-    Column column = Column{-1};
-    (...,
-     (column = archetype.pushComponent<Components>(std::forward<Components>(
-          comps)))); // and this should create its columns
+    Column column =
+        archetype.pushComponents(std::forward<Components>(comps)...);
+
     updateRecord(entity, bitMask, column);
 
     return std::tie<Components &...>(
@@ -193,119 +195,67 @@ private:
     return newColumnIndex;
   }
 
-  // ==================================================== //
-  // iterate
-  // ==================================================== //
-
-  // Extract all vectors of that particular component from the archetypes
-  template <typename ParticularComponent>
-  reg::Iterator<ParticularComponent>
-  createBeginIteratorFromComponent(int bitMask, int excludeBitMask)
-  {
-    std::vector<std::vector<ParticularComponent> *> vectors;
-    vectors.reserve(m_archetypes.size());
-
-    for (auto &pair : m_archetypes) {
-      if (((pair.first & bitMask) == bitMask) &&
-          (pair.first & excludeBitMask) == 0) {
-        Archetype &archetype = pair.second;
-        std::vector<ParticularComponent> *v =
-            &archetype.getComponent<ParticularComponent>();
-        vectors.push_back(v);
-        // vectors.push_back(&archetype.getComponent<ParticularComponent>());
-      }
-    }
-    return reg::Iterator<ParticularComponent>(std::move(vectors), 0, 0);
-  }
-
-  template <typename ParticularComponent>
-  reg::Iterator<ParticularComponent>
-  createEndIteratorFromComponent(int bitMask, int excludeBitMask)
-  {
-    std::vector<std::vector<ParticularComponent> *> vectors;
-    vectors.reserve(m_archetypes.size());
-
-    // TODO: It is possible to cache this result so it doesn't have to be made
-    // every time, altough it is made very rarely
-    for (auto &pair : m_archetypes) {
-      if (((pair.first & bitMask) == bitMask) &&
-          (pair.first & excludeBitMask) == 0) {
-        Archetype &archetype = pair.second;
-        std::vector<ParticularComponent> *v =
-            &archetype.getComponent<ParticularComponent>();
-        vectors.push_back(v);
-      }
-    }
-    // attention to evaluation order, do not replace below, will get UB
-    const size_t size = vectors.size();
-    return reg::Iterator<ParticularComponent>(std::move(vectors), size, 0);
-  }
-
-  template <typename FirstComponent, typename... Rest>
-  size_t sizeOfComponent(int bitMask, int excludeBitMask)
-  {
-    size_t totalSize = 0;
-    // TODO: It is possible to cache this result so it doesn't have to be made
-    // every time, altough it is made very rarely
-    for (auto &pair : m_archetypes) {
-      if (((pair.first & bitMask) == bitMask) &&
-          (pair.first & excludeBitMask) == 0) {
-        Archetype &archetype = pair.second;
-        const std::vector<FirstComponent> *v =
-            &archetype.getComponent<FirstComponent>();
-        totalSize += v->size();
-      }
-    }
-    return totalSize;
-  }
-
 public:
-  // return iterator of component
+  // ==================================================== //
+  // iterate chunks
+  // ==================================================== //
 
-  template <typename T>
-    requires IsSingleType<T>
-  reg::Iterator<T> begin()
-  {
-    int bitMask = getSingleBitmask<T>();
-    return createBeginIteratorFromComponent<T>(bitMask, 0);
-  }
-
-  // return iterator of component
-  template <typename T>
-    requires IsSingleType<T>
-  reg::Iterator<T> end()
-  {
-    int bitMask = getSingleBitmask<T>();
-    return createEndIteratorFromComponent<T>(bitMask, 0);
-  }
-
-  // return tuple of iterators
+  // return vector of chunks
   template <typename... Components, typename... ExcludeComponents>
-    requires IsMultipleTypes<Components...>
-  std::tuple<reg::Iterator<Components>...>
-  begin(exclude_t<ExcludeComponents...> = {})
+  std::vector<ChunkView<Components...>>
+  query(exclude_t<ExcludeComponents...> = {})
   {
     int bitMask = getMultipleBitmask<Components...>();
     int excludeBitMask = getMultipleBitmask<ExcludeComponents...>();
-    // for each component, extract all vectors of that component in each
-    // Archetype (SoA)
-    // return into a tuple of components
-    return std::make_tuple(createBeginIteratorFromComponent<Components>(
-        bitMask, excludeBitMask)...);
+    // for each component, extract the target vectors of that component in each
+    // Archetype (SoA), then get its address (ChunkView)
+
+    std::vector<ChunkView<Components...>> chunks;
+    chunks.reserve(m_archetypes.size());
+
+    for (auto &[mask, archetype] : m_archetypes) {
+      if ((mask & bitMask) != bitMask)
+        continue;
+      if ((mask & excludeBitMask) != 0)
+        continue;
+
+      ChunkView<Components...> chunk{
+          .arrays =
+              std::tuple<Components *...>{
+                  archetype.getComponent<Components>().data()...},
+          .count = archetype.size()};
+      chunks.emplace_back(chunk);
+    }
+
+    return chunks;
   }
-  // return tuple of iterators
   template <typename... Components, typename... ExcludeComponents>
-    requires IsMultipleTypes<Components...>
-  std::tuple<reg::Iterator<Components>...>
-  end(exclude_t<ExcludeComponents...> = {})
+  std::vector<ChunkView<const Components...>>
+  queryConst(const exclude_t<ExcludeComponents...> = {}) const
   {
     int bitMask = getMultipleBitmask<Components...>();
     int excludeBitMask = getMultipleBitmask<ExcludeComponents...>();
-    // for each component, extract all vectors of that component in each
-    // Archetype (SoA)
-    // return into a tuple of components
-    return std::make_tuple(
-        createEndIteratorFromComponent<Components>(bitMask, excludeBitMask)...);
+
+    std::vector<ChunkView<const Components...>> chunks;
+    chunks.reserve(m_archetypes.size());
+
+    for (auto &[mask, archetype] : m_archetypes) {
+      if ((mask & bitMask) != bitMask)
+        continue;
+      if ((mask & excludeBitMask) != 0)
+        continue;
+
+      ChunkView<const Components...> chunk{
+          .arrays =
+              std::tuple<const Components *...>{std::as_const(archetype)
+                                                    .getComponent<Components>()
+                                                    .data()...},
+          .count = archetype.size()};
+
+      chunks.emplace_back(chunk);
+    }
+
+    return chunks;
   }
   // ==================================================== //
   // size

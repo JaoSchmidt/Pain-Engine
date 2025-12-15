@@ -2,6 +2,7 @@
 name: Build (Ubuntu – No Docker)
 
 on:
+  push:
   workflow_dispatch:
 
 jobs:

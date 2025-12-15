@@ -15,10 +15,15 @@ void Systems::Kinematics::onUpdate(DeltaTime deltaTime)
   // =============================================================== //
   {
     PROFILE_SCOPE("Scene::updateSystems - rotation");
-    for (auto rIt = begin<RotationComponent>(); rIt != end<RotationComponent>();
-         ++rIt) {
-      rIt->m_rotation = {cos(rIt->m_rotationAngle), sin(rIt->m_rotationAngle),
-                         0};
+    auto chunks = query<RotationComponent>();
+
+    for (auto &chunk : chunks) {
+      auto *__restrict r = std::get<0>(chunk.arrays);
+
+      for (size_t i = 0; i < chunk.count; ++i) {
+        r[i].m_rotation = {cos(r[i].m_rotationAngle), sin(r[i].m_rotationAngle),
+                           0};
+      }
     }
   }
 
@@ -27,10 +32,16 @@ void Systems::Kinematics::onUpdate(DeltaTime deltaTime)
   // =============================================================== //
   {
     PROFILE_SCOPE("Scene::updateSystems - movement");
-    auto [tIt, mIt] = begin<Transform2dComponent, Movement2dComponent>();
-    auto [tItEnd, mItEnd] = end<Transform2dComponent, Movement2dComponent>();
-    for (; tIt != tItEnd; ++tIt, ++mIt) {
-      tIt->m_position += mIt->m_velocity * deltaTime.getSecondsf();
+    auto chunks = query<Transform2dComponent, Movement2dComponent>();
+    float dt = deltaTime.getSecondsf();
+
+    for (auto &chunk : chunks) {
+      auto *__restrict t = std::get<0>(chunk.arrays);
+      auto *__restrict m = std::get<1>(chunk.arrays);
+
+      for (size_t i = 0; i < chunk.count; ++i) {
+        t[i].m_position += m[i].m_velocity * dt;
+      }
     }
   }
 }

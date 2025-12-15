@@ -183,60 +183,61 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
 {
   UNUSED(deltaTime)
   // Step 1: Update all moving endpoints with new data from the components
-  auto [tIt, cIt, mIt] =
-      begin<Transform2dComponent, SAPCollider, Movement2dComponent>();
-  auto [tItEnd, cItEnd, mItEnd] =
-      end<Transform2dComponent, SAPCollider, Movement2dComponent>();
+  auto chunks = query<Transform2dComponent, SAPCollider, Movement2dComponent>();
 
-  // --------------------------------------------------------------------------
-  // Step 2: update all `valueOnAxis` from the sorted list with new values from
-  // --------------------------------------------------------------------------
-  // the components
-  for (; tIt != tItEnd; ++tIt, ++cIt, ++mIt) {
-    EndPointKey &proxy = m_endPointKeys[cIt->m_index];
-    glm::vec2 center = tIt->m_position + cIt->m_offset;
-    glm::vec2 bottomLeft;
-    glm::vec2 topRight;
+  for (auto &chunk : chunks) {
+    auto *t = std::get<0>(chunk.arrays);
+    auto *c = std::get<1>(chunk.arrays);
 
-    // if (isnan(tIt->m_position.x))
-    //   PLOG_E("tIt->m_position.x is Nan, from entity {}, index {}, offset",
-    //          cIt->m_entity, cIt->m_index);
-    // if (isnan(tIt->m_position.y))
-    //   PLOG_E("tIt->m_position = ({}, {})", tIt->m_position.x,
-    //          tIt->m_position.y);
-    // compute AABB
-    std::visit(
-        [&](auto &&shape1) {
-          using T1 = std::decay_t<decltype(shape1)>;
-          if constexpr (std::is_same_v<T1, AABBShape>) {
-            bottomLeft = center - shape1.halfSize;
-            topRight = center + shape1.halfSize;
-          } else if constexpr (std::is_same_v<T1, CircleShape>) {
-            const float diameter = 2.f * shape1.radius;
-            bottomLeft = center - glm::vec2(diameter);
-            topRight = center + glm::vec2(diameter);
-          } else {
-            PLOG_E("ERROR: could not find infer shape of collider");
-          }
-        },
-        cIt->m_shape);
+    for (size_t i = 0; i < chunk.count; ++i) {
 
-    m_endPointsX[proxy.index_minX].valueOnAxis = bottomLeft.x;
-    insertionSortEndpoint(m_endPointsX, m_endPointKeys, proxy.index_minX, true);
+      SAPCollider &collider = c[i];
+      EndPointKey &proxy = m_endPointKeys[collider.m_index];
 
-    m_endPointsX[proxy.index_maxX].valueOnAxis = topRight.x;
-    insertionSortEndpoint(m_endPointsX, m_endPointKeys, proxy.index_maxX, true);
+      glm::vec2 center = t[i].m_position + collider.m_offset;
+      glm::vec2 bottomLeft;
+      glm::vec2 topRight;
 
-    // Update Y axis endpoints
-    m_endPointsY[proxy.index_minY].valueOnAxis = bottomLeft.y;
-    insertionSortEndpoint(m_endPointsY, m_endPointKeys, proxy.index_minY,
-                          false);
+      std::visit(
+          [&](auto &&shape) {
+            using T = std::decay_t<decltype(shape)>;
 
-    m_endPointsY[proxy.index_maxY].valueOnAxis = topRight.y;
-    insertionSortEndpoint(m_endPointsY, m_endPointKeys, proxy.index_maxY,
-                          false);
+            if constexpr (std::is_same_v<T, AABBShape>) {
+              bottomLeft = center - shape.halfSize;
+              topRight = center + shape.halfSize;
+            } else if constexpr (std::is_same_v<T, CircleShape>) {
+              float d = 2.f * shape.radius;
+              bottomLeft = center - glm::vec2(d);
+              topRight = center + glm::vec2(d);
+            } else {
+              PLOG_E("ERROR: could not infer shape of collider");
+            }
+          },
+          collider.m_shape);
+
+      // ----------------------------------------------------------
+      // Update X axis endpoints
+      // ----------------------------------------------------------
+      m_endPointsX[proxy.index_minX].valueOnAxis = bottomLeft.x;
+      insertionSortEndpoint(m_endPointsX, m_endPointKeys, proxy.index_minX,
+                            true);
+
+      m_endPointsX[proxy.index_maxX].valueOnAxis = topRight.x;
+      insertionSortEndpoint(m_endPointsX, m_endPointKeys, proxy.index_maxX,
+                            true);
+
+      // ----------------------------------------------------------
+      // Update Y axis endpoints
+      // ----------------------------------------------------------
+      m_endPointsY[proxy.index_minY].valueOnAxis = bottomLeft.y;
+      insertionSortEndpoint(m_endPointsY, m_endPointKeys, proxy.index_minY,
+                            false);
+
+      m_endPointsY[proxy.index_maxY].valueOnAxis = topRight.y;
+      insertionSortEndpoint(m_endPointsY, m_endPointKeys, proxy.index_maxY,
+                            false);
+    }
   }
-
   // --------------------------------------------------------------------------
   // Step 3: Sweep and build active list to find overlapping pairs
   // --------------------------------------------------------------------------

@@ -39,32 +39,18 @@ protected:
   // Iterate archetypes
   // ---------------------------------------------------- //
 
-  template <typename T>
-    requires reg::IsSingleType<T>
-  inline reg::Iterator<T> end()
-  {
-    return m_registry.template end<T>();
-  }
-  template <typename T>
-    requires reg::IsSingleType<T>
-  inline reg::Iterator<T> begin()
-  {
-    return m_registry.template begin<T>();
-  }
   template <typename... Components, typename... ExcludeComponents>
-    requires reg::IsMultipleTypes<Components...>
-  inline std::tuple<reg::Iterator<Components>...>
-  begin(exclude_t<ExcludeComponents...> = {})
+  inline std::vector<reg::ChunkView<Components...>>
+  query(exclude_t<ExcludeComponents...> = {})
   {
-    return m_registry.template begin<Components...>(
+    return m_registry.template query<Components...>(
         exclude<ExcludeComponents...>);
   }
   template <typename... Components, typename... ExcludeComponents>
-    requires reg::IsMultipleTypes<Components...>
-  inline std::tuple<reg::Iterator<Components>...>
-  end(exclude_t<ExcludeComponents...> = {})
+  inline std::vector<reg::ChunkView<const Components...>>
+  queryConst(exclude_t<ExcludeComponents...> = {})
   {
-    return m_registry.template end<Components...>(
+    return m_registry.template queryConst<Components...>(
         exclude<ExcludeComponents...>);
   }
 

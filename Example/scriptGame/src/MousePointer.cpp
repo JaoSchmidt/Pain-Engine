@@ -6,11 +6,14 @@
 #include "imgui.h"
 #include <pain.h>
 
-MousePointer::MousePointer(pain::Scene &scene) : NormalEntity(scene)
+reg::Entity MousePointer::create(pain::Scene &scene)
 {
-  createComponents(scene, pain::Transform2dComponent{},                     //
-                   pain::SpriteComponent{"resources/textures/pointer.png"}, //
-                   pain::NativeScriptComponent{});
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(
+      entity, pain::Transform2dComponent{},                    //
+      pain::SpriteComponent{"resources/textures/pointer.png"}, //
+      pain::NativeScriptComponent{});
+  return entity;
 }
 
 MousePointerScript::MousePointerScript(reg::Entity entity, pain::Scene &scene,

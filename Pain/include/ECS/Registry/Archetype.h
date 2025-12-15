@@ -16,6 +16,7 @@ class Archetype
 {
 private:
   std::map<std::type_index, void *> m_componentMap;
+  size_t m_count = 0;
 
 public:
   // ---------------------------------------------------- //
@@ -36,6 +37,17 @@ public:
       return *static_cast<std::vector<C> *>(newIt->second);
     }
   }
+
+  template <typename... Components> Column pushComponents(Components &&...comps)
+  {
+    Column column = Column{-1};
+    (...,
+     (column = pushComponent<Components>(std::forward<Components>(
+          comps)))); // and this should create its columns
+    ++m_count;
+    return column;
+  }
+
   // directly add the component to the archetype, should be used N time per
   // entity, with N being the entity's number of components
   template <typename C, typename... Args> Column pushComponent(Args &&...args)
@@ -56,6 +68,7 @@ public:
                   "Not allowed to remove from empty archetypes");
     std::int32_t lastColumn = -1;
     (..., (lastColumn = removeFromComponent<Components>(column)));
+    --m_count;
     return lastColumn;
   }
 
@@ -110,7 +123,7 @@ public:
       PLOG_E("Cannot find component vector inside Archetype");
       PLOG_E("You are probably trying to call getComponent but the component "
              "you want doesn't exist in the object.");
-      PLOG_E("Missing component type: %s", typeid(C).name());
+      PLOG_E("Missing component type: {}", typeid(C).name());
       std::terminate();
     }
     return *static_cast<const std::vector<C> *>(it->second);
@@ -123,11 +136,13 @@ public:
       PLOG_E("Cannot find component vector inside Archetype");
       PLOG_E("You are probably trying to call getComponent but the component "
              "you want doesn't exist in the object.");
-      PLOG_E("Missing component type: %s", typeid(C).name());
+      PLOG_E("Missing component type: {}", typeid(C).name());
       std::terminate();
     }
     return *static_cast<std::vector<C> *>(it->second);
   }
+
+  std::size_t size() const { return m_count; }
 };
 
 } // namespace reg

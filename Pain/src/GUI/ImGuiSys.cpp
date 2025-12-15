@@ -40,10 +40,13 @@ ImGuiSys::ImGuiSys(reg::ArcheRegistry<ComponentManager> &archetype,
 void ImGuiSys::onEvent(const SDL_Event &event)
 {
   ImGui_ImplSDL2_ProcessEvent(&event);
-  for (auto it = begin<ImGuiComponent>(); it != end<ImGuiComponent>(); ++it) {
-    auto &nsc = *it;
-    if (nsc.instance && nsc.onEventFunction)
-      nsc.onEventFunction(nsc.instance, event);
+  auto chunks = query<ImGuiComponent>();
+  for (auto &chunk : chunks) {
+    auto *__restrict nsc = std::get<0>(chunk.arrays);
+    for (size_t i = 0; i < chunk.count; ++i) {
+      if (nsc[i].instance && nsc[i].onEventFunction)
+        nsc[i].onEventFunction(nsc[i].instance, event);
+    }
   }
 }
 void ImGuiSys::onRender(Renderer2d &renderer, bool isMinimized,
@@ -56,11 +59,15 @@ void ImGuiSys::onRender(Renderer2d &renderer, bool isMinimized,
   if (!isMinimized) {
     // ::ImGui::ShowDemoWindow(); // Show demo window! :)
 
-    for (auto it = begin<ImGuiComponent>(); it != end<ImGuiComponent>(); ++it) {
-      auto &nsc = *it;
-
-      if (nsc.instance && nsc.onRenderFunction)
-        nsc.onRenderFunction(nsc.instance, renderer, isMinimized, currentTime);
+    auto chunks = query<ImGuiComponent>();
+    for (auto &chunk : chunks) {
+      auto *__restrict nscs = std::get<0>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        auto &nsc = nscs[i];
+        if (nsc.instance && nsc.onRenderFunction)
+          nsc.onRenderFunction(nsc.instance, renderer, isMinimized,
+                               currentTime);
+      }
     }
   }
 

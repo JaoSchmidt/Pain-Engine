@@ -1,18 +1,25 @@
 #include "Player.h"
 #include "ECS/Components/Particle.h"
 #include "Physics/Collision/Collider.h"
-#include "Scripting/CollisionCallback.h"
 #include "Scripting/Component.h"
 #include <pain.h>
 
-Player::Player(pain::Scene &scene, pain::Texture &tex) : NormalEntity(scene)
+reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
+                           int resolutionHeight, int resolutionWeigh,
+                           float zoomLevel)
 {
-  createComponents(
-      scene, pain::Transform2dComponent{}, //
-      pain::SpriteComponent{tex},          //
-      pain::Movement2dComponent{},         //
-      pain::ParticleSprayComponent{},      //
-      pain::OrthoCameraComponent{},        //
-      pain::CollisionCallbackComponent{},  //
-      pain::LuaScriptComponent{m_entity, scene, scene.getSharedLuaState()});
+  const float aspectRatio = static_cast<float>(resolutionWeigh) /
+                            static_cast<float>(resolutionHeight);
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(
+      entity, pain::Transform2dComponent{}, //
+      pain::SpriteComponent{tex},           //
+      pain::RotationComponent{},            //
+      pain::Movement2dComponent{},          //
+      pain::ParticleSprayComponent{},       //
+      pain::OrthoCameraComponent{aspectRatio, zoomLevel, resolutionWeigh,
+                                 resolutionHeight}, //
+      pain::NativeScriptComponent{},
+      pain::LuaScriptComponent{entity, scene, scene.getSharedLuaState()});
+  return entity;
 }
