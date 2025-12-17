@@ -12,7 +12,6 @@ struct CollisionEvent {
   reg::Entity b;
   glm::vec2 normal;
   float penetration;
-  bool isTrigger;
 };
 
 } // namespace pain

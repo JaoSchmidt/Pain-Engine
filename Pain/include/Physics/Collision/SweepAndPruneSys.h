@@ -24,20 +24,37 @@ struct EndPointKey {
 };
 
 struct SweepAndPruneSys : public System<ComponentManager> {
+
   template <typename... Args>
+    requires std::constructible_from<System<ComponentManager>, Args...>
   SweepAndPruneSys(Args &&...args) : System(std::forward<Args>(args)...){};
+
   SweepAndPruneSys() = delete;
   void onUpdate(DeltaTime deltaTime);
-  void insertStaticEntity(reg::Entity entity, const Transform2dComponent &tc,
-                          SAPCollider &sc);
-  void insertEntity(reg::Entity entitiy, const Transform2dComponent &tc,
-                    SAPCollider &sc);
-  void sortAfterInsertion();
   // void deleteStaticEntities(std::span<reg::Entity> entities);
   // void deleteStaticEntity(reg::Entity entitiy);
   // void deleteEntity(reg::Entity entitiy);
 
+  template <typename... Args> void insertColliders(const Args &...blob)
+  {
+    auto deBlob = [this](const auto &blob) {
+      using E = std::remove_const_t<std::remove_cvref_t<decltype(blob)>>;
+
+      if constexpr (std::same_as<E, reg::Entity>) {
+        insertCollider(blob);
+      } else if constexpr (std::same_as<E, std::vector<reg::Entity>>) {
+        insertColliderSpan(blob);
+      }
+    };
+    (deBlob(blob), ...);
+    sortAfterInsertion();
+  }
+
+  size_t insertCollider(reg::Entity entity);
+  void insertColliderSpan(const std::vector<reg::Entity> &entities);
+
 private:
+  void sortAfterInsertion();
   std::vector<EndPoint> m_endPointsX = {};
   std::vector<EndPoint> m_endPointsY = {};
 

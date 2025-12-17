@@ -3,6 +3,7 @@
 
 #include "Assets/DeltaTime.h"
 #include "Core.h"
+#include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Registry/Entity.h"
 #include "GUI/ImGuiComponent.h"
@@ -35,7 +36,9 @@ public:
   inline reg::Entity createEntity() { return m_registry.createEntity(); }
 
   // insert an object batch into the collider
-  void insertColliders(const std::vector<reg::Entity> &entities);
+  void insertColliders(std::initializer_list<
+                       std::reference_wrapper<const std::vector<reg::Entity>>>
+                           vectors);
 
   // ---------------------------------------------------- //
   // Constructors
@@ -185,10 +188,19 @@ public:
   void renderSystems(Renderer2d &renderer, bool isMinimized,
                      DeltaTime currentTime);
 
+  // NOTE: this might need to be modified if I ever want modular systems
+  Systems::SweepAndPruneSys *getCollisionSys() { return m_sweepAndPruneSystem; }
+
+  reg::EventDispatcher &getEventDispatcher() { return m_eventDispatcher; }
+  const reg::EventDispatcher &getEventDispatcher() const
+  {
+    return m_eventDispatcher;
+  }
   ~Scene();
 
 private:
   reg::ArcheRegistry<ComponentManager> m_registry;
+  reg::EventDispatcher m_eventDispatcher;
   sol::state &m_luaState;
   reg::Entity m_entity;
   Systems::Render *m_renderSystem;

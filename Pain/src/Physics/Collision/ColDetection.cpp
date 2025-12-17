@@ -100,18 +100,31 @@ ColDet::Result ColDet::checkAABBCollisionCircle(const glm::vec2 &center1,
                                                 const glm::vec2 &center2,
                                                 float radius2)
 {
-  const glm::vec2 diff = center2 - center1;
-  const glm::vec2 closestLocal = glm::clamp(diff, -halfSize1, halfSize1);
-  const glm::vec2 closestPoint = center1 + closestLocal;
+  glm::vec2 diff = center2 - center1;
 
-  const float collisionDistance = glm::distance(center2, closestPoint);
-  if (collisionDistance <= radius2) {
-    const glm::vec2 normal = center2 - closestPoint;
-    const glm::vec2 normalized =
-        glm::length(normal) > 0.0f ? glm::normalize(normal) : glm::vec2(0.0f);
-    return {true, radius2 - collisionDistance, normalized};
+  glm::vec2 clamped = glm::clamp(diff, -halfSize1, halfSize1);
+  glm::vec2 closestPoint = center1 + clamped;
+
+  glm::vec2 normal = center2 - closestPoint;
+  float distance = glm::length(normal);
+
+  // Circle center is outside the AABB
+  if (distance > 0.0f) {
+    if (distance > radius2)
+      return {false};
+
+    return {true, radius2 - distance, normal / distance};
+  }
+
+  // --- Circle center is INSIDE the AABB ---
+  glm::vec2 distancesToEdge = halfSize1 - glm::abs(diff);
+
+  if (distancesToEdge.x < distancesToEdge.y) {
+    normal = glm::vec2((diff.x > 0) ? 1.0f : -1.0f, 0.0f);
+    return {true, distancesToEdge.x + radius2, normal};
   } else {
-    return {false};
+    normal = glm::vec2(0.0f, (diff.y > 0) ? 1.0f : -1.0f);
+    return {true, distancesToEdge.y + radius2, normal};
   }
 }
 

@@ -5,6 +5,7 @@
 #include "Physics/Collision/ColDetection.h"
 #include "Physics/Collision/ColReaction.h"
 #include "Physics/Collision/Collider.h"
+#include "Physics/Collision/Events.h"
 #include "Scripting/CollisionCallback.h"
 namespace pain
 {
@@ -14,11 +15,11 @@ namespace Systems
 // =============================================================
 // COLLISION DETECTION
 // =============================================================
-void narrowPhaseCollisionStatic(Transform2dComponent &t_i,
-                                ColliderComponent &c_i,
-                                Movement2dComponent &m_i,
-                                const Transform2dComponent &t_j,
-                                const ColliderComponent &c_j)
+void NaiveCollisionSys::narrowPhaseCollisionStatic(
+    Transform2dComponent &t_i, ColliderComponent &c_i, Movement2dComponent &m_i,
+    reg::Entity entity_i, //
+    const Transform2dComponent &t_j, const ColliderComponent &c_j,
+    reg::Entity entity_j)
 {
   glm::vec2 center1 = t_i.m_position + c_i.m_offset;
   glm::vec2 center2 = t_j.m_position + c_j.m_offset;
@@ -50,8 +51,9 @@ void narrowPhaseCollisionStatic(Transform2dComponent &t_i,
   // --- Perform Collision Reaction on Entities with Collision Scripts
   if (collisionHappened.isDetected) {
     if (c_i.m_isTrigger || c_j.m_isTrigger) {
-      // TODO: perform trigger callback
-      PLOG_I("Trigger collision happened despite being WIP");
+      m_eventDispatcher.enqueue<CollisionEvent>(
+          {entity_i, entity_j, collisionHappened.normal,
+           collisionHappened.penetration});
     } else {
       // PLOG_I("Static Collision between ({},{}) and ({},{})",
       //        TP_VEC2(t_i.m_position), TP_VEC2(t_j.m_position));
@@ -64,9 +66,11 @@ void narrowPhaseCollisionStatic(Transform2dComponent &t_i,
   }
 }
 
-void narrowPhaseCollision(Transform2dComponent &t_i, ColliderComponent &c_i,
-                          Movement2dComponent &m_i, Transform2dComponent &t_j,
-                          ColliderComponent &c_j, Movement2dComponent &m_j)
+void NaiveCollisionSys::narrowPhaseCollision(
+    Transform2dComponent &t_i, ColliderComponent &c_i, Movement2dComponent &m_i,
+    reg::Entity entity_i, //
+    Transform2dComponent &t_j, ColliderComponent &c_j, Movement2dComponent &m_j,
+    reg::Entity entity_j)
 {
   glm::vec2 center1 = t_i.m_position + c_i.m_offset;
   glm::vec2 center2 = t_j.m_position + c_j.m_offset;
@@ -98,8 +102,9 @@ void narrowPhaseCollision(Transform2dComponent &t_i, ColliderComponent &c_i,
   // --- Perform Collision Reaction on Entities with Collision Scripts
   if (collisionHappened.isDetected) {
     if (c_i.m_isTrigger || c_j.m_isTrigger) {
-      // TODO: perform trigger callback
-      PLOG_I("Trigger collision happened despite being WIP");
+      m_eventDispatcher.enqueue<CollisionEvent>(
+          {entity_i, entity_j, collisionHappened.normal,
+           collisionHappened.penetration});
     } else {
       ColReaction::solidCollisionDynamic( //
           t_i.m_position,                 //
@@ -139,12 +144,13 @@ void NaiveCollisionSys::onUpdate(DeltaTime deltaTime)
         const bool same_chunk = (ci == cj);
         for (size_t i = 0; i < chunk_i.count; ++i) {
           // NOTE: If same chunk, start at i+1 to avoid duplicates
-          // If there are in the same chunk, then i = j at first
+          // Why? Bc if there are in the same chunk, then i = j at first
           size_t j_start = same_chunk ? i + 1 : 0;
 
           for (size_t j = j_start; j < chunk_j.count; ++j) {
-            narrowPhaseCollision(t_chunk_i[i], c_chunk_i[i], m_chunk_i[i],
-                                 t_chunk_j[j], c_chunk_j[j], m_chunk_j[j]);
+            narrowPhaseCollision(
+                t_chunk_i[i], c_chunk_i[i], m_chunk_i[i], chunk_i.entities[i],
+                t_chunk_j[j], c_chunk_j[j], m_chunk_j[j], chunk_j.entities[j]);
           }
         }
       }
@@ -173,8 +179,9 @@ void NaiveCollisionSys::onUpdate(DeltaTime deltaTime)
 
         for (size_t i = 0; i < chunk_i.count; ++i) {
           for (size_t j = 0; j < chunk_j.count; ++j) {
-            narrowPhaseCollisionStatic(t_chunk_i[i], c_chunk_i[i], m_chunk_i[i],
-                                       t_chunk_j[j], c_chunk_j[j]);
+            narrowPhaseCollisionStatic( //
+                t_chunk_i[i], c_chunk_i[i], m_chunk_i[i], chunk_i.entities[i],
+                t_chunk_j[j], c_chunk_j[j], chunk_j.entities[j]);
           }
         }
       }

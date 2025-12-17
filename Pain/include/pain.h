@@ -29,8 +29,7 @@
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
-#include "ECS/Events/EventDispatcher.h"
-#include "ECS/Events/Events.h"
+#include "ECS/EventDispatcher.h"
 #include "ECS/Scene.h"
 #include "ECS/Scriptable.h"
 // Scripts

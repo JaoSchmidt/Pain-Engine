@@ -17,34 +17,17 @@ namespace pain
 
 Scene::Scene(sol::state &solState, void *context, SDL_Window *window)
 
-    : m_registry(), m_luaState(solState), m_entity(createEntity()),
+    : m_registry(), m_eventDispatcher(), m_luaState(solState),
+      m_entity(createEntity()),
       // ---- Systems --------------------------------
-      m_renderSystem{new Systems::Render(m_registry)},
-      m_kinematicsSystem{new Systems::Kinematics(m_registry)},
-      m_nativeScriptSystem{new Systems::NativeScript(m_registry)},
-      m_imGuiSystem{new Systems::ImGuiSys(m_registry, context, window)},
-      m_luaSystem{new Systems::LuaScript(m_registry)},
-      m_sweepAndPruneSystem{new Systems::SweepAndPruneSys(m_registry)}
-{
-  SAPCollider::s_systemsReference = m_sweepAndPruneSystem;
-};
-
-void Scene::insertColliders(const std::vector<reg::Entity> &entities)
-{
-  // TODO: we can probably extract the components faster
-  // - perhaps by requiring entities to be in order and make a "merge walk" with
-  // std::vector<Records> in the registry?
-  // HACK: Why is this slow? because you are looking for the archetype for every
-  // iteration.
-  for (const reg::Entity &entity : entities) {
-    auto [tc, sc] = getComponents<Transform2dComponent, SAPCollider>(entity);
-    if (hasAnyComponents<Movement2dComponent>(entity))
-      m_sweepAndPruneSystem->insertEntity(entity, tc, sc);
-    else
-      m_sweepAndPruneSystem->insertStaticEntity(entity, tc, sc);
-  }
-  m_sweepAndPruneSystem->sortAfterInsertion();
-}
+      // clang-format off
+      m_renderSystem{new Systems::Render(m_registry, m_eventDispatcher)},
+      m_kinematicsSystem{new Systems::Kinematics(m_registry, m_eventDispatcher)},
+      m_nativeScriptSystem{new Systems::NativeScript(m_registry, m_eventDispatcher)},
+      m_imGuiSystem{new Systems::ImGuiSys(m_registry,m_eventDispatcher, context, window)},
+      m_luaSystem{new Systems::LuaScript(m_registry, m_eventDispatcher)},
+      m_sweepAndPruneSystem{new Systems::SweepAndPruneSys(m_registry, m_eventDispatcher)} // clang-format on
+{};
 
 // clang-format off
       // m_renderSystem{std::make_unique<Systems::Render>(m_registry)},
@@ -61,6 +44,7 @@ void Scene::updateSystems(DeltaTime deltaTime)
   m_nativeScriptSystem->onUpdate(deltaTime);
   m_luaSystem->onUpdate(deltaTime);
   m_sweepAndPruneSystem->onUpdate(deltaTime);
+  m_eventDispatcher.update();
 }
 
 void Scene::updateSystems(const SDL_Event &event)

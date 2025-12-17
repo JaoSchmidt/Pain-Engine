@@ -1,6 +1,7 @@
 // Systems.h
 #pragma once
 
+#include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include <iostream>
 
@@ -8,7 +9,9 @@ namespace pain
 {
 template <typename CM> struct System {
 public:
-  System(reg::ArcheRegistry<CM> &archetype) : m_registry(archetype) {};
+  System(reg::ArcheRegistry<CM> &archetype,
+         reg::EventDispatcher &eventDispatcher)
+      : m_registry(archetype), m_eventDispatcher(eventDispatcher) {};
 
   // Move constructor
   System(System &&other) noexcept : m_registry(other.m_registry)
@@ -34,6 +37,7 @@ public:
 
 protected:
   reg::ArcheRegistry<CM> &m_registry;
+  reg::EventDispatcher &m_eventDispatcher;
 
   // ---------------------------------------------------- //
   // Iterate archetypes
@@ -47,7 +51,7 @@ protected:
         exclude<ExcludeComponents...>);
   }
   template <typename... Components, typename... ExcludeComponents>
-  inline std::vector<reg::ChunkView<const Components...>>
+  inline std::vector<reg::ChunkViewConst<const Components...>>
   queryConst(exclude_t<ExcludeComponents...> = {})
   {
     return m_registry.template queryConst<Components...>(
@@ -92,6 +96,27 @@ protected:
   template <typename T> const T &getComponent(reg::Entity entity) const
   {
     return std::as_const(m_registry).template getComponent<T>(entity);
+  }
+
+  // ---------------------------------------------------- //
+  // "Has" functions
+  // ---------------------------------------------------- //
+  template <typename... TargetComponents>
+  bool hasAnyComponents(reg::Entity entity) const
+  {
+    return std::as_const(m_registry)
+        .template hasAny<TargetComponents...>(entity);
+  }
+  template <typename... TargetComponents>
+  constexpr bool containsAllComponents(reg::Entity entity) const
+  {
+    return m_registry.template containsAll<TargetComponents...>(entity);
+  }
+  // remove an entity, alongside its components from it's archetype,
+  // NOTE: The caller needs to tell me the components of the entity
+  template <typename... Components> bool removeEntity(reg::Entity entity)
+  {
+    return m_registry.template remove<Components...>(entity);
   }
 };
 } // namespace pain

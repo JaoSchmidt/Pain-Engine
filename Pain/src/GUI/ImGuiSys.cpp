@@ -12,8 +12,9 @@ namespace pain
 namespace Systems
 {
 ImGuiSys::ImGuiSys(reg::ArcheRegistry<ComponentManager> &archetype,
-                   void *context, SDL_Window *window, ImGuiConfigFlags flags)
-    : System(archetype)
+                   reg::EventDispatcher &eventDispatcher, void *context,
+                   SDL_Window *window, ImGuiConfigFlags flags)
+    : System(archetype, eventDispatcher)
 {
   P_ASSERT(m_io == nullptr,
            "Trying to create a new ImGui context will undermine the singleton "

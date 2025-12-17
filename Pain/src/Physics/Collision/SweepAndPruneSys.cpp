@@ -5,6 +5,7 @@
 #include "Physics/Collision/ColDetection.h"
 #include "Physics/Collision/ColReaction.h"
 #include "Physics/Collision/Collider.h"
+#include "Physics/Collision/Events.h"
 
 namespace pain
 {
@@ -119,9 +120,11 @@ void insertionSortEndpoint(std::vector<EndPoint> &endpoints,
   }
 }
 
-void insertEndPoint(std::vector<EndPoint> &vecX, std::vector<EndPoint> &vecY,
-                    std::vector<EndPointKey> &vecKeys,
-                    const Transform2dComponent &transComp, SAPCollider &colComp)
+size_t insertEndPoint(reg::Entity entity, std::vector<EndPoint> &vecX,
+                      std::vector<EndPoint> &vecY,
+                      std::vector<EndPointKey> &vecKeys,
+                      const Transform2dComponent &transComp,
+                      SAPCollider &colComp)
 {
   glm::vec2 center = transComp.m_position + colComp.m_offset;
   glm::vec2 bottomLeft;
@@ -150,27 +153,36 @@ void insertEndPoint(std::vector<EndPoint> &vecX, std::vector<EndPoint> &vecY,
   vecX.emplace_back(key_index, topRight.x, false);
   vecY.emplace_back(key_index, bottomLeft.y, true);
   vecY.emplace_back(key_index, topRight.y, false);
-  vecKeys.emplace_back(colComp.m_entity, 0, 0, 0, 0);
-  colComp.m_index = key_index;
+  // NOTE: the indexes don't matter if you are going to use std::sort
+  // They do matter for introducing colliders later dynamically
+  vecKeys.emplace_back(entity,          //
+                       vecX.size() - 2, //
+                       vecX.size() - 1, //
+                       vecY.size() - 2, //
+                       vecY.size() - 1);
+  colComp.m_index = static_cast<int>(key_index);
+  return key_index;
+}
+size_t SweepAndPruneSys::insertCollider(reg::Entity entity)
+{
+  auto [tc, sc] = getComponents<Transform2dComponent, SAPCollider>(entity);
+
+  const bool isDynamic = hasAnyComponents<Movement2dComponent>(entity);
+
+  auto &endPointsX = isDynamic ? m_endPointsX : m_staticEndPointsX;
+  auto &endPointsY = isDynamic ? m_endPointsY : m_staticEndPointsY;
+  auto &endPointKeys = isDynamic ? m_endPointKeys : m_staticEndPointKeys;
+
+  return insertEndPoint(entity, endPointsX, endPointsY, endPointKeys, tc, sc);
 }
 
-// insert a non moving entity into the static entities array, then sort the
-// array
-void SweepAndPruneSys::insertStaticEntity(reg::Entity entity,
-                                          const Transform2dComponent &tc,
-                                          SAPCollider &sc)
+void SweepAndPruneSys::insertColliderSpan(
+    const std::vector<reg::Entity> &entities)
 {
-  UNUSED(entity)
-  insertEndPoint(m_staticEndPointsX, m_staticEndPointsY, m_staticEndPointKeys,
-                 tc, sc);
+  for (reg::Entity entity : entities)
+    insertCollider(entity);
 }
-void SweepAndPruneSys::insertEntity(reg::Entity entity,
-                                    const Transform2dComponent &tc,
-                                    SAPCollider &sc)
-{
-  UNUSED(entity)
-  insertEndPoint(m_endPointsX, m_endPointsY, m_endPointKeys, tc, sc);
-}
+
 void SweepAndPruneSys::sortAfterInsertion()
 {
   sortSAP(m_endPointsX, m_endPointKeys, true);
@@ -192,7 +204,10 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
     for (size_t i = 0; i < chunk.count; ++i) {
 
       SAPCollider &collider = c[i];
-      EndPointKey &proxy = m_endPointKeys[collider.m_index];
+      EndPointKey &proxy =
+          collider.m_index >= 0
+              ? m_endPointKeys[static_cast<unsigned>(collider.m_index)]
+              : m_endPointKeys[insertCollider(chunk.entities[i])];
 
       glm::vec2 center = t[i].m_position + collider.m_offset;
       glm::vec2 bottomLeft;
@@ -280,24 +295,6 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
         m_activeList.push_back(static_cast<long>(dynEndPoint->key));
 
       } else {
-        // FIX: debug only part, nothing happening here
-        // if (dynEndPoint->valueOnAxis > 2.f) {
-        //   // check if circle
-        //
-        //   EndPointKey entityProxy1 = m_endPointKeys[dynEndPoint->key];
-        //
-        //   const float maxY1 =
-        //   m_endPointsY[entityProxy1.index_maxY].valueOnAxis; if (maxY1 > 1.5)
-        //   {
-        //     PLOG_I("AABB {}, index {}, detected at x = {}",
-        //     entityProxy1.entity,
-        //            dynEndPoint->key, dynEndPoint->valueOnAxis);
-        //   }
-        // }
-
-        // remove the overlap from the active objects
-        // TODO: if necessary, this search can be removed by "simply" caching
-        // the active list index inside the dynEndPoint
         auto it = std::find(m_activeList.begin(), m_activeList.end(),
                             dynEndPoint->key);
         if (it != m_activeList.end()) {
@@ -422,8 +419,9 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
       // --- Perform Collision Reaction on Entities with Collision Scripts
       if (collisionHappened.isDetected) {
         if (cIt_i.m_isTrigger || cIt_j.m_isTrigger) {
-          // TODO: perform trigger callback
-          PLOG_I("Trigger collision happened despite being WIP");
+          m_eventDispatcher.enqueue<CollisionEvent>(
+              {entity1, entity2, collisionHappened.normal,
+               collisionHappened.penetration});
         } else {
           ColReaction::solidCollisionDynamic( //
               tIt_i.m_position,               //
@@ -478,8 +476,9 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
       // --- Perform Collision Reaction on Entities with Collision Scripts
       if (collisionHappened.isDetected) {
         if (cIt_i.m_isTrigger || cIt_j.m_isTrigger) {
-          // TODO: perform trigger callback
-          PLOG_I("Trigger collision happened despite being WIP");
+          m_eventDispatcher.enqueue<CollisionEvent>(
+              {entity1, entity2, collisionHappened.normal,
+               collisionHappened.penetration});
         } else {
           ColReaction::solidCollisionStatic( //
               tIt_i.m_position,              //

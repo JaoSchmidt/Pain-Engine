@@ -13,6 +13,12 @@ namespace reg
 {
 template <typename... Components> struct ChunkView {
   std::tuple<Components *...> arrays;
+  std::vector<reg::Entity> &entities;
+  size_t count;
+};
+template <typename... Components> struct ChunkViewConst {
+  std::tuple<Components *...> arrays;
+  const std::vector<reg::Entity> &entities;
   size_t count;
 };
 
@@ -32,7 +38,7 @@ template <typename ComponentManagerT> class ArcheRegistry
                 "reg::CompileTimeBitMask<...> type");
 
   std::map<Bitmask, Archetype> m_archetypes = {};
-  std::vector<Record> m_entities;
+  std::vector<Record> m_records;
   std::queue<reg::Entity> m_availableEntities = {};
   std::int32_t numberOfEntities = -1;
 
@@ -63,14 +69,14 @@ public:
                                                Components &&...comps)
   {
     Bitmask bitMask = getMultipleBitmask<Components...>();
-    P_ASSERT(m_entities.at((size_t)entity).bitmask == bitMask ||
-                 m_entities.at((size_t)entity).bitmask == -1,
+    P_ASSERT(m_records.at((size_t)entity).bitmask == bitMask ||
+                 m_records.at((size_t)entity).bitmask == -1,
              "Component reset isn't implemented yet. TODO: need to remove "
              "component of old archetype");
     Archetype &archetype =
         m_archetypes[bitMask]; // this will create an empty map
     Column column =
-        archetype.pushComponents(std::forward<Components>(comps)...);
+        archetype.pushComponents(entity, std::forward<Components>(comps)...);
 
     updateRecord(entity, bitMask, column);
 
@@ -84,8 +90,8 @@ public:
   Component &createComponent(Entity entity, Component &&args)
   {
     Bitmask bitMask = getSingleBitmask<Component>();
-    P_ASSERT(m_entities.at(entity).bitmask == bitMask ||
-                 m_entities.at((size_t)entity).bitmask == -1,
+    P_ASSERT(m_records.at(entity).bitmask == bitMask ||
+                 m_records.at((size_t)entity).bitmask == -1,
              "Component reset isn't implemented yet. TODO: need to remove "
              "component of old archetype");
     Archetype &archetype = m_archetypes[bitMask];
@@ -155,8 +161,8 @@ public:
   std::tuple<Components &...> addComponents(Entity entity,
                                             Components &&...comps)
   {
-    Bitmask oldBitmask = m_entities[static_cast<unsigned>(entity)].bitmask;
-    int oldColumn = m_entities[static_cast<unsigned>(entity)].column;
+    Bitmask oldBitmask = m_records[static_cast<unsigned>(entity)].bitmask;
+    int oldColumn = m_records[static_cast<unsigned>(entity)].column;
     Bitmask newBitMask = getMultipleBitmask<Components...>();
     Archetype &archetype = m_archetypes[oldBitmask];
     Archetype &newArchetype = m_archetypes[newBitMask];
@@ -189,8 +195,8 @@ private:
     // add new ones
     (..., to.pushComponent<Components>(std::forward<Components>(comps)));
 
-    m_entities[static_cast<unsigned>(entity)].bitmask = newBitMask;
-    m_entities[static_cast<unsigned>(entity)].column = newColumnIndex;
+    m_records[static_cast<unsigned>(entity)].bitmask = newBitMask;
+    m_records[static_cast<unsigned>(entity)].column = newColumnIndex;
     from.remove<Components...>(oldColumn);
     return newColumnIndex;
   }
@@ -220,23 +226,22 @@ public:
         continue;
 
       ChunkView<Components...> chunk{
-          .arrays =
-              std::tuple<Components *...>{
-                  archetype.getComponent<Components>().data()...},
-          .count = archetype.size()};
+          std::tuple<Components *...>{
+              archetype.getComponent<Components>().data()...},
+          archetype.m_entities, archetype.m_entities.size()};
       chunks.emplace_back(chunk);
     }
 
     return chunks;
   }
   template <typename... Components, typename... ExcludeComponents>
-  std::vector<ChunkView<const Components...>>
+  std::vector<ChunkViewConst<const Components...>>
   queryConst(const exclude_t<ExcludeComponents...> = {}) const
   {
     int bitMask = getMultipleBitmask<Components...>();
     int excludeBitMask = getMultipleBitmask<ExcludeComponents...>();
 
-    std::vector<ChunkView<const Components...>> chunks;
+    std::vector<ChunkViewConst<const Components...>> chunks;
     chunks.reserve(m_archetypes.size());
 
     for (auto &[mask, archetype] : m_archetypes) {
@@ -245,12 +250,10 @@ public:
       if ((mask & excludeBitMask) != 0)
         continue;
 
-      ChunkView<const Components...> chunk{
-          .arrays =
-              std::tuple<const Components *...>{std::as_const(archetype)
-                                                    .getComponent<Components>()
-                                                    .data()...},
-          .count = archetype.size()};
+      ChunkViewConst<const Components...> chunk{
+          std::tuple<const Components *...>{
+              std::as_const(archetype).getComponent<Components>().data()...},
+          archetype.m_entities, archetype.m_entities.size()};
 
       chunks.emplace_back(chunk);
     }
@@ -283,9 +286,9 @@ public:
                   "When using getComponent some component didn't exist inside  "
                   "the CompileTimeBitMask");
     Archetype &archetype =
-        m_archetypes.at(m_entities[static_cast<unsigned>(entity)].bitmask);
+        m_archetypes.at(m_records[static_cast<unsigned>(entity)].bitmask);
     return archetype.extractColumn<TargetComponents...>(
-        m_entities[static_cast<unsigned>(entity)].column);
+        m_records[static_cast<unsigned>(entity)].column);
   }
   template <typename... TargetComponents>
   const std::tuple<TargetComponents &...> getComponents(Entity entity) const
@@ -294,23 +297,23 @@ public:
                   "When using getComponent some component didn't exist inside "
                   "the CompileTimeBitMask");
     const Archetype &archetype =
-        m_archetypes.at(m_entities[static_cast<unsigned>(entity)].bitmask);
+        m_archetypes.at(m_records[static_cast<unsigned>(entity)].bitmask);
     return archetype.extractColumn<TargetComponents...>(
-        m_entities[static_cast<unsigned>(entity)].column);
+        m_records[static_cast<unsigned>(entity)].column);
   }
   template <typename T> T &getComponent(Entity entity)
   {
     Archetype &archetype =
-        m_archetypes.at(m_entities[static_cast<unsigned>(entity)].bitmask);
+        m_archetypes.at(m_records[static_cast<unsigned>(entity)].bitmask);
     return archetype.fetchComponent<T>(
-        m_entities[static_cast<unsigned>(entity)].column);
+        m_records[static_cast<unsigned>(entity)].column);
   }
   template <typename T> const T &getComponent(Entity entity) const
   {
     const Archetype &archetype =
-        m_archetypes.at(m_entities[static_cast<unsigned>(entity)].bitmask);
+        m_archetypes.at(m_records[static_cast<unsigned>(entity)].bitmask);
     return archetype.fetchComponent<T>(
-        m_entities[static_cast<unsigned>(entity)].column);
+        m_records[static_cast<unsigned>(entity)].column);
   }
 
   // ==================================================== //
@@ -321,14 +324,14 @@ public:
   template <typename... ObjectComponents>
   constexpr bool containsAll(Entity entity) const
   {
-    Bitmask targetBitMask = m_entities[static_cast<unsigned>(entity)].bitmask;
+    Bitmask targetBitMask = m_records[static_cast<unsigned>(entity)].bitmask;
     int objectBitMask = getMultipleBitmask<ObjectComponents...>();
     return (targetBitMask | objectBitMask) == objectBitMask;
   }
   // Targeted has at least one component that a specific archetype also has
   template <typename... TargetComponents> bool hasAny(Entity entity) const
   {
-    Bitmask specificBitMask = m_entities[static_cast<unsigned>(entity)].bitmask;
+    Bitmask specificBitMask = m_records[static_cast<unsigned>(entity)].bitmask;
     if constexpr (sizeof...(TargetComponents) == 1) {
       int targetBitMask = getSingleBitmask<TargetComponents...>();
       return (targetBitMask & specificBitMask) != 0;
@@ -344,21 +347,17 @@ public:
 
   // Removal of a single entity can be O(n) in worst case (because we need to
   // update the last element's Record). If possible, prefer to batch
-  template <typename... ObjectComponents> bool remove(Entity entity)
+  template <typename... ObjectComponents> void remove(Entity entity)
   {
-    Bitmask targetBitMask = m_entities[static_cast<unsigned>(entity)].bitmask;
-    Column targetColumn = m_entities[static_cast<unsigned>(entity)].column;
+    // internally: update swapped entity's record, turn removed record invalid
+    Bitmask targetBitMask = m_records[static_cast<unsigned>(entity)].bitmask;
+    Column targetColumn = m_records[static_cast<unsigned>(entity)].column;
     Archetype &archetype = m_archetypes.at(targetBitMask);
-    int lastEntityColumn = archetype.remove<ObjectComponents...>(targetColumn);
+
+    auto [lastEntityColumn, swappedEntity] =
+        archetype.remove<ObjectComponents...>(targetColumn);
     removeEntity(entity);
-    for (Record &record : m_entities) {
-      if (record.bitmask == targetBitMask &&
-          record.column == lastEntityColumn) {
-        record.column = targetColumn;
-        return true;
-      }
-    }
-    return false;
+    m_records[swappedEntity] = {targetBitMask, targetColumn};
   }
   template <typename... ObjectComponents>
   void removeBatch(std::span<const Entity> entities)
@@ -387,8 +386,8 @@ public:
     // remove NOTE: for high remove batches, it may be faster to cache
     // archetypes
     for (auto &target : entities) {
-      Bitmask &bitmask = m_entities[target].bitmask;
-      Column &column = m_entities[target].column;
+      Bitmask &bitmask = m_records[target].bitmask;
+      Column &column = m_records[target].column;
       Archetype &archetype = m_archetypes.at(bitmask);
       replacedMap.emplace(bitmask,
                           archetype.remove<ObjectComponents...>(column));
@@ -397,7 +396,7 @@ public:
     }
     // update remaining records columns
     std::size_t updated = 0;
-    for (Record &record : m_entities) {
+    for (Record &record : m_records) {
       // NOTE: there is a possibility that it will find the some invalid record,
       // in this case, we need to test it to make sure that is the correct
       // behaviour
@@ -415,8 +414,8 @@ public:
 private:
   void removeEntity(Entity entity)
   {
-    m_entities[static_cast<unsigned>(entity)].bitmask = Bitmask{0};
-    m_entities[static_cast<unsigned>(entity)].column = Column{0};
+    m_records[static_cast<unsigned>(entity)].bitmask = Bitmask{-1};
+    m_records[static_cast<unsigned>(entity)].column = Column{-1};
     m_availableEntities.push(entity);
   }
   template <typename... Components>
@@ -434,19 +433,19 @@ private:
   }
   void addRecord(Bitmask bitmask, Column column)
   {
-    m_entities.emplace_back(bitmask, column);
+    m_records.emplace_back(bitmask, column);
   }
   void addRecord(Bitmask bitmask, size_t column)
   {
-    m_entities.emplace_back(bitmask, Column{static_cast<int32_t>(column)});
+    m_records.emplace_back(bitmask, Column{static_cast<int32_t>(column)});
   }
   void updateRecord(Entity entity, Bitmask bitmask, Column column)
   {
-    m_entities[static_cast<unsigned>(entity)] = {bitmask, column};
+    m_records[static_cast<unsigned>(entity)] = {bitmask, column};
   }
   void updateRecord(Entity entity, Bitmask bitmask, size_t column)
   {
-    m_entities[static_cast<unsigned>(entity)] = {
+    m_records[static_cast<unsigned>(entity)] = {
         bitmask, Column{static_cast<int32_t>(column)}};
   }
 };

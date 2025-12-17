@@ -144,6 +144,15 @@ public:
   inline reg::Entity getEntity() const { return m_entity; }
   inline Scene &getScene() const { return m_scene.get(); }
 
+  reg::EventDispatcher &getEventDispatcher()
+  {
+    return m_scene.get().getEventDispatcher();
+  }
+  const reg::EventDispatcher &getEventDispatcher() const
+  {
+    return m_scene.get().getEventDispatcher();
+  }
+
   // ------------------------------------------------------------ //
   // MOVE CONSTRUCTORS AND ASSGINMENT
   // ------------------------------------------------------------ //

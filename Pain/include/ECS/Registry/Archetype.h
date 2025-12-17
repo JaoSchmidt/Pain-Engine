@@ -18,9 +18,10 @@ public:
   using Deleter = void (*)(void *);
   using ErasedVector = std::unique_ptr<void, Deleter>;
 
+  std::vector<reg::Entity> m_entities;
+
 private:
   std::map<std::type_index, ErasedVector> m_componentMap;
-  size_t m_count = 0;
 
 public:
   // ---------------------------------------------------- //
@@ -49,13 +50,14 @@ public:
     }
   }
 
-  template <typename... Components> Column pushComponents(Components &&...comps)
+  template <typename... Components>
+  Column pushComponents(reg::Entity entity, Components &&...comps)
   {
     Column column = Column{-1};
     (...,
      (column = pushComponent<Components>(std::forward<Components>(
           comps)))); // and this should create its columns
-    ++m_count;
+    m_entities.emplace_back(entity);
     return column;
   }
 
@@ -73,24 +75,27 @@ public:
   // remove
   // ---------------------------------------------------- //
 
-  template <typename... Components> std::int32_t remove(Column column)
+  template <typename... Components>
+  std::pair<Column, Entity> remove(Column column)
   {
     static_assert(sizeof...(Components) != 0,
                   "Not allowed to remove from empty archetypes");
-    std::int32_t lastColumn = -1;
+    Column lastColumn = Column{-1};
+    Entity swappedEntity = m_entities[m_entities.size() - 1];
     (..., (lastColumn = removeFromComponent<Components>(column)));
-    --m_count;
-    return lastColumn;
+    std::iter_swap(m_entities.begin() + column, m_entities.end() - 1);
+    m_entities.pop_back();
+    return std::make_pair(lastColumn, swappedEntity);
   }
 
   // This is returning the swapped element's column. You need to use it to
   // update its entity record later
-  template <typename C> std::int32_t removeFromComponent(Column index)
+  template <typename C> Column removeFromComponent(Column index)
   {
     std::vector<C> &v = getComponent<C>();
     std::iter_swap(v.begin() + index, v.end() - 1);
     v.pop_back();
-    return v.size();
+    return Column{static_cast<Column>(v.size())};
   }
 
   // ---------------------------------------------------- //
@@ -115,7 +120,7 @@ public:
     P_ASSERT((unsigned)entityIndex <= componentArray.size(),
              "Entity index {} out of range on array of size {}",
              entityIndex.value, componentArray.size());
-    return componentArray[(unsigned)entityIndex];
+    return componentArray[static_cast<unsigned>(entityIndex)];
   }
 
   template <typename T> T &fetchComponent(Column entityIndex)
@@ -124,7 +129,7 @@ public:
     P_ASSERT((unsigned)entityIndex <= componentArray.size(),
              "Entity index {} out of range on array of size {}",
              entityIndex.value, componentArray.size());
-    return componentArray[(unsigned)entityIndex];
+    return componentArray[static_cast<unsigned>(entityIndex)];
   }
 
   template <typename C> const std::vector<C> &getComponent() const
@@ -153,7 +158,10 @@ public:
     return *static_cast<std::vector<C> *>(it->second.get());
   }
 
-  std::size_t size() const { return m_count; }
+  reg::Entity getEntity(Column column) const
+  {
+    return m_entities[static_cast<unsigned>(column)];
+  }
 };
 
 } // namespace reg

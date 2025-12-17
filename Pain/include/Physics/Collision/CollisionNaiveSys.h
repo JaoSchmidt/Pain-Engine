@@ -18,6 +18,18 @@ struct NaiveCollisionSys : public System<CMNaiveCollision> {
   //     m_movingObjects;
   // std::vector<std::tuple<const ColliderComponent *, Transform2dComponent *>>
   //     m_staticObjects;
+private:
+  void narrowPhaseCollisionStatic(Transform2dComponent &t_i,
+                                  ColliderComponent &c_i,
+                                  Movement2dComponent &m_i,
+                                  reg::Entity entity_i,
+                                  const Transform2dComponent &t_j,
+                                  const ColliderComponent &c_j,
+                                  reg::Entity entity_j);
+  void narrowPhaseCollision(Transform2dComponent &t_i, ColliderComponent &c_i,
+                            Movement2dComponent &m_i, reg::Entity entity_i,
+                            Transform2dComponent &t_j, ColliderComponent &c_j,
+                            Movement2dComponent &m_j, reg::Entity entity_j);
 };
 
 } // namespace Systems

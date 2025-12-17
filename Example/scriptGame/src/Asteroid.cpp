@@ -14,7 +14,7 @@ reg::Entity Asteroid::create(pain::Scene &scene, pain::TextureSheet &texSheet,
                          pain::RotationComponent{},                     //
                          pain::SpriteComponent{texSheet, id, diameter}, //
                          pain::SpritelessComponent(radius),             //
-                         pain::SAPCollider::createCollider(entity, radius));
+                         pain::SAPCollider::createCollider(radius));
   return entity;
 }
 reg::Entity Asteroid::create(pain::Scene &scene, pain::TextureSheet &texSheet,
@@ -27,6 +27,6 @@ reg::Entity Asteroid::create(pain::Scene &scene, pain::TextureSheet &texSheet,
                          pain::RotationComponent{},                 //
                          pain::SpriteComponent{texSheet, id, size}, //
                          pain::SpritelessComponent(size),           //
-                         pain::SAPCollider::createCollider(entity, size));
+                         pain::SAPCollider::createCollider(size));
   return entity;
 }

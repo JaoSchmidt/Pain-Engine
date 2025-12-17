@@ -26,21 +26,19 @@ public:
     // PLAYER ---------------------------------------------------------------
     pain::Texture &shipTex =
         pain::resources::getTexture("resources/textures/ship_H.png");
-    reg::Entity player =
-        Player::create(scene, shipTex, resHeight, resWeight, zoom);
+    reg::Entity player = Player::create(scene, shipTex, {0.2f, 0.2f}, resHeight,
+                                        resWeight, zoom);
 
     // Player player = {scene, shipTex};
     // auto lsc = &player.getComponent<pain::LuaScriptComponent>(scene);
     // lsc->bind("resources/scripts/lua_script.lua");
 
     // create the camera
-    pain::OrthoCameraScript &orthocameraScript =
-        scene.emplaceScript<pain::OrthoCameraScript>(player);
+    Player::Script &playerScript = scene.emplaceScript<Player::Script>(player);
     const pain::OrthoCameraComponent &camComp =
-        std::as_const(orthocameraScript)
-            .getComponent<pain::OrthoCameraComponent>();
-    app->setRendererCamera(*camComp.m_matrices, orthocameraScript.getEntity());
-    reg::Entity cameraEntity = orthocameraScript.getEntity();
+        std::as_const(playerScript).getComponent<pain::OrthoCameraComponent>();
+    app->setRendererCamera(*camComp.m_matrices, playerScript.getEntity());
+    reg::Entity cameraEntity = playerScript.getEntity();
 
     // dummy.reset(new Dummy(&scene, {0.23f, 0.54f}, {1.f, 1.f},
     //                       {9.f, 0.f, 5.f, 1.f}, &m_texture, 1.f));
@@ -118,21 +116,19 @@ public:
           ));
       // glm::vec2{0.2f, 0.2f})); //
     }
-    for (unsigned short i = asteroidAmount / 2; i < asteroidAmount; i++) {
-      asteroids.emplace_back(Asteroid::create( //
-          scene,                               //
-          asteroidSheet,                       //
-          i % asteroidSheet.size(),            //
-          glm::vec2{0.3f * i, 0.2f},           //
-          glm::vec2{0.5f, 1.0f},               //
-          glm::vec2{0.2f, 0.2f}                //
-          ));                                  //
-    }
+    // for (unsigned short i = asteroidAmount / 2; i < asteroidAmount; i++) {
+    //   asteroids.emplace_back(Asteroid::create( //
+    //       scene,                               //
+    //       asteroidSheet,                       //
+    //       i % asteroidSheet.size(),            //
+    //       glm::vec2{0.3f * i, 0.2f},           //
+    //       glm::vec2{0.5f, 1.0f},               //
+    //       glm::vec2{0.2f, 0.2f}                //
+    //       ));                                  //
+    // }
 
     // add objects to collision System
-    scene.insertColliders(asteroids);
-    scene.insertColliders(walls);
-
+    scene.getCollisionSys()->insertColliders(asteroids, walls);
     // MOUSE POINTER
     // ---------------------------------------------------------------
     reg::Entity mp = MousePointer::create(scene);
