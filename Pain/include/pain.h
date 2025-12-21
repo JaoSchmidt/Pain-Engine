@@ -12,6 +12,7 @@
 #include "GUI/Launcher.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/BasicShape.h"
+#include "Misc/Events.h"
 #include "Misc/PerspCameraController.h"
 // Renderer
 #include "CoreRender/AllBuffers.h"

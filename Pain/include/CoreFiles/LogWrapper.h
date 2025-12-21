@@ -10,6 +10,7 @@ namespace pain
 namespace logWrapper
 {
 std::shared_ptr<spdlog::logger> &GetCoreLogger();
+std::shared_ptr<spdlog::logger> &GetLuaLogger();
 std::shared_ptr<spdlog::logger> &GetClientLogger();
 void InitLogger();
 } // namespace logWrapper
@@ -28,3 +29,10 @@ void InitLogger();
 #define PLOG_W(...) ::pain::logWrapper::GetCoreLogger()->warn(__VA_ARGS__)
 #define PLOG_E(...) ::pain::logWrapper::GetCoreLogger()->error(__VA_ARGS__)
 #define PLOG_F(...) ::pain::logWrapper::GetCoreLogger()->critical(__VA_ARGS__)
+
+// clang-format off
+#define LUA_LOG_T(...) ::pain::logWrapper::GetLuaLogger()->trace(__VA_ARGS__)
+#define LUA_LOG_I(...) ::pain::logWrapper::GetLuaLogger()->info(__VA_ARGS__)
+#define LUA_LOG_W(...) ::pain::logWrapper::GetLuaLogger()->warn(__VA_ARGS__)
+#define LUA_LOG_E(...) ::pain::logWrapper::GetLuaLogger()->error(__VA_ARGS__)
+#define LUA_LOG_F(...) ::pain::logWrapper::GetLuaLogger()->critical(__VA_ARGS__)

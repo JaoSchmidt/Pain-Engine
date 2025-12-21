@@ -18,8 +18,8 @@ class Script : public pain::OrthoCameraScript
 {
 public:
   void onCreate();
+  void onUpdate(pain::DeltaTime deltaTime) = delete;
   using OrthoCameraScript::onEvent;
-  using OrthoCameraScript::onUpdate;
   using OrthoCameraScript::OrthoCameraScript;
 };
 

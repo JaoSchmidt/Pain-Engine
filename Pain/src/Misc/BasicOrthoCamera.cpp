@@ -77,11 +77,6 @@ void OrthoCameraScript::onEvent(const SDL_Event &event)
   OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
   if (event.type == SDL_MOUSEWHEEL)
     onMouseScrolled(event, cc);
-  if (event.type == SDL_WINDOWEVENT) {
-    if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-      onWindowResized(event, cc);
-    }
-  }
 }
 
 void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
@@ -94,13 +89,4 @@ void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
                                -cc.m_zoomLevel, cc.m_zoomLevel);
 }
 
-void OrthoCameraScript::onWindowResized(const SDL_Event &event,
-                                        OrthoCameraComponent &cc)
-{
-  cc.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
-  cc.m_matrices->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
-                               cc.m_aspectRatio * cc.m_zoomLevel,
-                               -cc.m_zoomLevel, cc.m_zoomLevel);
-  cc.m_matrices->setResolution(event.window.data1, event.window.data2);
-}
 } // namespace pain

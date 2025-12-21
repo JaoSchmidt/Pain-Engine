@@ -1,7 +1,7 @@
 #include "Player.h"
 #include "ECS/Components/Particle.h"
+#include "Misc/Events.h"
 #include "Physics/Collision/Collider.h"
-#include "Physics/Collision/Events.h"
 #include "Scripting/Component.h"
 #include <pain.h>
 
@@ -22,8 +22,7 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
       pain::ParticleSprayComponent{}, //
       pain::OrthoCameraComponent{aspectRatio, zoomLevel, resolutionWeigh,
                                  resolutionHeight}, //
-      pain::NativeScriptComponent{},
-      pain::LuaScriptComponent{entity, scene, scene.getSharedLuaState()});
+      pain::NativeScriptComponent{}, pain::LuaScriptComponent{entity, scene});
   return entity;
 }
 

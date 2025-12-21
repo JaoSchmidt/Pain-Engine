@@ -17,16 +17,10 @@ Script.on_update(function(self, dt)
 end)
 
 Script.on_create(function(self)
-	-- print("this is onCreate function, x later is " .. transform.m_position.x)
-end)
-
-Script.on_event(function(self, event)
-	print("this is on event function")
-	print(type(event))
-end)
-
-Script.on_collision_enter(function(self)
-	print("a")
+	Event.subscribeCollision(function(event)
+		print("Collision between " .. tostring(event.a) .. " and " .. tostring(event.b))
+	end)
+	print("this is onCreate function")
 end)
 
 Script.on_destroy(function(self)

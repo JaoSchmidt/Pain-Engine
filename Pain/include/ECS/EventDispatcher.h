@@ -6,47 +6,57 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <typeindex>
+#include <sol/forward.hpp>
+#include <sol/sol.hpp>
+
+template <typename Event>
+concept LuaConvertable = requires(Event &e, sol::state &s) {
+  { e.toLuaTable(s) };
+};
 
 namespace reg
 {
 
 class EventDispatcher
 {
-public:
   // type erasure stuff
   using Deleter = void (*)(void *);
   using ErasedVector = std::unique_ptr<void, Deleter>;
 
   // useful for subsribing to specific events happening
-  template <typename Event> using Listener = std::function<void(const Event &)>;
-  // useful to hold before triggering
+  template <LuaConvertable Event>
+  using Listener = std::function<void(const Event &)>;
 
-private:
-  struct PendingQueue {
+  // this will hold the data until the end of a frame/cycle.
+  struct EventQueue {
     ErasedVector data;
-    std::function<void()> dispatch;
+    std::function<void()> dispatch; // not a subscribe function, but a wrapper
   };
 
 public:
-  template <typename Event> void subscribe(Listener<Event> listener)
+  EventDispatcher(sol::state &lua) : m_lua(lua) {};
+  // --------------------------------------------------
+  // C++ Events and Dispatch (not fully static tho)
+  // --------------------------------------------------
+  template <LuaConvertable Event> void subscribe(Listener<Event> listener)
   {
-    std::vector<Listener<Event>> &list = getEventObservers<Event>();
+    std::vector<Listener<Event>> &list = getSubscribers<Event>();
     list.emplace_back(listener);
   }
 
-  template <typename Event> void trigger(const Event &event)
+  template <LuaConvertable Event> void trigger(const Event &event)
   {
-    std::vector<Listener<Event>> &list = getEventObservers<Event>();
+    std::vector<Listener<Event>> &list = getSubscribers<Event>();
     for (Listener<Event> &handler : list) {
       handler(event);
     }
+    trigger<Event>(event.toLuaTable(m_lua));
   }
 
-  template <typename Event> void enqueue(const Event &event)
+  template <LuaConvertable Event> void enqueue(const Event &event)
   {
     if (hasEventHandler<Event>()) {
-      PendingQueue &pending = getEvents<Event>();
+      EventQueue &pending = getPendingEvents<Event>();
       std::vector<Event> *vec =
           static_cast<std::vector<Event> *>(pending.data.get());
       vec->emplace_back(std::move(event));
@@ -60,19 +70,62 @@ public:
   {
     for (auto &[type, pendingQueue] : m_pending)
       pendingQueue.dispatch();
+    updateLua();
   }
 
-private:
-  std::map<std::type_index, ErasedVector> m_eventObservers;
-  std::map<std::type_index, PendingQueue> m_pending;
-  template <typename Event> bool hasEventHandler()
+  // --------------------------------------------------
+  // Lua Events and Dispatch
+  // --------------------------------------------------
+  template <LuaConvertable Event> void subscribe(const sol::function &fn)
   {
-    return m_eventObservers.find(std::type_index(typeid(Event))) !=
-           m_eventObservers.end();
+    std::vector<sol::function> &list = getSubscribersLua<Event>();
+    list.emplace_back(fn);
   }
-  template <typename Event> PendingQueue &getEvents()
+  template <LuaConvertable Event> void enqueueLua(const Event &data)
   {
-    auto it = m_pending.find(std::type_index(typeid(Event)));
+    if (hasEventHandler<Event>()) {
+      std::vector<sol::table> &vec = getPendingEventsLua<Event>();
+      vec.emplace_back(data.toLuaTable(m_lua));
+    } else {
+      PLOG_W("Warning, there is no handler for the Event \"{}\"",
+             typeid(Event).name());
+    }
+  }
+  template <LuaConvertable Event> void trigger(const sol::table &event)
+  {
+    std::vector<sol::function> &list = getSubscribersLua<Event>();
+    for (sol::function &handler : list) {
+      handler(event);
+    }
+  }
+  // Lua versions below are exclusively for custom events FROM lua
+  void subscribe(size_t id, sol::function &fn);
+  void enqueue(size_t id, sol::table &data);
+  void trigger(size_t id, sol::table &event);
+
+private:
+  sol::state &m_lua;
+  // Holder of Event subscribers, each one has a vector of functions. Once
+  // triggered, it should alert all subscribers/listeners
+  std::map<uint64_t, ErasedVector> m_eventSubscribers;
+  std::map<uint64_t, std::vector<sol::function>> m_luaSubscribers;
+
+  // Holder of a vector of events. They also hold a small function containing
+  // the trigger function
+  std::map<uint64_t, EventQueue> m_pending;
+  std::map<uint64_t, std::vector<sol::table>> m_luaPending;
+
+  // --------------------------------------------------
+  // C++ Events Map
+  // --------------------------------------------------
+  template <LuaConvertable Event> bool hasEventHandler() const
+  {
+    return m_eventSubscribers.find(customHash(typeid(Event))) !=
+           m_eventSubscribers.end();
+  }
+  template <LuaConvertable Event> EventQueue &getPendingEvents()
+  {
+    auto it = m_pending.find(customHash(typeid(Event)));
     if (it != m_pending.end()) {
       return it->second;
     } else {
@@ -81,7 +134,7 @@ private:
         delete static_cast<std::vector<Event> *>(vector);
       };
       std::vector<Event> *vec = new std::vector<Event>();
-      PendingQueue pendingQueue = //
+      EventQueue pendingQueue = //
           {
               .data = {vec, deleter},
               .dispatch =
@@ -92,8 +145,8 @@ private:
                     vec->clear();
                   } //
           };
-      auto [newIt, isInserted] = m_pending.emplace(
-          std::type_index(typeid(Event)), std::move(pendingQueue));
+      auto [newIt, isInserted] =
+          m_pending.emplace(customHash(typeid(Event)), std::move(pendingQueue));
 
       P_ASSERT(isInserted, "Could not create new component vector");
       PLOG_I("New Event added {}", typeid(Event).name());
@@ -102,18 +155,18 @@ private:
       return newIt->second;
     }
   }
-  template <typename Event> std::vector<Listener<Event>> &getEventObservers()
+  template <LuaConvertable Event> std::vector<Listener<Event>> &getSubscribers()
   {
-    auto it = m_eventObservers.find(std::type_index(typeid(Event)));
-    if (it != m_eventObservers.end()) {
+    auto it = m_eventSubscribers.find(customHash(typeid(Event)));
+    if (it != m_eventSubscribers.end()) {
       return *static_cast<std::vector<Listener<Event>> *>(it->second.get());
     } else {
 
       Deleter deleter = [](void *vector) {
         delete static_cast<std::vector<Listener<Event>> *>(vector);
       };
-      auto [newIt, isInserted] = m_eventObservers.emplace(
-          std::type_index(typeid(Event)),
+      auto [newIt, isInserted] = m_eventSubscribers.emplace(
+          customHash(typeid(Event)),
           ErasedVector{new std::vector<Listener<Event>>(), deleter});
       P_ASSERT(isInserted, "Could not create new component vector");
       PLOG_I("New subscription added {}", typeid(Event).name());
@@ -121,6 +174,49 @@ private:
       // store the deleter to use inside the destructor
       return *static_cast<std::vector<Listener<Event>> *>(newIt->second.get());
     }
+  }
+  // --------------------------------------------------
+  // Lua Events Map
+  // --------------------------------------------------
+  bool hasEventHandlerLua(size_t id) const;
+  void updateLua();
+  template <LuaConvertable Event> std::vector<sol::table> &getPendingEventsLua()
+  {
+    auto it = m_luaPending.find(customHash(typeid(Event)));
+    if (it != m_luaPending.end()) {
+      return it->second;
+    } else {
+      auto [newIt, isInserted] = m_luaPending.emplace(
+          customHash(typeid(Event)), std::vector<sol::table>{});
+      P_ASSERT(isInserted, "Could not create new component vector");
+      PLOG_I("New subscription added {}", typeid(Event).name());
+
+      // store the deleter to use inside the destructor
+      return newIt->second;
+    }
+  }
+  template <LuaConvertable Event>
+  std::vector<sol::function> &getSubscribersLua()
+  {
+    auto it = m_luaSubscribers.find(customHash(typeid(Event)));
+    if (it != m_luaSubscribers.end()) {
+      return it->second;
+    } else {
+      const uint64_t hash = customHash(typeid(Event));
+      auto [newIt, isInserted] =
+          m_luaSubscribers.emplace(hash, std::vector<sol::function>{});
+      P_ASSERT(isInserted, "Could not create new component vector");
+      PLOG_I("New subscription added {}", typeid(Event).name());
+
+      // store the deleter to use inside the destructor
+      return newIt->second;
+    }
+  }
+  uint64_t customHash(const std::type_info &info) const
+  {
+    std::string name = info.name();
+    std::hash<std::string> hasher;
+    return hasher(name);
   }
 };
 

@@ -1,3 +1,4 @@
+// State.cpp
 #include "Scripting/State.h"
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/Movement.h"
@@ -15,17 +16,17 @@ sol::state createLuaState()
   lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
   lua.set_function("print", [](sol::variadic_args va) {
     for (auto arg : va) {
-      PLOG_I("{}", arg.get<std::string>());
+      LUA_LOG_I("{}", arg.get<std::string>());
     }
   });
   lua.set_function("print_error", [](sol::variadic_args va) {
     for (auto arg : va) {
-      PLOG_E("{}", arg.get<std::string>());
+      LUA_LOG_E("{}", arg.get<std::string>());
     }
   });
   lua.set_function("print_warning", [](sol::variadic_args va) {
     for (auto arg : va) {
-      PLOG_W("{}", arg.get<std::string>());
+      LUA_LOG_W("{}", arg.get<std::string>());
     }
   });
   // clang-format off
@@ -61,30 +62,6 @@ sol::state createLuaState()
       "m_position", &Transform2dComponent::m_position //
   );
 
-  lua.new_usertype<LuaScriptComponent>(
-      "LuaScriptComponent", "get_position",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<Transform2dComponent>())
-          return sol::make_reference(
-              c.getLuaState(),
-              std::ref(c.getComponent<Transform2dComponent>()));
-        return sol::nil;
-      },
-      "get_sprite",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<SpriteComponent>())
-          return sol::make_reference(
-              c.getLuaState(), std::ref(c.getComponent<SpriteComponent>()));
-        return sol::nil;
-      },
-      "get_movement",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<Movement2dComponent>())
-          return sol::make_reference(
-              c.getLuaState(), std::ref(c.getComponent<Movement2dComponent>()));
-        return sol::nil;
-      });
-
   // ------ EVENTS ----------------------------------------
   // Usage in Lua: "Input.isKeyPressed(Scancode.SPACE)"
   lua.new_enum<SDL_Scancode>(
@@ -111,6 +88,35 @@ sol::state createLuaState()
       "Input", sol::no_constructor, //
       "is_key_pressed",
       static_cast<bool (*)(SDL_Scancode)>(&InputManager::isKeyPressed));
+
+  // ------ GAME ENGINE EVENTS -----------------------------
   return lua;
 };
+
+void addComponentFunctions(sol::state &lua)
+{
+  lua.new_usertype<LuaScriptComponent>(
+      "LuaScriptComponent", "get_position",
+      [&](LuaScriptComponent &c) -> sol::object {
+        if (c.hasAnyComponents<Transform2dComponent>())
+          return sol::make_reference(
+              lua, std::ref(c.getComponent<Transform2dComponent>()));
+        return sol::nil;
+      },
+      "get_sprite",
+      [&](LuaScriptComponent &c) -> sol::object {
+        if (c.hasAnyComponents<SpriteComponent>())
+          return sol::make_reference(
+              lua, std::ref(c.getComponent<SpriteComponent>()));
+        return sol::nil;
+      },
+      "get_movement",
+      [&](LuaScriptComponent &c) -> sol::object {
+        if (c.hasAnyComponents<Movement2dComponent>())
+          return sol::make_reference(
+              lua, std::ref(c.getComponent<Movement2dComponent>()));
+        return sol::nil;
+      });
+}
+
 } // namespace pain

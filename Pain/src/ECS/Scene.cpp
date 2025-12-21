@@ -5,19 +5,43 @@
 #include "Debugging/Profiling.h"
 #include "ECS/Scriptable.h"
 #include "GUI/ImGuiSys.h"
+#include "Misc/CameraSys.h"
+#include "Misc/Events.h"
 #include "Physics/Collision/Collider.h"
 #include "Physics/Collision/CollisionNaiveSys.h"
 #include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/KinematicsSys.h"
+#include "Scripting/Component.h"
 #include "Scripting/LuaScriptSys.h"
 #include "Scripting/NativeScriptSys.h"
 
 namespace pain
 {
+// ------------------------------------------------
+// event - lua bridge
+// ------------------------------------------------
 
+void Scene::emplaceLuaScript(reg::Entity entity, const char *scriptPath)
+{
+  P_ASSERT(hasAnyComponents<LuaScriptComponent>(entity),
+           "You are trying to bind a lua script on an entity that doesn't have "
+           "lua component");
+  LuaScriptComponent &lc = getComponent<LuaScriptComponent>(entity);
+  lc.bind(m_luaState, scriptPath);
+  if (lc.m_onCreate) {
+    sol::protected_function_result result = (*lc.m_onCreate)(lc);
+    if (!result.valid()) {
+      PLOG_E("Lua error (m_onUpdateFunction): {}",
+             result.get<sol::error>().what());
+    }
+  }
+}
+
+// ------------------------------------------------
 Scene::Scene(sol::state &solState, void *context, SDL_Window *window)
 
-    : m_registry(), m_eventDispatcher(), m_luaState(solState),
+    : m_registry(), m_eventDispatcher(solState),
+      m_luaState(createScriptEventMap(solState, m_eventDispatcher)),
       m_entity(createEntity()),
       // ---- Systems --------------------------------
       // clang-format off
@@ -26,16 +50,10 @@ Scene::Scene(sol::state &solState, void *context, SDL_Window *window)
       m_nativeScriptSystem{new Systems::NativeScript(m_registry, m_eventDispatcher)},
       m_imGuiSystem{new Systems::ImGuiSys(m_registry,m_eventDispatcher, context, window)},
       m_luaSystem{new Systems::LuaScript(m_registry, m_eventDispatcher)},
-      m_sweepAndPruneSystem{new Systems::SweepAndPruneSys(m_registry, m_eventDispatcher)} // clang-format on
+      m_sweepAndPruneSystem{new Systems::SweepAndPruneSys(m_registry, m_eventDispatcher)},
+      m_cameraSystem{new Systems::CameraSys(m_registry, m_eventDispatcher)}
+// clang-format on
 {};
-
-// clang-format off
-      // m_renderSystem{std::make_unique<Systems::Render>(m_registry)},
-      // m_kinematicsSystem{std::make_unique<Systems::Kinematics>(m_registry)},
-      // m_nativeScriptSystem{std::make_unique<Systems::NativeScript>(m_registry)},
-      // m_imGuiSystem{std::make_unique<Systems::ImGuiSys>(m_registry, context, window)},
-      // m_luaSystem{std::make_unique<Systems::LuaScript>(m_registry)},
-      // m_collisionSystem{std::make_unique<Systems::NaiveCollisionSys>(m_registry)} {};
 
 void Scene::updateSystems(DeltaTime deltaTime)
 {
@@ -53,13 +71,8 @@ void Scene::updateSystems(const SDL_Event &event)
   m_nativeScriptSystem->onEvent(event);
   m_imGuiSystem->onEvent(event);
   m_luaSystem->onEvent(event);
+  m_cameraSystem->onEvent(event);
 }
-//
-// void Scene::insertStaticCollider(reg::Entity entity)
-// {
-//   // m_collisionSystem.insertStatic(
-//   //     entity, getComponent<TransformComponent>(entity).m_position);
-// }
 
 void Scene::renderSystems(Renderer2d &renderer, bool isMinimized,
                           DeltaTime currentTime)
@@ -70,13 +83,15 @@ void Scene::renderSystems(Renderer2d &renderer, bool isMinimized,
   m_luaSystem->onRender(renderer, isMinimized, currentTime);
 }
 
-Scene::~Scene(){
+Scene::~Scene()
+{
   delete m_renderSystem;
   delete m_kinematicsSystem;
   delete m_nativeScriptSystem;
   delete m_imGuiSystem;
   delete m_luaSystem;
   delete m_sweepAndPruneSystem;
+  delete m_cameraSystem;
 }
 
 } // namespace pain

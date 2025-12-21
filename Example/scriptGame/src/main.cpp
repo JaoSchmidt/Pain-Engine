@@ -35,6 +35,7 @@ public:
 
     // create the camera
     Player::Script &playerScript = scene.emplaceScript<Player::Script>(player);
+    scene.emplaceLuaScript(player, "resources/scripts/lua_script.lua");
     const pain::OrthoCameraComponent &camComp =
         std::as_const(playerScript).getComponent<pain::OrthoCameraComponent>();
     app->setRendererCamera(*camComp.m_matrices, playerScript.getEntity());
@@ -43,7 +44,6 @@ public:
     // dummy.reset(new Dummy(&scene, {0.23f, 0.54f}, {1.f, 1.f},
     //                       {9.f, 0.f, 5.f, 1.f}, &m_texture, 1.f));
     // auto ls = &dummy->getComponent<pain::LuaScriptComponent>(scene);
-    // ls->bind("resources/scripts/lua_script.lua");
     // ls->onCreate();
 
     // STARS ---------------------------------------------------------------

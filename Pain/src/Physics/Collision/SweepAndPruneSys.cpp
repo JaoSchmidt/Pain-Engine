@@ -2,10 +2,10 @@
 #include "Physics/Collision/SweepAndPruneSys.h"
 
 #include "ECS/Components/Movement.h"
+#include "Misc/Events.h"
 #include "Physics/Collision/ColDetection.h"
 #include "Physics/Collision/ColReaction.h"
 #include "Physics/Collision/Collider.h"
-#include "Physics/Collision/Events.h"
 
 namespace pain
 {

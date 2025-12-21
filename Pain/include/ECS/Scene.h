@@ -22,6 +22,7 @@ struct LuaScript;
 struct NativeScript;
 struct NaiveCollisionSys;
 struct SweepAndPruneSys;
+struct CameraSys;
 } // namespace Systems
 
 struct NormalEntity;
@@ -49,6 +50,7 @@ public:
   // ---------------------------------------------------- //
   // Helper function to "emplace" Scripts
   // ---------------------------------------------------- //
+  void emplaceLuaScript(reg::Entity entity, const char *scriptPath);
 
   // Move already made script to the registry
   template <typename T> T &emplaceScript(reg::Entity entity, T &&t)
@@ -209,5 +211,6 @@ private:
   Systems::ImGuiSys *m_imGuiSystem;
   Systems::LuaScript *m_luaSystem;
   Systems::SweepAndPruneSys *m_sweepAndPruneSystem;
+  Systems::CameraSys *m_cameraSystem;
 };
 } // namespace pain

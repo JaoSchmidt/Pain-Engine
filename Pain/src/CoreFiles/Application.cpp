@@ -109,7 +109,10 @@ Application::Application(sol::state &&luaState, SDL_Window *window,
     : m_renderer(Renderer2d::createRenderer2d()),
       m_defaultImGuiInstance(new EngineController()),
       m_luaState(std::move(luaState)), m_endGameFlags(), m_window(window),
-      m_context(context) {};
+      m_context(context)
+{
+  addComponentFunctions(m_luaState);
+};
 
 void Application::stopLoop(bool restartFlag)
 {
