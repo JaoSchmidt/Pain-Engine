@@ -2,6 +2,7 @@
 
 #include "CoreFiles/LogWrapper.h"
 
+#include "spdlog/common.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace pain
@@ -29,8 +30,12 @@ void InitLogger()
   // ---- Lua logger with custom colors ----
   auto lua_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 
-  // Change INFO from green to blue
+// NOTE: this is exactly how is defined inside spdlog
+#ifdef _WIN32
+  lua_sink->set_color(spdlog::level::info, FOREGROUND_BLUE);
+#else
   lua_sink->set_color(spdlog::level::info, lua_sink->blue);
+#endif
 
   s_LuaLogger = std::make_shared<spdlog::logger>("LUA", lua_sink);
   s_LuaLogger->set_level(spdlog::level::trace);

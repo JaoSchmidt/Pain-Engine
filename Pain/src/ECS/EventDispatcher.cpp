@@ -8,26 +8,26 @@ namespace reg
 {
 using LuaListener = sol::protected_function;
 
-void EventDispatcher::subscribe(size_t hash, sol::function &fn)
+void EventDispatcher::subscribe(size_t eventId, sol::function &fn)
 {
-  PLOG_I("Lua event {} subscription", hash);
-  m_luaSubscribers[hash].push_back(fn);
+  PLOG_I("Lua event {} subscription", eventId);
+  m_luaSubscribers[eventId].push_back(fn);
 }
-void EventDispatcher::enqueue(size_t hash, sol::table &event)
+void EventDispatcher::enqueue(size_t eventId, const sol::table &event)
 {
-  if (hasEventHandlerLua(hash)) {
-    std::vector<sol::table> &vec = m_luaPending[hash];
+  if (hasEventHandlerLua(eventId)) {
+    std::vector<sol::table> &vec = m_luaPending[eventId];
     vec.emplace_back(std::move(event));
   } else {
     PLOG_W("Warning, there is no handler for custom event \"{}\", did you "
            "subcribe that event?",
-           hash);
+           eventId);
   }
 }
 
-void EventDispatcher::trigger(size_t hash, sol::table &event)
+void EventDispatcher::trigger(size_t eventId, const sol::table &event)
 {
-  std::vector<sol::function> &list = m_luaSubscribers[hash];
+  std::vector<sol::function> &list = m_luaSubscribers[eventId];
   for (sol::function &handler : list) {
     handler(event);
   }
@@ -36,7 +36,7 @@ void EventDispatcher::trigger(size_t hash, sol::table &event)
 void EventDispatcher::updateLua()
 {
   for (auto &[type, pendingQueue] : m_luaPending)
-    for (sol::table &table : pendingQueue)
+    for (const sol::table &table : pendingQueue)
       trigger(type, table);
 }
 

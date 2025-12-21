@@ -76,12 +76,19 @@ public:
   // --------------------------------------------------
   // Lua Events and Dispatch
   // --------------------------------------------------
-  template <LuaConvertable Event> void subscribe(const sol::function &fn)
+  template <LuaConvertable Event> void subscribe(sol::function &fn)
   {
     std::vector<sol::function> &list = getSubscribersLua<Event>();
     list.emplace_back(fn);
   }
-  template <LuaConvertable Event> void enqueueLua(const Event &data)
+  // NOTE: not sure this function will be useful bc it only
+  // serves to create an c++ event that will be listened by lua scripts ONLY...
+  // However, that funcionallity is already working with the basic
+  // "enqueue(const Event &data)"
+  // A possible implementation would be to allow lua tables to be viewed by the
+  // native script, but that would require some mechanism to allow:
+  // weak typed tables -> strong typed Events
+  template <LuaConvertable Event> void possibleEnqueueFnc(const Event &data)
   {
     if (hasEventHandler<Event>()) {
       std::vector<sol::table> &vec = getPendingEventsLua<Event>();
@@ -98,22 +105,22 @@ public:
       handler(event);
     }
   }
-  // Lua versions below are exclusively for custom events FROM lua
+  // Lua versions below are exclusively for custom events FROM lua TO lua
   void subscribe(size_t id, sol::function &fn);
-  void enqueue(size_t id, sol::table &data);
-  void trigger(size_t id, sol::table &event);
+  void enqueue(size_t id, const sol::table &data);
+  void trigger(size_t id, const sol::table &event);
 
 private:
   sol::state &m_lua;
   // Holder of Event subscribers, each one has a vector of functions. Once
   // triggered, it should alert all subscribers/listeners
-  std::map<uint64_t, ErasedVector> m_eventSubscribers;
-  std::map<uint64_t, std::vector<sol::function>> m_luaSubscribers;
+  std::map<u_int64_t, ErasedVector> m_eventSubscribers;
+  std::map<u_int64_t, std::vector<sol::function>> m_luaSubscribers;
 
   // Holder of a vector of events. They also hold a small function containing
   // the trigger function
-  std::map<uint64_t, EventQueue> m_pending;
-  std::map<uint64_t, std::vector<sol::table>> m_luaPending;
+  std::map<u_int64_t, EventQueue> m_pending;
+  std::map<u_int64_t, std::vector<sol::table>> m_luaPending;
 
   // --------------------------------------------------
   // C++ Events Map
@@ -202,7 +209,7 @@ private:
     if (it != m_luaSubscribers.end()) {
       return it->second;
     } else {
-      const uint64_t hash = customHash(typeid(Event));
+      const u_int64_t hash = customHash(typeid(Event));
       auto [newIt, isInserted] =
           m_luaSubscribers.emplace(hash, std::vector<sol::function>{});
       P_ASSERT(isInserted, "Could not create new component vector");
@@ -212,7 +219,7 @@ private:
       return newIt->second;
     }
   }
-  uint64_t customHash(const std::type_info &info) const
+  u_int64_t customHash(const std::type_info &info) const
   {
     std::string name = info.name();
     std::hash<std::string> hasher;
