@@ -74,8 +74,6 @@ struct Renderer2d {
   void setViewport(int x, int y, int width, int height);
   void setClearColor(const glm::vec4 &color);
   void clear();
-  void drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
-                   uint32_t indexCount = 0);
   void clearEntireRenderer();
 
   // ================================================================= //
@@ -136,6 +134,7 @@ struct Renderer2d {
   void setCellGridSize(float size);
 
 private:
+  void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount = 0);
   // quads initializer
   VertexArray m_quadVertexArray;
   VertexBuffer m_quadVertexBuffer;

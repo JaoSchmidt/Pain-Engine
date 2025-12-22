@@ -1,3 +1,4 @@
+#include "ContextBackend.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 
@@ -250,16 +251,8 @@ Renderer2d Renderer2d::createRenderer2d()
   gridShader->uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
   gridShader->uploadUniformFloat("u_CellSize", 1.f);
   gridShader->uploadUniformFloat("u_Thickness", 0.005f);
-  // =============================================================== //
-  // Create Renderer
-  // =============================================================== //
-  // allow transparency
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  // HACK: allow textures with 3 channels to align properly, e.g. font textures.
-  // No idea why it works tho, perhaps I will find a proper doc later
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+  backend::InitRenderer();
   return Renderer2d(std::move(*quadIB),            //
                     std::move(*circleIB),          //
                     std::move(*triIB),             //
@@ -310,7 +303,7 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
     m_gridVertexArray.bind();
     m_gridVertexBuffer.bind();
     m_gridShader.bind();
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    drawIndexed(m_gridVertexArray, 6);
   }
   // =============================================================== //
   // =============================================================== //
@@ -337,11 +330,7 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
     }
 
     m_quadTextureShader.bind();
-    const uint32_t quadCount =
-        m_quadIndexCount ? m_quadIndexCount
-                         : m_quadVertexArray.getIndexBuffer().getCount();
-    glDrawElements(GL_TRIANGLES, quadCount, GL_UNSIGNED_INT, nullptr);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    drawIndexed(m_quadVertexArray, m_quadIndexCount);
   }
   // =============================================================== //
   // Text
@@ -357,11 +346,7 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
     m_textTextureShader.bind();
     m_textTextureShader.uploadUniformInt("u_FontAtlas", 0);
 
-    const uint32_t textCount =
-        m_textIndexCount ? m_textIndexCount
-                         : m_textVertexArray.getIndexBuffer().getCount();
-    glDrawElements(GL_TRIANGLES, textCount, GL_UNSIGNED_INT, nullptr);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    drawIndexed(m_textVertexArray, m_textIndexCount);
   }
 
   // =============================================================== //
@@ -381,11 +366,7 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
       m_textureSlots[i]->bindAndClearSlot();
 
     m_sprayShader.bind();
-    const uint32_t sprayCount =
-        m_sprayIndexCount ? m_sprayIndexCount
-                          : m_sprayVertexArray.getIndexBuffer().getCount();
-    glDrawElements(GL_TRIANGLES, sprayCount, GL_UNSIGNED_INT, nullptr);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    drawIndexed(m_sprayVertexArray, m_sprayIndexCount);
   }
   // =============================================================== //
   // Triangles
@@ -399,11 +380,7 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
     m_triVertexBuffer.setData((void *)m_triVertexBufferBase, numBytes);
 
     m_triShader.bind();
-    const uint32_t triCount =
-        m_triIndexCount ? m_triIndexCount
-                        : m_triVertexArray.getIndexBuffer().getCount();
-    glDrawElements(GL_TRIANGLES, triCount, GL_UNSIGNED_INT, nullptr);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    drawIndexed(m_triVertexArray, m_triIndexCount);
   }
   // =============================================================== //
   // Circles
@@ -418,11 +395,7 @@ void Renderer2d::draw(const glm::mat4 &viewProjectionMatrix)
     m_circleVertexBuffer.setData((void *)m_circleVertexBufferBase, numBytes);
 
     m_circleShader.bind();
-    const uint32_t circleCount =
-        m_circleIndexCount ? m_circleIndexCount
-                           : m_circleVertexArray.getIndexBuffer().getCount();
-    glDrawElements(GL_TRIANGLES, circleCount, GL_UNSIGNED_INT, nullptr);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    drawIndexed(m_circleVertexArray, m_circleIndexCount);
   }
 }
 

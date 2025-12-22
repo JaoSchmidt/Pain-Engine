@@ -1,10 +1,10 @@
 #include "CoreFiles/Application.h"
 #include "Assets/DefaultTexture.h"
 #include "Assets/ResourceManager.h"
+#include "ContextBackend.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "Debugging/OpenGLDebugger.h"
 #include "GUI/ImGuiSys.h"
 #include "Scripting/State.h"
 #include <SDL2/SDL_timer.h>
@@ -50,40 +50,7 @@ Application *Application::createApplication(const char *title, int w, int h)
   PLOG_T("SDL version: {}.{}.{}", sdl_version.major, sdl_version.minor,
          sdl_version.patch);
 
-  // =========================================================================//
-  // OpenGL Initial setup
-  // =========================================================================//
-
-  int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
-  if (version == 0) {
-    PLOG_E("Error: Failed to initialize glad");
-    exit(1);
-  }
-  PLOG_T("GL version: {}",
-         std::string(reinterpret_cast<const char *>(glGetString(GL_VERSION))));
-  // PLOG_T("Default relative path is: {}",
-  //        std::filesystem::current_path().string());
-
-  int versionMajor;
-  int versionMinor;
-  glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
-  glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
-  P_ASSERT(versionMajor >= 4 && versionMinor >= 3,
-           "OpenGL version must be above 4.3, current version is {}.{}",
-           versionMajor, versionMinor);
-
-  int maxTextureUnits;
-  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
-  PLOG_T("GPU Texture Mapping Units: {}", maxTextureUnits);
-
-#ifndef NDEBUG
-  glEnable(GL_DEBUG_OUTPUT);
-  glDebugMessageCallback(Debug::glErrorHandler, 0);
-#endif
-
-  // renderer is created BEFORE the asset manager, as the asset manager retrives
-  // the default assets, it will slowly link some to the renderer cache
-
+  backend::Init();
   // =========================================================================//
   // Application Initial setup before
   // =========================================================================//
@@ -104,6 +71,8 @@ Application *Application::createApplication(const char *title, int w, int h)
                          std::move(context));
 }
 /* Creates window, opengl context and init glew*/
+// renderer is created BEFORE the asset manager, as the asset manager retrives
+// the default assets, it will slowly link some to the renderer cache
 Application::Application(sol::state &&luaState, SDL_Window *window,
                          void *context)
     : m_renderer(Renderer2d::createRenderer2d()),

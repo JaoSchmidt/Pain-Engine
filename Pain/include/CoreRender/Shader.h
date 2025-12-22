@@ -1,10 +1,16 @@
+// Shader.h
 #pragma once
+#include "Core.h"
 #include "pch.h"
 
-#include "Core.h"
+#include <functional>
+#include <glm/glm.hpp>
+#include <optional>
+#include <string>
 
 namespace pain
 {
+
 class Shader
 {
 public:
@@ -26,11 +32,10 @@ public:
 
   void bind() const;
   void unbind() const;
-  static std::pair<std::string, std::string> parseShader(const char *filepath);
-  inline const std::string &getName() const { return m_name; };
+  inline const std::string &getName() const { return m_name; }
 
-  // upload variables to shaders
-  void uploadUniformInt(const std::string &name, int integer);
+  // Uniform uploads (API-agnostic)
+  void uploadUniformInt(const std::string &name, int value);
   void uploadUniformInt2(const std::string &name, const glm::ivec2 &value);
   void uploadUniformInt3(const std::string &name, const glm::ivec3 &value);
   void uploadUniformInt4(const std::string &name, const glm::ivec4 &value);
@@ -43,14 +48,14 @@ public:
   void uploadUniformIntArray(const std::string &name, int *values,
                              uint32_t count);
 
+  static std::pair<std::string, std::string> parseShader(const char *filepath);
+
 private:
+  int getUniformLocation(const std::string &name) const;
   Shader() = default;
+
   std::string m_name = "undefined";
-  GLint getUniformLocation(const std::string &name) const;
-  uint32_t compileShader(uint32_t type, const std::string &source);
-  bool checkLinkProgram(uint32_t programID);
   uint32_t m_programId = 0;
-  void createShaderFromStrings(const std::string &vertexShader,
-                               const std::string &fragmentShader);
 };
+
 } // namespace pain

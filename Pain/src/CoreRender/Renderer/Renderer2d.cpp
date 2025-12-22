@@ -7,6 +7,7 @@
 #include "ECS/Scene.h"
 #include "glm/ext/matrix_transform.hpp"
 
+#include "platform/ContextBackend.h"
 namespace pain
 {
 extern const Texture *m_fontAtlasTexture;
@@ -18,14 +19,14 @@ extern const Texture *m_fontAtlasTexture;
 
 void Renderer2d::setViewport(int x, int y, int width, int height)
 {
-  glViewport(x, y, width, height);
+  backend::setViewPort(x, y, width, height);
 }
 
-void Renderer2d::clear() { glClear(GL_COLOR_BUFFER_BIT); }
+void Renderer2d::clear() { backend::clear(); }
 
 void Renderer2d::setClearColor(const glm::vec4 &color)
 {
-  glClearColor(color.r, color.g, color.b, color.a);
+  backend::setClearColor(color);
 }
 void Renderer2d::changeCamera(const OrthographicMatrices &cameraMatrices,
                               reg::Entity cameraEntity)
@@ -63,14 +64,10 @@ void Renderer2d::endScene()
   flush();
 }
 
-void Renderer2d::drawIndexed(const std::shared_ptr<VertexArray> &vertexArray,
+void Renderer2d::drawIndexed(const VertexArray &vertexArray,
                              uint32_t indexCount)
 {
-  PROFILE_FUNCTION();
-  uint32_t count =
-      indexCount ? indexCount : vertexArray->getIndexBuffer().getCount();
-  glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
-  glBindTexture(GL_TEXTURE_2D, 0);
+  backend::drawIndexed(vertexArray, indexCount);
 }
 
 // ================================================================= //

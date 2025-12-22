@@ -1,6 +1,7 @@
 namespace pain
 {
 #include "Core.h"
+#include "glad/gl.h"
 
 namespace Debug
 {

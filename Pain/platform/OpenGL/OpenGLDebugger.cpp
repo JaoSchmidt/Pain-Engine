@@ -1,4 +1,4 @@
-#include "Debugging/OpenGLDebugger.h"
+#include "OpenGLDebugger.h"
 #include "CoreFiles/LogWrapper.h"
 
 namespace pain

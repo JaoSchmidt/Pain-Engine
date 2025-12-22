@@ -5,12 +5,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
-# set(CMAKE_VERBOSE_MAKEFILE ON)
+set(MACRO_DEFINITIONS "PAIN_RENDERER_OPENGL")
+remove_definitions("-DNDEBUG")
 project(${PROJECT_NAME} VERSION 0.1.0)
 
-# set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
-     "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp")
+     "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp",
+     "${PROJECT_SOURCE_DIR}/Pain/platform/*.cpp")
 add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 
 # file(GLOB_RECURSE MODULES "Pain/include/*.cppm") message("Finding the
@@ -24,6 +25,7 @@ set(BUILD_SHARED_LIBS OFF)
 target_include_directories(
   ${LIBRARY_NAME}
   PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
+         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/platform>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/mINI/src>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>)
@@ -33,7 +35,6 @@ target_compile_features(${LIBRARY_NAME} PUBLIC cxx_std_20)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-remove_definitions("-DNDEBUG")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_options(
@@ -277,6 +278,7 @@ target_precompile_headers(${LIBRARY_NAME} PRIVATE
 # =========== Resources/Assets Managment ==================================
 
 set(GAME_FOLDER "Example/scriptGame")
+add_compile_definitions(${MACRO_DEFINITIONS})
 
 # TODO: BUILD THIS FOR WINDOWS AND TEST IT Define custom target to rsync
 # resources

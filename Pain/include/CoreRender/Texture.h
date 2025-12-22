@@ -1,6 +1,8 @@
+// Texture.h
 #pragma once
 
 #include "Core.h"
+#include "ImageFormat.h"
 
 #include <SDL2/SDL_surface.h>
 #include <cstdint>
@@ -10,12 +12,11 @@
 
 namespace pain
 {
-enum class ImageFormat { None = 0, R8, RGB8, RGBA8, RGBA32F };
 class Texture
 {
 public:
   static std::optional<Texture> createTexture(const char *path,
-                                              bool glClampToEdge = false);
+                                              bool clamp = false);
   static std::optional<Texture>
   createTexture(const char *name, uint32_t width, uint32_t height,
                 ImageFormat format = ImageFormat::RGBA8);
@@ -42,40 +43,11 @@ public:
   std::string m_path = "NULL texture string"; // or name
 private:
   uint32_t m_width, m_height;
-  uint32_t m_dataFormat;
-  uint32_t m_internalFormat;
+  ImageFormat m_dataFormat;
   uint32_t m_textureId;
 
   Texture(const char *path, uint32_t width, uint32_t height,
-          uint32_t dataFormat, uint32_t internalFormat, uint32_t rendererId);
-  static constexpr unsigned getInternalFormat(ImageFormat format)
-  {
-    constexpr unsigned types[] = {
-        GL_R8,      // None = 0,
-        GL_R8,      // R8,
-        GL_RGB8,    // RGB8,
-        GL_RGBA8,   // RGBA8,
-        GL_RGBA32F, // RGBA32F
-    };
-    static_assert(static_cast<unsigned>(ImageFormat::RGBA32F) <
-                      sizeof(types) / sizeof(types[0]),
-                  "Missing entry in types array");
-    return types[static_cast<uint32_t>(format)];
-  }
-  static constexpr unsigned getGLDataFormat(ImageFormat format)
-  {
-    constexpr unsigned types[] = {
-        GL_RG,   // None = 0,
-        GL_RG,   // R8,
-        GL_RGB,  // RGB8,
-        GL_RGBA, // RGBA8,
-        GL_RGBA, // RGBA32F
-    };
-    static_assert(static_cast<unsigned>(ImageFormat::RGBA32F) <
-                      sizeof(types) / sizeof(types[0]),
-                  "Missing entry in types array");
-    return types[static_cast<uint32_t>(format)];
-  }
+          ImageFormat dataFormat, uint32_t rendererId);
 };
 
 } // namespace pain

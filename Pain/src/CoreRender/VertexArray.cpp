@@ -1,6 +1,6 @@
 #include "CoreRender/VertexArray.h"
-#include "CoreFiles/LogWrapper.h"
-#include "CoreRender/AllBuffers.h"
+#include "CoreRender/Buffers.h"
+#include "VertexArrayBackend.h"
 
 namespace pain
 {
@@ -9,12 +9,7 @@ std::optional<VertexArray>
 VertexArray::createVertexArray(VertexBuffer &vertexBuffer,
                                IndexBuffer &indexBuffer)
 {
-  uint32_t rendererId;
-  glCreateVertexArrays(1, &rendererId);
-  if (rendererId == 0) {
-    PLOG_W("Failed to generate vertex buffer");
-    return std::nullopt;
-  }
+  uint32_t rendererId = backend::createVertexArray();
 
   addVertexBuffer(vertexBuffer, rendererId);
   setIndexBuffer(indexBuffer, rendererId);
@@ -42,40 +37,20 @@ VertexArray &VertexArray::operator=(VertexArray &&o)
 }
 VertexArray::~VertexArray()
 {
-  if (m_rendererId != 0)
-    glDeleteVertexArrays(1, &m_rendererId);
+  if (m_rendererId)
+    backend::destroyVertexArray(m_rendererId);
   // buffers will be deleted later from here, which is the correct order
 }
-void VertexArray::bind() const { glBindVertexArray(m_rendererId); }
-void VertexArray::unbind() const { glBindVertexArray(0); }
+void VertexArray::bind() const { backend::bindVertexArray(m_rendererId); }
+void VertexArray::unbind() const { backend::unbindVertexArray(); }
 void VertexArray::addVertexBuffer(const VertexBuffer &vertexBuffer,
                                   uint32_t rendererId)
 {
-  P_ASSERT(
-      vertexBuffer.getLayout().GetElements().size() > 0,
-      "VertexArray.h: Can't add a vertexBuffer that doesn't have a layout");
-  glBindVertexArray(rendererId);
-  vertexBuffer.bind();
-
-  uint32_t index = 0;
-  const auto &layout = vertexBuffer.getLayout();
-  for (const auto &element : layout) {
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(                       //
-        index,                                   //
-        element.getComponentCount(),             //
-        element.getComponentGLType(),            //
-        element.normalized ? GL_TRUE : GL_FALSE, //
-        layout.GetStride(),                      //
-        // same as `(const void *)element.offset`, but won't generate warning
-        reinterpret_cast<const void *>(static_cast<uintptr_t>(element.offset)));
-    index++;
-  }
+  backend::addVertexBuffer(vertexBuffer, rendererId);
 }
 void VertexArray::setIndexBuffer(const IndexBuffer &indexBuffer,
                                  uint32_t rendererId)
 {
-  glBindVertexArray(rendererId);
-  indexBuffer.bind(); // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufferId);
+  backend::setIndexBuffer(indexBuffer, rendererId);
 }
 } // namespace pain

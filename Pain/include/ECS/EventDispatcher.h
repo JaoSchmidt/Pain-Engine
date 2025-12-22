@@ -114,13 +114,13 @@ private:
   sol::state &m_lua;
   // Holder of Event subscribers, each one has a vector of functions. Once
   // triggered, it should alert all subscribers/listeners
-  std::map<u_int64_t, ErasedVector> m_eventSubscribers;
-  std::map<u_int64_t, std::vector<sol::function>> m_luaSubscribers;
+  std::map<uint64_t, ErasedVector> m_eventSubscribers;
+  std::map<uint64_t, std::vector<sol::function>> m_luaSubscribers;
 
   // Holder of a vector of events. They also hold a small function containing
   // the trigger function
-  std::map<u_int64_t, EventQueue> m_pending;
-  std::map<u_int64_t, std::vector<sol::table>> m_luaPending;
+  std::map<uint64_t, EventQueue> m_pending;
+  std::map<uint64_t, std::vector<sol::table>> m_luaPending;
 
   // --------------------------------------------------
   // C++ Events Map
@@ -209,7 +209,7 @@ private:
     if (it != m_luaSubscribers.end()) {
       return it->second;
     } else {
-      const u_int64_t hash = customHash(typeid(Event));
+      const uint64_t hash = customHash(typeid(Event));
       auto [newIt, isInserted] =
           m_luaSubscribers.emplace(hash, std::vector<sol::function>{});
       P_ASSERT(isInserted, "Could not create new component vector");
@@ -219,7 +219,7 @@ private:
       return newIt->second;
     }
   }
-  u_int64_t customHash(const std::type_info &info) const
+  uint64_t customHash(const std::type_info &info) const
   {
     std::string name = info.name();
     std::hash<std::string> hasher;

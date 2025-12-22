@@ -15,8 +15,8 @@
 #include "Misc/Events.h"
 #include "Misc/PerspCameraController.h"
 // Renderer
-#include "CoreRender/AllBuffers.h"
 #include "CoreRender/BufferLayout.h"
+#include "CoreRender/Buffers.h"
 #include "CoreRender/Camera.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/Renderer3d.h"
