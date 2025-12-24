@@ -19,20 +19,17 @@ namespace pain
 class ImGuiLauncher : public ExtendedEntity
 {
 public:
-  static ImGuiLauncher &createScriptScene(int resWeight, int resHeight,
-                                          float zoom,
+  static ImGuiLauncher &createScriptScene(Scene &scene, int resWeight,
+                                          int resHeight, float zoom,
                                           pain::Application *settingsApp)
   {
-    pain::Scene &scene = settingsApp->createScene(
-        1.f, pain::NativeScriptComponent{}, pain::ImGuiComponent{});
-    pain::OrthoCamera orthoCamera = {&scene, resWeight, resHeight, zoom};
+    reg::Entity orthoCamera =
+        Dummy2dCamera::create(scene, resWeight, resHeight, zoom);
 
-    settingsApp->setRendererCamera(
-        *(std::as_const(orthoCamera)
-              .getComponent<OrthoCameraComponent>(scene)
-              .m_matrices),
-        orthoCamera.getEntity());
-    orthoCamera.emplaceScript<OrthoCameraScript>(scene);
+    const pain::OrthoCameraComponent &camComp =
+        scene.getComponent<pain::OrthoCameraComponent>(orthoCamera);
+    settingsApp->setRendererCamera(*camComp.m_matrices, orthoCamera);
+    scene.emplaceScript<OrthoCameraScript>(orthoCamera);
 
     return scene.emplaceImGuiScript<ImGuiLauncher>(
         scene.getEntity(), settingsApp, std::move(orthoCamera));
@@ -46,7 +43,7 @@ public:
         m_dockspaceOpen(std::exchange(other.m_dockspaceOpen, true)),
         m_init(std::move(other.m_init)),
         m_app(std::exchange(other.m_app, nullptr)),
-        m_orthocamera(std::move(other.m_orthocamera)) {};
+        m_orthocamera(other.m_orthocamera) {};
   ImGuiLauncher &operator=(ImGuiLauncher &&other) noexcept
   {
     if (this != &other) {
@@ -56,7 +53,7 @@ public:
       m_dockspaceOpen = std::exchange(other.m_dockspaceOpen, true);
       m_init = std::move(other.m_init);
       m_app = std::exchange(other.m_app, nullptr);
-      m_orthocamera = std::move(other.m_orthocamera);
+      m_orthocamera = other.m_orthocamera;
     }
     return *this;
   }
@@ -150,7 +147,7 @@ public:
   }
 
   ImGuiLauncher(reg::Entity entity, Scene &scene, Application *app,
-                OrthoCamera &&camera)
+                reg::Entity camera)
       : ExtendedEntity(entity, scene), m_init(), m_app(app),
         m_orthocamera(std::move(camera)) {};
   std::vector<std::string> m_availableResolutions;
@@ -164,7 +161,7 @@ private:
   bool m_dockspaceOpen = true;
   IniConfig m_init;
   Application *m_app = nullptr;
-  OrthoCamera m_orthocamera;
+  reg::Entity m_orthocamera;
 };
 
 Application *createLauncher()
@@ -174,9 +171,12 @@ Application *createLauncher()
   const int width = 500;
   const int height = 200;
   const float zoom = 1.f;
-  Application *settingsApp =
-      Application::createApplication(title, width, height);
-  ImGuiLauncher::createScriptScene(width, height, zoom, settingsApp);
+
+  Application *settingsApp = Application::createApplication(
+      title, width, height, {.swapChainTarget = true});
+  pain::Scene &scene = settingsApp->createScene(
+      1.f, pain::NativeScriptComponent{}, pain::ImGuiComponent{});
+  ImGuiLauncher::createScriptScene(scene, width, height, zoom, settingsApp);
 
   return settingsApp;
 }

@@ -3,10 +3,7 @@
 
 #include "Assets/DefaultTexture.h"
 #include "Asteroid.h"
-#include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/Movement.h"
-#include "GUI/ImGuiComponent.h"
-#include "GUI/ImGuiDebugMenu.h"
+#include "Editor.h"
 #include "MousePointer.h"
 #include "Player.h"
 #include "Stars.h"
@@ -23,6 +20,7 @@ public:
                                        int resHeight, float zoom,
                                        pain::Application *app)
   {
+#if 0
     // PLAYER ---------------------------------------------------------------
     pain::Texture &shipTex =
         pain::resources::getTexture("resources/textures/ship_H.png");
@@ -134,20 +132,30 @@ public:
     reg::Entity mp = MousePointer::create(scene);
     scene.emplaceScript<MousePointerScript>(mp, cameraEntity);
 
-    scene.emplaceImGuiScript<pain::ImGuiDebugMenu>(scene.getEntity(), app,
-                                                   cameraEntity, mp);
-    return scene.emplaceScript<MainScript>(scene.getEntity(), std::move(stars),
-                                           player, std::move(asteroids),
-                                           std::move(walls), mp);
+#endif
+    scene.emplaceImGuiScript<PainlessEditor>(scene.getEntity(), *app);
+    // return scene.emplaceScript<MainScript>(scene.getEntity(),
+    // std::move(stars),
+    //                                        player, std::move(asteroids),
+    //                                        std::move(walls), mp);
+    reg::Entity orthoCamera =
+        pain::Dummy2dCamera::create(scene, resWeight, resHeight, zoom);
+
+    const pain::OrthoCameraComponent &camComp =
+        scene.getComponent<pain::OrthoCameraComponent>(orthoCamera);
+    app->setRendererCamera(*camComp.m_matrices, orthoCamera);
+    return scene.emplaceScript<MainScript>(scene.getEntity(), orthoCamera);
   }
   void onRender(pain::Renderer2d &renderer, bool minimazed,
                 pain::DeltaTime deltatime)
   {
-    // renderer.drawQuad(
-    //     {0.0f, 0.0f}, {0.2f, 0.2f}, {0.2f, 0.9f, 0.6f, 1.f},
-    //     pain::resources::getDefaultTexture(pain::resources::BLANK, false));
-    // renderer.drawCircle({0.0f, 0.0f}, 0.2f, {0.2f, 0.3f, 0.9f, 1.f});
+    renderer.drawQuad(
+        {0.0f, 0.0f}, {0.2f, 0.2f}, {0.2f, 0.9f, 0.6f, 1.f},
+        pain::resources::getDefaultTexture(pain::resources::Blank, false));
+    renderer.drawCircle({0.0f, 0.0f}, 0.2f, {0.2f, 0.3f, 0.9f, 1.f});
   }
+  MainScript(reg::Entity entity, pain::Scene &scene, reg::Entity orthocamera)
+      : ExtendedEntity(entity, scene), m_orthocamera(orthocamera) {};
 
   MainScript(reg::Entity entity, pain::Scene &scene,
              std::vector<reg::Entity> &&stars, reg::Entity orthocamera,
@@ -181,12 +189,16 @@ pain::Application *pain::createApplication()
   const char *title = "Developing Pain - Example 2d";
   const int width = 1000;
   const int height = 1000;
-  const float zoom = 7.f;
-  Application *app = Application::createApplication(title, width, height);
+  const int editorWidth = 600;
+  const int editorHeight = 600;
+  const float zoom = 5.f;
+
+  Application *app = Application::createApplication(
+      title, width, height, {.width = editorWidth, .height = editorHeight});
 
   pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{},
                                         pain::ImGuiComponent{});
-  MainScript::createScriptScene(scene, width, height, zoom, app);
+  MainScript::createScriptScene(scene, editorWidth, editorHeight, zoom, app);
 
   // Scene *scene = new MainScene(app->getLuaState());
   // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);

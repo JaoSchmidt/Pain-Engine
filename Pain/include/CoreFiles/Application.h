@@ -1,4 +1,5 @@
 #pragma once
+#include "CoreFiles/RenderPipeline.h"
 #include "pch.h"
 
 #include "Assets/DeltaTime.h"
@@ -16,7 +17,9 @@ class Application
 {
 public:
   static constexpr const char *configIniFile = "config.ini";
-  static Application *createApplication(const char *title, int w, int h);
+  static Application *
+  createApplication(const char *title, int w, int h,
+                    FrameBufferCreationInfo &&frameBufferCreationInfo);
   ~Application();
 
   // TODO: This is useful to mess with time e.g. set speed to as high as
@@ -33,6 +36,10 @@ public:
   bool inline *getIsSimulation() { return &m_isSimulation; }
   sol::state &getLuaState() { return m_luaState; };
   Renderer2d &getRenderer() { return m_renderer; }
+  const FrameBufferCreationInfo &getFrameInfo() const
+  {
+    return m_renderPipeline.m_frameBuffer.getSpecification();
+  }
 
   // ECS
   void stopLoop(bool restartFlag = false);
@@ -57,7 +64,8 @@ public:
   }
 
 private:
-  Application(sol::state &&luaState, SDL_Window *window, void *context);
+  Application(sol::state &&luaState, SDL_Window *window, void *context,
+              RenderPipeline &&renderPipeline);
   // =============================================================== //
   // OWNED CLASSES
   // =============================================================== //
@@ -85,14 +93,7 @@ private:
   const double m_fixedFPS = 1.0 / 60.0;
   double m_timeMultiplier = 1.0;
   DeltaTime m_maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
-
-  // Pure Black
-  // static constexpr glm::vec4 m_clearColor = glm::vec4(0.0,0.0,0.0,1);
-  // Dark Grey
-  static constexpr glm::vec4 m_clearColor = glm::vec4(0.2, 0.2, 0.2, 1);
-  // Strong Pink
-  // static constexpr glm::vec4 m_clearColor = glm::vec4(1.0, 0.2, 0.9, 1);
-
+  RenderPipeline m_renderPipeline;
   friend struct Pain;
 
   // FPS Calculation

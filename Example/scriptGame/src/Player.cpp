@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "ECS/Components/Particle.h"
+#include "GUI/ImGuiDebugRegistry.h"
 #include "Misc/Events.h"
 #include "Physics/Collision/Collider.h"
 #include "Scripting/Component.h"
@@ -24,6 +25,13 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
                                  resolutionHeight}, //
       pain::NativeScriptComponent{}, pain::LuaScriptComponent{entity, scene});
   return entity;
+}
+
+void Player::Script::onRender(pain::Renderer2d &renderer, bool isMinimized,
+                              pain::DeltaTime currentTime)
+{
+  auto &camCC = getComponent<pain::OrthoCameraComponent>();
+  IMGUI_PLOG([=]() { ImGui::Text("Camera zoom: %.3f", camCC.m_zoomLevel); });
 }
 
 void Player::Script::onCreate()

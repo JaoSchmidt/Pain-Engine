@@ -2,6 +2,7 @@
 
 #ifdef PAIN_RENDERER_OPENGL
 
+#include "platform/OpenGL/OpenGLDebugger.h"
 #include <SDL2/SDL_surface.h>
 #include <SDL_image.h>
 #include <cstring>
@@ -17,27 +18,28 @@ namespace pain::backend
 // Helpers
 // ------------------------------------------------------------
 
-static SDL_Surface *flipVertical(const SDL_Surface &surface)
-{
-  SDL_Surface *result = SDL_CreateRGBSurface(
-      surface.flags, surface.w, surface.h, surface.format->BytesPerPixel * 8,
-      surface.format->Rmask, surface.format->Gmask, surface.format->Bmask,
-      surface.format->Amask);
-
-  const size_t pitch = static_cast<unsigned long>(surface.pitch);
-  const size_t pxlength = pitch * (static_cast<unsigned long>(surface.h - 1));
-
-  auto *src = static_cast<unsigned char *>(surface.pixels) + pxlength;
-  auto *dst = static_cast<unsigned char *>(result->pixels);
-
-  for (int y = 0; y < surface.h; ++y) {
-    std::memcpy(dst, src, pitch);
-    src -= pitch;
-    dst += pitch;
-  }
-
-  return result;
-}
+// static SDL_Surface *flipVertical(const SDL_Surface &surface)
+// {
+//   SDL_Surface *result = SDL_CreateRGBSurface(
+//       surface.flags, surface.w, surface.h, surface.format->BytesPerPixel * 8,
+//       surface.format->Rmask, surface.format->Gmask, surface.format->Bmask,
+//       surface.format->Amask);
+//
+//   const size_t pitch = static_cast<unsigned long>(surface.pitch);
+//   const size_t pxlength = pitch * (static_cast<unsigned long>(surface.h -
+//   1));
+//
+//   auto *src = static_cast<unsigned char *>(surface.pixels) + pxlength;
+//   auto *dst = static_cast<unsigned char *>(result->pixels);
+//
+//   for (int y = 0; y < surface.h; ++y) {
+//     std::memcpy(dst, src, pitch);
+//     src -= pitch;
+//     dst += pitch;
+//   }
+//
+//   return result;
+// }
 
 static constexpr unsigned getInternalFormat(ImageFormat format)
 {
@@ -131,6 +133,7 @@ uint32_t createTextureFromFile(const TextureFromFileInfo &info)
 
   glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, surface->w, surface->h, 0,
                dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
+  P_OPENGL_CHECK("Failed glTexImage2D inside Texture");
 
   PLOG_I("Texture created id = {}, path = {}", id, info.path);
   return id;

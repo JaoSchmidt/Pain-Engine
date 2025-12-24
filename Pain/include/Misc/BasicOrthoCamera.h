@@ -9,15 +9,11 @@
 namespace pain
 {
 
-class Scene;
-class OrthoCamera : public NormalEntity
+namespace Dummy2dCamera
 {
-public:
-  MOVABLE(OrthoCamera)
-  NONCOPYABLE(OrthoCamera)
-  OrthoCamera(Scene *scene, int resolutionHeight, int resolutionWeight,
-              float zoomLevel);
-};
+reg::Entity create(pain::Scene &scene, int resolutionHeight,
+                   int resolutionWeigh, float zoomLevel);
+}
 
 class OrthoCameraScript : public ExtendedEntity
 {

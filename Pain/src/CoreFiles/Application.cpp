@@ -4,6 +4,7 @@
 #include "ContextBackend.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "GUI/ImGuiSys.h"
 #include "Scripting/State.h"
@@ -19,7 +20,8 @@ unsigned Application::getProcessorCount()
   return std::thread::hardware_concurrency();
 }
 
-Application *Application::createApplication(const char *title, int w, int h)
+Application *Application::createApplication(const char *title, int w, int h,
+                                            FrameBufferCreationInfo &&fbci)
 {
   PLOG_T(resources::getCurrentWorkingDir());
   // =========================================================================//
@@ -67,18 +69,20 @@ Application *Application::createApplication(const char *title, int w, int h)
   // config.ini file
   // =========================================================================//
 
+  auto rp = fbci.swapChainTarget ? RenderPipeline::create()
+                                 : RenderPipeline::create(fbci);
   return new Application(std::move(luaState), std::move(window),
-                         std::move(context));
+                         std::move(context), std::move(rp));
 }
 /* Creates window, opengl context and init glew*/
 // renderer is created BEFORE the asset manager, as the asset manager retrives
 // the default assets, it will slowly link some to the renderer cache
 Application::Application(sol::state &&luaState, SDL_Window *window,
-                         void *context)
+                         void *context, RenderPipeline &&renderPipeline)
     : m_renderer(Renderer2d::createRenderer2d()),
       m_defaultImGuiInstance(new EngineController()),
       m_luaState(std::move(luaState)), m_endGameFlags(), m_window(window),
-      m_context(context)
+      m_context(context), m_renderPipeline(std::move(renderPipeline))
 {
   addComponentFunctions(m_luaState);
 };
@@ -171,15 +175,8 @@ EndGameFlags Application::run()
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Rendering");
-      // int w, h;
-      // SDL_GetWindowSize(m_window, &w, &h);
-      // Renderer2d::setViewport(0, 0, w, h);
-      m_renderer.setClearColor(m_clearColor);
-      m_renderer.clear();
-
-      m_renderer.beginScene(lastFrameTime, *m_worldScene);
-      m_worldScene->renderSystems(m_renderer, m_isMinimized, lastFrameTime);
-      m_renderer.endScene();
+      m_renderPipeline.pipeline(m_renderer, m_isMinimized, lastFrameTime,
+                                *m_worldScene);
       P_ASSERT(m_window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_window);
     }

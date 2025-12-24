@@ -50,6 +50,8 @@ void InitRenderer()
   // HACK: allow textures with 3 channels to align properly, e.g. font textures.
   // No idea why it works tho, perhaps I will find a proper doc later
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  // temp enable depth test
+  glEnable(GL_DEPTH_TEST);
 }
 void setViewPort(int x, int y, int width, int height)
 {
@@ -70,7 +72,8 @@ void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount)
 {
   uint32_t count =
       indexCount ? indexCount : vertexArray.getIndexBuffer().getCount();
-  glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, static_cast<int32_t>(count), GL_UNSIGNED_INT,
+                 nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 

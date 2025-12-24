@@ -9,23 +9,22 @@
 #include "imgui.h"
 namespace pain
 {
-
-OrthoCamera::OrthoCamera(Scene *scene, int resolutionHeight,
-                         int resolutionWeigh, float zoomLevel)
-    : NormalEntity(*scene)
+reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionHeight,
+                                  int resolutionWeigh, float zoomLevel)
 {
   const float aspectRatio = static_cast<float>(resolutionWeigh) /
                             static_cast<float>(resolutionHeight);
-  // clang-format off
-  createComponents(*scene,
-      Movement2dComponent{glm::vec2(0.f), 1.f},
-      RotationComponent{},
-      Transform2dComponent{},
-      OrthoCameraComponent{ aspectRatio, zoomLevel, resolutionWeigh, resolutionHeight},
-      NativeScriptComponent{}
-  );
-  // clang-format on
-};
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(entity, pain::Transform2dComponent{}, //
+                         pain::RotationComponent{},            //
+                         pain::Movement2dComponent{},          //
+                         pain::OrthoCameraComponent{aspectRatio, zoomLevel,
+                                                    resolutionWeigh,
+                                                    resolutionHeight}, //
+                         pain::NativeScriptComponent{});
+  return entity;
+}
+
 void OrthoCameraScript::onCreate()
 {
   getComponent<Movement2dComponent>().m_rotationSpeed = 1.f;

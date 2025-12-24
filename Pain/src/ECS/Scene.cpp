@@ -79,10 +79,14 @@ void Scene::renderSystems(Renderer2d &renderer, bool isMinimized,
 {
   m_renderSystem->onRender(renderer, isMinimized, currentTime);
   m_nativeScriptSystem->onRender(renderer, isMinimized, currentTime);
-  m_imGuiSystem->onRender(renderer, isMinimized, currentTime);
   m_luaSystem->onRender(renderer, isMinimized, currentTime);
 }
 
+void Scene::renderImGui(Renderer2d &renderer, bool isMinimized,
+                        DeltaTime currentTime)
+{
+  m_imGuiSystem->onRender(renderer, isMinimized, currentTime);
+}
 Scene::~Scene()
 {
   delete m_renderSystem;

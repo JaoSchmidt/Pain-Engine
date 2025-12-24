@@ -189,7 +189,8 @@ public:
   void updateSystems(const SDL_Event &event);
   void renderSystems(Renderer2d &renderer, bool isMinimized,
                      DeltaTime currentTime);
-
+  void renderImGui(Renderer2d &renderer, bool isMinimized,
+                   DeltaTime currentTime);
   // NOTE: this might need to be modified if I ever want modular systems
   Systems::SweepAndPruneSys *getCollisionSys() { return m_sweepAndPruneSystem; }
 
