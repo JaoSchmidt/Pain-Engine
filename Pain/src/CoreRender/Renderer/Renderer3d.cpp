@@ -85,7 +85,8 @@ void Renderer3d::drawIndexed(VertexArray &vertexArray, uint32_t indexCount)
 {
   uint32_t count =
       indexCount ? indexCount : vertexArray.getIndexBuffer().getCount();
-  glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, static_cast<int32_t>(count), GL_UNSIGNED_INT,
+                 nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 

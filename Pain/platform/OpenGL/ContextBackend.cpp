@@ -50,8 +50,10 @@ void InitRenderer()
   // HACK: allow textures with 3 channels to align properly, e.g. font textures.
   // No idea why it works tho, perhaps I will find a proper doc later
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  // temp enable depth test
-  glEnable(GL_DEPTH_TEST);
+
+  // NOTE: This enable 3d and can be changed later in case we need some camera
+  // mechanic
+  // glEnable(GL_DEPTH_TEST);
 }
 void setViewPort(int x, int y, int width, int height)
 {

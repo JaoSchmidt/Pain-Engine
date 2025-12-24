@@ -150,9 +150,17 @@ public:
                 pain::DeltaTime deltatime)
   {
     renderer.drawQuad(
-        {0.0f, 0.0f}, {0.2f, 0.2f}, {0.2f, 0.9f, 0.6f, 1.f},
+        {0.2, -0.2f}, {0.2f, 0.2f}, {0.8f, 0.2f, 0.1f, 1.f},
+        0.25f * std::numbers::pi,
+        pain::resources::getTexture("resources/textures/Checkerboard.png"));
+    renderer.drawQuad(
+        {0.2f, 0.2f}, {0.2f, 0.2f}, {0.9f, 0.9f, 0.2f, 1.f},
         pain::resources::getDefaultTexture(pain::resources::Blank, false));
-    renderer.drawCircle({0.0f, 0.0f}, 0.2f, {0.2f, 0.3f, 0.9f, 1.f});
+    renderer.drawQuad({-0.2f, 0.2f}, {0.2f, 0.2f}, {1.f, 1.f, 1.f, 1.f},
+                      pain::resources::getTexture(
+                          "resources/textures/Checkerboard original.png"));
+    renderer.drawCircle({0.0f, 0.0f}, 0.1f, {0.2f, 0.3f, 0.9f, 1.f});
+    renderer.drawTri({-0.2f, -0.2f}, {0.2f, 0.2f}, {0.2f, 0.3f, 0.9f, 1.f});
   }
   MainScript(reg::Entity entity, pain::Scene &scene, reg::Entity orthocamera)
       : ExtendedEntity(entity, scene), m_orthocamera(orthocamera) {};
