@@ -46,10 +46,20 @@ QuadBatch::QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
       vao(*VertexArray::createVertexArray(vbo, ib)), shader(std::move(shader_)),
       cpuBuffer(std::make_unique<Vertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
-void QuadBatch::reset()
+
+void QuadBatch::resetPtr(uint32_t &textureSlotIndex)
 {
   indexCount = 0;
   ptr = cpuBuffer.get();
+  textureSlotIndex = 1;
+}
+void QuadBatch::resetAll(uint32_t &textureSlotIndex)
+{
+  resetPtr(textureSlotIndex);
+#ifndef NDEBUG
+  statsCount = 0;
+  drawCount = 0;
+#endif
 }
 
 void QuadBatch::flush(const std::array<Texture *, MaxTextureSlots> &textures,
@@ -70,6 +80,9 @@ void QuadBatch::flush(const std::array<Texture *, MaxTextureSlots> &textures,
   shader.bind();
   ib.bind();
   backend::drawIndexed(vao, indexCount);
+#ifndef NDEBUG
+  drawCount++;
+#endif
 }
 
 void QuadBatch::allocateQuad(const glm::mat4 &transform,
@@ -93,6 +106,9 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform,
     ptr++;
   }
   indexCount += 6;
+#ifndef NDEBUG
+  statsCount++;
+#endif
 }
 
 } // namespace pain

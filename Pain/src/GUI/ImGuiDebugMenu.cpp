@@ -2,6 +2,7 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "ECS/Components/Camera.h"
 #include "GUI/ImGuiDebugRegistry.h"
 
 namespace pain

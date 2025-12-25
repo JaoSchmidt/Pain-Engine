@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreFiles/RenderPipeline.h"
+#include "ECS/Scene.h"
 #include "pch.h"
 
 #include "Assets/DeltaTime.h"

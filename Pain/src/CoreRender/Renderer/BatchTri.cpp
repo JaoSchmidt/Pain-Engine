@@ -31,7 +31,15 @@ TriBatch::TriBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
       cpuBuffer(std::make_unique<Vertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
 
-void TriBatch::reset()
+void TriBatch::resetAll()
+{
+  resetPtr();
+#ifndef NDEBUG
+  statsCount = 0;
+  drawCount = 0;
+#endif
+}
+void TriBatch::resetPtr()
 {
   indexCount = 0;
   ptr = cpuBuffer.get();
@@ -50,6 +58,9 @@ void TriBatch::flush()
   shader.bind();
   ib.bind();
   backend::drawIndexed(vao, indexCount);
+#ifndef NDEBUG
+  drawCount++;
+#endif
 }
 
 void TriBatch::allocateTri(const glm::mat4 &transform,
@@ -67,6 +78,9 @@ void TriBatch::allocateTri(const glm::mat4 &transform,
     ptr++;
   }
   indexCount += 3;
+#ifndef NDEBUG
+  statsCount++;
+#endif
 }
 
 } // namespace pain

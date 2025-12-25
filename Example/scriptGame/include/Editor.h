@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreRender/FrameBuffer.h"
+#include "imgui_internal.h"
 #include <imgui.h>
 #include <pain.h>
 
@@ -13,10 +14,10 @@ public:
   NONCOPYABLE(PainlessEditor);
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
+
   void onRender(pain::Renderer2d &renderer, bool isMinimized,
                 pain::DeltaTime currentTime)
   {
-    UNUSED(renderer)
     UNUSED(currentTime)
     UNUSED(isMinimized)
 
@@ -56,6 +57,21 @@ public:
       if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
         ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
         ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+        static bool dockspace_initialized = false;
+        if (!dockspace_initialized) {
+          dockspace_initialized = true;
+          ImGui::DockBuilderRemoveNode(dockspace_id);
+          ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+          ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+          ImGuiID dock_id_left, dock_id_center;
+
+          // Split: 25% left
+          ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25f,
+                                      &dock_id_left, &dock_id_center);
+          ImGui::DockBuilderDockWindow("Stats", dock_id_left);
+          ImGui::DockBuilderDockWindow("Viewport", dock_id_center);
+          ImGui::DockBuilderFinish(dockspace_id);
+        }
       }
 
       if (ImGui::BeginMenuBar()) {
@@ -73,25 +89,49 @@ public:
         ImGui::EndMenuBar();
       }
 
-      ImGui::Begin("Settings");
+      ImGui::Begin("Stats");
 
-      // auto stats = Hazel::Renderer2D::GetStats();
+      // -------------------------------------------------- //
+      auto showStats = [](const pain::Renderer2d::Stats &s) {
+        ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "%s instances: %d",
+                           s.name, s.count);
+
+        // Small indented box for extra stats
+        if (ImGui::TreeNodeEx((void *)(&s), // unique ID
+                              ImGuiTreeNodeFlags_Framed |
+                                  ImGuiTreeNodeFlags_SpanAvailWidth,
+                              "Details")) {
+          ImGui::BeginChild(
+              "DetailsBox",
+              ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4), true);
+
+          ImGui::Text("Draw Calls: %d", s.draws);
+          ImGui::Text("Vertices:  %d", s.vertices);
+          ImGui::Text("Indices:   %d", s.indices);
+
+          ImGui::EndChild();
+          ImGui::TreePop();
+        }
+      };
       ImGui::Text("Renderer2D Stats:");
-      ImGui::Text("Draw Calls: %d", 0);
-      ImGui::Text("Quads: %d", 0);
-      ImGui::Text("Vertices: %d", 0);
-      ImGui::Text("Indices: %d", 0);
-      // ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-      // ImGui::Text("Quads: %d", stats.QuadCount);
-      // ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-      // ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+      showStats(renderer.getStatistics<pain::QuadBatch>());
+      showStats(renderer.getStatistics<pain::CircleBatch>());
+      showStats(renderer.getStatistics<pain::TextBatch>());
+      showStats(renderer.getStatistics<pain::SprayBatch>());
+      showStats(renderer.getStatistics<pain::TriBatch>());
 
+      ImGui::End();
+
+      ImGui::Begin("Viewport");
       uint32_t textureID = m_app.getFrameInfo().colorAttachmentTextureId;
-      if (textureID)
-        ImGui::Image(static_cast<ImTextureID>(textureID),
-                     ImVec2{static_cast<float>(m_app.getFrameInfo().width),
-                            static_cast<float>(m_app.getFrameInfo().height)});
+      if (textureID) {
+        m_avail = ImGui::GetContentRegionAvail();
 
+        ImGui::Image((ImTextureID)(uintptr_t)textureID, m_avail);
+        // ImGui::Image(static_cast<ImTextureID>(textureID),
+        //              ImVec2{static_cast<float>(m_app.getFrameInfo().width),
+        //                     static_cast<float>(m_app.getFrameInfo().height)});
+      }
       ImGui::End();
 
       ImGui::End();
@@ -109,6 +149,7 @@ private:
       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
       ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
+  ImVec2 m_avail;
   bool m_dockspaceOpen = true;
   pain::Application &m_app;
 };

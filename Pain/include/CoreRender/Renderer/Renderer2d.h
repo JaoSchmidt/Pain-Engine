@@ -9,12 +9,11 @@
 #include "CoreRender/Renderer/BatchText.h"
 #include "CoreRender/Renderer/BatchTri.h"
 #include "CoreRender/Renderer/MiscDebugGrid.h"
-#include "CoreRender/Shader.h"
 #include "CoreRender/Text/Font.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 #include "ECS/Components/Particle.h"
-#include "Misc/BasicOrthoCamera.h"
+#include "ECS/Registry/Entity.h"
 
 namespace pain
 {
@@ -22,6 +21,13 @@ namespace pain
 class Scene;
 
 struct Renderer2d {
+  struct Stats {
+    const uint32_t &count;
+    uint32_t indices;
+    uint32_t vertices;
+    const uint32_t &draws;
+    const char *name;
+  };
   static Renderer2d createRenderer2d();
   Renderer2d &operator=(Renderer2d &&o) noexcept;
   // void changeCamera(const OrthographicMatrices &cameraMatrices);
@@ -99,6 +105,27 @@ struct Renderer2d {
 
   // // TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
   static constexpr uint32_t MaxTextureSlots = 32;
+
+  template <typename Batch>
+    requires requires(Batch &b) { b.statsCount; }
+  Stats getStatistics()
+  {
+    if constexpr (std::is_same_v<Batch, TriBatch>)
+      return {m.triBatch.statsCount, m.triBatch.statsCount * 3,
+              m.triBatch.statsCount * 3, m.triBatch.drawCount, "Triangules"};
+    else if constexpr (std::is_same_v<Batch, QuadBatch>)
+      return {m.quadBatch.statsCount, m.quadBatch.statsCount * 6,
+              m.quadBatch.statsCount * 4, m.quadBatch.drawCount, "Quads"};
+    else if constexpr (std::is_same_v<Batch, TextBatch>)
+      return {m.textBatch.statsCount, m.textBatch.statsCount * 6,
+              m.textBatch.statsCount * 4, m.textBatch.drawCount, "Glyphs"};
+    else if constexpr (std::is_same_v<Batch, CircleBatch>)
+      return {m.circleBatch.statsCount, m.circleBatch.statsCount * 6,
+              m.circleBatch.statsCount * 4, m.circleBatch.drawCount, "Circles"};
+    else if constexpr (std::is_same_v<Batch, SprayBatch>)
+      return {m.sprayBatch.statsCount, m.sprayBatch.statsCount * 6,
+              m.sprayBatch.statsCount * 4, m.sprayBatch.drawCount, "Sprays"};
+  }
 
 private:
   void flush();

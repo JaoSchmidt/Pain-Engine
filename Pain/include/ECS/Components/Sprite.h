@@ -5,6 +5,8 @@
 #include "Misc/BasicShape.h"
 #include "Misc/TextureSheet.h"
 
+#include <variant>
+
 namespace pain
 {
 struct SheetStruct {

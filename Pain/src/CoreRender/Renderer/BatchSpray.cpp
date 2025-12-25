@@ -38,10 +38,18 @@ SprayBatch::SprayBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader)
       cpuBuffer(std::make_unique<ParticleVertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
 
-void SprayBatch::reset()
+void SprayBatch::resetPtr()
 {
   indexCount = 0;
   ptr = cpuBuffer.get();
+}
+void SprayBatch::resetAll()
+{
+  resetPtr();
+#ifndef NDEBUG
+  statsCount = 0;
+  drawCount = 0;
+#endif
 }
 
 void SprayBatch::flush()
@@ -58,6 +66,9 @@ void SprayBatch::flush()
   shader.bind();
   ib.bind();
   backend::drawIndexed(vao, indexCount);
+#ifndef NDEBUG
+  drawCount++;
+#endif
 }
 
 void SprayBatch::allocateSprayParticles(const glm::vec2 &position,
@@ -83,6 +94,9 @@ void SprayBatch::allocateSprayParticles(const glm::vec2 &position,
     ptr++;
   }
   indexCount += 6;
+#ifndef NDEBUG
+  statsCount++;
+#endif
 }
 
 } // namespace pain

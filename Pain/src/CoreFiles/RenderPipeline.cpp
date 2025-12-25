@@ -1,5 +1,7 @@
 
 #include "CoreFiles/RenderPipeline.h"
+#include "ECS/Components/Camera.h"
+#include "ECS/Scene.h"
 
 #include <cstdlib>
 
@@ -33,6 +35,40 @@ RenderPipeline RenderPipeline::create(const FrameBufferCreationInfo &info)
   }
 
   return RenderPipeline{std::move(*fb)};
+}
+
+void resizeCamera(const SDL_Event &event, OrthoCameraComponent &cc,
+                  const FrameBuffer &fb)
+{
+  if (fb.getSpecification().swapChainTarget) {
+    cc.m_matrices->setResolution(event.window.data1, event.window.data2);
+    cc.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
+  } else {
+    cc.m_matrices->setResolution(static_cast<int>(fb.getWidth()),
+                                 static_cast<int>(fb.getHeight()));
+    cc.m_aspectRatio = fb.getWidthf() / fb.getHeightf();
+  }
+  cc.m_matrices->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
+                               cc.m_aspectRatio * cc.m_zoomLevel,
+                               -cc.m_zoomLevel, cc.m_zoomLevel);
+}
+
+void RenderPipeline::onWindowResized(const SDL_Event &event,
+                                     Renderer2d &renderer, Scene &scene)
+{
+  renderer.setViewport(0, 0, event.window.data1, event.window.data2);
+  auto chunks = scene.query<OrthoCameraComponent>();
+  for (auto &chunk : chunks) {
+    auto *__restrict c = std::get<0>(chunk.arrays);
+
+    for (size_t i = 0; i < chunk.count; ++i) {
+      if (event.type == SDL_WINDOWEVENT) {
+        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+          resizeCamera(event, c[i], m_frameBuffer);
+        }
+      }
+    }
+  }
 }
 
 void RenderPipeline::pipeline(Renderer2d &renderer, bool isMinimized,

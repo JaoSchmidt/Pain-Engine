@@ -18,6 +18,8 @@ struct TriBatch {
   static constexpr uint32_t MaxPolygons = 1000;
   static constexpr uint32_t MaxVertices = MaxPolygons * 3;
   static constexpr uint32_t MaxIndices = MaxPolygons * 3;
+  uint32_t statsCount = 0;
+  uint32_t drawCount = 0;
 
   VertexBuffer vbo;
   IndexBuffer ib;
@@ -29,7 +31,8 @@ struct TriBatch {
   uint32_t indexCount = 0;
 
   static TriBatch create();
-  void reset();
+  void resetAll();
+  void resetPtr();
   void flush();
   void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor);
 

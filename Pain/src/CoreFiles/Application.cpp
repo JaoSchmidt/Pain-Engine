@@ -161,8 +161,7 @@ EndGameFlags Application::run()
           else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
             m_isMinimized = false;
           else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-            m_renderer.setViewport(0, 0, event.window.data1,
-                                   event.window.data2);
+            m_renderPipeline.onWindowResized(event, m_renderer, *m_worldScene);
           break;
         default:
           break;

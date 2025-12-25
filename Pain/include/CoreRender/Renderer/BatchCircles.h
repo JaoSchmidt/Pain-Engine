@@ -16,6 +16,8 @@ struct CircleBatch {
   static constexpr uint32_t MaxPolygons = 1000;
   static constexpr uint32_t MaxVertices = MaxPolygons * 4;
   static constexpr uint32_t MaxIndices = MaxPolygons * 6;
+  uint32_t statsCount = 0;
+  uint32_t drawCount = 0;
 
   VertexBuffer vbo;
   IndexBuffer ib;
@@ -27,7 +29,8 @@ struct CircleBatch {
   uint32_t indexCount = 0;
 
   static CircleBatch create();
-  void reset();
+  void resetAll();
+  void resetPtr();
   void flush();
 
   void allocateCircle(const glm::mat4 &transform, const glm::vec4 &tintColor,

@@ -24,6 +24,8 @@ struct QuadBatch {
   static constexpr uint32_t MaxPolygons = 40000;
   static constexpr uint32_t MaxVertices = MaxPolygons * 4;
   static constexpr uint32_t MaxIndices = MaxPolygons * 6;
+  uint32_t statsCount = 0;
+  uint32_t drawCount = 0;
 
   VertexBuffer vbo;
   IndexBuffer ib;
@@ -39,7 +41,8 @@ struct QuadBatch {
   void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
                     const float tilingFactor, const float textureIndex,
                     const std::array<glm::vec2, 4> &textureCoordinate);
-  void reset();
+  void resetAll(uint32_t &textureSlotIndex);
+  void resetPtr(uint32_t &textureSlotIndex);
   void flush(const std::array<Texture *, MaxTextureSlots> &textures,
              uint32_t textureCount);
 

@@ -79,6 +79,10 @@ void Renderer2d::drawCircle(const glm::vec2 &position, const float radius,
                             const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
+  if (m.circleBatch.indexCount >= QuadBatch::MaxIndices) {
+    m.circleBatch.flush();
+    m.circleBatch.resetPtr();
+  }
   const float diameter = 2.f * radius;
   const glm::mat4 transform =
       getTransform(position, glm::vec2(diameter, diameter));
@@ -95,6 +99,11 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
+  if (m.quadBatch.indexCount >= QuadBatch::MaxIndices) {
+    m.quadBatch.flush(m.textureSlots, m.textureSlotIndex);
+    m.quadBatch.resetPtr(m.textureSlotIndex);
+  }
+
   const float texIndex = allocateTextures(texture);
   const glm::mat4 transform = getTransform(position, size);
   m.quadBatch.allocateQuad(transform, tintColor, tilingFactor, texIndex,
@@ -107,6 +116,10 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
+  if (m.quadBatch.indexCount >= QuadBatch::MaxIndices) {
+    m.quadBatch.flush(m.textureSlots, m.textureSlotIndex);
+    m.quadBatch.resetPtr(m.textureSlotIndex);
+  }
   PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
@@ -121,6 +134,10 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
                          const glm::vec4 &tintColor)
 {
+  if (m.triBatch.indexCount >= TriBatch::MaxIndices) {
+    m.triBatch.flush();
+    m.triBatch.resetPtr();
+  }
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size);
   m.triBatch.allocateTri(transform, tintColor);
@@ -129,6 +146,10 @@ void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
                          const glm::vec4 &tintColor,
                          const float rotationRadians)
 {
+  if (m.triBatch.indexCount >= TriBatch::MaxIndices) {
+    m.triBatch.flush();
+    m.triBatch.resetPtr();
+  }
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   m.triBatch.allocateTri(transform, tintColor);
@@ -140,6 +161,10 @@ void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
 
 void Renderer2d::drawSprayParticle(const Particle &p)
 {
+  if (m.sprayBatch.indexCount >= SprayBatch::MaxIndices) {
+    m.sprayBatch.flush();
+    m.sprayBatch.resetPtr();
+  }
   m.sprayBatch.allocateSprayParticles(p.m_position, p.m_offset, p.m_normal,
                                       p.m_startTime, p.m_rotationSpeed);
 }
@@ -154,6 +179,12 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
   const auto &fontGeometry = font.getFontGeometry();
   const auto &metrics = fontGeometry.getMetrics();
   const double &spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
+
+  if (m.textBatch.indexCount >= TextBatch::MaxIndices) {
+    m.textBatch.flush();
+    m.textBatch.resetPtr();
+  }
+
   m.textBatch.fontAtlas = &font.getAtlasTexture();
 
   double x = 0.0;
@@ -227,7 +258,7 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
 }
 
 // ================================================================= //
-// Private or shader specific functions (old draw2d.cpp)
+// Old draw2d.cpp functions
 // ================================================================= //
 Renderer2d Renderer2d::createRenderer2d()
 {
@@ -260,13 +291,11 @@ void Renderer2d::bindTextures()
 void Renderer2d::goBackToFirstVertex()
 {
   PROFILE_FUNCTION();
-  m.quadBatch.reset();
-  m.textBatch.reset();
-  m.sprayBatch.reset();
-  m.circleBatch.reset();
-  m.triBatch.reset();
-
-  m.textureSlotIndex = 1; // 1, because 0 is for default 1x1 white texture
+  m.quadBatch.resetAll(m.textureSlotIndex);
+  m.textBatch.resetAll();
+  m.sprayBatch.resetAll();
+  m.circleBatch.resetAll();
+  m.triBatch.resetAll();
 }
 
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,

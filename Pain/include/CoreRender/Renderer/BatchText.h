@@ -23,6 +23,8 @@ struct TextBatch {
   static constexpr uint32_t MaxGlyphs = 40000;
   static constexpr uint32_t MaxVertices = MaxGlyphs * 4;
   static constexpr uint32_t MaxIndices = MaxGlyphs * 6;
+  uint32_t statsCount = 0;
+  uint32_t drawCount = 0;
 
   VertexBuffer vbo;
   IndexBuffer ib;
@@ -36,7 +38,8 @@ struct TextBatch {
   const Texture *fontAtlas = nullptr;
 
   static TextBatch create();
-  void reset();
+  void resetAll();
+  void resetPtr();
   void flush();
 
   void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,

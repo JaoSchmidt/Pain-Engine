@@ -20,6 +20,8 @@ struct SprayBatch {
   static constexpr uint32_t MaxPolygons = 1000;
   static constexpr uint32_t MaxVertices = MaxPolygons * 4;
   static constexpr uint32_t MaxIndices = MaxPolygons * 6;
+  uint32_t statsCount = 0;
+  uint32_t drawCount = 0;
 
   VertexBuffer vbo;
   IndexBuffer ib;
@@ -31,7 +33,8 @@ struct SprayBatch {
   uint32_t indexCount = 0;
 
   static SprayBatch create();
-  void reset();
+  void resetAll();
+  void resetPtr();
   void flush();
 
   void allocateSprayParticles(const glm::vec2 &position,

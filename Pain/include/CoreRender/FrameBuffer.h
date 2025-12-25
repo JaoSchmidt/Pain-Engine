@@ -34,7 +34,9 @@ public:
     return m.colorAttachmentTextureId;
   }
   uint32_t getWidth() const { return static_cast<uint32_t>(m.width); }
+  float getWidthf() const { return static_cast<float>(m.width); }
   uint32_t getHeight() const { return static_cast<uint32_t>(m.height); }
+  float getHeightf() const { return static_cast<float>(m.height); }
 
 private:
   FrameBufferCreationInfo m;

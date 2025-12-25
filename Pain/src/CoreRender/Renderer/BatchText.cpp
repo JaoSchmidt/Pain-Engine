@@ -37,10 +37,18 @@ TextBatch::TextBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
       cpuBuffer(std::make_unique<TextQuadVertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
 
-void TextBatch::reset()
+void TextBatch::resetPtr()
 {
   indexCount = 0;
   ptr = cpuBuffer.get();
+}
+void TextBatch::resetAll()
+{
+  resetPtr();
+#ifndef NDEBUG
+  statsCount = 0;
+  drawCount = 0;
+#endif
 }
 
 void TextBatch::flush()
@@ -62,6 +70,9 @@ void TextBatch::flush()
 
   ib.bind();
   backend::drawIndexed(vao, indexCount);
+#ifndef NDEBUG
+  drawCount++;
+#endif
 }
 
 void TextBatch::allocateCharacter(
@@ -77,6 +88,9 @@ void TextBatch::allocateCharacter(
     ptr++;
   }
   indexCount += 6;
+#ifndef NDEBUG
+  statsCount++;
+#endif
 }
 
 } // namespace pain

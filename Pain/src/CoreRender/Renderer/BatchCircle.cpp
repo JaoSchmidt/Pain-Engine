@@ -36,10 +36,18 @@ CircleBatch::CircleBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_,
       cpuBuffer(std::make_unique<CircleVertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
 
-void CircleBatch::reset()
+void CircleBatch::resetPtr()
 {
   indexCount = 0;
   ptr = cpuBuffer.get();
+}
+void CircleBatch::resetAll()
+{
+  resetPtr();
+#ifndef NDEBUG
+  statsCount = 0;
+  drawCount = 0;
+#endif
 }
 
 void CircleBatch::flush()
@@ -56,6 +64,9 @@ void CircleBatch::flush()
   shader.bind();
   ib.bind();
   backend::drawIndexed(vao, indexCount);
+#ifndef NDEBUG
+  drawCount++;
+#endif
 }
 
 void CircleBatch::allocateCircle(const glm::mat4 &transform,
@@ -76,6 +87,9 @@ void CircleBatch::allocateCircle(const glm::mat4 &transform,
     ptr++;
   }
   indexCount += 6;
+#ifndef NDEBUG
+  statsCount++;
+#endif
 }
 
 } // namespace pain
