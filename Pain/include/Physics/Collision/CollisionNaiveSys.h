@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Assets/DeltaTime.h"
+#include "ECS/Components/ComponentManager.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Systems.h"
 namespace pain
@@ -8,11 +9,11 @@ namespace pain
 
 namespace Systems
 {
-struct NaiveCollisionSys : public System<CMNaiveCollision> {
+struct NaiveCollisionSys : public System<CMNaiveCollision>, IOnUpdate {
   template <typename... Args>
   NaiveCollisionSys(Args &&...args) : System(std::forward<Args>(args)...){};
   NaiveCollisionSys() = delete;
-  void onUpdate(DeltaTime dt);
+  void onUpdate(DeltaTime dt) override;
   // std::vector<std::tuple<const ColliderComponent *, Transform2dComponent *,
   //                        Movement2dComponent *>>
   //     m_movingObjects;

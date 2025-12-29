@@ -23,24 +23,24 @@ MousePointerScript::MousePointerScript(reg::Entity entity, pain::Scene &scene,
 
 void MousePointerScript::onCreate()
 {
-  pain::OrthoCameraComponent &camCC =
-      getScene().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
-  PLOG_I("Resolution x {}", camCC.m_matrices->getResolution().x);
-  PLOG_I("Resolution y {}", camCC.m_matrices->getResolution().y);
+  const pain::Component::OrthoCamera &camCC =
+      getComponent<pain::Component::OrthoCamera>(m_cameraEntity);
+  PLOG_I("Resolution x {}", camCC.getResolution().x);
+  PLOG_I("Resolution y {}", camCC.getResolution().y);
   PLOG_I("Zoom Level {}", camCC.m_zoomLevel);
 }
 
 glm::vec2 MousePointerScript::screenToWorld(int mouseX, int mouseY)
 {
   // 1. Get the active OrthoCamera
+  // pain::Scene &s = std::get<std::reference_wrapper<pain::Scene>>(m_scene);
   auto [camCC, camTC, camRC] =
-      getScene()
-          .getComponents<pain::OrthoCameraComponent, pain::Transform2dComponent,
-                         pain::RotationComponent>(m_cameraEntity);
+      getComponents<pain::Component::OrthoCamera, pain::Transform2dComponent,
+                    pain::RotationComponent>(m_cameraEntity);
 
   // 2. Convert screen -> NDC space from -1 to 1
-  float ndcX = (2.f * mouseX) / camCC.m_matrices->getResolution().x - 1.f;
-  float ndcY = 1.f - (2.f * mouseY) / camCC.m_matrices->getResolution().y;
+  float ndcX = (2.f * mouseX) / camCC.getResolution().x - 1.f;
+  float ndcY = 1.f - (2.f * mouseY) / camCC.getResolution().y;
 
   // 3. Convert NDC -> camera local coordinates
   glm::vec2 localCoord = glm::vec2(
@@ -48,8 +48,7 @@ glm::vec2 MousePointerScript::screenToWorld(int mouseX, int mouseY)
 
   IMGUI_PLOG([=]() {
     ImGui::Text("Aspect Ratio (world)  %.3f", camCC.m_aspectRatio);
-    ImGui::Text("Resolution (world) %dx%d ",
-                TP_VEC2(camCC.m_matrices->getResolution()));
+    ImGui::Text("Resolution (world) %dx%d ", TP_VEC2(camCC.getResolution()));
   });
   // 4. Convert camera local -> world coordinates using rotation
   float angle = glm::radians(camRC.m_rotationAngle);

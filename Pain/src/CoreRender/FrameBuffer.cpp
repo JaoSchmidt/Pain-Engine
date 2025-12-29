@@ -21,6 +21,12 @@ FrameBuffer::createFrameBuffer(const FrameBufferCreationInfo &info)
     return std::nullopt;
 }
 
+void FrameBuffer::resizeFrameBuffer(int32_t width, int32_t height)
+{
+  m.width = width;
+  m.height = height;
+  pain::backend::resizeFrameBuffer(m);
+}
 void FrameBuffer::bind() { pain::backend::bindFrameBuffer(m.bufferId); }
 void FrameBuffer::unbind() { pain::backend::unbindFrameBuffer(); }
 

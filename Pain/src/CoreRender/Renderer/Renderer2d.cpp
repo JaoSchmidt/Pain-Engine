@@ -1,7 +1,6 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Assets/DefaultTexture.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Components/Camera.h"
 
 #include "ECS/Components/Movement.h"
 #include "ECS/Scene.h"
@@ -28,11 +27,8 @@ void Renderer2d::setClearColor(const glm::vec4 &color)
 {
   backend::setClearColor(color);
 }
-void Renderer2d::changeCamera(const OrthographicMatrices &cameraMatrices,
-                              reg::Entity cameraEntity)
+void Renderer2d::changeCamera(reg::Entity cameraEntity)
 {
-
-  m.cameraMatrices = &cameraMatrices;
   m.orthoCameraEntity = cameraEntity;
 }
 
@@ -40,12 +36,14 @@ void Renderer2d::beginScene(DeltaTime globalTime, const Scene &scene,
                             const glm::mat4 &transform)
 {
   PROFILE_FUNCTION();
-  uploadBasicUniforms(
-      m.cameraMatrices->getViewProjectionMatrix(), globalTime, transform,
-      m.cameraMatrices->getResolution(),
-      scene.getComponent<Transform2dComponent>(m.orthoCameraEntity).m_position,
-      scene.getComponent<OrthoCameraComponent>(m.orthoCameraEntity)
-          .m_zoomLevel);
+  const Component::OrthoCamera &cc =
+      std::as_const(scene).getComponent<Component::OrthoCamera>(
+          m.orthoCameraEntity);
+  const Transform2dComponent &tc =
+      std::as_const(scene).getComponent<Transform2dComponent>(
+          m.orthoCameraEntity);
+  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime, transform,
+                      cc.getResolution(), tc.m_position, cc.m_zoomLevel);
   goBackToFirstVertex();
 }
 

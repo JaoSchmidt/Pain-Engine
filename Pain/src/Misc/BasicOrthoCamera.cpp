@@ -1,27 +1,34 @@
 #include "Misc/BasicOrthoCamera.h"
-#include "CoreRender/Camera.h"
-#include "ECS/Components/Camera.h"
+#include "CoreRender/CameraComponent.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Rotation.h"
 #include "GUI/ImGuiDebugRegistry.h"
 #include "glm/fwd.hpp"
-#include "imgui.h"
 namespace pain
 {
 reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionHeight,
-                                  int resolutionWeigh, float zoomLevel)
+                                  int resolutionWidth, float zoomLevel)
 {
-  const float aspectRatio = static_cast<float>(resolutionWeigh) /
-                            static_cast<float>(resolutionHeight);
   reg::Entity entity = scene.createEntity();
   scene.createComponents(entity, pain::Transform2dComponent{}, //
                          pain::RotationComponent{},            //
                          pain::Movement2dComponent{},          //
-                         pain::OrthoCameraComponent{aspectRatio, zoomLevel,
-                                                    resolutionWeigh,
-                                                    resolutionHeight}, //
+                         pain::Component::OrthoCamera::create(
+                             resolutionWidth, resolutionHeight, zoomLevel), //
                          pain::NativeScriptComponent{});
+  return entity;
+}
+reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
+                                             int resolutionHeight,
+                                             int resolutionWeigh,
+                                             float zoomLevel)
+{
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(entity, pain::Transform2dComponent{},
+                         pain::Component::OrthoCamera::create(
+                             resolutionWeigh, resolutionHeight, zoomLevel) //
+  );
   return entity;
 }
 
@@ -33,8 +40,8 @@ void OrthoCameraScript::onCreate()
 inline void OrthoCameraScript::recalculatePosition(const glm::vec2 &position,
                                                    const float rotation)
 {
-  getComponent<OrthoCameraComponent>().m_matrices->RecalculateViewMatrix(
-      position, rotation);
+  getComponent<Component::OrthoCamera>().recalculateViewMatrix(position,
+                                                               rotation);
 }
 
 void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
@@ -42,7 +49,7 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   auto [mc, tc, cc, rc] =
       getComponents<Movement2dComponent, Transform2dComponent,
-                    OrthoCameraComponent, RotationComponent>();
+                    Component::OrthoCamera, RotationComponent>();
 
   glm::vec3 moveDir{0.0f};
 
@@ -68,24 +75,24 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
     rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTime.getSecondsf();
 
   tc.m_position += mc.m_velocity * deltaTime.getSecondsf();
-  recalculatePosition(tc.m_position, rc.m_rotationAngle);
+  cc.recalculateViewMatrix(tc.m_position, rc.m_rotationAngle);
 }
 
 void OrthoCameraScript::onEvent(const SDL_Event &event)
 {
-  OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
+  Component::OrthoCamera &cc = getComponent<Component::OrthoCamera>();
   if (event.type == SDL_MOUSEWHEEL)
     onMouseScrolled(event, cc);
 }
 
 void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
-                                        OrthoCameraComponent &cc)
+                                        Component::OrthoCamera &cc)
 {
   cc.m_zoomLevel -= (float)event.wheel.y * m_zoomSpeed;
   cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
-  cc.m_matrices->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
-                               cc.m_aspectRatio * cc.m_zoomLevel,
-                               -cc.m_zoomLevel, cc.m_zoomLevel);
+  cc.setProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
+                   cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
+                   cc.m_zoomLevel);
 }
 
 } // namespace pain

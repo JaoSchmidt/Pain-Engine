@@ -143,7 +143,7 @@ void uploadUniformMat4(int loc, const glm::mat4 &m)
 }
 void uploadUniformIntArray(int loc, int *values, uint32_t count)
 {
-  glUniform1iv(loc, count, values);
+  glUniform1iv(loc, static_cast<int32_t>(count), values);
 }
 
 } // namespace pain::backend

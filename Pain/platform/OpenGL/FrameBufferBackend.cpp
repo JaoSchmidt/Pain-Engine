@@ -53,6 +53,19 @@ uint32_t createFrameBuffer(FrameBufferCreationInfo &spec)
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   return frameBufferId;
 }
+void resizeFrameBuffer(const FrameBufferCreationInfo &spec)
+{
+  glBindTexture(GL_TEXTURE_2D, spec.colorAttachmentTextureId);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, spec.width, spec.height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, nullptr);
+  if (glIsEnabled(GL_DEPTH_TEST)) {
+    glBindTexture(GL_TEXTURE_2D, spec.depthAttachmentTextureId);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, spec.width,
+                   spec.height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, spec.width, spec.height, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+  }
+}
 
 void deleteFrameBuffer(uint32_t rendererId)
 {

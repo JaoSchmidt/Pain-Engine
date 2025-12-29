@@ -3,9 +3,7 @@
 
 #include "Core.h"
 
-#include "CoreRender/Camera.h"
 #include "CoreRender/Renderer/CubeVertex.h"
-#include "CoreRender/Shader.h"
 #include "CoreRender/VertexArray.h"
 #include "Misc/PerspCameraController.h"
 

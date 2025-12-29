@@ -3,6 +3,7 @@
 
 #include "Assets/DefaultTexture.h"
 #include "Asteroid.h"
+#include "CoreRender/RenderSys.h"
 #include "Editor.h"
 #include "MousePointer.h"
 #include "Player.h"
@@ -11,13 +12,14 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 class MainScript : public pain::ExtendedEntity
 {
 public:
-  static MainScript &createScriptScene(pain::Scene &scene, int resWeight,
-                                       int resHeight, float zoom,
+  static MainScript &createScriptScene(pain::Scene &scene, int cameraWidth,
+                                       int cameraHeight, float zoom,
                                        pain::Application *app)
   {
 #if 0
@@ -34,8 +36,8 @@ public:
     // create the camera
     Player::Script &playerScript = scene.emplaceScript<Player::Script>(player);
     scene.emplaceLuaScript(player, "resources/scripts/lua_script.lua");
-    const pain::OrthoCameraComponent &camComp =
-        std::as_const(playerScript).getComponent<pain::OrthoCameraComponent>();
+    const pain::Component::OrthoCamera &camComp =
+        std::as_const(playerScript).getComponent<pain::Component::OrthoCamera>();
     app->setRendererCamera(*camComp.m_matrices, playerScript.getEntity());
     reg::Entity cameraEntity = playerScript.getEntity();
 
@@ -133,17 +135,14 @@ public:
     scene.emplaceScript<MousePointerScript>(mp, cameraEntity);
 
 #endif
-    scene.emplaceImGuiScript<PainlessEditor>(scene.getEntity(), *app);
     // return scene.emplaceScript<MainScript>(scene.getEntity(),
     // std::move(stars),
     //                                        player, std::move(asteroids),
     //                                        std::move(walls), mp);
     reg::Entity orthoCamera =
-        pain::Dummy2dCamera::create(scene, resWeight, resHeight, zoom);
+        pain::Dummy2dCamera::create(scene, cameraWidth, cameraHeight, zoom);
 
-    const pain::OrthoCameraComponent &camComp =
-        scene.getComponent<pain::OrthoCameraComponent>(orthoCamera);
-    app->setRendererCamera(*camComp.m_matrices, orthoCamera);
+    app->setRendererCamera(orthoCamera);
     return scene.emplaceScript<MainScript>(scene.getEntity(), orthoCamera);
   }
   void onRender(pain::Renderer2d &renderer, bool minimazed,
@@ -197,16 +196,22 @@ pain::Application *pain::createApplication()
   const char *title = "Developing Pain - Example 2d";
   const int width = 1000;
   const int height = 1000;
-  const int editorWidth = 600;
-  const int editorHeight = 600;
   const float zoom = 5.f;
 
-  Application *app = Application::createApplication(
-      title, width, height, {.width = editorWidth, .height = editorHeight});
+  Application *app = Application::createApplication(title, width, height,
+                                                    {.swapChainTarget = false});
 
-  pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{},
-                                        pain::ImGuiComponent{});
-  MainScript::createScriptScene(scene, editorWidth, editorHeight, zoom, app);
+  pain::Scene &scene = app->createScene(1.f, pain::NativeScriptComponent{});
+
+  scene.addSystem<Systems::SweepAndPruneSys>();
+  scene.addSystem<Systems::Render>();
+  scene.addSystem<Systems::NativeScript>();
+  scene.addSystem<Systems::LuaScript>();
+  scene.addSystem<Systems::Kinematics>();
+  MainScript::createScriptScene(scene, width, height, zoom, app);
+
+  UIScene &uiScene = app->createUIScene(pain::ImGuiComponent{});
+  uiScene.emplaceImGuiScript<PainlessEditor>(uiScene.getEntity(), *app);
 
   // Scene *scene = new MainScene(app->getLuaState());
   // ((MainScene *)scene)->init(*app, scene, (float)width / height, 1.0f);

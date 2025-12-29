@@ -1,3 +1,4 @@
+#pragma once
 #include "ECS/Registry/Entity.h"
 #include <cstddef>
 #include <type_traits>
@@ -106,5 +107,8 @@ struct is_compile_time_bitmask<CompileTimeBitMask<Components...>>
 template <typename T>
 inline constexpr bool is_compile_time_bitmask_v =
     is_compile_time_bitmask<T>::value;
+
+template <typename T>
+concept CompileTimeBitMaskType = is_compile_time_bitmask_v<T>;
 
 } // namespace reg

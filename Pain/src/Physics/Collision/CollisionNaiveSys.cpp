@@ -6,7 +6,6 @@
 #include "Physics/Collision/ColDetection.h"
 #include "Physics/Collision/ColReaction.h"
 #include "Physics/Collision/Collider.h"
-#include "Scripting/CollisionCallback.h"
 namespace pain
 {
 namespace Systems

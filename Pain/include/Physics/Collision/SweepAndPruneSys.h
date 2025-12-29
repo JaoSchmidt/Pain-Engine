@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Assets/DeltaTime.h"
+#include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
 namespace pain
 {
@@ -23,14 +24,15 @@ struct EndPointKey {
   size_t index_maxY;
 };
 
-struct SweepAndPruneSys : public System<ComponentManager> {
-
+struct SweepAndPruneSys : public System<ComponentManager>, IOnUpdate {
   template <typename... Args>
-    requires std::constructible_from<System<ComponentManager>, Args...>
+    requires std::constructible_from<System<ComponentManager>, Args...> &&
+             (ComponentManager::allRegistered<SAPCollider, Transform2dComponent,
+                                              Movement2dComponent>())
   SweepAndPruneSys(Args &&...args) : System(std::forward<Args>(args)...){};
 
   SweepAndPruneSys() = delete;
-  void onUpdate(DeltaTime deltaTime);
+  void onUpdate(DeltaTime deltaTime) override;
   // void deleteStaticEntities(std::span<reg::Entity> entities);
   // void deleteStaticEntity(reg::Entity entitiy);
   // void deleteEntity(reg::Entity entitiy);

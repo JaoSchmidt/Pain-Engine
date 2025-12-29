@@ -1,31 +1,27 @@
-
+// Scene.cpp
 #include "ECS/Scene.h"
 
 #include "CoreRender/RenderSys.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Scriptable.h"
 #include "GUI/ImGuiSys.h"
-#include "Misc/CameraSys.h"
 #include "Misc/Events.h"
-#include "Physics/Collision/Collider.h"
-#include "Physics/Collision/CollisionNaiveSys.h"
-#include "Physics/Collision/SweepAndPruneSys.h"
-#include "Physics/KinematicsSys.h"
 #include "Scripting/Component.h"
 #include "Scripting/LuaScriptSys.h"
 #include "Scripting/NativeScriptSys.h"
+#include <concepts>
+
+#include "CoreRender/RenderSys.h"
 
 namespace pain
 {
 // ------------------------------------------------
 // event - lua bridge
 // ------------------------------------------------
-
-void Scene::emplaceLuaScript(reg::Entity entity, const char *scriptPath)
+template <reg::CompileTimeBitMaskType Manager>
+void AbstractScene<Manager>::emplaceLuaScript(reg::Entity entity,
+                                              const char *scriptPath)
+  requires(Manager::template isRegistered<LuaScriptComponent>())
 {
-  P_ASSERT(hasAnyComponents<LuaScriptComponent>(entity),
-           "You are trying to bind a lua script on an entity that doesn't have "
-           "lua component");
   LuaScriptComponent &lc = getComponent<LuaScriptComponent>(entity);
   lc.bind(m_luaState, scriptPath);
   if (lc.m_onCreate) {
@@ -38,64 +34,43 @@ void Scene::emplaceLuaScript(reg::Entity entity, const char *scriptPath)
 }
 
 // ------------------------------------------------
-Scene::Scene(sol::state &solState, void *context, SDL_Window *window)
+template <reg::CompileTimeBitMaskType Manager>
+AbstractScene<Manager>::AbstractScene(reg::EventDispatcher &ed,
+                                      sol::state &solState)
 
-    : m_registry(), m_eventDispatcher(solState),
+    : m_registry(), m_eventDispatcher(ed),
       m_luaState(createScriptEventMap(solState, m_eventDispatcher)),
-      m_entity(createEntity()),
-      // ---- Systems --------------------------------
-      // clang-format off
-      m_renderSystem{new Systems::Render(m_registry, m_eventDispatcher)},
-      m_kinematicsSystem{new Systems::Kinematics(m_registry, m_eventDispatcher)},
-      m_nativeScriptSystem{new Systems::NativeScript(m_registry, m_eventDispatcher)},
-      m_imGuiSystem{new Systems::ImGuiSys(m_registry,m_eventDispatcher, context, window)},
-      m_luaSystem{new Systems::LuaScript(m_registry, m_eventDispatcher)},
-      m_sweepAndPruneSystem{new Systems::SweepAndPruneSys(m_registry, m_eventDispatcher)},
-      m_cameraSystem{new Systems::CameraSys(m_registry, m_eventDispatcher)}
-// clang-format on
-{};
+      m_entity(createEntity()){};
 
-void Scene::updateSystems(DeltaTime deltaTime)
+template <reg::CompileTimeBitMaskType Manager>
+void AbstractScene<Manager>::updateSystems(DeltaTime deltaTime)
 {
   PROFILE_FUNCTION();
-  m_kinematicsSystem->onUpdate(deltaTime);
-  m_nativeScriptSystem->onUpdate(deltaTime);
-  m_luaSystem->onUpdate(deltaTime);
-  m_sweepAndPruneSystem->onUpdate(deltaTime);
+  for (auto *sys : m_updateSystems)
+    static_cast<IOnUpdate *>(sys)->onUpdate(deltaTime);
   m_eventDispatcher.update();
 }
 
-void Scene::updateSystems(const SDL_Event &event)
+template <reg::CompileTimeBitMaskType Manager>
+void AbstractScene<Manager>::updateSystems(const SDL_Event &event)
 {
   PROFILE_SCOPE("Scene::updateSystems - events for nsc");
-  m_nativeScriptSystem->onEvent(event);
-  m_imGuiSystem->onEvent(event);
-  m_luaSystem->onEvent(event);
-  m_cameraSystem->onEvent(event);
+  for (auto *sys : m_eventSystems)
+    static_cast<IOnEvent *>(sys)->onEvent(event);
 }
 
-void Scene::renderSystems(Renderer2d &renderer, bool isMinimized,
-                          DeltaTime currentTime)
+template <reg::CompileTimeBitMaskType Manager>
+void AbstractScene<Manager>::renderSystems(Renderer2d &renderer,
+                                           bool isMinimized,
+                                           DeltaTime currentTime)
 {
-  m_renderSystem->onRender(renderer, isMinimized, currentTime);
-  m_nativeScriptSystem->onRender(renderer, isMinimized, currentTime);
-  m_luaSystem->onRender(renderer, isMinimized, currentTime);
+  for (auto *sys : m_renderSystems)
+    static_cast<IOnRender *>(sys)->onRender(renderer, isMinimized, currentTime);
 }
 
-void Scene::renderImGui(Renderer2d &renderer, bool isMinimized,
-                        DeltaTime currentTime)
-{
-  m_imGuiSystem->onRender(renderer, isMinimized, currentTime);
-}
-Scene::~Scene()
-{
-  delete m_renderSystem;
-  delete m_kinematicsSystem;
-  delete m_nativeScriptSystem;
-  delete m_imGuiSystem;
-  delete m_luaSystem;
-  delete m_sweepAndPruneSystem;
-  delete m_cameraSystem;
-}
+template class AbstractScene<ComponentManager>;
+template class AbstractScene<UIManager>;
 
+using Scene = AbstractScene<ComponentManager>;
+using UIScene = AbstractScene<UIManager>;
 } // namespace pain

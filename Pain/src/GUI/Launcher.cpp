@@ -19,21 +19,10 @@ namespace pain
 class ImGuiLauncher : public ExtendedEntity
 {
 public:
-  static ImGuiLauncher &createScriptScene(Scene &scene, int resWeight,
-                                          int resHeight, float zoom,
-                                          pain::Application *settingsApp)
-  {
-    reg::Entity orthoCamera =
-        Dummy2dCamera::create(scene, resWeight, resHeight, zoom);
+  ImGuiLauncher(reg::Entity entity, UIScene &scene, Application *app)
+      : ExtendedEntity(entity, scene), m_init(), m_app(app) {};
+  std::vector<std::string> m_availableResolutions;
 
-    const pain::OrthoCameraComponent &camComp =
-        scene.getComponent<pain::OrthoCameraComponent>(orthoCamera);
-    settingsApp->setRendererCamera(*camComp.m_matrices, orthoCamera);
-    scene.emplaceScript<OrthoCameraScript>(orthoCamera);
-
-    return scene.emplaceImGuiScript<ImGuiLauncher>(
-        scene.getEntity(), settingsApp, std::move(orthoCamera));
-  }
   ~ImGuiLauncher() = default;
   NONCOPYABLE(ImGuiLauncher);
   ImGuiLauncher(ImGuiLauncher &&other) noexcept
@@ -42,21 +31,8 @@ public:
         m_windowFlags(std::exchange(other.m_windowFlags, 0)),
         m_dockspaceOpen(std::exchange(other.m_dockspaceOpen, true)),
         m_init(std::move(other.m_init)),
-        m_app(std::exchange(other.m_app, nullptr)),
-        m_orthocamera(other.m_orthocamera) {};
-  ImGuiLauncher &operator=(ImGuiLauncher &&other) noexcept
-  {
-    if (this != &other) {
-      ExtendedEntity::operator=(std::move(other));
-      m_availableResolutions = std::move(other.m_availableResolutions);
-      m_windowFlags = std::exchange(other.m_windowFlags, 0);
-      m_dockspaceOpen = std::exchange(other.m_dockspaceOpen, true);
-      m_init = std::move(other.m_init);
-      m_app = std::exchange(other.m_app, nullptr);
-      m_orthocamera = other.m_orthocamera;
-    }
-    return *this;
-  }
+        m_app(std::exchange(other.m_app, nullptr)) {};
+  ImGuiLauncher &operator=(ImGuiLauncher &&other) = delete;
 
   // void init(Application *app) { m_app = app; }
   void onCreate()
@@ -66,10 +42,9 @@ public:
     }
     // clang-format on
   }
-  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime)
+  void onRender(Renderer2d &renderer, bool isMinimized)
   {
     UNUSED(renderer)
-    UNUSED(currentTime)
     UNUSED(isMinimized)
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -146,12 +121,6 @@ public:
     ImGui::End();
   }
 
-  ImGuiLauncher(reg::Entity entity, Scene &scene, Application *app,
-                reg::Entity camera)
-      : ExtendedEntity(entity, scene), m_init(), m_app(app),
-        m_orthocamera(std::move(camera)) {};
-  std::vector<std::string> m_availableResolutions;
-
 private:
   ImGuiWindowFlags m_windowFlags =
       ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar |
@@ -161,7 +130,6 @@ private:
   bool m_dockspaceOpen = true;
   IniConfig m_init;
   Application *m_app = nullptr;
-  reg::Entity m_orthocamera;
 };
 
 Application *createLauncher()
@@ -170,13 +138,11 @@ Application *createLauncher()
   const char *title = "Settings";
   const int width = 500;
   const int height = 200;
-  const float zoom = 1.f;
 
   Application *settingsApp = Application::createApplication(
       title, width, height, {.swapChainTarget = true});
-  pain::Scene &scene = settingsApp->createScene(
-      1.f, pain::NativeScriptComponent{}, pain::ImGuiComponent{});
-  ImGuiLauncher::createScriptScene(scene, width, height, zoom, settingsApp);
+  pain::UIScene &uiscene = settingsApp->createUIScene(pain::ImGuiComponent{});
+  uiscene.emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), settingsApp);
 
   return settingsApp;
 }

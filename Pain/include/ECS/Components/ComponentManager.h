@@ -6,10 +6,13 @@ namespace pain
 template <typename Alias, typename Target> struct AliasComponent {
   using type = Target;
 };
+namespace cmp
+{
+struct OrthoCamera;
+}
 struct LuaScriptComponent;
 struct NativeScriptComponent;
 struct CollisionCallbackComponent;
-struct OrthoCameraComponent;
 struct Transform2dComponent;
 struct Movement2dComponent;
 struct ParticleSprayComponent;
@@ -24,19 +27,27 @@ struct ImGuiComponent;
 struct ColliderComponent;
 struct SAPCollider;
 
+// basic World Scene Manager
 using ComponentManager = reg::CompileTimeBitMask<
-    OrthoCameraComponent, Transform2dComponent, Movement2dComponent,
+    cmp::OrthoCamera, Transform2dComponent, Movement2dComponent,
     NativeScriptComponent, ParticleSprayComponent, RotationComponent,
     SpriteComponent, SpritelessComponent, TrianguleComponent,
-    LuaScriptComponent, onUpdateLuaFunction, ImGuiComponent,
-    CollisionCallbackComponent, SAPCollider>;
+    LuaScriptComponent, onUpdateLuaFunction, CollisionCallbackComponent,
+    SAPCollider>;
 
+// using NaiveCollisionSys instead of SAPCollider
 using CMNaiveCollision = reg::CompileTimeBitMask<
-    OrthoCameraComponent, Transform2dComponent, Movement2dComponent,
+    cmp::OrthoCamera, Transform2dComponent, Movement2dComponent,
     NativeScriptComponent, ParticleSprayComponent, RotationComponent,
     SpriteComponent, SpritelessComponent, TrianguleComponent,
-    LuaScriptComponent, onUpdateLuaFunction, ImGuiComponent,
-    CollisionCallbackComponent, ColliderComponent>;
+    LuaScriptComponent, onUpdateLuaFunction, CollisionCallbackComponent,
+    ColliderComponent>;
+
+// using only relevant to UI
+using UIManager = reg::CompileTimeBitMask<ImGuiComponent, cmp::OrthoCamera,
+                                          Transform2dComponent>;
+
+static_assert(UIManager::isRegistered<ImGuiComponent>(), "banana");
 
 // HACK: Stupidity finder
 #define XOR(A, B) (A && !B) || (!A && B)

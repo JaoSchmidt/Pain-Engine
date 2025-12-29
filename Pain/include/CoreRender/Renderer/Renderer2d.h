@@ -2,7 +2,7 @@
 
 #include "Core.h"
 
-#include "CoreRender/Camera.h"
+#include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/BatchCircles.h"
 #include "CoreRender/Renderer/BatchQuad.h"
 #include "CoreRender/Renderer/BatchSpray.h"
@@ -12,13 +12,18 @@
 #include "CoreRender/Text/Font.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
+#include "ECS/Components/ComponentManager.h"
 #include "ECS/Components/Particle.h"
 #include "ECS/Registry/Entity.h"
 
 namespace pain
 {
 
-class Scene;
+// Frwd declare Scene
+template <reg::CompileTimeBitMaskType Manager> class AbstractScene;
+using Scene = AbstractScene<ComponentManager>;
+template <reg::CompileTimeBitMaskType Manager> class AbstractScene;
+using UIScene = AbstractScene<UIManager>;
 
 struct Renderer2d {
   struct Stats {
@@ -31,8 +36,7 @@ struct Renderer2d {
   static Renderer2d createRenderer2d();
   Renderer2d &operator=(Renderer2d &&o) noexcept;
   // void changeCamera(const OrthographicMatrices &cameraMatrices);
-  void changeCamera(const OrthographicMatrices &cameraMatrices,
-                    reg::Entity camera);
+  void changeCamera(reg::Entity camera);
   // ================================================================= //
   // Renderer basic wrapper around opengl
   // ================================================================= //
@@ -149,10 +153,9 @@ private:
     std::array<Texture *, MaxTextureSlots> textureSlots;
     uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
 
+    reg::Entity orthoCameraEntity = reg::Entity{-1};
     // replaced by m_textBatch.fontAtlas
     // const Texture *m_fontAtlasTexture = nullptr;
-    const OrthographicMatrices *cameraMatrices = nullptr;
-    reg::Entity orthoCameraEntity = reg::Entity{-1};
   };
 
   M m;

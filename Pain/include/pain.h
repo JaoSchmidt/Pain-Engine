@@ -17,7 +17,7 @@
 // Renderer
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/Buffers.h"
-#include "CoreRender/Camera.h"
+#include "CoreRender/RenderSys.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "CoreRender/Shader.h"
@@ -25,7 +25,6 @@
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 // ECS
-#include "ECS/Components/Camera.h"
 #include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Components/Rotation.h"
@@ -35,8 +34,11 @@
 #include "ECS/Scriptable.h"
 // Scripts
 #include "Scripting/Component.h"
+#include "Scripting/LuaScriptSys.h"
+#include "Scripting/NativeScriptSys.h"
 
 #include "Physics/Collision/Collider.h"
+#include "Physics/KinematicsSys.h"
 
 #include <SDL2/SDL_events.h>
 

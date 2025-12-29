@@ -11,7 +11,9 @@ namespace pain
 PerspectiveCameraController::PerspectiveCameraController(
     float windowWidth, float windowHeight, float fieldOfViewDegrees)
     : m_aspectRatio(windowWidth / windowHeight),
-      m_camera(m_aspectRatio, fieldOfViewDegrees),
+      m_camera(cmp::PerspCamera::create(static_cast<int>(windowWidth),
+                                        static_cast<int>(windowHeight),
+                                        fieldOfViewDegrees)),
       m_fieldOfViewDegrees(fieldOfViewDegrees)
 {
   m_translationSpeed = 1.0f;
@@ -128,7 +130,7 @@ void PerspectiveCameraController::onMouseScrolled(const SDL_Event &event)
   else if (m_fieldOfViewDegrees > 100.0f)
     m_fieldOfViewDegrees = 100.0f;
 
-  m_camera.SetProjection(m_aspectRatio, m_fieldOfViewDegrees);
+  m_camera.setProjection(m_aspectRatio, m_fieldOfViewDegrees);
 }
 
 void PerspectiveCameraController::onWindowResized(const SDL_Event &event)
@@ -137,6 +139,6 @@ void PerspectiveCameraController::onWindowResized(const SDL_Event &event)
   m_windowWidth = (float)event.window.data1;
   m_windowHeight = (float)event.window.data2;
   m_aspectRatio = m_windowWidth / m_windowHeight;
-  m_camera.SetProjection(m_aspectRatio, m_fieldOfViewDegrees);
+  m_camera.setProjection(m_aspectRatio, m_fieldOfViewDegrees);
 }
 } // namespace pain

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/ComponentManager.h"
 #include "ECS/Registry/Archetype.h"
+#include "ECS/Registry/Bitmask.h"
 #include "ECS/Registry/ExcludeComponents.h"
 
 #include <queue>
@@ -31,12 +31,10 @@ concept IsSingleType = (sizeof...(Ts) == 1);
 template <typename... Ts>
 concept IsMultipleTypes = (sizeof...(Ts) > 1);
 
-template <typename ComponentManagerT> class ArcheRegistry
+template <typename ComponentManagerT>
+  requires(is_compile_time_bitmask_v<ComponentManagerT>)
+class ArcheRegistry
 {
-  static_assert(is_compile_time_bitmask_v<ComponentManagerT>,
-                "ArcheRegistry requires ComponentManagerT to be a "
-                "reg::CompileTimeBitMask<...> type");
-
   std::map<Bitmask, Archetype> m_archetypes = {};
   std::vector<Record> m_records;
   std::queue<reg::Entity> m_availableEntities = {};
@@ -108,7 +106,7 @@ public:
         MovementComponent{},
         RotationComponent{},
         TransformComponent{},
-        OrthoCameraComponent{aspectRatio, zoomLevel},
+        Component::OrthoCamera{aspectRatio, zoomLevel},
         NativeScriptComponent{"Camera nsc"}
       );
      // We can call this:

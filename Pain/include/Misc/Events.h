@@ -9,6 +9,16 @@
 
 namespace pain
 {
+struct ImGuiViewportChangeEvent {
+  glm::vec2 newSize;
+  sol::table toLuaTable(const sol::state &lua) const
+  {
+    return lua.create_table_with( //
+        lua,                      //
+        "newSize", newSize        //
+    );
+  }
+};
 
 struct CollisionEvent {
   reg::Entity a;

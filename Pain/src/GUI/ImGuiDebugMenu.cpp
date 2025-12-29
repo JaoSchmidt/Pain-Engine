@@ -2,7 +2,6 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "ECS/Components/Camera.h"
 #include "GUI/ImGuiDebugRegistry.h"
 
 namespace pain
@@ -19,8 +18,7 @@ void ImGuiDebugMenu::onRender(pain::Renderer2d &renderer, bool isMinimized,
   UNUSED(isMinimized)
   UNUSED(currentTime)
   ImGui::Begin("Debug info");
-  auto &camCC =
-      getScene().getComponent<pain::OrthoCameraComponent>(m_cameraEntity);
+  auto &camCC = getComponent<pain::Component::OrthoCamera>(m_cameraEntity);
 
   ImGui::Text("Camera zoom: %.3f", camCC.m_zoomLevel);
   ImGuiDebugRegistry::renderAll();
@@ -37,16 +35,5 @@ ImGuiDebugMenu::ImGuiDebugMenu(ImGuiDebugMenu &&other) noexcept
     : ExtendedEntity(std::move(other)), m_cameraEntity(other.m_cameraEntity),
       m_mousePointerEntity(other.m_mousePointerEntity),
       m_app(std::exchange(other.m_app, nullptr)) {};
-
-ImGuiDebugMenu &ImGuiDebugMenu::operator=(ImGuiDebugMenu &&other) noexcept
-{
-  if (this != &other) {
-    ExtendedEntity::operator=(std::move(other));
-    m_app = std::exchange(other.m_app, nullptr);
-    m_cameraEntity = other.m_cameraEntity;
-    m_mousePointerEntity = other.m_mousePointerEntity;
-  }
-  return *this;
-}
 
 } // namespace pain

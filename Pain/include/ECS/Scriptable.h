@@ -93,6 +93,134 @@ protected:
   reg::Entity m_entity = reg::Entity{0};
 };
 
+class SceneHandle
+{
+  enum class Kind { Scene, UIScene };
+
+public:
+  SceneHandle(Scene &s) : kind(Kind::Scene) { data.scene = &s; }
+  SceneHandle(UIScene &s) : kind(Kind::UIScene) { data.uiscene = &s; }
+
+  // ---------------- Components ---------------- //
+
+  template <typename T> T &getComponent(reg::Entity e)
+  {
+    switch (kind) {
+    case Kind::Scene:
+      if constexpr (ComponentManager::isRegistered<T>())
+        return data.scene->getComponent<T>(e);
+      std::abort();
+    case Kind::UIScene:
+      if constexpr (UIManager::isRegistered<T>())
+        return data.uiscene->getComponent<T>(e);
+      std::abort();
+    }
+  }
+
+  template <typename T> const T &getComponent(reg::Entity e) const
+  {
+    switch (kind) {
+    case Kind::Scene:
+      if constexpr (ComponentManager::isRegistered<T>())
+        return std::as_const(*data.scene).getComponent<T>(e);
+      std::abort();
+    case Kind::UIScene:
+      if constexpr (UIManager::isRegistered<T>())
+        return std::as_const(*data.uiscene).getComponent<T>(e);
+      std::abort();
+    }
+  }
+
+  template <typename... Ts> std::tuple<Ts &...> getComponents(reg::Entity e)
+  {
+    switch (kind) {
+    case Kind::Scene:
+      if constexpr (ComponentManager::allRegistered<Ts...>())
+        return data.scene->getComponents<Ts...>(e);
+      std::abort();
+    case Kind::UIScene:
+      if constexpr (UIManager::allRegistered<Ts...>())
+        return data.uiscene->getComponents<Ts...>(e);
+      std::abort();
+    }
+  }
+
+  template <typename... Ts>
+  std::tuple<const Ts &...> getComponents(reg::Entity e) const
+  {
+    switch (kind) {
+    case Kind::Scene:
+      if constexpr (ComponentManager::allRegistered<Ts...>())
+        return std::as_const(*data.scene).getComponents<Ts...>(e);
+      std::abort();
+    case Kind::UIScene:
+      if constexpr (UIManager::allRegistered<Ts...>())
+        return std::as_const(*data.uiscene).getComponents<Ts...>(e);
+      std::abort();
+    }
+  }
+
+  // ---------------- Queries ---------------- //
+
+  template <typename... Ts> bool hasAnyComponents(reg::Entity e) const
+  {
+    switch (kind) {
+    case Kind::Scene:
+      if constexpr (ComponentManager::allRegistered<Ts...>())
+        return data.scene->hasAnyComponents<Ts...>(e);
+    case Kind::UIScene:
+      if constexpr (UIManager::allRegistered<Ts...>())
+        return data.uiscene->hasAnyComponents<Ts...>(e);
+    }
+    std::abort();
+  }
+
+  template <typename... Ts> bool hasAllComponents(reg::Entity e) const
+  {
+    switch (kind) {
+    case Kind::Scene:
+      if constexpr (ComponentManager::allRegistered<Ts...>())
+        return data.scene->containsAllComponents<Ts...>(e);
+    case Kind::UIScene:
+      if constexpr (UIManager::allRegistered<Ts...>())
+        return data.uiscene->containsAllComponents<Ts...>(e);
+    }
+    std::abort();
+  }
+
+  // ---------------- Misc ---------------- //
+
+  reg::EventDispatcher &getEventDispatcher()
+  {
+    switch (kind) { // NOTE: it doesn't the branch in this case, but the right
+                    // scene still needs to be selected here;
+    case Kind::Scene:
+      return data.scene->getEventDispatcher();
+    case Kind::UIScene:
+      return data.uiscene->getEventDispatcher();
+    }
+    std::abort();
+  }
+
+  const reg::EventDispatcher &getEventDispatcher() const
+  {
+    switch (kind) { // NOTE: it doesn't the branch in this case, but the right
+                    // scene still needs to be selected here;
+    case Kind::Scene:
+      return std::as_const(*data.scene).getEventDispatcher();
+    case Kind::UIScene:
+      return std::as_const(*data.scene).getEventDispatcher();
+    }
+    std::abort();
+  }
+
+  const Kind kind;
+  union {
+    Scene *scene;
+    UIScene *uiscene;
+  } data;
+};
+
 // ExtendedEntity, meaning that it has additional functions to more
 // easily get components. This can be useful for scripts where the extra space
 // isn't necessary
@@ -101,77 +229,103 @@ class ExtendedEntity
 public:
   ExtendedEntity(reg::Entity entity, Scene &scene)
       : m_scene(scene), m_entity(entity) {};
-  NONCOPYABLE(ExtendedEntity)
+
+  ExtendedEntity(reg::Entity entity, UIScene &scene)
+      : m_scene(scene), m_entity(entity) {};
+
   // ---------------------------------------------------- //
-  // Get components from archetypes
+  // Self entity convenience
   // ---------------------------------------------------- //
-  template <typename... TargetComponents>
-  std::tuple<TargetComponents &...> getComponents()
+
+  template <typename... Ts> std::tuple<Ts &...> getComponents()
   {
-    return m_scene.get().getComponents<TargetComponents...>(m_entity);
-  }
-  // return the components of an entity, as a tuple
-  template <typename... TargetComponents>
-  const std::tuple<TargetComponents &...> getComponents() const
-  {
-    return m_scene.get().getComponents<TargetComponents...>(m_entity);
-  }
-  template <typename T> T &getComponent()
-  {
-    PROFILE_FUNCTION();
-    return m_scene.get().getComponent<T>(m_entity);
-  }
-  template <typename T> const T &getComponent() const
-  {
-    PROFILE_FUNCTION();
-    return static_cast<const Scene &>(m_scene.get()).getComponent<T>(m_entity);
-  }
-  // ---------------------------------------------------- //
-  // "Has" all components
-  // ---------------------------------------------------- //
-  // Does archetype has any of the target components?
-  template <typename... TargetComponents> bool hasAnyComponents() const
-  {
-    return m_scene.get().hasAnyComponents<TargetComponents...>(m_entity);
+    return getComponents<Ts...>(m_entity);
   }
 
-  // Does archetype has all of the target components?
-  template <typename... TargetComponents> bool hasAllComponents() const
+  template <typename... Ts> std::tuple<const Ts &...> getComponents() const
   {
-    return m_scene.get().containsAllComponents<TargetComponents...>();
+    return getComponents<Ts...>(m_entity);
   }
-  explicit operator bool() const { return m_entity != -1; }
-  inline reg::Entity getEntity() const { return m_entity; }
-  inline Scene &getScene() const { return m_scene.get(); }
+
+  template <typename T> T &getComponent() { return getComponent<T>(m_entity); }
+
+  template <typename T> const T &getComponent() const
+  {
+    return getComponent<T>(m_entity);
+  }
+
+  // ---------------------------------------------------- //
+  // Other entity access
+  // ---------------------------------------------------- //
+
+  template <typename... Ts> std::tuple<Ts &...> getComponents(reg::Entity e)
+  {
+    return m_scene.getComponents<Ts...>(e);
+  }
+
+  template <typename... Ts>
+  std::tuple<const Ts &...> getComponents(reg::Entity e) const
+  {
+    return m_scene.getComponents<Ts...>(e);
+  }
+
+  template <typename T> T &getComponent(reg::Entity e)
+  {
+    return m_scene.getComponent<T>(e);
+  }
+
+  template <typename T> const T &getComponent(reg::Entity e) const
+  {
+    return m_scene.getComponent<T>(e);
+  }
+
+  // ---------------------------------------------------- //
+  // Queries
+  // ---------------------------------------------------- //
+
+  template <typename... Ts> bool hasAnyComponents() const
+  {
+    return m_scene.hasAnyComponents<Ts...>(m_entity);
+  }
+
+  template <typename... Ts> bool hasAllComponents() const
+  {
+    return m_scene.hasAllComponents<Ts...>(m_entity);
+  }
+
+  // ---------------------------------------------------- //
+  // Misc
+  // ---------------------------------------------------- //
+
+  explicit operator bool() const { return m_entity != reg::Entity{-1}; }
+
+  reg::Entity getEntity() const { return m_entity; }
 
   reg::EventDispatcher &getEventDispatcher()
   {
-    return m_scene.get().getEventDispatcher();
-  }
-  const reg::EventDispatcher &getEventDispatcher() const
-  {
-    return m_scene.get().getEventDispatcher();
+    return m_scene.getEventDispatcher();
   }
 
-  // ------------------------------------------------------------ //
-  // MOVE CONSTRUCTORS AND ASSGINMENT
-  // ------------------------------------------------------------ //
+  const reg::EventDispatcher &getEventDispatcher() const
+  {
+    return m_scene.getEventDispatcher();
+  }
+
+  // ---------------------------------------------------- //
+  // Move support
+  // ---------------------------------------------------- //
+
   ExtendedEntity(ExtendedEntity &&other) noexcept
       : m_scene(other.m_scene),
         m_entity(std::exchange(other.m_entity, reg::Entity{-1})) {};
-  ExtendedEntity &operator=(ExtendedEntity &&other) noexcept
-  {
-    if (this != &other) {
-      m_scene = other.m_scene;
-      m_entity = std::exchange(other.m_entity, reg::Entity{-1});
-    }
-    return *this;
-  }
+  ExtendedEntity(const ExtendedEntity &other) noexcept
+      : m_scene(other.m_scene), m_entity(other.m_entity) {};
+
+  ExtendedEntity &operator=(ExtendedEntity &&other) = delete;
+  ExtendedEntity &operator=(const ExtendedEntity &other) = delete;
 
 protected:
-  std::reference_wrapper<Scene> m_scene;
+  SceneHandle m_scene;
   reg::Entity m_entity;
-  friend class Scene;
 };
-
 } // namespace pain

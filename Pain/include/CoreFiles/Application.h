@@ -8,33 +8,34 @@
 #include "CoreFiles/EndGameFlags.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/DebuggingImGui.h"
+#include "ECS/Scene.h"
 #include "GUI/ImGuiSys.h"
 #include <sol/state.hpp>
 
 namespace pain
 {
-
 class Application
 {
 public:
   static constexpr const char *configIniFile = "config.ini";
   static Application *
   createApplication(const char *title, int w, int h,
-                    FrameBufferCreationInfo &&frameBufferCreationInfo);
+                    FrameBufferCreationInfo &&frameBufferCreationInfo = {
+                        .swapChainTarget = false});
   ~Application();
 
   // TODO: This is useful to mess with time e.g. set speed to as high as
   // possible
   void setInfiniteSimulation(bool isSimulation)
   {
-    m_isSimulation = isSimulation;
+    m.isSimulation = isSimulation;
   };
   static unsigned getProcessorCount();
-  void inline disableRendering() { m_isRendering = false; }
-  void inline enableRendering() { m_isRendering = true; }
-  void inline setTimeMultiplier(double time) { m_timeMultiplier = time; }
-  double inline *getTimeMultiplier() { return &m_timeMultiplier; }
-  bool inline *getIsSimulation() { return &m_isSimulation; }
+  void inline disableRendering() { m.isRendering = false; }
+  void inline enableRendering() { m.isRendering = true; }
+  void inline setTimeMultiplier(double time) { m.timeMultiplier = time; }
+  double inline *getTimeMultiplier() { return &m.timeMultiplier; }
+  bool inline *getIsSimulation() { return &m.isSimulation; }
   sol::state &getLuaState() { return m_luaState; };
   Renderer2d &getRenderer() { return m_renderer; }
   const FrameBufferCreationInfo &getFrameInfo() const
@@ -45,16 +46,15 @@ public:
   // ECS
   void stopLoop(bool restartFlag = false);
   // clang-format on
-  void setRendererCamera(const OrthographicMatrices &cameraMatrices,
-                         const reg::Entity camera)
+  void setRendererCamera(const reg::Entity camera)
   {
-    m_renderer.changeCamera(cameraMatrices, camera);
+    m_renderer.changeCamera(camera);
   }
 
   template <typename... Components>
   Scene &createScene(float collisionGridSize, Components... args)
   {
-    m_worldScene = std::make_unique<Scene>(m_luaState, m_context, m_window);
+    m_worldScene = std::make_unique<Scene>(m_eventDispatcher, m_luaState);
     m_worldScene->createComponents(m_worldScene->getEntity(),
                                    std::forward<Components>(args)...);
     // m_worldSceneSys = std::make_unique<WorldSystems>(
@@ -63,45 +63,65 @@ public:
 
     return *m_worldScene;
   }
+  template <typename... Components> UIScene &createUIScene(Components... args)
+  {
+    m_uiScene = std::make_unique<UIScene>(m_eventDispatcher, m_luaState);
+    m_uiScene->createComponents(m_uiScene->getEntity(),
+                                std::forward<Components>(args)...);
+    m_uiScene->addSystem<Systems::ImGuiSys>(m_context, m_window);
+    // m_worldSceneSys = std::make_unique<WorldSystems>(
+    //     m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
+
+    return *m_uiScene;
+  }
 
 private:
   Application(sol::state &&luaState, SDL_Window *window, void *context,
-              RenderPipeline &&renderPipeline);
+              FrameBufferCreationInfo &&fbci, int fallbackWidth = 600,
+              int fallbackHeight = 600);
   // =============================================================== //
   // OWNED CLASSES
   // =============================================================== //
   std::unique_ptr<Scene> m_worldScene;
+  std::unique_ptr<UIScene> m_uiScene;
 
   Renderer2d m_renderer;
 
   EngineController *m_defaultImGuiInstance;
-
   sol::state m_luaState;
+  reg::EventDispatcher m_eventDispatcher;
 
   // =============================================================== //
   // VARIABLES/CONSTANTS
   // =============================================================== //
+  struct DefaultApplicationValues {
+    bool isGameRunning = true;
+    bool isRendering = true;
+    bool isMinimized = false;
+    bool isSimulation = false;
+    const double fixedUpdateTime = 1.0 / 60.0;
+    const double fixedFPS = 1.0 / 60.0;
+    double timeMultiplier = 1.0;
+    DeltaTime maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
+
+    // FPS Calculation
+    constexpr static int FPS_SAMPLE_COUNT = 64;
+    double fpsSamples[FPS_SAMPLE_COUNT] = {0};
+    int currentSample =
+        1; // begins in 1 to loop all the way to 0 before calculation
+    int defaultWidth = 600;
+    int defaultHeight = 600;
+  };
+
+  DefaultApplicationValues m;
   EndGameFlags run();
   EndGameFlags m_endGameFlags = {};
   // Refers to the game window
   SDL_Window *m_window = nullptr;
   SDL_GLContext m_context = nullptr;
-  bool m_isGameRunning = true;
-  bool m_isRendering = true;
-  bool m_isMinimized = false;
-  bool m_isSimulation = false;
-  const double m_fixedUpdateTime = 1.0 / 60.0;
-  const double m_fixedFPS = 1.0 / 60.0;
-  double m_timeMultiplier = 1.0;
-  DeltaTime m_maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
+
   RenderPipeline m_renderPipeline;
   friend struct Pain;
-
-  // FPS Calculation
-  constexpr static int FPS_SAMPLE_COUNT = 64;
-  double m_fpsSamples[FPS_SAMPLE_COUNT] = {0};
-  int m_currentSample =
-      1; // begins in 1 to loop all the way to 0 before calculation
 };
 
 // To be defined in CLIENT

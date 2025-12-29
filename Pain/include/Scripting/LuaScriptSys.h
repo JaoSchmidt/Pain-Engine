@@ -1,5 +1,6 @@
 #pragma once
 #include "Assets/DeltaTime.h"
+#include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
 
 namespace pain
@@ -7,11 +8,15 @@ namespace pain
 struct Renderer2d;
 namespace Systems
 {
-struct LuaScript : public System<ComponentManager> {
+struct LuaScript : public System<ComponentManager>,
+                   IOnUpdate,
+                   IOnEvent,
+                   IOnRender {
   using System::System;
-  void onUpdate(DeltaTime deltaTime);
-  void onEvent(const SDL_Event &e);
-  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);
+  void onUpdate(DeltaTime deltaTime) override;
+  void onEvent(const SDL_Event &e) override;
+  void onRender(Renderer2d &renderer, bool isMinimized,
+                DeltaTime currentTime) override;
 };
 } // namespace Systems
 

@@ -1,39 +1,42 @@
 // Systems.h
 #pragma once
 
+#include "Core.h"
 #include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include <iostream>
 
 namespace pain
 {
+class DeltaTime;
+struct Renderer2d;
+
+struct IOnUpdate {
+  virtual ~IOnUpdate() = default;
+  virtual void onUpdate(DeltaTime) = 0;
+};
+
+struct IOnEvent {
+  virtual ~IOnEvent() = default;
+  virtual void onEvent(const SDL_Event &) = 0;
+};
+
+struct IOnRender {
+  virtual ~IOnRender() = default;
+  virtual void onRender(Renderer2d &, bool, DeltaTime) = 0;
+};
+
 template <typename CM> struct System {
 public:
   System(reg::ArcheRegistry<CM> &archetype,
          reg::EventDispatcher &eventDispatcher)
       : m_registry(archetype), m_eventDispatcher(eventDispatcher) {};
 
-  // Move constructor
-  System(System &&other) noexcept : m_registry(other.m_registry)
-  {
-    std::cout << "System move-constructed\n";
-  }
-
-  // Move assignment
-  System &operator=(System &&other) noexcept
-  {
-    std::cout << "System move-assigned\n";
-    if (this != &other) {
-      // you cannot rebind a reference, so just keep the old one
-      // m_registry still refers to the same ArcheRegistry
-      // but we can log this for clarity
-    }
-    return *this;
-  }
-
-  // Delete copy operations to be explicit
-  System(const System &) = delete;
-  System &operator=(const System &) = delete;
+  System(System &&other) = default;
+  System &operator=(System &&other) = delete;
+  NONCOPYABLE(System);
+  System() = delete;
+  virtual ~System() = default;
 
 protected:
   reg::ArcheRegistry<CM> &m_registry;

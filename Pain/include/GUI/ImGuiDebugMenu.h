@@ -13,7 +13,7 @@ public:
   ImGuiDebugMenu(reg::Entity entity, pain::Scene &scene, pain::Application *app,
                  reg::Entity cameraEntity, reg::Entity mp);
   ImGuiDebugMenu(ImGuiDebugMenu &&other) noexcept;
-  ImGuiDebugMenu &operator=(ImGuiDebugMenu &&other) noexcept;
+  ImGuiDebugMenu &operator=(ImGuiDebugMenu &&other) = delete;
 
 private:
   reg::Entity m_cameraEntity = reg::Entity{-2};

@@ -4,7 +4,7 @@
 
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Camera.h"
+#include "CoreRender/CameraComponent.h"
 
 namespace pain
 {
@@ -18,19 +18,19 @@ public:
   void onUpdate(DeltaTime deltaTimeSec);
   void onEvent(const SDL_Event &e);
 
-  const PerspectiveCamera &getCamera() const { return m_camera; }
+  const Component::PerspCamera &getCamera() const { return m_camera; }
 
   inline void setPosition(const glm::vec3 &position)
   {
     m_position = position;
-    m_camera.RecalculateViewMatrix(m_position, m_cameraFront);
+    m_camera.recalculateViewMatrix(m_position, m_cameraFront);
   }
   inline const glm::vec3 &getPosition() const { return m_position; }
 
   inline void setFrontVector(glm::vec3 rotation)
   {
     m_cameraFront = rotation;
-    m_camera.RecalculateViewMatrix(m_position, m_cameraFront);
+    m_camera.recalculateViewMatrix(m_position, m_cameraFront);
   }
   inline glm::vec3 getFrontVector() const { return m_cameraFront; }
 
@@ -47,7 +47,7 @@ private:
   float m_aspectRatio = 800.f / 600.f;
   float m_windowWidth = 800.f;
   float m_windowHeight = 600.f;
-  PerspectiveCamera m_camera;
+  Component::PerspCamera m_camera;
   bool m_isMovementEnable = true;
 
   // vectors

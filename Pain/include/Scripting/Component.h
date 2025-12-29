@@ -12,7 +12,7 @@ struct LuaScriptComponent : public ExtendedEntity {
   void bind(sol::state &solstate, const char *scriptPath);
 
   NONCOPYABLE(LuaScriptComponent);
-  LuaScriptComponent &operator=(LuaScriptComponent &&other) noexcept;
+  LuaScriptComponent &operator=(LuaScriptComponent &&other) = delete;
   LuaScriptComponent(LuaScriptComponent &&other) noexcept;
   ~LuaScriptComponent() = default;
 

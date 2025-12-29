@@ -11,8 +11,8 @@ namespace pain
 {
 namespace Systems
 {
-ImGuiSys::ImGuiSys(reg::ArcheRegistry<ComponentManager> &archetype,
-                   reg::EventDispatcher &eventDispatcher, void *context,
+ImGuiSys::ImGuiSys(reg::ArcheRegistry<UIManager> &archetype,
+                   reg::EventDispatcher &eventDispatcher, SDL_GLContext context,
                    SDL_Window *window, ImGuiConfigFlags flags)
     : System(archetype, eventDispatcher)
 {
@@ -53,6 +53,7 @@ void ImGuiSys::onEvent(const SDL_Event &event)
 void ImGuiSys::onRender(Renderer2d &renderer, bool isMinimized,
                         DeltaTime currentTime)
 {
+  UNUSED(currentTime);
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   ::ImGui::NewFrame();
@@ -66,8 +67,7 @@ void ImGuiSys::onRender(Renderer2d &renderer, bool isMinimized,
       for (size_t i = 0; i < chunk.count; ++i) {
         auto &nsc = nscs[i];
         if (nsc.instance && nsc.onRenderFunction)
-          nsc.onRenderFunction(nsc.instance, renderer, isMinimized,
-                               currentTime);
+          nsc.onRenderFunction(nsc.instance, renderer, isMinimized);
       }
     }
   }

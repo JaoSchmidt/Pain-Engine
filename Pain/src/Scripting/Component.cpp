@@ -60,17 +60,4 @@ LuaScriptComponent::LuaScriptComponent(LuaScriptComponent &&other) noexcept
       m_onDestroy(std::move(other.m_onDestroy)),
       m_scriptPath(std::exchange(other.m_scriptPath, nullptr)) {};
 
-LuaScriptComponent &
-LuaScriptComponent::operator=(LuaScriptComponent &&other) noexcept
-{
-  if (this != &other) {
-    ExtendedEntity::operator=(std::move(other)); // assign base
-
-    m_scriptPath = std::exchange(other.m_scriptPath, nullptr);
-    m_onCreate = std::move(other.m_onCreate);
-    m_onDestroy = std::move(other.m_onDestroy);
-    // m_lua is a reference, no need to assign again
-  }
-  return *this;
-}
 } // namespace pain

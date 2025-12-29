@@ -5,9 +5,7 @@
 #include "platform/OpenGL/OpenGLDebugger.h"
 #include <SDL2/SDL_surface.h>
 #include <SDL_image.h>
-#include <cstring>
 #include <glad/gl.h>
-#include <memory>
 
 #include "CoreFiles/LogWrapper.h"
 
@@ -85,7 +83,8 @@ uint32_t createTexture(const TextureCreateInfo &info)
 
   GLenum internal = getInternalFormat(info.format);
 
-  glTextureStorage2D(id, 1, internal, info.width, info.height);
+  glTextureStorage2D(id, 1, internal, static_cast<int32_t>(info.width),
+                     static_cast<int32_t>(info.height));
   glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -131,8 +130,9 @@ uint32_t createTextureFromFile(const TextureFromFileInfo &info)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 
-  glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, surface->w, surface->h, 0,
-               dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
+  glTexImage2D(GL_TEXTURE_2D, 0, static_cast<int32_t>(internalFormat),
+               surface->w, surface->h, 0, dataFormat, GL_UNSIGNED_BYTE,
+               surface->pixels);
   P_OPENGL_CHECK("Failed glTexImage2D inside Texture");
 
   PLOG_I("Texture created id = {}, path = {}", id, info.path);
@@ -161,7 +161,8 @@ void setTextureData(uint32_t id, uint32_t width, uint32_t height,
   uint32_t bytesPerPixel = getGLDataFormat(dataFormat) == GL_RGBA ? 4 : 3;
   P_ASSERT_W(size == width * height * bytesPerPixel,
              "Data must be entire texture!");
-  glTextureSubImage2D(id, 0, 0, 0, width, height, getGLDataFormat(dataFormat),
+  glTextureSubImage2D(id, 0, 0, 0, static_cast<int32_t>(width),
+                      static_cast<int32_t>(height), getGLDataFormat(dataFormat),
                       GL_UNSIGNED_BYTE, data);
 }
 

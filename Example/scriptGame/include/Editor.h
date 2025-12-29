@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreRender/FrameBuffer.h"
+#include "Misc/Events.h"
 #include "imgui_internal.h"
 #include <imgui.h>
 #include <pain.h>
@@ -15,10 +16,8 @@ public:
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::Renderer2d &renderer, bool isMinimized,
-                pain::DeltaTime currentTime)
+  void onRender(pain::Renderer2d &renderer, bool isMinimized)
   {
-    UNUSED(currentTime)
     UNUSED(isMinimized)
 
     if (!m_app.getFrameInfo().swapChainTarget) {
@@ -36,7 +35,7 @@ public:
       // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will
       // render our background and handle the pass-thru hole, so we ask Begin()
       // to not render a background.
-      if (ImGuiDockNodeFlags_PassthruCentralNode)
+      if constexpr (ImGuiDockNodeFlags_PassthruCentralNode)
         m_windowFlags |= ImGuiWindowFlags_NoBackground;
 
       // Important: note that we proceed even if Begin() returns false (aka
@@ -125,12 +124,15 @@ public:
       ImGui::Begin("Viewport");
       uint32_t textureID = m_app.getFrameInfo().colorAttachmentTextureId;
       if (textureID) {
-        m_avail = ImGui::GetContentRegionAvail();
+        ImVec2 avail = ImGui::GetContentRegionAvail();
+        if (avail.x != m_avail.x || avail.y != m_avail.y) {
+          m_avail = avail;
+          renderer.setViewport(0, 0, avail.x, avail.y);
+          getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
+              {glm::vec2(avail.x, avail.y)});
+        }
 
         ImGui::Image((ImTextureID)(uintptr_t)textureID, m_avail);
-        // ImGui::Image(static_cast<ImTextureID>(textureID),
-        //              ImVec2{static_cast<float>(m_app.getFrameInfo().width),
-        //                     static_cast<float>(m_app.getFrameInfo().height)});
       }
       ImGui::End();
 
@@ -138,7 +140,8 @@ public:
     }
   }
 
-  PainlessEditor(reg::Entity entity, pain::Scene &scene, pain::Application &app)
+  PainlessEditor(reg::Entity entity, pain::UIScene &scene,
+                 pain::Application &app)
       : ExtendedEntity(entity, scene), m_app(app) {};
   std::vector<std::string> m_availableResolutions;
 
@@ -149,7 +152,7 @@ private:
       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
       ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-  ImVec2 m_avail;
+  ImVec2 m_avail = {200.f, 200.f};
   bool m_dockspaceOpen = true;
   pain::Application &m_app;
 };
