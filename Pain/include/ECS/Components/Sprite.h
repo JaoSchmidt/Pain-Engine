@@ -22,7 +22,6 @@ struct SpriteComponent {
   float m_tilingFactor = 1.f;
   TextureVariant m_tex = TextureVariant{
       &resources::getDefaultTexture(resources::DefaultTexture::Error, false)};
-
   void printptr(const char *a) const
   {
     std::visit(
@@ -37,6 +36,50 @@ struct SpriteComponent {
         m_tex);
   }
 
+  // ------------------------------------------------------------
+  //  Factory functions
+  // ------------------------------------------------------------
+
+  static SpriteComponent create(glm::vec2 size = {0.1f, 0.1f})
+  {
+    return SpriteComponent{.m_size = size,
+                           .m_tex = &resources::getDefaultTexture(
+                               resources::DefaultTexture::General, false)};
+  }
+  // -- Texture by file path
+  static SpriteComponent create(const char *textureFilePath,
+                                glm::vec2 size = {0.1f, 0.1f})
+  {
+    return SpriteComponent{.m_size = size,
+                           .m_tex = &resources::getTexture(textureFilePath)};
+  }
+  static SpriteComponent create(const char *sheetFilePath, unsigned short id,
+                                glm::vec2 size = {0.1f, 0.1f})
+  {
+    return SpriteComponent{
+        .m_size = size,
+        .m_tex = SheetStruct{&resources::getTextureSheet(sheetFilePath), id}};
+  }
+
+  // -- Texture by reference
+  static SpriteComponent create(Texture &texture, glm::vec2 size = {0.1f, 0.1f})
+  {
+    return SpriteComponent{.m_size = size, .m_tex = &texture};
+  }
+  static SpriteComponent create(TextureSheet &sheet, unsigned short id,
+                                glm::vec2 size = {0.1f, 0.1f})
+  {
+    return SpriteComponent{.m_size = size, .m_tex = SheetStruct{&sheet, id}};
+  }
+  static SpriteComponent create(Texture &texture, const glm::vec2 &size,
+                                const glm::vec4 &color,
+                                float tilingFactor = 1.f)
+  {
+    return SpriteComponent{.m_size = size,
+                           .m_color = color,
+                           .m_tilingFactor = tilingFactor,
+                           .m_tex = &texture};
+  }
   // ------------------------------------------------------------
   //  GETTERS with type-enforced stuff
   // ------------------------------------------------------------
@@ -67,49 +110,42 @@ struct SpriteComponent {
   {
     m_tex = TextureVariant{SheetStruct{&sheet, id}};
   }
-
-  // --- Constructors ---
-  SpriteComponent(const glm::vec2 &size, const glm::vec4 &color,
-                  float tilingFactor, Texture &texture)
-      : m_size(size), m_color(color), m_tilingFactor(tilingFactor),
-        m_tex(&texture) {};
-
-  SpriteComponent(Texture &texture, glm::vec2 size = {0.1f, 0.1f})
-      : m_size(size), m_tex(&texture) {};
-
-  SpriteComponent(TextureSheet &sheet, unsigned short id,
-                  glm::vec2 size = {0.1f, 0.1f})
-      : m_size(size), m_tex(SheetStruct{&sheet, id}) {};
-
-  SpriteComponent(const char *filepath)
-      : m_tex(&resources::getTexture(filepath)) {};
-
-  SpriteComponent() = default;
-
-  // --- Move semantics are fully handled by std::variant ---
-  SpriteComponent(SpriteComponent &&) noexcept = default;
-  SpriteComponent &operator=(SpriteComponent &&) noexcept = default;
 };
 
 struct SpritelessComponent {
   std::variant<CircleShape, QuadShape> m_shape = QuadShape();
   glm::vec4 m_color{0.8f, 0.2f, 0.1f, 0.8f};
-  SpritelessComponent() = default;
-  SpritelessComponent(const glm::vec2 &size) : m_shape(QuadShape(size)) {};
-  SpritelessComponent(const float radius) : m_shape(CircleShape(radius)) {};
-
-  SpritelessComponent(const float radius, const glm::vec4 &color)
-      : m_shape(CircleShape(radius)), m_color(color) {};
-  SpritelessComponent(const glm::vec2 &size, const glm::vec4 &color)
-      : m_shape(QuadShape(size)), m_color(color) {};
+  static SpritelessComponent createQuad(const glm::vec2 &size)
+  {
+    return SpritelessComponent{.m_shape = QuadShape(size)};
+  }
+  static SpritelessComponent createCircle(float radius)
+  {
+    return SpritelessComponent{.m_shape = CircleShape(radius)};
+  }
+  static SpritelessComponent createQuad(const glm::vec2 &size,
+                                        const glm::vec4 &color)
+  {
+    return SpritelessComponent{.m_shape = QuadShape(size), .m_color = color};
+  }
+  static SpritelessComponent createCircle(float radius, const glm::vec4 &color)
+  {
+    return SpritelessComponent{.m_shape = CircleShape(radius),
+                               .m_color = color};
+  }
 };
 
 struct TrianguleComponent {
   glm::vec2 m_height{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
-  TrianguleComponent() = default;
-  TrianguleComponent(const glm::vec2 &height, const glm::vec4 &color)
-      : m_height(height), m_color(color) {};
+  static TrianguleComponent create(const glm::vec2 &height)
+  {
+    return TrianguleComponent{.m_height = height};
+  }
+  static TrianguleComponent create(const glm::vec2 &height,
+                                   const glm::vec4 &color)
+  {
+    return TrianguleComponent{.m_height = height, .m_color = color};
+  }
 };
-
 } // namespace pain

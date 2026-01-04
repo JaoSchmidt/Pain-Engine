@@ -3,9 +3,11 @@
 #include "Scripting/Component.h"
 #include <pain.h>
 
-Bullet::Bullet(pain::Scene *scene) : NormalEntity(*scene)
+reg::Entity Bullet::create(pain::Scene &scene)
 {
-  createComponents(*scene, pain::Transform2dComponent{}, //
-                   pain::SpriteComponent{},              //
-                   pain::Movement2dComponent{});
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(entity, pain::Transform2dComponent{}, //
+                         pain::SpriteComponent{},              //
+                         pain::Movement2dComponent{});
+  return entity;
 }

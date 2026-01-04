@@ -42,12 +42,13 @@ class ArcheRegistry
 
 public:
   ArcheRegistry() : m_archetypes() {};
-  Entity createEntity()
+
+  Entity createEntity(Bitmask archetype = reg::Bitmask{-1})
   {
     reg::Entity id;
     if (m_availableEntities.empty()) {
       id = reg::Entity(++numberOfEntities);
-      addRecord(Bitmask{-1}, Column{-1});
+      addRecord(archetype, Column{-1});
     } else {
       id = m_availableEntities.front();
       m_availableEntities.pop();
@@ -100,53 +101,6 @@ public:
     return archetype.fetchComponent<Component>(column);
   }
 
-  /* TODO: In theory, we can call createComponents with "ArgTuples" instead of
-     the above, this will be it possible to, instead of calling this:
-     createComponents(
-        MovementComponent{},
-        RotationComponent{},
-        TransformComponent{},
-        Component::OrthoCamera{aspectRatio, zoomLevel},
-        NativeScriptComponent{"Camera nsc"}
-      );
-     // We can call this:
-     createComponents(
-          std::make_tuple(),
-          std::make_tuple(),
-          std::make_tuple(),
-          std::make_tuple(aspectRatio, zoomLevel),
-          std::make_tuple("Camera nsc")
-      );
-      In theory, this can be done to make it a little more cheaper to insert
-     components, as they will be emplaced direclty inside the vector instead of
-     being moved to
-  */
-
-  // template <typename... Components, typename... ArgTuples>
-  // std::tuple<Components &...> createComponents(Entity entity,
-  //                                              ArgTuples &&...args)
-  // {
-  //   static_assert(sizeof...(Components) == sizeof...(ArgTuples),
-  //                 "Mismatch in components and constructor arguments");
-
-  //   int bitMask = createBitMasks<Components...>();
-  //   Archetype &archetype = m_archetypes[bitMask];
-
-  //   // for iterate every component
-  //   (archetype.pushComponent<Components>(std::forward<ArgTuples>(args)),
-  //   ...); return archetype.extractColumn<Components...>(entity);
-  // }
-  // template <typename Component, typename Tuple>
-  // void pushComponentHelper(Archetype &archetype, Tuple &&args)
-  // {
-  //   std::apply(
-  //       [&](auto &&...unpackedArgs) {
-  //         archetype.pushComponent<Component>(
-  //             std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
-  //       },
-  //       std::forward<Tuple>(args));
-  // }
-
   // ---------------------------------------------------- //
   // add
   // ---------------------------------------------------- //
@@ -169,7 +123,21 @@ public:
         moveEntity<Components...>(archetype, newArchetype, entity, newBitMask,
                                   oldColumn, std::forward(comps)...);
     return std::tie<Components &...>(
-        archetype.fetchComponent<Components>(newColumn)...);
+        newArchetype.fetchComponent<Components>(newColumn)...);
+  }
+
+  // If bitmask is known, you can manually push components into the archetype
+  template <typename C>
+  void manualPush(Entity entity, Bitmask bitmask, C &&comps)
+  {
+    Archetype &archetype = m_archetypes[bitmask];
+    Column column = m_records[static_cast<unsigned long>(entity)].column;
+    if (column == -1) {
+      m_records[static_cast<unsigned long>(entity)].column =
+          archetype.pushComponents(entity, std::forward<C>(comps));
+    } else {
+      archetype.pushComponents(std::forward<C>(comps));
+    }
   }
 
 private:
@@ -283,8 +251,12 @@ public:
     static_assert(hasAllBitmask<TargetComponents...>(),
                   "When using getComponent some component didn't exist inside  "
                   "the CompileTimeBitMask");
+    const Bitmask b = m_records[static_cast<unsigned>(entity)].bitmask;
+    P_ASSERT((b & getMultipleBitmask<TargetComponents...>()) ==
+                 getMultipleBitmask<TargetComponents...>(),
+             "Entity {} does not have all components requested", entity);
     Archetype &archetype =
-        m_archetypes.at(m_records[static_cast<unsigned>(entity)].bitmask);
+        m_archetypes[m_records[static_cast<unsigned>(entity)].bitmask];
     return archetype.extractColumn<TargetComponents...>(
         m_records[static_cast<unsigned>(entity)].column);
   }

@@ -287,8 +287,14 @@ if(UNIX OR APPLE)
     sync_resources
     COMMAND rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
             "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
-    COMMAND rsync -av "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
-            "${PROJECT_SOURCE_DIR}/resources/"
+    COMMAND
+      rsync -av "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
+      "${PROJECT_SOURCE_DIR}/resources/"
+      # NOTE: not sure if this is necessasry but I'm just going to assume for
+      # now that every developer will need to sync the lua types inside the
+      # project source directory. Why? beacuse lua lsp works with these files
+    COMMAND rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/scripts/"
+            "${PROJECT_SOURCE_DIR}/"
     COMMENT "Syncing resources folder")
   # Add dependency to sync_resources target on make
   add_dependencies(${LIBRARY_NAME} sync_resources)

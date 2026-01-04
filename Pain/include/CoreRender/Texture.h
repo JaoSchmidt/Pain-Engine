@@ -42,9 +42,9 @@ public:
 
   std::string m_path = "NULL texture string"; // or name
 private:
-  uint32_t m_width, m_height;
-  ImageFormat m_dataFormat;
-  uint32_t m_textureId;
+  uint32_t m_width = 1, m_height = 1;
+  ImageFormat m_dataFormat = ImageFormat::R8;
+  uint32_t m_textureId = 0;
 
   Texture(const char *path, uint32_t width, uint32_t height,
           ImageFormat dataFormat, uint32_t rendererId);

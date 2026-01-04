@@ -37,6 +37,7 @@ struct Renderer2d {
   Renderer2d &operator=(Renderer2d &&o) noexcept;
   // void changeCamera(const OrthographicMatrices &cameraMatrices);
   void changeCamera(reg::Entity camera);
+  bool hasCamera();
   // ================================================================= //
   // Renderer basic wrapper around opengl
   // ================================================================= //
@@ -105,6 +106,7 @@ struct Renderer2d {
                                const glm::vec2 &size);
 
   void removeTexture(const Texture &texture);
+  // set a debug grid size. Pass size 0 to disable the grid
   void setCellGridSize(float size);
 
   // // TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
@@ -161,6 +163,7 @@ private:
   M m;
 
   Renderer2d(M args) : m(std::move(args)) {}
+  friend class Application;
 };
 
 } // namespace pain

@@ -11,24 +11,25 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
                            int resolutionWeigh, float zoomLevel)
 {
   reg::Entity entity = scene.createEntity();
-  scene.createComponents(                   //
-      entity, pain::Transform2dComponent{}, //
-      pain::SpriteComponent{tex, size},     //
-      pain::SpritelessComponent{size},      //
-      pain::RotationComponent{},            //
-      pain::Movement2dComponent{},          //
-      pain::SAPCollider::createCollider(size, true),
+  scene.createComponents(                          //
+      entity, pain::Transform2dComponent{},        //
+      pain::SpriteComponent::create(tex, size),    //
+      pain::SpritelessComponent::createQuad(size), //
+      pain::RotationComponent{},                   //
+      pain::Movement2dComponent{},                 //
+      pain::SAPCollider::createAABB(size, true),
       pain::ParticleSprayComponent{}, //
-      pain::Component::OrthoCamera::create(zoomLevel, resolutionWeigh,
-                                           resolutionHeight), //
-      pain::NativeScriptComponent{}, pain::LuaScriptComponent{entity, scene});
+      Component::OrthoCamera::create(zoomLevel, resolutionWeigh,
+                                     resolutionHeight), //
+      pain::NativeScriptComponent{},
+      pain::LuaScriptComponent::create(entity, scene));
   return entity;
 }
 
 void Player::Script::onRender(pain::Renderer2d &renderer, bool isMinimized,
                               pain::DeltaTime currentTime)
 {
-  auto &camCC = getComponent<pain::Component::OrthoCamera>();
+  auto &camCC = getComponent<Component::OrthoCamera>();
   IMGUI_PLOG([=]() { ImGui::Text("Camera zoom: %.3f", camCC.m_zoomLevel); });
 }
 

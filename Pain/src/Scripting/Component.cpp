@@ -11,6 +11,10 @@ namespace pain
 {
 void custom_print(const std::string &str) { PLOG_I("{}", str); }
 
+LuaScriptComponent LuaScriptComponent::create(reg::Entity entity, Scene &scene)
+{
+  return LuaScriptComponent(entity, scene);
+};
 LuaScriptComponent::LuaScriptComponent(reg::Entity entity, Scene &scene)
     : ExtendedEntity(entity, scene) {};
 
@@ -44,7 +48,6 @@ void LuaScriptComponent::bind(sol::state &lua, const char *scriptPath)
     sol::error err = script;
     PLOG_E("Error loading Lua script: {}", err.what());
   }
-  PLOG_I("has transform? {}", hasAnyComponents<Transform2dComponent>());
   sol::protected_function_result result =
       script(); // will place everything inside an anonymous function and run
   if (!result.valid()) {
@@ -53,11 +56,4 @@ void LuaScriptComponent::bind(sol::state &lua, const char *scriptPath)
     return;
   }
 }
-
-LuaScriptComponent::LuaScriptComponent(LuaScriptComponent &&other) noexcept
-    : ExtendedEntity(std::move(other)), // base class
-      m_onCreate(std::move(other.m_onCreate)),
-      m_onDestroy(std::move(other.m_onDestroy)),
-      m_scriptPath(std::exchange(other.m_scriptPath, nullptr)) {};
-
 } // namespace pain

@@ -69,6 +69,8 @@ private:
   std::vector<long> m_activeList = {};
   std::vector<long> m_activeStaticList = {};
 
+  bool m_firstTime = true;
+
   static inline long staticMSB(size_t x)
   {
     long lx = static_cast<long>(x);

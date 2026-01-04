@@ -6,7 +6,7 @@
 
 #include <filesystem>
 #include <optional>
-
+#define DEFAULT_TEXTURE_PATH "resources/default/textures/defaultTexture.png"
 namespace pain
 {
 namespace
@@ -19,9 +19,49 @@ std::string m_resourcesPath; // we can replace this with IniConfig class
 std::map<std::string, TextureSheet> m_textureSheetMap = {};
 } // namespace
 
+void resources::setDefaultPath(const char *path)
+{
+  namespace fs = std::filesystem;
+  fs::path p(path);
+  // normalize path (remove redundant ./ and ensure trailing slash)
+  p = fs::weakly_canonical(p);
+  if (p.filename() == "resources") {
+    p = p.parent_path();
+  }
+  m_resourcesPath = p.string();
+}
+std::string getFullPath(const char *relativeOrAbsolute)
+{
+  namespace fs = std::filesystem;
+  fs::path p(relativeOrAbsolute);
+
+  // If already absolute, just normalize it
+  if (p.is_absolute()) {
+    return fs::weakly_canonical(p).string();
+  }
+
+  fs::path base(m_resourcesPath);
+  fs::path full = base / p;
+  return fs::weakly_canonical(full).string();
+}
+
+void resources::initiateDefaultTextures()
+{
+  // White texture
+  Texture &whiteTexture =
+      resources::createDumpTexture("BLANK", 1, 1, ImageFormat::RGBA8, false);
+  const uint32_t whiteTextureData = 0xffffffff;
+  whiteTexture.setData(&whiteTextureData, sizeof(uint32_t));
+
+  // Error textures
+  getTexture(DEFAULT_TEXTURE_PATH);
+  createTextureSheet("GENERAL", DEFAULT_TEXTURE_PATH, 1, 1, {{0, 0}});
+}
+
 // ---------------------------------------------------------- //
 // TextureSheet
 // ---------------------------------------------------------- //
+
 TextureSheet &
 resources::createTextureSheet(const char *name, const char *texturePath,
                               unsigned nlinesX, unsigned ncolumnsY,
@@ -40,46 +80,37 @@ resources::createTextureSheet(const char *name, const char *texturePath,
   auto [it, inserted] = m_textureSheetMap.emplace(name, std::move(sheet));
   return it->second;
 }
-
-TextureSheet &getTextureSheet(const char *name)
+TextureSheet &getDefaultSheet(resources::DefaultTexture defTex,
+                              bool isError = true)
 {
-  auto search = m_textureSheetMap.find(name);
-  P_ASSERT(search != m_textureSheetMap.end(), "TextureSheet {} not found",
-           name);
-  return search->second;
+  P_ASSERT(m_textureSheetMap.contains("GENERAL"),
+           "Some default values are missing, did you remember to call "
+           "initiateDefaultTextures?")
+
+  switch (defTex) {
+  case resources::DefaultTexture::General:
+  case resources::DefaultTexture::Blank:
+  case resources::DefaultTexture::Error: {
+    if (isError)
+      PLOG_E("Using a default ERROR texture sheet");
+    return m_textureSheetMap.at("GENERAL");
+  }
+  }
 }
 
-void clearTextureSheets() { m_textureSheetMap.clear(); }
+TextureSheet &resources::getTextureSheet(const char *name)
+{
+  auto search = m_textureSheetMap.find(name);
+  if (search != m_textureSheetMap.end()) {
+    return search->second;
+  }
+  return getDefaultSheet(DefaultTexture::General);
+}
+
 // ---------------------------------------------------------- //
 // Texture
 // ---------------------------------------------------------- //
 
-void resources::setDefaultPath(const char *path)
-{
-  namespace fs = std::filesystem;
-  fs::path p(path);
-  // normalize path (remove redundant ./ and ensure trailing slash)
-  p = fs::weakly_canonical(p);
-  if (p.filename() == "resources") {
-    p = p.parent_path();
-  }
-  m_resourcesPath = p.string();
-}
-
-std::string resources::getFullPath(const char *relativeOrAbsolute)
-{
-  namespace fs = std::filesystem;
-  fs::path p(relativeOrAbsolute);
-
-  // If already absolute, just normalize it
-  if (p.is_absolute()) {
-    return fs::weakly_canonical(p).string();
-  }
-
-  fs::path base(m_resourcesPath);
-  fs::path full = base / p;
-  return fs::weakly_canonical(full).string();
-}
 Texture &resources::createDumpTexture(const char *name, uint32_t width,
                                       uint32_t height, ImageFormat imf,
                                       bool isError)
@@ -93,18 +124,6 @@ Texture &resources::createDumpTexture(const char *name, uint32_t width,
   auto textOpt = Texture::createTexture(name, width, height, imf);
   if (textOpt) {
     auto [it, inserted] = m_textureMap.emplace(name, std::move(*textOpt));
-    // prevents m_textureSlots become invalid by allocating at least once;
-    // if (renderer2d != nullptr) {
-    //   renderer2d->allocateTextures(*textOpt);
-    // } else if (renderer3d != nullptr) {
-    //   PLOG_E("allocate texture for renderer 3d is WIP");
-    //   exit(1);
-    // } else {
-    //   PLOG_E(
-    //       "Did you forget to allocate the renderer inside the asset
-    //       manager?");
-    //   exit(1);
-    // }
     return it->second;
   } else {
     PLOG_W("Using a default Texture instead of {}", name);
@@ -116,12 +135,12 @@ Texture &resources::getDefaultTexture(resources::DefaultTexture defTex,
 {
   P_ASSERT(m_textureMap.contains("BLANK"),
            "Some default values are missing, did you remember to call "
-           "initiateDefaultTexture?")
+           "initiateDefaultTextures?")
 
   switch (defTex) {
   case DefaultTexture::General:
   case DefaultTexture::Error: {
-    auto t = getFullPath("resources/default/textures/defaultTexture.png");
+    auto t = getFullPath(DEFAULT_TEXTURE_PATH);
     if (isError)
       PLOG_E("Using a default ERROR texture {}", t);
     return m_textureMap.at(t);
@@ -131,8 +150,6 @@ Texture &resources::getDefaultTexture(resources::DefaultTexture defTex,
       PLOG_W("Using a default blank texture");
     return m_textureMap.at("BLANK");
   }
-  // Should never happen
-  return m_textureMap.at("BLANK");
 }
 const Texture &resources::getConstTexture(const char *pathOrName, bool isPath)
 {
@@ -174,15 +191,6 @@ Texture &resources::getTexture(const char *pathOrName, bool gl_clamp_to_edge,
     PLOG_W("Using a default Texture instead of {}", key);
     return getDefaultTexture(DefaultTexture::General);
   }
-}
-
-void resources::initiateDefaultTexture()
-{
-  getTexture("resources/default/textures/defaultTexture.png");
-  Texture &whiteTexture =
-      resources::createDumpTexture("BLANK", 1, 1, ImageFormat::RGBA8, false);
-  const uint32_t whiteTextureData = 0xffffffff;
-  whiteTexture.setData(&whiteTextureData, sizeof(uint32_t));
 }
 
 bool resources::deleteTexture(const std::string &key, Renderer2d &renderer)

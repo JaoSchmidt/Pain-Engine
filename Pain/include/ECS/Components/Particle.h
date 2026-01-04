@@ -30,26 +30,31 @@ struct ParticleSprayComponent {
   unsigned m_maxNumberOfParticles = 100;
   unsigned m_numberOfParticles = 0;
 
-  ParticleSprayComponent()
+  static ParticleSprayComponent create()
   {
-    for (unsigned i = 0; i < m_maxNumberOfParticles; i++) {
-      Particle particle;
-      m_particles.push_back(particle);
-    }
-  };
-  ParticleSprayComponent(float velocity, uint64_t lifeTime,
-                         unsigned maxNumberOfParticles,
-                         const glm::vec4 &color = glm::vec4(1.f))
-      : m_velocity(velocity), m_lifeTime(lifeTime), m_color(color),
-        m_maxNumberOfParticles(maxNumberOfParticles)
+    ParticleSprayComponent c{};
+    c.m_particles.resize(c.m_maxNumberOfParticles);
+    return c;
+  }
+
+  static ParticleSprayComponent create(float velocity, uint64_t lifeTime,
+                                       unsigned maxNumberOfParticles,
+                                       const glm::vec4 &color = glm::vec4(1.f))
   {
-    for (unsigned i = 0; i < m_maxNumberOfParticles; i++) {
-      Particle particle;
-      m_particles.push_back(particle);
-      const float rando = (float)rand() / (float)RAND_MAX;
-      particle.m_rotationSpeed = rando;
+    ParticleSprayComponent c{.m_velocity = velocity,
+                             .m_lifeTime = lifeTime,
+                             .m_color = color,
+                             .m_maxNumberOfParticles = maxNumberOfParticles};
+
+    c.m_particles.resize(maxNumberOfParticles);
+
+    for (auto &particle : c.m_particles) {
+      particle.m_rotationSpeed =
+          static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
       particle.m_alive = false;
     }
+
+    return c;
   }
 
   void emitParticle(const uint64_t currentTime, const glm::vec2 &basePosition,

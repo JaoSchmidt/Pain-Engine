@@ -41,8 +41,8 @@ struct QuadBatch {
   void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
                     const float tilingFactor, const float textureIndex,
                     const std::array<glm::vec2, 4> &textureCoordinate);
-  void resetAll(uint32_t &textureSlotIndex);
-  void resetPtr(uint32_t &textureSlotIndex);
+  void resetAll();
+  void resetPtr();
   void flush(const std::array<Texture *, MaxTextureSlots> &textures,
              uint32_t textureCount);
 

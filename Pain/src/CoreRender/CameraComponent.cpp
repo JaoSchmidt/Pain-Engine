@@ -33,8 +33,9 @@ OrthographicMatrices::OrthographicMatrices(glm::mat4 projectionMatrix,
           .m_viewProjectionCache{projectionMatrix * viewMatrix},
       } {};
 
-void Component::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
-                                                   const float rotation)
+} // namespace pain
+void ::cmp::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
+                                               const float rotation)
 {
   glm::mat4 transform =
       glm::translate(glm::mat4(1.0f), glm::vec3(position, 0)) *
@@ -45,7 +46,7 @@ void Component::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
       m_matrices.m_projection * m_matrices.m_view;
 }
 
-void Component::OrthoCamera::setProjection(int width, int height)
+void ::cmp::OrthoCamera::setProjection(int width, int height)
 {
   setResolution(width, height);
   float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
@@ -53,15 +54,15 @@ void Component::OrthoCamera::setProjection(int width, int height)
   setProjection(-aspectRatio * m_zoomLevel, aspectRatio * m_zoomLevel,
                 -m_zoomLevel, m_zoomLevel);
 }
-void Component::OrthoCamera::setProjection(float aspectRatio, float zoomLevel)
+void ::cmp::OrthoCamera::setProjection(float aspectRatio, float zoomLevel)
 {
   m_aspectRatio = aspectRatio;
   m_zoomLevel = aspectRatio;
   setProjection(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel,
                 zoomLevel);
 }
-void Component::OrthoCamera::setProjection(float left, float right,
-                                           float bottom, float top)
+void ::cmp::OrthoCamera::setProjection(float left, float right, float bottom,
+                                       float top)
 {
   m_matrices.m_projection = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
   m_matrices.m_viewProjectionCache =
@@ -72,8 +73,8 @@ void Component::OrthoCamera::setProjection(float left, float right,
 // Perspective Camera Matrices
 // ======================================================================== //
 
-PerspectiveMatrices::PerspectiveMatrices(glm::mat4 perspectiveMatrix,
-                                         glm::mat4 viewMatrix)
+pain::PerspectiveMatrices::PerspectiveMatrices(glm::mat4 perspectiveMatrix,
+                                               glm::mat4 viewMatrix)
     : CameraMatrices{.m_projection{perspectiveMatrix},
                      .m_view{glm::mat4(1.0f)},
                      .m_viewProjectionCache{perspectiveMatrix * viewMatrix}} {};
@@ -136,10 +137,11 @@ Component::OrthoCamera::create(int resWidth, int resHeight, float zoomLevel)
   glm::mat4 viewMatrix{glm::mat4(1.f)};
 
   return Component::OrthoCamera{
-      zoomLevel, OrthographicMatrices(projectionMatrix, viewMatrix),
+      zoomLevel, pain::OrthographicMatrices(projectionMatrix, viewMatrix),
       aspectRatio, resWidth, resHeight};
 }
-Component::OrthoCamera::OrthoCamera(float zoomLevel, OrthographicMatrices oc,
+Component::OrthoCamera::OrthoCamera(float zoomLevel,
+                                    pain::OrthographicMatrices oc,
                                     float aspectRatio, int resWidth,
                                     int resHeight)
     : CameraResolution{glm::vec2(resWidth, resHeight), aspectRatio},
@@ -157,13 +159,12 @@ Component::PerspCamera Component::PerspCamera::create(int resWidth,
       glm::radians(fieldOfViewDegrees), aspectRatio, 0.1f, 10.0f);
   glm::mat4 viewMatrix = glm::mat4(1.f);
   return Component::PerspCamera{
-      PerspectiveMatrices(perspectiveMatrix, viewMatrix), aspectRatio, resWidth,
-      resHeight};
+      pain::PerspectiveMatrices(perspectiveMatrix, viewMatrix), aspectRatio,
+      resWidth, resHeight};
 }
 
-Component::PerspCamera::PerspCamera(PerspectiveMatrices pe, float aspectRatio,
-                                    int resWidth, int resHeight)
+Component::PerspCamera::PerspCamera(pain::PerspectiveMatrices pe,
+                                    float aspectRatio, int resWidth,
+                                    int resHeight)
     : CameraResolution{glm::vec2(resWidth, resHeight), aspectRatio},
       m_matrices(pe) {};
-
-} // namespace pain

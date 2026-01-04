@@ -18,7 +18,7 @@ constexpr std::array<glm::vec4, 3> s_colorOptions = {
     glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), // Dark Grey
     glm::vec4(1.0f, 0.2f, 0.9f, 1.0f)  // Strong Pink
 };
-constexpr glm::vec4 s_clearColor = s_colorOptions[2];
+constexpr glm::vec4 s_clearColor = s_colorOptions[1];
 } // namespace
 
 void resizeFBViewport(const ImGuiViewportChangeEvent &event,

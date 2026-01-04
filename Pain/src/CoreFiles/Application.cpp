@@ -8,6 +8,7 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "GUI/ImGuiSys.h"
 #include "Misc/BasicOrthoCamera.h"
+#include "Misc/Events.h"
 #include "Scripting/State.h"
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_version.h>
@@ -65,7 +66,7 @@ Application *Application::createApplication(const char *title, int w, int h,
   // Default Values to increase redundancy
   // =========================================================================//
   resources::initiateDefaultScript();
-  resources::initiateDefaultTexture();
+  resources::initiateDefaultTextures();
   // =========================================================================//
   // config.ini file
   // =========================================================================//
@@ -79,15 +80,20 @@ Application *Application::createApplication(const char *title, int w, int h,
 Application::Application(sol::state &&luaState, SDL_Window *window,
                          void *context, FrameBufferCreationInfo &&fbci,
                          int fallbackWidth, int fallbackHeight)
-    : m_renderer(Renderer2d::createRenderer2d()),
+    : m({.defaultWidth = fallbackWidth, .defaultHeight = fallbackHeight}),
+      m_renderer(Renderer2d::createRenderer2d()),
       m_defaultImGuiInstance(new EngineController()),
       m_luaState(std::move(luaState)), m_eventDispatcher(m_luaState),
-      m({.defaultWidth = fallbackWidth, .defaultHeight = fallbackHeight}),
+      m_worldScene(Scene::create(m_eventDispatcher, m_luaState)),
       m_endGameFlags(), m_window(window), m_context(context),
       m_renderPipeline(fbci.swapChainTarget
                            ? RenderPipeline::create(m_eventDispatcher)
-                           : RenderPipeline::create(fbci, m_eventDispatcher)) {
-      };
+                           : RenderPipeline::create(fbci, m_eventDispatcher))
+{
+  createScriptEventMap(m_luaState, m_eventDispatcher);
+  addScheduler(m_luaState, m_worldScene);
+  m_worldScene.addEntityFunctions("World", m_luaState);
+};
 
 void Application::stopLoop(bool restartFlag)
 {
@@ -98,11 +104,12 @@ void Application::stopLoop(bool restartFlag)
 
 EndGameFlags Application::run()
 {
-  // creates a dummy world scene in case it doesn't exist
-  if (m_worldScene.get() == nullptr) {
-    createScene(1.f);
-    reg::Entity camera = Dummy2dCamera::createBasicCamera(
-        *m_worldScene, m.defaultWidth, m.defaultHeight, 1.f);
+  // creates a dummy camera in case it doesn't exist
+  if (!m_renderer.hasCamera()) {
+    PLOG_W("You didn't set a camera, using the default camera");
+    reg::Entity camera = Dummy2dCamera::create(m_worldScene, m.defaultWidth,
+                                               m.defaultHeight, 1.f);
+    m_worldScene.emplaceScript<OrthoCameraScript>(camera);
     setRendererCamera(camera);
   }
 
@@ -112,8 +119,7 @@ EndGameFlags Application::run()
     createUIScene();
 
   // With all scenes created, we can now properly use it
-  m_renderPipeline.subscribeToViewportChange(*m_worldScene);
-  addComponentFunctions(m_luaState);
+  m_renderPipeline.subscribeToViewportChange(m_worldScene);
 
   DeltaTime deltaTime;
   DeltaTime accumulator = 0.0;
@@ -154,7 +160,7 @@ EndGameFlags Application::run()
 
       // renderAccumulator += deltaSeconds;
       while (accumulator >= m.maxFrameRate) {
-        m_worldScene->updateSystems(m.maxFrameRate);
+        m_worldScene.updateSystems(m.maxFrameRate);
         accumulator -= m.maxFrameRate;
       }
     }
@@ -180,12 +186,12 @@ EndGameFlags Application::run()
           else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
             m.isMinimized = false;
           else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-            m_renderPipeline.onWindowResized(event, m_renderer, *m_worldScene);
+            m_renderPipeline.onWindowResized(event, m_renderer, m_worldScene);
           break;
         default:
           break;
         }
-        m_worldScene->updateSystems(event);
+        m_worldScene.updateSystems(event);
         if (m_uiScene != nullptr)
           m_uiScene->updateSystems(event);
       }
@@ -196,7 +202,7 @@ EndGameFlags Application::run()
     {
       PROFILE_SCOPE("Application::run - Handle Rendering");
       m_renderPipeline.pipeline(m_renderer, m.isMinimized, lastFrameTime,
-                                *m_worldScene, *m_uiScene);
+                                m_worldScene, *m_uiScene);
       P_ASSERT(m_window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_window);
     }

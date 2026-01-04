@@ -1,10 +1,11 @@
 // State.cpp
 #include "Scripting/State.h"
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
+#include "Physics/MovementComponent.h"
 #include "Scripting/Component.h"
 #include "Scripting/InputManager.h"
+#include "Scripting/SchedulerComponent.h"
 #include <sol/object.hpp>
 #include <sol/sol.hpp>
 
@@ -95,12 +96,12 @@ sol::state createLuaState()
 
 void addComponentFunctions(sol::state &lua)
 {
-  lua.new_usertype<LuaScriptComponent>(
+  lua.new_usertype<pain::LuaScriptComponent>(
       "LuaScriptComponent", "get_position",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<Transform2dComponent>())
+      [&](pain::LuaScriptComponent &c) -> sol::object {
+        if (c.hasAnyComponents<pain::Transform2dComponent>())
           return sol::make_reference(
-              lua, std::ref(c.getComponent<Transform2dComponent>()));
+              lua, std::ref(c.getComponent<pain::Transform2dComponent>()));
         return sol::nil;
       },
       "get_sprite",
@@ -117,6 +118,18 @@ void addComponentFunctions(sol::state &lua)
               lua, std::ref(c.getComponent<Movement2dComponent>()));
         return sol::nil;
       });
+}
+// NOTE: maybe I should move this into a single space?
+void addScheduler(sol::state &lua, Scene &worldScene)
+{
+  sol::table scheduler_api = lua.create_table();
+  scheduler_api["every"] = [&](float interval, sol::function f) {
+    reg::Entity e = worldScene.createEntity();
+    worldScene.createComponents(
+        e, cmp::LuaScheduleTask{.onScheduleFunction = std::move(f),
+                                .interval = interval});
+  };
+  lua["Scheduler"] = scheduler_api;
 }
 
 } // namespace pain

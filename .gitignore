@@ -11,7 +11,7 @@ CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
 .cmake/
 ## Debug stuff
-resources/
+/resources/
 resources/*
 .luarc.json
 lua_types/

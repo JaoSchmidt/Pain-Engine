@@ -20,6 +20,7 @@ TextureSheet &
 createTextureSheet(const char *name, const char *texturePath, unsigned nlinesX,
                    unsigned ncolumnsY,
                    std::initializer_list<std::pair<int, int>> coords);
+TextureSheet &getTextureSheet(const char *filepath);
 // ---------------------------------------------------------- //
 // Texture
 // ---------------------------------------------------------- //
@@ -30,11 +31,11 @@ const Texture &getConstTexture(const char *pathOrName, bool isPath = true);
 Texture &createDumpTexture(const char *name, uint32_t width, uint32_t height,
                            ImageFormat imf = ImageFormat::RGBA8,
                            bool isError = true);
-void initiateDefaultTexture();
+void initiateDefaultTextures();
 void clearTextures();
 bool deleteTexture(const std::string &key, Renderer2d &renderer);
 void setDefaultPath(const char *path);
-std::string getFullPath(const char *relativeOrAbsolute);
+// std::string getFullPath(const char *relativeOrAbsolute);
 
 } // namespace resources
 } // namespace pain

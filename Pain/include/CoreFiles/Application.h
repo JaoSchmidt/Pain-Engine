@@ -52,20 +52,19 @@ public:
   }
 
   template <typename... Components>
-  Scene &createScene(float collisionGridSize, Components... args)
+  Scene &createWorldSceneComponents(float collisionGridSize, Components... args)
   {
-    m_worldScene = std::make_unique<Scene>(m_eventDispatcher, m_luaState);
-    m_worldScene->createComponents(m_worldScene->getEntity(),
-                                   std::forward<Components>(args)...);
+    m_worldScene.createComponents(m_worldScene.getEntity(),
+                                  std::forward<Components>(args)...);
     // m_worldSceneSys = std::make_unique<WorldSystems>(
     //     m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
     m_renderer.setCellGridSize(collisionGridSize);
-
-    return *m_worldScene;
+    return m_worldScene;
   }
   template <typename... Components> UIScene &createUIScene(Components... args)
   {
-    m_uiScene = std::make_unique<UIScene>(m_eventDispatcher, m_luaState);
+    m_uiScene = std::make_unique<UIScene>(
+        UIScene::create(m_eventDispatcher, m_luaState));
     m_uiScene->createComponents(m_uiScene->getEntity(),
                                 std::forward<Components>(args)...);
     m_uiScene->addSystem<Systems::ImGuiSys>(m_context, m_window);
@@ -79,18 +78,6 @@ private:
   Application(sol::state &&luaState, SDL_Window *window, void *context,
               FrameBufferCreationInfo &&fbci, int fallbackWidth = 600,
               int fallbackHeight = 600);
-  // =============================================================== //
-  // OWNED CLASSES
-  // =============================================================== //
-  std::unique_ptr<Scene> m_worldScene;
-  std::unique_ptr<UIScene> m_uiScene;
-
-  Renderer2d m_renderer;
-
-  EngineController *m_defaultImGuiInstance;
-  sol::state m_luaState;
-  reg::EventDispatcher m_eventDispatcher;
-
   // =============================================================== //
   // VARIABLES/CONSTANTS
   // =============================================================== //
@@ -112,8 +99,19 @@ private:
     int defaultWidth = 600;
     int defaultHeight = 600;
   };
-
   DefaultApplicationValues m;
+  // =============================================================== //
+  // OWNED CLASSES
+  // =============================================================== //
+  std::unique_ptr<UIScene> m_uiScene = nullptr;
+
+  Renderer2d m_renderer;
+
+  EngineController *m_defaultImGuiInstance;
+  sol::state m_luaState;
+  reg::EventDispatcher m_eventDispatcher;
+  Scene m_worldScene;
+
   EndGameFlags run();
   EndGameFlags m_endGameFlags = {};
   // Refers to the game window

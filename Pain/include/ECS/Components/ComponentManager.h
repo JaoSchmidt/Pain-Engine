@@ -1,18 +1,19 @@
 #pragma once
 #include "ECS/Registry/Bitmask.h"
 
+namespace cmp
+{
+struct OrthoCamera;
+struct LuaScheduleTask;
+} // namespace cmp
+
 namespace pain
 {
 template <typename Alias, typename Target> struct AliasComponent {
   using type = Target;
 };
-namespace cmp
-{
-struct OrthoCamera;
-}
 struct LuaScriptComponent;
 struct NativeScriptComponent;
-struct CollisionCallbackComponent;
 struct Transform2dComponent;
 struct Movement2dComponent;
 struct ParticleSprayComponent;
@@ -32,16 +33,15 @@ using ComponentManager = reg::CompileTimeBitMask<
     cmp::OrthoCamera, Transform2dComponent, Movement2dComponent,
     NativeScriptComponent, ParticleSprayComponent, RotationComponent,
     SpriteComponent, SpritelessComponent, TrianguleComponent,
-    LuaScriptComponent, onUpdateLuaFunction, CollisionCallbackComponent,
-    SAPCollider>;
+    LuaScriptComponent, onUpdateLuaFunction, SAPCollider, cmp::LuaScheduleTask>;
 
 // using NaiveCollisionSys instead of SAPCollider
 using CMNaiveCollision = reg::CompileTimeBitMask<
     cmp::OrthoCamera, Transform2dComponent, Movement2dComponent,
     NativeScriptComponent, ParticleSprayComponent, RotationComponent,
     SpriteComponent, SpritelessComponent, TrianguleComponent,
-    LuaScriptComponent, onUpdateLuaFunction, CollisionCallbackComponent,
-    ColliderComponent>;
+    LuaScriptComponent, onUpdateLuaFunction, ColliderComponent,
+    cmp::LuaScheduleTask>;
 
 // using only relevant to UI
 using UIManager = reg::CompileTimeBitMask<ImGuiComponent, cmp::OrthoCamera,

@@ -39,6 +39,6 @@ struct CollisionEvent {
 
 #define EVENT_TYPE_LIST X(CollisionEvent, Collision)
 
-sol::state &createScriptEventMap(sol::state &lua, reg::EventDispatcher &reg);
+void createScriptEventMap(sol::state &lua, reg::EventDispatcher &reg);
 
 } // namespace pain

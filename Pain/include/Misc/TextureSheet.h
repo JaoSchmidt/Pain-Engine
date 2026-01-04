@@ -18,24 +18,19 @@ public:
   createTextureSheet(Texture &texture, float spriteWidth, float spriteHeight,
                      std::initializer_list<std::pair<int, int>> coords);
   void updateSurroundingChunks(glm::vec3 &playerPos);
+
+  // choose a specific texture coordenate by its index. If index > size, then
+  // index = index % size
   inline std::array<glm::vec2, 4> &operator[](unsigned short i)
   {
-#ifndef NDEBUG
-    if (i > m_textureIds.size()) {
-      PLOG_E("You are tyring to call an out of bounds texture id {} inside a "
-             "textureSheeet",
-             i);
-    }
-    i = i % m_textureIds.size();
-#endif
-    return m_textureIds[i];
+    return m_textureIds[i % m_textureIds.size()];
   }
 
   const std::vector<std::vector<int>> &getDefaultMap() const;
   const std::vector<std::vector<int>> &getSceneryMap() const;
-  const std::array<glm::vec2, 4> getTexCoord(unsigned id) const
+  inline const std::array<glm::vec2, 4> getTexCoord(unsigned short id) const
   {
-    return m_textureIds.at(id);
+    return m_textureIds.operator[](id);
   };
   const Texture &getTexture() const { return m_texture; }
   Texture &getTexture() { return m_texture; }
@@ -47,7 +42,7 @@ public:
   ~TextureSheet() = default;
 
 private:
-  std::vector<glm::vec2> m_chunksCoord;
+  std::vector<glm::vec2> m_chunksCoord = {};
   glm::vec2 m_spriteSize = {0.0f, 0.0f};
   size_t m_size = 1;
   std::reference_wrapper<Texture> m_texture;

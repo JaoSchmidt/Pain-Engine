@@ -47,15 +47,14 @@ QuadBatch::QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
       cpuBuffer(std::make_unique<Vertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
 
-void QuadBatch::resetPtr(uint32_t &textureSlotIndex)
+void QuadBatch::resetPtr()
 {
   indexCount = 0;
   ptr = cpuBuffer.get();
-  textureSlotIndex = 1;
 }
-void QuadBatch::resetAll(uint32_t &textureSlotIndex)
+void QuadBatch::resetAll()
 {
-  resetPtr(textureSlotIndex);
+  resetPtr();
 #ifndef NDEBUG
   statsCount = 0;
   drawCount = 0;

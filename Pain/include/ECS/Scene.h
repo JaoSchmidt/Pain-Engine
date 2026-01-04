@@ -49,7 +49,8 @@ public:
   // Constructors
   // ---------------------------------------------------- //
 
-  AbstractScene(reg::EventDispatcher &eventDispatcher, sol::state &solState);
+  static AbstractScene create(reg::EventDispatcher &eventDispatcher,
+                              sol::state &solState);
 
   // ---------------------------------------------------- //
   // Helper function to "emplace" Scripts
@@ -130,6 +131,22 @@ public:
   {
     return m_registry.template createComponent<T>(entity,
                                                   std::forward<Args>(args)...);
+  }
+
+  // ---------------------------------------------------- //
+  // Add components
+  // ---------------------------------------------------- //
+
+  template <typename... Components>
+  std::tuple<Components &...> addComponents(reg::Entity entity,
+                                            Components &&...components)
+  {
+    return m_registry.template addComponents<Components...>(
+        entity, std::forward<Components>(components)...);
+  }
+  template <typename Component> reg::Bitmask getSingleBitmask()
+  {
+    return Manager::template singleComponentBitmask<Component>();
   }
 
   // ---------------------------------------------------- //
@@ -221,6 +238,17 @@ public:
     return m_eventDispatcher;
   }
 
+  template <typename Sys> Sys *getSys()
+  {
+    std::type_index key = std::type_index(typeid(Sys));
+    auto it = m_systems.find(key);
+    if (it != m_systems.end()) {
+      return static_cast<Sys *>(it->second.get());
+    }
+    PLOG_E("Could not recover system {}", typeid(Sys).name());
+    return nullptr;
+  }
+
   template <typename Sys, typename... Args>
     requires std::is_constructible_v<Sys, reg::ArcheRegistry<Manager> &,
                                      reg::EventDispatcher &, Args...> &&
@@ -246,7 +274,12 @@ public:
       m_updateSystems.emplace_back(s);
   }
 
+  void addEntityFunctions(const char *sceneName, sol::state &lua);
+
 private:
+  AbstractScene(reg::EventDispatcher &ed, sol::state &solState);
+  sol::state &enchanceLuaState(sol::state &state);
+
   reg::ArcheRegistry<Manager> m_registry;
   reg::EventDispatcher &m_eventDispatcher;
   sol::state &m_luaState;

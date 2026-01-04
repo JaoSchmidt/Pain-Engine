@@ -49,7 +49,14 @@ public:
       return *static_cast<std::vector<C> *>(newIt->second.get());
     }
   }
-
+  template <typename... Components> Column pushComponents(Components &&...comps)
+  {
+    Column column = Column{-1};
+    (...,
+     (column = pushComponent<Components>(std::forward<Components>(
+          comps)))); // and this should create its columns
+    return column;
+  }
   template <typename... Components>
   Column pushComponents(reg::Entity entity, Components &&...comps)
   {
@@ -157,7 +164,10 @@ public:
     }
     return *static_cast<std::vector<C> *>(it->second.get());
   }
-
+  Column lastColumn() const
+  {
+    return Column{static_cast<int>(m_entities.size())};
+  }
   reg::Entity getEntity(Column column) const
   {
     return m_entities[static_cast<unsigned>(column)];

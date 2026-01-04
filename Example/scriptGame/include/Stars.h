@@ -2,9 +2,9 @@
 
 #include "Core.h"
 #include "CoreRender/Texture.h"
-#include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
+#include "Physics/MovementComponent.h"
 
 namespace Stars
 {

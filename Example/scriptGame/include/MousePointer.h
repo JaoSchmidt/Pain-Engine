@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Core.h"
-#include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
+#include "Physics/MovementComponent.h"
 
 namespace MousePointer
 {

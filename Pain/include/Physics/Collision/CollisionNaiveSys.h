@@ -2,7 +2,7 @@
 
 #include "Assets/DeltaTime.h"
 #include "ECS/Components/ComponentManager.h"
-#include "ECS/Components/Movement.h"
+#include "Physics/MovementComponent.h"
 #include "ECS/Systems.h"
 namespace pain
 {

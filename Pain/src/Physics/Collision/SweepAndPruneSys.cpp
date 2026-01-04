@@ -1,11 +1,12 @@
 // SweepAndPruneSys.cpp
 #include "Physics/Collision/SweepAndPruneSys.h"
 
-#include "ECS/Components/Movement.h"
+#include "ECS/Registry/ArcheRegistry.h"
 #include "Misc/Events.h"
 #include "Physics/Collision/ColDetection.h"
 #include "Physics/Collision/ColReaction.h"
 #include "Physics/Collision/Collider.h"
+#include "Physics/MovementComponent.h"
 
 namespace pain
 {
@@ -189,11 +190,44 @@ void SweepAndPruneSys::sortAfterInsertion()
   sortSAP(m_endPointsY, m_endPointKeys, false);
   sortSAP(m_staticEndPointsX, m_staticEndPointKeys, true);
   sortSAP(m_staticEndPointsY, m_staticEndPointKeys, false);
+  m_firstTime = false;
 }
 
 void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
 {
   UNUSED(deltaTime)
+  // Step 0: In case its the first time, use faster sorter
+  if (m_firstTime) {
+
+    auto chunks =
+        query<Transform2dComponent, SAPCollider, Movement2dComponent>();
+    m_firstTime = false;
+    for (auto &chunk : chunks) {
+      auto *t = std::get<0>(chunk.arrays);
+      auto *c = std::get<1>(chunk.arrays);
+      auto &e = chunk.entities;
+      for (size_t i = 0; i < chunk.count; ++i) {
+        insertEndPoint(e[i], m_endPointsX, m_endPointsY, m_endPointKeys, t[i],
+                       c[i]);
+      }
+    }
+    auto chunks2 =
+        query<Transform2dComponent, SAPCollider>(exclude<Movement2dComponent>);
+    for (auto &chunk : chunks2) {
+      auto *t = std::get<0>(chunk.arrays);
+      auto *c = std::get<1>(chunk.arrays);
+      auto &e = chunk.entities;
+      for (size_t i = 0; i < chunk.count; ++i) {
+        insertEndPoint(e[i], m_staticEndPointsX, m_staticEndPointsY,
+                       m_staticEndPointKeys, t[i], c[i]);
+      }
+    }
+    sortSAP(m_endPointsX, m_endPointKeys, true);
+    sortSAP(m_endPointsY, m_endPointKeys, false);
+    sortSAP(m_staticEndPointsX, m_staticEndPointKeys, true);
+    sortSAP(m_staticEndPointsY, m_staticEndPointKeys, false);
+  }
+
   // Step 1: Update all moving endpoints with new data from the components
   auto chunks = query<Transform2dComponent, SAPCollider, Movement2dComponent>();
 

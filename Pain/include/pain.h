@@ -25,20 +25,22 @@
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
 // ECS
-#include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
-#include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/EventDispatcher.h"
 #include "ECS/Scene.h"
 #include "ECS/Scriptable.h"
+#include "Physics/MovementComponent.h"
 // Scripts
 #include "Scripting/Component.h"
 #include "Scripting/LuaScriptSys.h"
 #include "Scripting/NativeScriptSys.h"
+#include "Scripting/SchedulerSys.h"
 
 #include "Physics/Collision/Collider.h"
 #include "Physics/KinematicsSys.h"
+#include "Physics/MovementComponent.h"
+#include "Physics/RotationComponent.h"
 
 #include <SDL2/SDL_events.h>
 

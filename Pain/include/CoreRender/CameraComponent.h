@@ -35,6 +35,7 @@ public:
   PerspectiveMatrices(glm::mat4 perspectiveMatrix, glm::mat4 viewMatrix);
 };
 
+} // namespace pain
 // ================================================================= //
 // OrthoCamera Component for the ECS
 // ================================================================= //
@@ -50,7 +51,7 @@ struct CameraResolution {
 
 struct OrthoCamera : CameraResolution {
   float m_zoomLevel = 1.0f;
-  OrthographicMatrices m_matrices;
+  pain::OrthographicMatrices m_matrices;
 
   const glm::mat4 &getViewProjectionMatrix() const;
   static OrthoCamera create(int resWidth, int resHeight, float zoomLevel);
@@ -68,12 +69,12 @@ struct OrthoCamera : CameraResolution {
   OrthoCamera() = delete;
 
 private:
-  OrthoCamera(float zoomLevel, OrthographicMatrices oc, float aspectRatio,
+  OrthoCamera(float zoomLevel, pain::OrthographicMatrices oc, float aspectRatio,
               int resWidth, int resHeight);
 };
 
 struct PerspCamera : CameraResolution {
-  PerspectiveMatrices m_matrices;
+  pain::PerspectiveMatrices m_matrices;
 
   const glm::mat4 &getViewProjectionMatrix() const;
   static PerspCamera create(int resWidth, int resHeight,
@@ -84,10 +85,9 @@ struct PerspCamera : CameraResolution {
   PerspCamera() = delete;
 
 private:
-  PerspCamera(PerspectiveMatrices pe, float aspectRatio, int resWidth,
+  PerspCamera(pain::PerspectiveMatrices pe, float aspectRatio, int resWidth,
               int resHeight);
 };
 
 } // namespace cmp
 namespace Component = cmp;
-} // namespace pain

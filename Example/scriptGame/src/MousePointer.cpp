@@ -10,8 +10,8 @@ reg::Entity MousePointer::create(pain::Scene &scene)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
-      entity, pain::Transform2dComponent{},                    //
-      pain::SpriteComponent{"resources/textures/pointer.png"}, //
+      entity, pain::Transform2dComponent{},                            //
+      pain::SpriteComponent::create("resources/textures/pointer.png"), //
       pain::NativeScriptComponent{});
   return entity;
 }
@@ -23,8 +23,8 @@ MousePointerScript::MousePointerScript(reg::Entity entity, pain::Scene &scene,
 
 void MousePointerScript::onCreate()
 {
-  const pain::Component::OrthoCamera &camCC =
-      getComponent<pain::Component::OrthoCamera>(m_cameraEntity);
+  const cmp::OrthoCamera &camCC =
+      getComponent<cmp::OrthoCamera>(m_cameraEntity);
   PLOG_I("Resolution x {}", camCC.getResolution().x);
   PLOG_I("Resolution y {}", camCC.getResolution().y);
   PLOG_I("Zoom Level {}", camCC.m_zoomLevel);
@@ -35,7 +35,7 @@ glm::vec2 MousePointerScript::screenToWorld(int mouseX, int mouseY)
   // 1. Get the active OrthoCamera
   // pain::Scene &s = std::get<std::reference_wrapper<pain::Scene>>(m_scene);
   auto [camCC, camTC, camRC] =
-      getComponents<pain::Component::OrthoCamera, pain::Transform2dComponent,
+      getComponents<cmp::OrthoCamera, pain::Transform2dComponent,
                     pain::RotationComponent>(m_cameraEntity);
 
   // 2. Convert screen -> NDC space from -1 to 1

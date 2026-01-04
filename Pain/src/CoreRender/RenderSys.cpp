@@ -1,9 +1,9 @@
 #include "CoreRender/RenderSys.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Rotation.h"
 #include "ECS/Components/Sprite.h"
+#include "Physics/MovementComponent.h"
+#include "Physics/RotationComponent.h"
 
 namespace pain
 {
@@ -26,7 +26,7 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
       auto *s = std::get<1>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         std::visit(
-            [&](auto &&tex) {
+            [&](auto &tex) {
               using T = std::decay_t<decltype(tex)>;
               if constexpr (std::is_same_v<T, SheetStruct>) {
                 renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,

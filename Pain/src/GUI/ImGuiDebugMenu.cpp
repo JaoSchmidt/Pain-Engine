@@ -18,7 +18,7 @@ void ImGuiDebugMenu::onRender(pain::Renderer2d &renderer, bool isMinimized,
   UNUSED(isMinimized)
   UNUSED(currentTime)
   ImGui::Begin("Debug info");
-  auto &camCC = getComponent<pain::Component::OrthoCamera>(m_cameraEntity);
+  auto &camCC = getComponent<Component::OrthoCamera>(m_cameraEntity);
 
   ImGui::Text("Camera zoom: %.3f", camCC.m_zoomLevel);
   ImGuiDebugRegistry::renderAll();

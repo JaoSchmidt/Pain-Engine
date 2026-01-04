@@ -2,8 +2,8 @@
 #include "Assets/DefaultTexture.h"
 #include "Debugging/Profiling.h"
 
-#include "ECS/Components/Movement.h"
 #include "ECS/Scene.h"
+#include "Physics/MovementComponent.h"
 #include "glm/ext/matrix_transform.hpp"
 
 #include "platform/ContextBackend.h"
@@ -27,6 +27,7 @@ void Renderer2d::setClearColor(const glm::vec4 &color)
 {
   backend::setClearColor(color);
 }
+bool Renderer2d::hasCamera() { return m.orthoCameraEntity != reg::Entity{-1}; }
 void Renderer2d::changeCamera(reg::Entity cameraEntity)
 {
   m.orthoCameraEntity = cameraEntity;
@@ -99,7 +100,7 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
   PROFILE_FUNCTION();
   if (m.quadBatch.indexCount >= QuadBatch::MaxIndices) {
     m.quadBatch.flush(m.textureSlots, m.textureSlotIndex);
-    m.quadBatch.resetPtr(m.textureSlotIndex);
+    m.quadBatch.resetPtr();
   }
 
   const float texIndex = allocateTextures(texture);
@@ -116,7 +117,7 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 {
   if (m.quadBatch.indexCount >= QuadBatch::MaxIndices) {
     m.quadBatch.flush(m.textureSlots, m.textureSlotIndex);
-    m.quadBatch.resetPtr(m.textureSlotIndex);
+    m.quadBatch.resetPtr();
   }
   PROFILE_FUNCTION();
   const float texIndex = allocateTextures(texture);
@@ -289,7 +290,7 @@ void Renderer2d::bindTextures()
 void Renderer2d::goBackToFirstVertex()
 {
   PROFILE_FUNCTION();
-  m.quadBatch.resetAll(m.textureSlotIndex);
+  m.quadBatch.resetAll();
   m.textBatch.resetAll();
   m.sprayBatch.resetAll();
   m.circleBatch.resetAll();
@@ -397,8 +398,13 @@ const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
 
 void Renderer2d::setCellGridSize(float cellsize)
 {
-  m.debugGrid.shader.bind();
-  m.debugGrid.shader.uploadUniformFloat("u_CellSize", 2 * cellsize);
+  if (cellsize != 0) {
+    m.debugGrid.enableGrid = true;
+    m.debugGrid.shader.bind();
+    m.debugGrid.shader.uploadUniformFloat("u_CellSize", 2 * cellsize);
+  } else {
+    m.debugGrid.enableGrid = false;
+  }
 }
 
 void Renderer2d::beginSprayParticle(const DeltaTime globalTime,

@@ -1,9 +1,9 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "CoreRender/CameraComponent.h"
-#include "ECS/Components/Movement.h"
 #include "ECS/Components/NativeScript.h"
-#include "ECS/Components/Rotation.h"
 #include "GUI/ImGuiDebugRegistry.h"
+#include "Physics/MovementComponent.h"
+#include "Physics/RotationComponent.h"
 #include "glm/fwd.hpp"
 namespace pain
 {
@@ -14,7 +14,7 @@ reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionHeight,
   scene.createComponents(entity, pain::Transform2dComponent{}, //
                          pain::RotationComponent{},            //
                          pain::Movement2dComponent{},          //
-                         pain::Component::OrthoCamera::create(
+                         Component::OrthoCamera::create(
                              resolutionWidth, resolutionHeight, zoomLevel), //
                          pain::NativeScriptComponent{});
   return entity;
@@ -26,7 +26,7 @@ reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(entity, pain::Transform2dComponent{},
-                         pain::Component::OrthoCamera::create(
+                         Component::OrthoCamera::create(
                              resolutionWeigh, resolutionHeight, zoomLevel) //
   );
   return entity;
@@ -54,9 +54,9 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
   glm::vec3 moveDir{0.0f};
 
   if (state[SDL_SCANCODE_W])
-    moveDir += -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
-  if (state[SDL_SCANCODE_S])
     moveDir += glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+  if (state[SDL_SCANCODE_S])
+    moveDir += -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
   if (state[SDL_SCANCODE_A])
     moveDir += -rc.m_rotation;
   if (state[SDL_SCANCODE_D])

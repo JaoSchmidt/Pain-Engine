@@ -1,7 +1,7 @@
 #include "Physics/KinematicsSys.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Rotation.h"
+#include "Physics/MovementComponent.h"
+#include "Physics/RotationComponent.h"
 namespace pain
 {
 
