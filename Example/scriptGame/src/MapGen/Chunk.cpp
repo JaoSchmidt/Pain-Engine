@@ -47,7 +47,8 @@ reg::Entity Chunk::create(pain::Scene &scene, glm::ivec2 offset, int chunkSize,
       entity, pain::Transform2dComponent{}, //
       pain::NativeScriptComponent{}         //
   );
-  scene.emplaceScript<Chunk::Script>(entity, scene, offset, chunkSize, mainMap);
+  pain::Scene::emplaceScript<Chunk::Script>(entity, scene, offset, chunkSize,
+                                            mainMap);
 
   // PLOG_I("getting inside chunk.cpp {}", entity);
   // pain::NativeScriptComponent &nsc =

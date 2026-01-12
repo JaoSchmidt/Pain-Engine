@@ -99,8 +99,7 @@ public:
 
 private:
   Application(sol::state &&luaState, SDL_Window *window, void *sdlContext,
-              FrameBufferCreationInfo &&fbci, AppContext &&context,
-              auto worldSceneFactory);
+              FrameBufferCreationInfo &&fbci, AppContext &&context);
   // =============================================================== //
   // VARIABLES/CONSTANTS
   // =============================================================== //

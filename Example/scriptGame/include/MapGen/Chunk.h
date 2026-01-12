@@ -28,6 +28,8 @@ public:
   int m_offsetX = 0;
   int m_offsetY = 0;
 
+  ~Script() { PLOG_T("Deleting chunk in ({},{})", m_offsetX, m_offsetY); };
+
 private:
   std::vector<int> m_data = {};
   int m_chunkSize = 0;

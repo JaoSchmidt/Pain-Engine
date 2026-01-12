@@ -39,35 +39,26 @@ public:
     // ---------------------------------------------------------------
     // scene.emplaceScript<MousePointerScript>(mp, cameraEntity);
 
-    // return scene.emplaceScript<MainScript>(scene.getEntity(),
-    // std::move(stars),
-    //                                        player, std::move(asteroids),
-    //                                        std::move(walls), mp);
-    // return scene.emplaceScript<MainScript>(scene.getEntity(), [&] {
-    //   return MainMap::create(scene, 16.f, 16.f, playerPos, 32, 1);
-    // });
     auto factory = [&] {
       // Force NRVO at last point
-      return MainMap::create(scene, 16.f, 16.f, playerPos, 32, 1);
+      return MainMap::create(16.f, 16.f, playerPos, 32, 1);
     };
 
     return pain::Scene::emplaceScript<MainScript>(scene.getEntity(), scene,
                                                   factory, playerCam);
   }
+  void onCreate() { m_mainMap.onCreate(getScene()); }
   void onUpdate(pain::DeltaTime dt)
   {
     m_mainMap.updateSurroundingChunks(
-        getComponent<pain::Transform2dComponent>(m_player));
+        getComponent<pain::Transform2dComponent>(m_player), getScene());
   }
   MainScript(reg::Entity entity, pain::Scene &scene, auto mainMapFactory,
              reg::Entity player)
       : pain::WorldObject(entity, scene), //
         m_player(player),                 //
         m_mainMap(mainMapFactory())       //
-  {
-    PLOG_I("Scene created {}", entity);
-    PLOG_I("Player created {}", player);
-  };
+  {};
   std::vector<std::vector<int>> m_backgroundMap;
   reg::Entity m_player = reg::Entity{-1};
   MainMap m_mainMap;

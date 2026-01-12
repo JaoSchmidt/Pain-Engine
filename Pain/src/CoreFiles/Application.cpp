@@ -73,26 +73,21 @@ Application *Application::createApplication(AppContext &&context,
   // config.ini file
   // =========================================================================//
 
-  auto sceneFactory = [](reg::EventDispatcher &ed, sol::state &state,
-                         ThreadPool &tp) {
-    return Scene::create(ed, state, tp);
-  };
   return new Application(std::move(luaState), std::move(window),
                          std::move(sdlContext), std::move(fbci),
-                         std::move(context), sceneFactory);
+                         std::move(context));
 }
 /* Creates window, opengl context and init glew*/
 // renderer is created BEFORE the asset manager, as the asset manager retrives
 // the default assets, it will slowly link some to the renderer cache
 Application::Application(sol::state &&luaState, SDL_Window *window,
                          void *sdlContext, FrameBufferCreationInfo &&fbci,
-                         AppContext &&context, auto worldSceneFactory)
+                         AppContext &&context)
     : m(), m_context(context), m_renderer(Renderer2d::createRenderer2d()),
       m_defaultImGuiInstance(new EngineController()),
       m_threadPool(ThreadPool{}), m_luaState(std::move(luaState)),
       m_eventDispatcher(m_luaState),
-      m_worldScene(
-          worldSceneFactory(m_eventDispatcher, m_luaState, m_threadPool)),
+      m_worldScene(Scene::create(m_eventDispatcher, m_luaState, m_threadPool)),
       m_endGameFlags(), m_window(window), m_sdlContext(sdlContext),
       m_renderPipeline(fbci.swapChainTarget
                            ? RenderPipeline::create(m_eventDispatcher)

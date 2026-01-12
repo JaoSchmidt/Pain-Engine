@@ -14,28 +14,17 @@ glm::ivec2 getChunkCoordinate(glm::vec2 &playerCoord, int chunkSize)
   return {playerCoord.x / chunkSize, playerCoord.y / chunkSize};
 }
 
-MainMap MainMap::create(pain::Scene &scene, float spriteWidth,
-                        float spriteHeight, glm::vec2 &playerPos, int chunkSize,
-                        int radius)
+MainMap MainMap::create(float spriteWidth, float spriteHeight,
+                        glm::vec2 &playerPos, int chunkSize, int radius)
 {
 
-  reg::Entity e = scene.createEntity();
   glm::ivec2 chunkAt = getChunkCoordinate(playerPos, chunkSize);
-  return MainMap{e,       scene,       radius,      chunkSize,
-                 chunkAt, spriteWidth, spriteHeight};
-  // for (int x = chunkAt.x - radius; x < chunkAt.x + radius; ++x) {
-  //   for (int y = chunkAt.y - radius; y < chunkAt.y + radius; ++y) {
-  //     Chunk::create(scene, {x, y}, chunkSize, map); // I need main map here
-  //   }
-  // }
-  // return map;
+  return MainMap{radius, chunkSize, chunkAt, spriteWidth, spriteHeight};
 }
 
-MainMap::MainMap(reg::Entity entity, pain::Scene &scene, int radius,
-                 int chunkSize, glm::ivec2 chunkAt, float spriteWidth,
-                 float spriteHeight)
-    : pain::WorldObject(entity, scene), m_radius(radius),
-      m_chunkSize(chunkSize), m_chunkAt(chunkAt),
+MainMap::MainMap(int radius, int chunkSize, glm::ivec2 chunkAt,
+                 float spriteWidth, float spriteHeight)
+    : m_radius(radius), m_chunkSize(chunkSize), m_chunkAt(chunkAt),
       m_spriteSheet(pain::resources::createWithDimensions(
           "terrain",
           "resources/textures/kenney_roguelike/Spritesheet/"
@@ -91,11 +80,11 @@ MainMap::MainMap(reg::Entity entity, pain::Scene &scene, int radius,
               {6, 29}  // 37 dirt 2
           })) {};
 
-void MainMap::onCreate()
+void MainMap::onCreate(pain::Scene &scene)
 {
   for (int x = m_chunkAt.x - m_radius; x < m_chunkAt.x + m_radius; x++) {
     for (int y = m_chunkAt.y - m_radius; y < m_chunkAt.y + m_radius; y++) {
-      reg::Entity e = Chunk::create(getScene(), {x, y}, m_chunkSize, *this);
+      reg::Entity e = Chunk::create(scene, {x, y}, m_chunkSize, *this);
       m_chunks.emplace(std::make_pair(x, y), e);
       PLOG_I("Chunk created {}", e);
     }
@@ -109,7 +98,7 @@ void MainMap::onCreate()
 //                             "roguelikeSheet_transparent.png"))
 
 // given the index x and y, return the four corners
-void MainMap::updateSurroundingChunks(glm::vec2 &playerPos)
+void MainMap::updateSurroundingChunks(glm::vec2 &playerPos, pain::Scene &scene)
 {
   PROFILE_FUNCTION()
   if (m_chunkAt != getChunkCoordinate(playerPos, m_chunkSize)) {
@@ -117,14 +106,14 @@ void MainMap::updateSurroundingChunks(glm::vec2 &playerPos)
     m_chunkAt = getChunkCoordinate(playerPos, m_chunkSize);
     for (auto it = m_chunks.begin(); it != m_chunks.end();) {
       const pain::Transform2dComponent &tc =
-          getComponent<pain::Transform2dComponent>(it->second);
+          scene.getComponent<pain::Transform2dComponent>(it->second);
       PLOG_I("position ({},{})", TP_VEC2(tc.m_position));
       PLOG_I("trying to get {}", it->second);
-      Chunk::Script &cs = getNativeScript<Chunk::Script>(it->second);
+      Chunk::Script &cs = scene.getNativeScript<Chunk::Script>(it->second);
 
       if (cs.isOutsideRadius(m_chunkAt, m_radius + 1)) {
-        removeEntity(it->second);
-        m_chunks.erase(it);
+        scene.removeEntity(it->second);
+        it = m_chunks.erase(it); // it now will be the next iterator
       } else {
         ++it;
       }
@@ -132,7 +121,7 @@ void MainMap::updateSurroundingChunks(glm::vec2 &playerPos)
     for (int x = m_chunkAt.x - m_radius; x < m_chunkAt.x + m_radius; x++) {
       for (int y = m_chunkAt.y - m_radius; y < m_chunkAt.y + m_radius; y++) {
         if (!m_chunks.contains({x, y})) {
-          reg::Entity e = Chunk::create(getScene(), {x, y}, m_chunkSize, *this);
+          reg::Entity e = Chunk::create(scene, {x, y}, m_chunkSize, *this);
           m_chunks.emplace(std::make_pair(x, y), e);
         }
       }

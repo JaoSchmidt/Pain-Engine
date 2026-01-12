@@ -16,17 +16,16 @@ struct SheetCoord {
 //   int chunkSize;
 //   int radius;
 // };
-class MainMap : pain::WorldObject
+class MainMap
 {
 public:
-  static MainMap create(pain::Scene &scene, float spriteWidth,
-                        float spriteHeight, glm::vec2 &playerPos, int chunkSize,
-                        int radius);
+  static MainMap create(float spriteWidth, float spriteHeight,
+                        glm::vec2 &playerPos, int chunkSize, int radius);
 
   NONCOPYABLE(MainMap);
   NONMOVABLE(MainMap);
-  void onCreate();
-  void updateSurroundingChunks(glm::vec2 &playerPos);
+  void onCreate(pain::Scene &scene);
+  void updateSurroundingChunks(glm::vec2 &playerPos, pain::Scene &scene);
 
   const std::vector<std::vector<int>> &getDefaultMap() const;
   const std::vector<std::vector<int>> &getSceneryMap() const;
@@ -43,6 +42,6 @@ private:
   pain::TextureSheet &m_spriteSheet;
 
   void createVecFromMap();
-  MainMap(reg::Entity entity, pain::Scene &scene, int radius, int chunkSize,
-          glm::ivec2 chunkAt, float spriteWidth, float spriteHeight);
+  MainMap(int radius, int chunkSize, glm::ivec2 chunkAt, float spriteWidth,
+          float spriteHeight);
 };

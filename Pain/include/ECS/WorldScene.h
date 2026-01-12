@@ -42,7 +42,9 @@ public:
     return static_cast<N &>(*nsc.instance);
   }
 
-  // Emplace script inside the registry
+  // Emplace script inside the registry.
+  // HACK: If this function is not working, test
+  // the actual constructor of the object too.
   template <typename N, typename... Args>
     requires std::constructible_from<N, reg::Entity, Scene &, Args...> &&
              (WorldComponents::isRegistered<NativeScriptComponent>())

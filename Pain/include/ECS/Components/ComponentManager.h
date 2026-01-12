@@ -22,10 +22,19 @@ struct SAPCollider;
 } // namespace tag
 
 // basic World Scene Manager
-using WorldComponents = reg::CompileTimeBitMask<
-    tag::OrthoCamera, tag::Transform2d, tag::Movement2d, tag::NativeScript,
-    tag::ParticleSpray, tag::Rotation, tag::Sprite, tag::Spriteless,
-    tag::Triangule, tag::LuaScript, tag::SAPCollider, tag::LuaScheduleTask>;
+using WorldComponents = reg::CompileTimeBitMask< //
+    tag::OrthoCamera,                            // 1
+    tag::Transform2d,                            // 2
+    tag::Movement2d,                             // 4
+    tag::NativeScript,                           // 8
+    tag::ParticleSpray,                          // 16
+    tag::Rotation,                               // 32
+    tag::Sprite,                                 // 64
+    tag::Spriteless,                             // 128
+    tag::Triangule,                              // 256
+    tag::LuaScript,                              // 512
+    tag::SAPCollider,                            // 1024
+    tag::LuaScheduleTask>;                       // 2048
 
 // if using NaiveCollisionSys instead of SAPCollider:
 // using WorldComponents = reg::CompileTimeBitMask<

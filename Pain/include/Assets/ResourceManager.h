@@ -116,8 +116,8 @@ struct IniConfig : public IConfig {
 
   Config<bool> hideConfig{false, "HideConfig"};
   Config<bool> fullscreen{false, "Fullscreen"};
-  Config<int> defaultWidth{800, "Default Width"};
-  Config<int> defaultHeight{600, "Default Height"};
+  Config<int> defaultWidth{800, "DefaultWidth"};
+  Config<int> defaultHeight{600, "DefaultHeight"};
   Config<std::string> assetsPath{
       pain::resources::getCurrentWorkingDir("resources"), "AssetPath"};
 

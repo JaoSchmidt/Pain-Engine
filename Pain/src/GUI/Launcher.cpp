@@ -61,17 +61,19 @@ public:
     static constexpr std::array<const char *, 9> items = {
         "1920x1080", "1680x1050", "1400x1050", "1600x900", "1280x1024",
         "1400x900",  "1280x960",  "800x600",   "640x480"};
-    static const char *current_item = items[items.size() - 2];
+    static const char *currentItem = items[items.size() - 2];
 
     if (ImGui::BeginCombo("##combo", "Resolution"))
     // The second parameter is the label previewed before opening the combo.
     {
       for (size_t n = 0; n < items.size(); n++) {
-        bool is_selected = (current_item == items[n]);
+        bool is_selected = (currentItem == items[n]);
         // You can store your selection however you want, outside or inside your
         // objects
         if (ImGui::Selectable(items[n], is_selected)) {
-          current_item = items[n];
+          currentItem = items[n];
+          std::sscanf(currentItem, "%dx%d", &m_init.defaultWidth.value,
+                      &m_init.defaultHeight.value);
         }
         if (is_selected)
           ImGui::SetItemDefaultFocus(); // You may set the initial focus when
