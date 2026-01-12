@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Core.h"
+#include "ECS/Components/ComponentManager.h"
 #include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include <iostream>
@@ -10,6 +11,9 @@ namespace pain
 {
 class DeltaTime;
 struct Renderer2d;
+
+template <typename... Ts> struct TypeList {
+};
 
 struct IOnUpdate {
   virtual ~IOnUpdate() = default;
@@ -38,7 +42,6 @@ public:
   System() = delete;
   virtual ~System() = default;
 
-protected:
   reg::ArcheRegistry<CM> &m_registry;
   reg::EventDispatcher &m_eventDispatcher;
 
@@ -47,13 +50,28 @@ protected:
   // ---------------------------------------------------- //
 
   template <typename... Components, typename... ExcludeComponents>
+  [[deprecated("Bitmask cannot be deduced for one the components in this "
+               "function. This is fine to call, but you won't be able to add "
+               "this system to any scene")]]
   inline std::vector<reg::ChunkView<Components...>>
   query(exclude_t<ExcludeComponents...> = {})
   {
+    // warn the used during compilation
     return m_registry.template query<Components...>(
         exclude<ExcludeComponents...>);
   }
   template <typename... Components, typename... ExcludeComponents>
+    requires(CM::template allRegistered<Components...>())
+  inline std::vector<reg::ChunkView<Components...>>
+  query(exclude_t<ExcludeComponents...> = {})
+  {
+    // warn the used during compilation
+    return m_registry.template query<Components...>(
+        exclude<ExcludeComponents...>);
+  }
+
+  template <typename... Components, typename... ExcludeComponents>
+    requires(CM::template allRegistered<Components...>())
   inline std::vector<reg::ChunkViewConst<const Components...>>
   queryConst(exclude_t<ExcludeComponents...> = {})
   {
@@ -122,4 +140,25 @@ protected:
     return m_registry.template remove<Components...>(entity);
   }
 };
+
+template <typename TL> struct TagsAllRegistered;
+
+template <typename T>
+concept IsSystemBase = std::is_base_of_v<System<WorldComponents>, T>;
+
+template <typename T>
+concept HasAnySystemInterface =
+    std::is_base_of_v<IOnUpdate, T> || std::is_base_of_v<IOnEvent, T> ||
+    std::is_base_of_v<IOnRender, T>;
+
+template <typename T>
+concept HasTags = requires { typename T::Tags; };
+
+template <typename T>
+concept TagsAreRegistered =
+    HasTags<T> && TagsAllRegistered<typename T::Tags>::value;
+
+template <typename T>
+concept ValidSystem = IsSystemBase<T> && HasAnySystemInterface<T>;
+
 } // namespace pain

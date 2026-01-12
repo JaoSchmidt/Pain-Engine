@@ -1,7 +1,8 @@
 
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/CameraComponent.h"
-#include "ECS/Scene.h"
+#include "ECS/UIScene.h"
+#include "ECS/WorldScene.h"
 #include "Misc/Events.h"
 
 #include <cstdlib>

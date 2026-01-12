@@ -16,28 +16,27 @@ namespace pain::backend
 // Helpers
 // ------------------------------------------------------------
 
-// static SDL_Surface *flipVertical(const SDL_Surface &surface)
-// {
-//   SDL_Surface *result = SDL_CreateRGBSurface(
-//       surface.flags, surface.w, surface.h, surface.format->BytesPerPixel * 8,
-//       surface.format->Rmask, surface.format->Gmask, surface.format->Bmask,
-//       surface.format->Amask);
-//
-//   const size_t pitch = static_cast<unsigned long>(surface.pitch);
-//   const size_t pxlength = pitch * (static_cast<unsigned long>(surface.h -
-//   1));
-//
-//   auto *src = static_cast<unsigned char *>(surface.pixels) + pxlength;
-//   auto *dst = static_cast<unsigned char *>(result->pixels);
-//
-//   for (int y = 0; y < surface.h; ++y) {
-//     std::memcpy(dst, src, pitch);
-//     src -= pitch;
-//     dst += pitch;
-//   }
-//
-//   return result;
-// }
+SDL_Surface *flipVertical(const SDL_Surface &surface)
+{
+  SDL_Surface *result = SDL_CreateRGBSurface(
+      surface.flags, surface.w, surface.h, surface.format->BytesPerPixel * 8,
+      surface.format->Rmask, surface.format->Gmask, surface.format->Bmask,
+      surface.format->Amask);
+
+  const size_t pitch = static_cast<unsigned long>(surface.pitch);
+  const size_t pxlength = pitch * (static_cast<unsigned long>(surface.h - 1));
+
+  auto *src = static_cast<unsigned char *>(surface.pixels) + pxlength;
+  auto *dst = static_cast<unsigned char *>(result->pixels);
+
+  for (int y = 0; y < surface.h; ++y) {
+    std::memcpy(dst, src, pitch);
+    src -= pitch;
+    dst += pitch;
+  }
+
+  return result;
+}
 
 static constexpr unsigned getInternalFormat(ImageFormat format)
 {
@@ -100,6 +99,7 @@ uint32_t createTextureFromFile(const TextureFromFileInfo &info)
 
   GLenum dataFormat, internalFormat;
   SDL_Surface *surface = info.surface;
+  surface = flipVertical(*surface);
   if (surface->format->BytesPerPixel == 3) {
     dataFormat = GL_RGB;
     internalFormat = GL_RGB8;

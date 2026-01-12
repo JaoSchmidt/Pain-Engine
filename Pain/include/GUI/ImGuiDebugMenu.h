@@ -6,7 +6,7 @@
 namespace pain
 {
 
-class ImGuiDebugMenu : public pain::ExtendedEntity
+class ImGuiDebugMenu : public pain::WorldObject
 {
 public:
   void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);

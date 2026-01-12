@@ -4,6 +4,8 @@
 #include "Assets/DeltaTime.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
+#include "Physics/Collision/Collider.h"
+#include "Physics/MovementComponent.h"
 namespace pain
 {
 
@@ -24,13 +26,11 @@ struct EndPointKey {
   size_t index_maxY;
 };
 
-struct SweepAndPruneSys : public System<ComponentManager>, IOnUpdate {
-  template <typename... Args>
-    requires std::constructible_from<System<ComponentManager>, Args...> &&
-             (ComponentManager::allRegistered<SAPCollider, Transform2dComponent,
-                                              Movement2dComponent>())
-  SweepAndPruneSys(Args &&...args) : System(std::forward<Args>(args)...){};
-
+struct SweepAndPruneSys : public System<WorldComponents>, IOnUpdate {
+  using System<WorldComponents>::System;
+  using Tags = TypeList<Transform2dComponent, //
+                        Movement2dComponent,  //
+                        SAPCollider>;
   SweepAndPruneSys() = delete;
   void onUpdate(DeltaTime deltaTime) override;
   // void deleteStaticEntities(std::span<reg::Entity> entities);

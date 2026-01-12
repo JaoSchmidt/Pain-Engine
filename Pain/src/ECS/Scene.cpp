@@ -8,6 +8,7 @@
 #include "GUI/ImGuiSys.h"
 #include "Misc/Events.h"
 #include "Physics/Collision/Collider.h"
+#include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
 #include "Scripting/Component.h"
@@ -16,6 +17,7 @@
 #include "Scripting/State.h"
 
 #include "CoreRender/RenderSys.h"
+
 namespace
 {
 struct LuaComponentDesc {
@@ -249,32 +251,51 @@ void AbstractScene<Manager>::emplaceLuaScript(reg::Entity entity,
   }
 }
 
-// ------------------------------------------------
+// =============================================================== //
+// =============================================================== //
+// MULTI THREAD RELATED
+// =============================================================== //
+// =============================================================== //
+template <reg::CompileTimeBitMaskType Manager>
+void AbstractScene<Manager>::enqueueMainThread(MainThreadJob job)
+{
+  std::lock_guard lock(m_mainThreadMutex);
+  m_mainThreadJobs.push(std::move(job));
+}
 
 template <reg::CompileTimeBitMaskType Manager>
-AbstractScene<Manager> AbstractScene<Manager>::create(reg::EventDispatcher &ed,
-                                                      sol::state &solState)
+void AbstractScene<Manager>::flushMainThreadJobs()
 {
-  return AbstractScene(ed, solState);
+  std::queue<MainThreadJob> jobs;
+
+  {
+    std::lock_guard lock(m_mainThreadMutex);
+    std::swap(jobs, m_mainThreadJobs);
+  }
+
+  while (!jobs.empty()) {
+    jobs.front()();
+    jobs.pop();
+  }
 }
-template <>
-AbstractScene<ComponentManager>
-AbstractScene<ComponentManager>::create(reg::EventDispatcher &ed,
-                                        sol::state &solState)
-{
-  addComponentFunctions(solState);
-  return AbstractScene(ed, solState);
-}
+
+// =============================================================== //
+// Constructors
+// =============================================================== //
+
 template <reg::CompileTimeBitMaskType Manager>
 AbstractScene<Manager>::AbstractScene(reg::EventDispatcher &ed,
-                                      sol::state &solState)
-    : m_registry(), m_eventDispatcher(ed),
-      m_luaState(enchanceLuaState(solState)), m_entity(createEntity()){};
+                                      sol::state &solState,
+                                      ThreadPool &threadPool)
+    : m_registry(), m_entity(createEntity()),
+      m_luaState(enchanceLuaState(solState)), m_threadPool(threadPool),
+      m_eventDispatcher(ed){};
 
 template <reg::CompileTimeBitMaskType Manager>
 void AbstractScene<Manager>::updateSystems(DeltaTime deltaTime)
 {
   PROFILE_FUNCTION();
+  flushMainThreadJobs();
   for (auto *sys : m_updateSystems)
     static_cast<IOnUpdate *>(sys)->onUpdate(deltaTime);
   m_eventDispatcher.update();
@@ -297,9 +318,7 @@ void AbstractScene<Manager>::renderSystems(Renderer2d &renderer,
     static_cast<IOnRender *>(sys)->onRender(renderer, isMinimized, currentTime);
 }
 
-template class AbstractScene<ComponentManager>;
-template class AbstractScene<UIManager>;
+template class AbstractScene<WorldComponents>;
+template class AbstractScene<UIComponents>;
 
-using Scene = AbstractScene<ComponentManager>;
-using UIScene = AbstractScene<UIManager>;
 } // namespace pain

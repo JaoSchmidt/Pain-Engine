@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Assets/DeltaTime.h"
+// TODO: Change this to use render context
 namespace pain
 {
 struct Renderer2d;

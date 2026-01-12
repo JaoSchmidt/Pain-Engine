@@ -94,31 +94,40 @@ sol::state createLuaState()
   return lua;
 };
 
-void addComponentFunctions(sol::state &lua)
+template <typename AbstractScene>
+void addComponentFunctions(sol::state &lua, AbstractScene &worldScene)
 {
   lua.new_usertype<pain::LuaScriptComponent>(
       "LuaScriptComponent", "get_position",
       [&](pain::LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<pain::Transform2dComponent>())
+        if (worldScene.template hasAnyComponents<pain::Transform2dComponent>(
+                c.entity))
           return sol::make_reference(
-              lua, std::ref(c.getComponent<pain::Transform2dComponent>()));
+              lua,
+              std::ref(
+                  worldScene.template getComponent<pain::Transform2dComponent>(
+                      c.entity)));
         return sol::nil;
       },
       "get_sprite",
       [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<SpriteComponent>())
+        if (worldScene.template hasAnyComponents<SpriteComponent>(c.entity))
           return sol::make_reference(
-              lua, std::ref(c.getComponent<SpriteComponent>()));
+              lua, std::ref(worldScene.template getComponent<SpriteComponent>(
+                       c.entity)));
         return sol::nil;
       },
       "get_movement",
       [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<Movement2dComponent>())
+        if (worldScene.template hasAnyComponents<Movement2dComponent>(c.entity))
           return sol::make_reference(
-              lua, std::ref(c.getComponent<Movement2dComponent>()));
+              lua,
+              std::ref(worldScene.template getComponent<Movement2dComponent>(
+                  c.entity)));
         return sol::nil;
       });
 }
+
 // NOTE: maybe I should move this into a single space?
 void addScheduler(sol::state &lua, Scene &worldScene)
 {
@@ -132,4 +141,10 @@ void addScheduler(sol::state &lua, Scene &worldScene)
   lua["Scheduler"] = scheduler_api;
 }
 
+template void pain::addComponentFunctions<pain::Scene>(sol::state &,
+                                                       pain::Scene &);
+
+// template void pain::addComponentFunctions<pain::UIScene>(sol::state &,
+//                                                          pain::UIScene &);
+//
 } // namespace pain

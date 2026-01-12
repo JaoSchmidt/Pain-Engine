@@ -1,57 +1,48 @@
 #pragma once
 #include "ECS/Registry/Bitmask.h"
 
-namespace cmp
+namespace pain
+{
+namespace tag
 {
 struct OrthoCamera;
 struct LuaScheduleTask;
-} // namespace cmp
-
-namespace pain
-{
-template <typename Alias, typename Target> struct AliasComponent {
-  using type = Target;
-};
-struct LuaScriptComponent;
-struct NativeScriptComponent;
-struct Transform2dComponent;
-struct Movement2dComponent;
-struct ParticleSprayComponent;
-struct RotationComponent;
-struct SpriteComponent;
-struct SpritelessComponent;
-struct TrianguleComponent;
-struct onUpdateLuaFunction;
-struct ImGuiComponent;
-
-// mutually exclusive collision components
-struct ColliderComponent;
+struct LuaScript;
+struct Transform2d;
+struct Movement2d;
+struct ParticleSpray;
+struct Rotation;
+struct Sprite;
+struct Spriteless;
+struct Triangule;
+struct NativeScript;
+struct ImGuiScript;
+struct Collider;
 struct SAPCollider;
+} // namespace tag
 
 // basic World Scene Manager
-using ComponentManager = reg::CompileTimeBitMask<
-    cmp::OrthoCamera, Transform2dComponent, Movement2dComponent,
-    NativeScriptComponent, ParticleSprayComponent, RotationComponent,
-    SpriteComponent, SpritelessComponent, TrianguleComponent,
-    LuaScriptComponent, onUpdateLuaFunction, SAPCollider, cmp::LuaScheduleTask>;
+using WorldComponents = reg::CompileTimeBitMask<
+    tag::OrthoCamera, tag::Transform2d, tag::Movement2d, tag::NativeScript,
+    tag::ParticleSpray, tag::Rotation, tag::Sprite, tag::Spriteless,
+    tag::Triangule, tag::LuaScript, tag::SAPCollider, tag::LuaScheduleTask>;
 
-// using NaiveCollisionSys instead of SAPCollider
-using CMNaiveCollision = reg::CompileTimeBitMask<
-    cmp::OrthoCamera, Transform2dComponent, Movement2dComponent,
-    NativeScriptComponent, ParticleSprayComponent, RotationComponent,
-    SpriteComponent, SpritelessComponent, TrianguleComponent,
-    LuaScriptComponent, onUpdateLuaFunction, ColliderComponent,
-    cmp::LuaScheduleTask>;
+// if using NaiveCollisionSys instead of SAPCollider:
+// using WorldComponents = reg::CompileTimeBitMask<
+//     tag::OrthoCamera, tag::Transform2d, tag::Movement2d, tag::NativeScript,
+//     tag::ParticleSpray, tag::Rotation, tag::Sprite, tag::Spriteless,
+//     tag::Triangule, tag::LuaScript, tag::Collider, tag::LuaScheduleTask>;
 
 // using only relevant to UI
-using UIManager = reg::CompileTimeBitMask<ImGuiComponent, cmp::OrthoCamera,
-                                          Transform2dComponent>;
+using UIComponents = reg::CompileTimeBitMask<tag::ImGuiScript, tag::OrthoCamera,
+                                             tag::Transform2d>;
 
-static_assert(UIManager::isRegistered<ImGuiComponent>(), "banana");
+static_assert(UIComponents::allRegistered<tag::ImGuiScript, tag::Transform2d>(),
+              "banana");
 
 // HACK: Stupidity finder
 #define XOR(A, B) (A && !B) || (!A && B)
-static_assert(XOR(ComponentManager::isRegistered<SAPCollider>(),
-                  ComponentManager::isRegistered<ColliderComponent>()),
+static_assert(XOR(WorldComponents::isRegistered<tag::SAPCollider>(),
+                  WorldComponents::isRegistered<tag::Collider>()),
               "Cannot mix collider types togheter");
 } // namespace pain

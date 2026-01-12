@@ -3,9 +3,9 @@
 
 #include "Assets/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Registry/Entity.h"
+#include "ECS/Components/ComponentManager.h"
+#include "ECS/Scene.h"
 #include "Scripting/Concepts.h"
-#include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
 
 namespace pain
@@ -14,23 +14,25 @@ struct Renderer2d;
 }
 namespace pain
 {
-class ExtendedEntity;
+template <typename SceneT> class GameObject;
+class Scene;
 
-// TODO: make the "setParams" function,  but perhaps in the lua script only?
-// that is because the use of a variable set of parameters only make sense in
-// the context of objects that need a null state. And in my current approach,
-// not necesserally if any object in c++ needs to be null at the beginning. We
-// can just construct them
 struct NativeScriptComponent {
-  ExtendedEntity *instance = nullptr;
+private:
+  using Scriptable = GameObject<Scene>;
 
-  void (*destroyInstanceFunction)(ExtendedEntity *&) = nullptr;
-  void (*onCreateFunction)(ExtendedEntity *) = nullptr;
-  void (*onDestroyFunction)(ExtendedEntity *) = nullptr;
-  void (*onRenderFunction)(ExtendedEntity *, Renderer2d &, bool,
+public:
+  using tag = tag::NativeScript;
+
+  Scriptable *instance = nullptr;
+
+  void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
+  void (*onCreateFunction)(Scriptable *) = nullptr;
+  void (*onDestroyFunction)(Scriptable *) = nullptr;
+  void (*onRenderFunction)(Scriptable *, Renderer2d &, bool,
                            DeltaTime) = nullptr;
-  void (*onUpdateFunction)(ExtendedEntity *, DeltaTime) = nullptr;
-  void (*onEventFunction)(ExtendedEntity *, const SDL_Event &) = nullptr;
+  void (*onUpdateFunction)(Scriptable *, DeltaTime) = nullptr;
+  void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
 
   template <typename T> void bindAndInitiate(T &&t)
   {
@@ -38,13 +40,13 @@ struct NativeScriptComponent {
     // static_assert(
     //     std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
     //     "Error: You are binding a function whose constructor doesn't
-    //     implement " "ExtendedEntity constructor: (Scene&, Entity, Bitmask).
+    //     implement " "Scriptable constructor: (Scene&, Entity, Bitmask).
     //     Pherhaps you " "are using the defualt constructor instead of coding
-    //     `using " "ExtendedEntity::ExtendedEntity;`?");
+    //     `using " "Scriptable::SceneObject;`?");
     instance = new T(std::move(t));
-    // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
+    // instantiateFunction = [](Scriptable *&instance) { instance = new T();
     // }
-    destroyInstanceFunction = [](ExtendedEntity *&instance) {
+    destroyInstanceFunction = [](Scriptable *&instance) {
       PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
              "called",
              fmt::ptr(instance));
@@ -53,7 +55,7 @@ struct NativeScriptComponent {
     };
 
     if constexpr (has_onCreate_method<T>) {
-      onCreateFunction = [](ExtendedEntity *instance) {
+      onCreateFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onCreate();
       };
     } else {
@@ -61,7 +63,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onDestroy_method<T>) {
-      onDestroyFunction = [](ExtendedEntity *instance) {
+      onDestroyFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
     } else {
@@ -69,7 +71,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
+      onRenderFunction = [](Scriptable *instance, Renderer2d &renderer,
                             bool isMinimized, DeltaTime realTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
       };
@@ -80,7 +82,7 @@ struct NativeScriptComponent {
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
     if constexpr (has_onUpdate_method<T>) {
-      onUpdateFunction = [](ExtendedEntity *instance, DeltaTime deltaTime) {
+      onUpdateFunction = [](Scriptable *instance, DeltaTime deltaTime) {
         static_cast<T *>(instance)->onUpdate(deltaTime);
       };
     } else {
@@ -88,7 +90,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onEvent_method<T>) {
-      onEventFunction = [](ExtendedEntity *instance, const SDL_Event &event) {
+      onEventFunction = [](Scriptable *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
     } else {
@@ -105,13 +107,13 @@ struct NativeScriptComponent {
     check_script_methods<T>();
     static_assert(std::is_constructible_v<T, Args...>,
                   "Error: You are binding a function whose constructor doesn't "
-                  "implement ExtendedEntity constructor: (Scene&, Entity, "
+                  "implement Scriptable constructor: (Scene&, Entity, "
                   "Bitmask). Pherhaps you are using the defualt constructor "
-                  "instead of coding `using ExtendedEntity::ExtendedEntity;`?");
+                  "instead of coding `using Scriptable::SceneObject;`?");
     instance = new T(std::forward<Args>(args)...);
-    // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
+    // instantiateFunction = [](Scriptable *&instance) { instance = new T();
     // }
-    destroyInstanceFunction = [](ExtendedEntity *&instance) {
+    destroyInstanceFunction = [](Scriptable *&instance) {
       PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
              "called",
              fmt::ptr(instance));
@@ -120,7 +122,7 @@ struct NativeScriptComponent {
     };
 
     if constexpr (has_onCreate_method<T>) {
-      onCreateFunction = [](ExtendedEntity *instance) {
+      onCreateFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onCreate();
       };
     } else {
@@ -128,7 +130,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onDestroy_method<T>) {
-      onDestroyFunction = [](ExtendedEntity *instance) {
+      onDestroyFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
     } else {
@@ -136,7 +138,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
+      onRenderFunction = [](Scriptable *instance, Renderer2d &renderer,
                             bool isMinimized, DeltaTime realTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
       };
@@ -147,7 +149,7 @@ struct NativeScriptComponent {
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
     if constexpr (has_onUpdate_method<T>) {
-      onUpdateFunction = [](ExtendedEntity *instance, DeltaTime deltaTime) {
+      onUpdateFunction = [](Scriptable *instance, DeltaTime deltaTime) {
         static_cast<T *>(instance)->onUpdate(deltaTime);
       };
     } else {
@@ -155,7 +157,7 @@ struct NativeScriptComponent {
     }
 
     if constexpr (has_onEvent_method<T>) {
-      onEventFunction = [](ExtendedEntity *instance, const SDL_Event &event) {
+      onEventFunction = [](Scriptable *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
     } else {

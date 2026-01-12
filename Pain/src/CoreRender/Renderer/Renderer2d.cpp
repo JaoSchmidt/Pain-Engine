@@ -1,8 +1,9 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Assets/DefaultTexture.h"
+#include "CoreRender/CameraComponent.h"
 #include "Debugging/Profiling.h"
 
-#include "ECS/Scene.h"
+#include "ECS/WorldScene.h"
 #include "Physics/MovementComponent.h"
 #include "glm/ext/matrix_transform.hpp"
 
@@ -37,7 +38,7 @@ void Renderer2d::beginScene(DeltaTime globalTime, const Scene &scene,
                             const glm::mat4 &transform)
 {
   PROFILE_FUNCTION();
-  const Component::OrthoCamera &cc =
+  const cmp::OrthoCamera &cc =
       std::as_const(scene).getComponent<Component::OrthoCamera>(
           m.orthoCameraEntity);
   const Transform2dComponent &tc =
@@ -266,17 +267,17 @@ Renderer2d Renderer2d::createRenderer2d()
   backend::InitRenderer();
 
   return Renderer2d( //
-      {
-          .quadBatch = QuadBatch::create(),     //
-          .triBatch = TriBatch::create(),       //
-          .circleBatch = CircleBatch::create(), //
-          .sprayBatch = SprayBatch::create(),   //
-          .textBatch = TextBatch::create(),     //
-          .debugGrid = DebugGrid::create(),
-
-          .textureSlots = // First texture is a  1x1 white texture
-          {&resources::getDefaultTexture(resources::DefaultTexture::Blank)} //
-
+      [] {
+        return M{
+            .quadBatch = QuadBatch::create(),     //
+            .triBatch = TriBatch::create(),       //
+            .circleBatch = CircleBatch::create(), //
+            .sprayBatch = SprayBatch::create(),   //
+            .textBatch = TextBatch::create(),     //
+            .debugGrid = DebugGrid::create(),
+            .textureSlots = // First texture is a  1x1 white texture
+            {&resources::getDefaultTexture(resources::DefaultTexture::Blank)} //
+        };
       }); //
 }
 

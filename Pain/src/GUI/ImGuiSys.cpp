@@ -11,7 +11,7 @@ namespace pain
 {
 namespace Systems
 {
-ImGuiSys::ImGuiSys(reg::ArcheRegistry<UIManager> &archetype,
+ImGuiSys::ImGuiSys(reg::ArcheRegistry<UIComponents> &archetype,
                    reg::EventDispatcher &eventDispatcher, SDL_GLContext context,
                    SDL_Window *window, ImGuiConfigFlags flags)
     : System(archetype, eventDispatcher)

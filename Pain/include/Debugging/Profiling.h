@@ -42,7 +42,7 @@ private:
 };
 } // namespace pain
 
-#ifndef NDEBUG
+#ifdef PROFILING
 #define PROFILE_OPEN(name, filepath)                                           \
   ::pain::Profiler::openStream(name, filepath)
 #define PROFILE_CLOSE() ::pain::Profiler::closeStream()

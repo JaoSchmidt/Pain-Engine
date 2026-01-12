@@ -35,9 +35,11 @@
 #include "Scripting/Component.h"
 #include "Scripting/LuaScriptSys.h"
 #include "Scripting/NativeScriptSys.h"
+#include "Scripting/SchedulerComponent.h"
 #include "Scripting/SchedulerSys.h"
 
 #include "Physics/Collision/Collider.h"
+#include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/KinematicsSys.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"

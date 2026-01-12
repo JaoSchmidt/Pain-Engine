@@ -5,19 +5,21 @@
 #include "ECS/Registry/Bitmask.h"
 #include "ECS/Registry/ExcludeComponents.h"
 
+#include <iostream>
 #include <queue>
 #include <span>
 #include <typeindex>
 
 namespace reg
 {
+
 template <typename... Components> struct ChunkView {
-  std::tuple<Components *...> arrays;
+  std::tuple<Components *...> arrays = {};
   std::vector<reg::Entity> &entities;
-  size_t count;
+  size_t count = 0;
 };
 template <typename... Components> struct ChunkViewConst {
-  std::tuple<Components *...> arrays;
+  std::tuple<Components *...> arrays = {};
   const std::vector<reg::Entity> &entities;
   size_t count;
 };
@@ -63,7 +65,7 @@ public:
   // Add an entity with N different components, passing using N arguments
   // This is useful to create all components at once, instead of one by one with
   // createComponent (singular)
-  template <typename... Components>
+  template <ECSComponent... Components>
   std::tuple<Components &...> createComponents(Entity entity,
                                                Components &&...comps)
   {
@@ -85,7 +87,7 @@ public:
 
   // use this in case you want to create a single component for an entity, not
   // ideal in most cases
-  template <typename Component>
+  template <ECSComponent Component>
   Component &createComponent(Entity entity, Component &&args)
   {
     Bitmask bitMask = getSingleBitmask<Component>();
@@ -109,7 +111,7 @@ public:
   // the objects more flexible but can also be used as a feature of the engine.
   // Slow process because we are also moving all its N components to N new
   // vectors
-  template <typename... Components>
+  template <ECSComponent... Components>
   std::tuple<Components &...> addComponents(Entity entity,
                                             Components &&...comps)
   {
@@ -127,7 +129,7 @@ public:
   }
 
   // If bitmask is known, you can manually push components into the archetype
-  template <typename C>
+  template <ECSComponent C>
   void manualPush(Entity entity, Bitmask bitmask, C &&comps)
   {
     Archetype &archetype = m_archetypes[bitmask];
@@ -141,7 +143,7 @@ public:
   }
 
 private:
-  template <typename... Components>
+  template <ECSComponent... Components>
   Column moveEntity(Archetype &from, Archetype &to, Entity entity,
                     Bitmask newBitMask, Column oldColumn, Components &&...comps)
   {
@@ -173,7 +175,7 @@ public:
   // ==================================================== //
 
   // return vector of chunks
-  template <typename... Components, typename... ExcludeComponents>
+  template <ECSComponent... Components, ECSComponent... ExcludeComponents>
   std::vector<ChunkView<Components...>>
   query(exclude_t<ExcludeComponents...> = {})
   {
@@ -200,7 +202,7 @@ public:
 
     return chunks;
   }
-  template <typename... Components, typename... ExcludeComponents>
+  template <ECSComponent... Components, ECSComponent... ExcludeComponents>
   std::vector<ChunkViewConst<const Components...>>
   queryConst(const exclude_t<ExcludeComponents...> = {}) const
   {
@@ -231,7 +233,7 @@ public:
   // ==================================================== //
 
   // return the size of the iterators
-  template <typename... Components, typename... ExcludeComponents>
+  template <ECSComponent... Components, typename... ExcludeComponents>
     requires IsMultipleTypes<Components...>
   size_t iteratorSize(exclude_t<ExcludeComponents...> = {})
   {
@@ -245,7 +247,7 @@ public:
   // ==================================================== //
   // get
   // ==================================================== //
-  template <typename... TargetComponents>
+  template <ECSComponent... TargetComponents>
   std::tuple<TargetComponents &...> getComponents(Entity entity)
   {
     static_assert(hasAllBitmask<TargetComponents...>(),
@@ -260,7 +262,7 @@ public:
     return archetype.extractColumn<TargetComponents...>(
         m_records[static_cast<unsigned>(entity)].column);
   }
-  template <typename... TargetComponents>
+  template <ECSComponent... TargetComponents>
   const std::tuple<TargetComponents &...> getComponents(Entity entity) const
   {
     static_assert(hasAllBitmask<TargetComponents...>(),
@@ -271,14 +273,14 @@ public:
     return archetype.extractColumn<TargetComponents...>(
         m_records[static_cast<unsigned>(entity)].column);
   }
-  template <typename T> T &getComponent(Entity entity)
+  template <ECSComponent T> T &getComponent(Entity entity)
   {
     Archetype &archetype =
         m_archetypes.at(m_records[static_cast<unsigned>(entity)].bitmask);
     return archetype.fetchComponent<T>(
         m_records[static_cast<unsigned>(entity)].column);
   }
-  template <typename T> const T &getComponent(Entity entity) const
+  template <ECSComponent T> const T &getComponent(Entity entity) const
   {
     const Archetype &archetype =
         m_archetypes.at(m_records[static_cast<unsigned>(entity)].bitmask);
@@ -291,7 +293,7 @@ public:
   // ==================================================== //
 
   // Are all components inside the targetBitMask?
-  template <typename... ObjectComponents>
+  template <ECSComponent... ObjectComponents>
   constexpr bool containsAll(Entity entity) const
   {
     Bitmask targetBitMask = m_records[static_cast<unsigned>(entity)].bitmask;
@@ -299,7 +301,7 @@ public:
     return (targetBitMask | objectBitMask) == objectBitMask;
   }
   // Targeted has at least one component that a specific archetype also has
-  template <typename... TargetComponents> bool hasAny(Entity entity) const
+  template <ECSComponent... TargetComponents> bool hasAny(Entity entity) const
   {
     Bitmask specificBitMask = m_records[static_cast<unsigned>(entity)].bitmask;
     if constexpr (sizeof...(TargetComponents) == 1) {
@@ -317,19 +319,21 @@ public:
 
   // Removal of a single entity can be O(n) in worst case (because we need to
   // update the last element's Record). If possible, prefer to batch
-  template <typename... ObjectComponents> void remove(Entity entity)
+  void remove(Entity entity)
   {
+    P_ASSERT(m_records.size() > static_cast<unsigned>(entity),
+             "Record couldn't find entity {}", entity);
     // internally: update swapped entity's record, turn removed record invalid
     Bitmask targetBitMask = m_records[static_cast<unsigned>(entity)].bitmask;
     Column targetColumn = m_records[static_cast<unsigned>(entity)].column;
     Archetype &archetype = m_archetypes.at(targetBitMask);
 
-    auto [lastEntityColumn, swappedEntity] =
-        archetype.remove<ObjectComponents...>(targetColumn);
+    auto [lastEntityColumn, swappedEntity] = archetype.remove(targetColumn);
     removeEntity(entity);
-    m_records[swappedEntity] = {targetBitMask, targetColumn};
+    m_records[static_cast<unsigned>(swappedEntity)] = {targetBitMask,
+                                                       targetColumn};
   }
-  template <typename... ObjectComponents>
+  template <ECSComponent... ObjectComponents>
   void removeBatch(std::span<const Entity> entities)
   {
     // useful
@@ -382,25 +386,54 @@ public:
   }
 
 private:
+  static constexpr std::string_view bitmaskWarning =
+      "You somehow reached a point where one of the requested components "
+      "on your engine doesn't exist in the compile time bitmask. This "
+      "should have been prevented with some static assertion on my part, "
+      "but I let you read this message in case you want to create more "
+      "flexible systems and components. For example: to statically check "
+      "only when the system is instantiated.\n\n How to statically check "
+      "yourself? just use something like:\n"
+      "requires(reg::CompileTimeBitMask::allRegistered<YourComponentsHere."
+      "..>())";
+  // Bitmask related
+  template <ECSComponent... Components>
+  static constexpr Bitmask getMultipleBitmask()
+  {
+    if constexpr (hasAllBitmask<Components...>()) {
+      return ComponentManagerT::template multiComponentBitmask<Components...>();
+    }
+    std::cout << bitmaskWarning << std::endl;
+    std::terminate();
+    return Bitmask{-1};
+  }
+  template <ECSComponent Component> static constexpr Bitmask getSingleBitmask()
+  {
+    if constexpr (hasBitmask<Component>()) {
+      return ComponentManagerT::template singleComponentBitmask<Component>();
+    }
+    std::cout << bitmaskWarning << std::endl;
+    std::terminate();
+    return Bitmask{-1};
+  }
+  template <ECSComponent... Component> static constexpr bool hasAllBitmask()
+  {
+    return ComponentManagerT::template allRegistered<Component...>();
+  }
+  template <ECSComponent Component> static constexpr bool hasBitmask()
+  {
+    return ComponentManagerT::template isRegistered<Component>();
+  }
+
+  // remove
   void removeEntity(Entity entity)
   {
     m_records[static_cast<unsigned>(entity)].bitmask = Bitmask{-1};
     m_records[static_cast<unsigned>(entity)].column = Column{-1};
     m_availableEntities.push(entity);
   }
-  template <typename... Components>
-  static constexpr Bitmask getMultipleBitmask()
-  {
-    return ComponentManagerT::template multiComponentBitmask<Components...>();
-  }
-  template <typename Component> static constexpr Bitmask getSingleBitmask()
-  {
-    return ComponentManagerT::template singleComponentBitmask<Component>();
-  }
-  template <typename... Component> static constexpr bool hasAllBitmask()
-  {
-    return ComponentManagerT::template allRegistered<Component...>();
-  }
+
+  // Record related
   void addRecord(Bitmask bitmask, Column column)
   {
     m_records.emplace_back(bitmask, column);

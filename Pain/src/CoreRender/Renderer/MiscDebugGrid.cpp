@@ -4,7 +4,7 @@
 namespace pain
 {
 
-DebugGrid DebugGrid::create()
+DebugGrid DebugGrid::create(float gridSize)
 {
   float vertices[] = {
       -1.0f, -1.0f, 0.0f, //
@@ -19,7 +19,7 @@ DebugGrid DebugGrid::create()
       *Shader::createFromFile("resources/default/shaders/InfiniteGrid.glsl");
   shader.bind();
   shader.uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
-  shader.uploadUniformFloat("u_CellSize", 1.f);
+  shader.uploadUniformFloat("u_CellSize", gridSize * 0.1f);
   shader.uploadUniformFloat("u_Thickness", 0.005f);
   return DebugGrid(
       *VertexBuffer::createStaticVertexBuffer(

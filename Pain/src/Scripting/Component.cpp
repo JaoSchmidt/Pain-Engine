@@ -11,12 +11,11 @@ namespace pain
 {
 void custom_print(const std::string &str) { PLOG_I("{}", str); }
 
-LuaScriptComponent LuaScriptComponent::create(reg::Entity entity, Scene &scene)
+LuaScriptComponent LuaScriptComponent::create(reg::Entity entity)
 {
-  return LuaScriptComponent(entity, scene);
+  return LuaScriptComponent{entity};
 };
-LuaScriptComponent::LuaScriptComponent(reg::Entity entity, Scene &scene)
-    : ExtendedEntity(entity, scene) {};
+LuaScriptComponent::LuaScriptComponent(reg::Entity entity) : entity(entity) {};
 
 void LuaScriptComponent::bind(sol::state &lua, const char *scriptPath)
 {

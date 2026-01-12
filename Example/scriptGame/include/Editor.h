@@ -7,7 +7,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-class PainlessEditor : public pain::ExtendedEntity
+class PainlessEditor : public pain::UIObject
 {
 
 public:
@@ -142,7 +142,7 @@ public:
 
   PainlessEditor(reg::Entity entity, pain::UIScene &scene,
                  pain::Application &app)
-      : ExtendedEntity(entity, scene), m_app(app) {};
+      : pain::UIObject(entity, scene), m_app(app) {};
   std::vector<std::string> m_availableResolutions;
 
 private:

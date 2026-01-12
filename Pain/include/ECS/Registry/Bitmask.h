@@ -5,27 +5,37 @@
 namespace reg
 {
 
-template <typename... Components> class CompileTimeBitMask
-{
+template <typename T>
+concept ECSComponent = requires { typename T::tag; };
 
+template <typename... Components> struct CompileTimeBitMask {
+private:
+  template <typename T>
+  using identity_t =
+      std::remove_cv_t<std::remove_reference_t<std::remove_pointer_t<T>>>;
+
+  // template <typename T>
+  // using identity_t = typename ComponentTag<clean_t<T>>::type;
+
+  // ------------------------------------------------------------------
 public:
   // Get the index of a component type (compile-time)
-  template <typename Target> static constexpr Bitmask singleComponentBitmask()
+  template <ECSComponent Target>
+  static constexpr Bitmask singleComponentBitmask()
   {
+    using CleanTarget = identity_t<Target>;
     static_assert(isRegistered<Target>(),
                   "You are asking for a component but haven't registered it "
                   "yet inside the register");
-    using CleanTarget = std::remove_pointer_t<
-        std::remove_cv_t<std::remove_reference_t<Target>>>;
-    return exp(getComponentIndex<CleanTarget, Components...>());
+    return exp(getComponentIndex<typename CleanTarget::tag, Components...>());
   }
 
   // Get combined bit mask for multiple components
-  template <typename... Targets>
+  template <ECSComponent... Targets>
   static constexpr Bitmask multiComponentBitmask()
   {
     if constexpr (sizeof...(Targets) > 0)
-      return getComponentsBitmask<Targets...>();
+      return getComponentsBitmask<typename Targets::tag...>();
     else
       return Bitmask{0};
   }
@@ -37,10 +47,14 @@ public:
   }
 
   // Check if a component type is registered
+  template <ECSComponent Target> static constexpr bool isRegistered()
+  {
+    using CleanTarget = identity_t<Target>;
+    return typenameContainsType<typename CleanTarget::tag, Components...>();
+  }
   template <typename Target> static constexpr bool isRegistered()
   {
-    using CleanTarget = std::remove_pointer_t<
-        std::remove_cv_t<std::remove_reference_t<Target>>>;
+    using CleanTarget = identity_t<Target>;
     return typenameContainsType<CleanTarget, Components...>();
   }
 
@@ -77,8 +91,8 @@ private:
   template <typename FirstDirty, typename... Targets>
   static constexpr Bitmask getComponentsBitmask()
   {
-    using First = std::remove_pointer_t<
-        std::remove_cv_t<std::remove_reference_t<FirstDirty>>>;
+    using First = identity_t<FirstDirty>;
+
     static_assert(isRegistered<First>(),
                   "One of the components you are trying to access isn't "
                   "properly registered inside the CompileTimeBitmask");

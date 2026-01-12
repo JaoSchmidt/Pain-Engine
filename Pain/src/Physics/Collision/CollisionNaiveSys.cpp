@@ -118,10 +118,8 @@ void NaiveCollisionSys::narrowPhaseCollision(
 void NaiveCollisionSys::onUpdate(DeltaTime deltaTime)
 {
   UNUSED(deltaTime)
-  // NOTE: testing without callbacks for now
-  // NOTE: also, testing without rotation for now too. If you introduce rotation
-  // in this system, it will break
   {
+
     auto chunks =
         query<Transform2dComponent, ColliderComponent, Movement2dComponent>();
 

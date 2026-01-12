@@ -9,6 +9,7 @@
 
 namespace pain
 {
+struct ImGuiComponent;
 struct Renderer2d;
 
 class ImGuiInstance
@@ -20,13 +21,13 @@ public:
 
 namespace Systems
 {
-struct ImGuiSys : public System<UIManager>, IOnRender, IOnEvent {
-public:
+struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
+  using Tags = TypeList<ImGuiComponent>;
   // HACK: The singleton (static) approach assumes that there
   // will be only one context necessary for Dear ImGui to work.
   // Keep an eye on that in case it doesn't work.
   ImGuiSys(
-      reg::ArcheRegistry<UIManager> &archetype,
+      reg::ArcheRegistry<UIComponents> &archetype,
       reg::EventDispatcher &eventDispatcher, SDL_GLContext context,
       SDL_Window *window,
       ImGuiConfigFlags flags =

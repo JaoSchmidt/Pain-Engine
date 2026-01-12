@@ -10,7 +10,7 @@ namespace MousePointer
 reg::Entity create(pain::Scene &scene);
 }
 
-class MousePointerScript : public pain::ExtendedEntity
+class MousePointerScript : public pain::WorldObject
 {
 public:
   MousePointerScript(reg::Entity entity, pain::Scene &scene,

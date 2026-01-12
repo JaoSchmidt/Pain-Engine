@@ -10,7 +10,7 @@ enum class EventType : size_t {
       Count
 };
 
-void createScriptEventMap(sol::state &lua, reg::EventDispatcher &ed)
+sol::state &createLuaEventMap(sol::state &lua, reg::EventDispatcher &ed)
 {
   lua["Event"] = lua.create_table();
   lua["Event"]["subscribe"] = [&](EventType eventType, sol::function fn) {
@@ -39,13 +39,13 @@ void createScriptEventMap(sol::state &lua, reg::EventDispatcher &ed)
                                       const sol::table event) {
     ed.enqueue(customEventId, event);
   };
-
   lua.new_enum<EventType>("EventType",
                           {
 #define X(eventclass, eventname) {#eventname, EventType::eventname}, //
                               EVENT_TYPE_LIST                        //
 #undef X                                                             //
                           });
+  return lua;
 }
 #undef EVENT_TYPE_LIST
 } // namespace pain

@@ -2,7 +2,6 @@
 
 #include "Core.h"
 
-#include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/BatchCircles.h"
 #include "CoreRender/Renderer/BatchQuad.h"
 #include "CoreRender/Renderer/BatchSpray.h"
@@ -12,7 +11,6 @@
 #include "CoreRender/Text/Font.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
-#include "ECS/Components/ComponentManager.h"
 #include "ECS/Components/Particle.h"
 #include "ECS/Registry/Entity.h"
 
@@ -20,10 +18,8 @@ namespace pain
 {
 
 // Frwd declare Scene
-template <reg::CompileTimeBitMaskType Manager> class AbstractScene;
-using Scene = AbstractScene<ComponentManager>;
-template <reg::CompileTimeBitMaskType Manager> class AbstractScene;
-using UIScene = AbstractScene<UIManager>;
+class Scene;
+class UIScene;
 
 struct Renderer2d {
   struct Stats {
@@ -161,8 +157,9 @@ private:
   };
 
   M m;
-
-  Renderer2d(M args) : m(std::move(args)) {}
+  template <typename NRVO>
+    requires std::same_as<std::invoke_result_t<NRVO>, M>
+  Renderer2d(NRVO &&factory) : m(factory()){};
   friend class Application;
 };
 

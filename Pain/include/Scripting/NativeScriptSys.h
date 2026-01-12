@@ -6,13 +6,15 @@
 namespace pain
 {
 struct Renderer2d;
+struct NativeScriptComponent;
 
 namespace Systems
 {
-struct NativeScript : public System<ComponentManager>,
+struct NativeScript : public System<WorldComponents>,
                       IOnUpdate,
                       IOnEvent,
                       IOnRender {
+  using Tags = TypeList<NativeScriptComponent>;
   using System::System;
   void onUpdate(DeltaTime deltaTime) override;
   void onEvent(const SDL_Event &e) override;

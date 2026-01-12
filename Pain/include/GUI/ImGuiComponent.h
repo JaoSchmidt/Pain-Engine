@@ -2,6 +2,8 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Components/ComponentManager.h"
+#include "ECS/Scene.h"
 #include "Scripting/Concepts.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
@@ -18,21 +20,22 @@ template <typename T>
 concept has_imgui_private_onRender =
     requires { sizeof(&T::onRender); } && !has_imgui_onRender_method<T>;
 
-class ExtendedEntity;
+template <typename SceneT> class GameObject;
+class UIScene;
 
-// TODO: make the "setParams" function,  but perhaps in the lua script only?
-// that is because the use of a variable set of parameters only make sense in
-// the context of objects that need a null state. And in my current approach,
-// not necesserally if any object in c++ needs to be null at the beginning. We
-// can just construct them
 struct ImGuiComponent {
-  ExtendedEntity *instance = nullptr;
+private:
+  using Scriptable = GameObject<UIScene>;
 
-  void (*destroyInstanceFunction)(ExtendedEntity *&) = nullptr;
-  void (*onCreateFunction)(ExtendedEntity *) = nullptr;
-  void (*onDestroyFunction)(ExtendedEntity *) = nullptr;
-  void (*onRenderFunction)(ExtendedEntity *, Renderer2d &, bool) = nullptr;
-  void (*onEventFunction)(ExtendedEntity *, const SDL_Event &) = nullptr;
+public:
+  using tag = tag::ImGuiScript;
+  Scriptable *instance = nullptr;
+
+  void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
+  void (*onCreateFunction)(Scriptable *) = nullptr;
+  void (*onDestroyFunction)(Scriptable *) = nullptr;
+  void (*onRenderFunction)(Scriptable *, Renderer2d &, bool) = nullptr;
+  void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
 
   template <typename T> void bindAndInitiate(T &&t)
   {
@@ -40,13 +43,13 @@ struct ImGuiComponent {
     // static_assert(
     //     std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
     //     "Error: You are binding a function whose constructor doesn't
-    //     implement " "ExtendedEntity constructor: (Scene&, Entity, Bitmask).
+    //     implement " "Scriptable constructor: (Scene&, Entity, Bitmask).
     //     Pherhaps you " "are using the defualt constructor instead of coding
-    //     `using " "ExtendedEntity::ExtendedEntity;`?");
+    //     `using " "Scriptable::Scriptable;`?");
     instance = new T(std::move(t));
-    // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
+    // instantiateFunction = [](Scriptable *&instance) { instance = new T();
     // }
-    destroyInstanceFunction = [](ExtendedEntity *&instance) {
+    destroyInstanceFunction = [](Scriptable *&instance) {
       PLOG_I("ImGuiComponent instance {}: destructorInstanceFunction "
              "called",
              fmt::ptr(instance));
@@ -55,7 +58,7 @@ struct ImGuiComponent {
     };
 
     if constexpr (has_onCreate_method<T>) {
-      onCreateFunction = [](ExtendedEntity *instance) {
+      onCreateFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onCreate();
       };
     } else {
@@ -63,7 +66,7 @@ struct ImGuiComponent {
     }
 
     if constexpr (has_onDestroy_method<T>) {
-      onDestroyFunction = [](ExtendedEntity *instance) {
+      onDestroyFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
     } else {
@@ -71,7 +74,7 @@ struct ImGuiComponent {
     }
 
     if constexpr (has_imgui_onRender_method<T>) {
-      onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
+      onRenderFunction = [](Scriptable *instance, Renderer2d &renderer,
                             bool isMinimized) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized);
       };
@@ -80,7 +83,7 @@ struct ImGuiComponent {
     }
 
     if constexpr (has_onEvent_method<T>) {
-      onEventFunction = [](ExtendedEntity *instance, const SDL_Event &event) {
+      onEventFunction = [](Scriptable *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
     } else {
@@ -97,13 +100,13 @@ struct ImGuiComponent {
     // check_script_methods<T>();
     static_assert(std::is_constructible_v<T, Args...>,
                   "Error: You are binding a function whose constructor doesn't "
-                  "implement ExtendedEntity constructor: (Scene&, Entity, "
+                  "implement Scriptable constructor: (Scene&, Entity, "
                   "Bitmask). Pherhaps you are using the defualt constructor "
-                  "instead of coding `using ExtendedEntity::ExtendedEntity;`?");
+                  "instead of coding `using Scriptable::Scriptable;`?");
     instance = new T(std::forward<Args>(args)...);
-    // instantiateFunction = [](ExtendedEntity *&instance) { instance = new T();
+    // instantiateFunction = [](Scriptable *&instance) { instance = new T();
     // }
-    destroyInstanceFunction = [](ExtendedEntity *&instance) {
+    destroyInstanceFunction = [](Scriptable *&instance) {
       PLOG_I("ImGuiComponent instance {}: destructorInstanceFunction "
              "called",
              fmt::ptr(instance));
@@ -112,7 +115,7 @@ struct ImGuiComponent {
     };
 
     if constexpr (has_onCreate_method<T>) {
-      onCreateFunction = [](ExtendedEntity *instance) {
+      onCreateFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onCreate();
       };
     } else {
@@ -120,7 +123,7 @@ struct ImGuiComponent {
     }
 
     if constexpr (has_onDestroy_method<T>) {
-      onDestroyFunction = [](ExtendedEntity *instance) {
+      onDestroyFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
     } else {
@@ -128,7 +131,7 @@ struct ImGuiComponent {
     }
 
     if constexpr (has_imgui_onRender_method<T>) {
-      onRenderFunction = [](ExtendedEntity *instance, Renderer2d &renderer,
+      onRenderFunction = [](Scriptable *instance, Renderer2d &renderer,
                             bool isMinimized) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized);
       };
@@ -137,7 +140,7 @@ struct ImGuiComponent {
     }
 
     if constexpr (has_onEvent_method<T>) {
-      onEventFunction = [](ExtendedEntity *instance, const SDL_Event &event) {
+      onEventFunction = [](Scriptable *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
     } else {

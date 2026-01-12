@@ -6,6 +6,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/Renderer/Renderer2d.h"
+#include "Debugging/Profiling.h"
 #include "GUI/ImGuiSys.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/Events.h"
@@ -22,7 +23,7 @@ unsigned Application::getProcessorCount()
   return std::thread::hardware_concurrency();
 }
 
-Application *Application::createApplication(const char *title, int w, int h,
+Application *Application::createApplication(AppContext &&context,
                                             FrameBufferCreationInfo &&fbci)
 {
   PLOG_T(resources::getCurrentWorkingDir());
@@ -43,11 +44,12 @@ Application *Application::createApplication(const char *title, int w, int h,
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
   SDL_Window *window = SDL_CreateWindow(
-      title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
+      context.title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+      context.defaultWidth, context.defaultHeight,
       SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
   if (window == nullptr)
     PLOG_E("Application window not initialized");
-  void *context = SDL_GL_CreateContext(window);
+  void *sdlContext = SDL_GL_CreateContext(window);
 
   SDL_version sdl_version;
   SDL_GetVersion(&sdl_version);
@@ -71,28 +73,35 @@ Application *Application::createApplication(const char *title, int w, int h,
   // config.ini file
   // =========================================================================//
 
+  auto sceneFactory = [](reg::EventDispatcher &ed, sol::state &state,
+                         ThreadPool &tp) {
+    return Scene::create(ed, state, tp);
+  };
   return new Application(std::move(luaState), std::move(window),
-                         std::move(context), std::move(fbci));
+                         std::move(sdlContext), std::move(fbci),
+                         std::move(context), sceneFactory);
 }
 /* Creates window, opengl context and init glew*/
 // renderer is created BEFORE the asset manager, as the asset manager retrives
 // the default assets, it will slowly link some to the renderer cache
 Application::Application(sol::state &&luaState, SDL_Window *window,
-                         void *context, FrameBufferCreationInfo &&fbci,
-                         int fallbackWidth, int fallbackHeight)
-    : m({.defaultWidth = fallbackWidth, .defaultHeight = fallbackHeight}),
-      m_renderer(Renderer2d::createRenderer2d()),
+                         void *sdlContext, FrameBufferCreationInfo &&fbci,
+                         AppContext &&context, auto worldSceneFactory)
+    : m(), m_context(context), m_renderer(Renderer2d::createRenderer2d()),
       m_defaultImGuiInstance(new EngineController()),
-      m_luaState(std::move(luaState)), m_eventDispatcher(m_luaState),
-      m_worldScene(Scene::create(m_eventDispatcher, m_luaState)),
-      m_endGameFlags(), m_window(window), m_context(context),
+      m_threadPool(ThreadPool{}), m_luaState(std::move(luaState)),
+      m_eventDispatcher(m_luaState),
+      m_worldScene(
+          worldSceneFactory(m_eventDispatcher, m_luaState, m_threadPool)),
+      m_endGameFlags(), m_window(window), m_sdlContext(sdlContext),
       m_renderPipeline(fbci.swapChainTarget
                            ? RenderPipeline::create(m_eventDispatcher)
                            : RenderPipeline::create(fbci, m_eventDispatcher))
 {
-  createScriptEventMap(m_luaState, m_eventDispatcher);
+  addComponentFunctions(m_luaState, m_worldScene);
   addScheduler(m_luaState, m_worldScene);
   m_worldScene.addEntityFunctions("World", m_luaState);
+  createLuaEventMap(m_luaState, m_eventDispatcher);
 };
 
 void Application::stopLoop(bool restartFlag)
@@ -107,9 +116,8 @@ EndGameFlags Application::run()
   // creates a dummy camera in case it doesn't exist
   if (!m_renderer.hasCamera()) {
     PLOG_W("You didn't set a camera, using the default camera");
-    reg::Entity camera = Dummy2dCamera::create(m_worldScene, m.defaultWidth,
-                                               m.defaultHeight, 1.f);
-    m_worldScene.emplaceScript<OrthoCameraScript>(camera);
+    reg::Entity camera = Dummy2dCamera::create(
+        m_worldScene, m_context.defaultWidth, m_context.defaultHeight, 1.f);
     setRendererCamera(camera);
   }
 
@@ -228,7 +236,7 @@ Application::~Application()
   PLOG_I("Deleting application");
   resources::clearTextures();
   resources::getDefaultLuaFile();
-  SDL_GL_DeleteContext(m_context);
+  SDL_GL_DeleteContext(m_sdlContext);
   SDL_DestroyWindow(m_window);
   SDL_Quit();
 }

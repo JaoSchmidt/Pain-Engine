@@ -12,23 +12,25 @@ class TextureSheet
 
 public:
   static TextureSheet
-  createTextureSheet(Texture &texture, unsigned nlinesX, unsigned ncolumnsY,
-                     std::initializer_list<std::pair<int, int>> coords);
+  createWithDivisions(Texture &texture, unsigned nlinesX, unsigned ncolumnsY,
+                      std::initializer_list<std::pair<int, int>> coords,
+                      float padding);
   static TextureSheet
-  createTextureSheet(Texture &texture, float spriteWidth, float spriteHeight,
-                     std::initializer_list<std::pair<int, int>> coords);
+  createWithDimensions(Texture &texture, float spriteWidth, float spriteHeight,
+                       std::initializer_list<std::pair<int, int>> coords,
+                       float padding);
   void updateSurroundingChunks(glm::vec3 &playerPos);
 
   // choose a specific texture coordenate by its index. If index > size, then
   // index = index % size
-  inline std::array<glm::vec2, 4> &operator[](unsigned short i)
+  const inline std::array<glm::vec2, 4> &operator[](unsigned short i)
   {
     return m_textureIds[i % m_textureIds.size()];
   }
 
   const std::vector<std::vector<int>> &getDefaultMap() const;
   const std::vector<std::vector<int>> &getSceneryMap() const;
-  inline const std::array<glm::vec2, 4> getTexCoord(unsigned short id) const
+  inline const std::array<glm::vec2, 4> &getTexCoord(unsigned short id) const
   {
     return m_textureIds.operator[](id);
   };
@@ -50,16 +52,16 @@ private:
   std::vector<std::array<glm::vec2, 4>> m_textureIds = {};
 
   void createVecFromMap();
-  static std::array<glm::vec2, 4> createVecFromCoord(pain::Texture &texture,
-                                                     float spriteWidth,
-                                                     float spriteHeight, int x,
-                                                     int y);
-  static std::array<glm::vec2, 4> createVecFromCoord(pain::Texture &texture,
-                                                     unsigned ndivisionX,
-                                                     unsigned ndivisionY, int x,
-                                                     int y);
-  static std::array<glm::vec2, 4>
-  createVecFromCoord(const char *atlasFilenameXML, int SubTextureId);
+  // static std::array<glm::vec2, 4> createVecFromCoord(pain::Texture &texture,
+  //                                                    float spriteWidth,
+  //                                                    float spriteHeight, int
+  //                                                    x, int y);
+  // static std::array<glm::vec2, 4> createVecFromCoord(pain::Texture &texture,
+  //                                                    unsigned ndivisionX,
+  //                                                    unsigned ndivisionY, int
+  //                                                    x, int y);
+  // static std::array<glm::vec2, 4>
+  // createVecFromCoord(const char *atlasFilenameXML, int SubTextureId);
   glm::ivec2 getChunkCoordinate(glm::vec3 &playerCood);
   TextureSheet(Texture &texture, float spriteWidth, float spriteHeight,
                std::vector<std::array<glm::vec2, 4>> texturesIds, size_t size);

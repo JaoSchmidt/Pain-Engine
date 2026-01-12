@@ -15,6 +15,8 @@
 #include <unistd.h>
 #endif
 
+namespace fs = std::filesystem;
+
 namespace
 {
 // NOTE: remember folks, surfaceMap is in the static/global memory but its
@@ -23,20 +25,40 @@ static std::map<std::string, std::string> m_luaScriptSource = {};
 } // namespace
 namespace pain
 {
-bool resources::exists_file(const std::string_view &name)
+bool resources::existsFile(const std::string_view &name)
 {
   return std::filesystem::exists(std::filesystem::path{name});
 }
-bool resources::exists_file(const char *name)
+bool resources::existsFile(const char *name)
 {
   struct stat buffer;
   return (stat(name, &buffer) == 0);
 }
-bool resources::exists_file(const std::string &name)
+bool resources::existsFile(const std::string &name)
 {
   struct stat buffer;
   return (stat(name.c_str(), &buffer) == 0);
 }
+bool resources::isDir(const std::string &name)
+{
+  return fs::is_directory(name);
+}
+
+bool resources::isFile(const std::string &name)
+{
+  return fs::is_regular_file(name);
+}
+
+bool resources::createFile(const std::string &filename)
+{
+  std::ofstream ofs(filename.c_str());
+  if (!ofs) {
+    PLOG_E("Error: Could not create file {}", filename);
+    return false;
+  }
+  return true;
+}
+
 bool resources::isSettingsGuiNeeded()
 {
   if (!std::filesystem::exists("config.ini"))
@@ -58,7 +80,7 @@ const std::string &resources::getLuaScriptSource(const char *filepath)
   if (it != m_luaScriptSource.end())
     return it->second;
 
-  if (!exists_file(filepath)) {
+  if (!existsFile(filepath)) {
     PLOG_E("Could not locate filepath {}", filepath);
     auto it = m_luaScriptSource.find(getDefaultLuaFile());
     P_ASSERT(it != m_luaScriptSource.end(),
@@ -112,31 +134,6 @@ std::string resources::getCurrentWorkingDir()
   return currentDir;
 }
 
-void resources::defaultNativeScript::onUpdate(DeltaTime deltaTimeSec)
-{
-  UNUSED(deltaTimeSec)
-  PLOG_W("You are updating a script that hasn't been initialized!");
-}
-
-void resources::defaultNativeScript::onEvent(const SDL_Event &e)
-{
-  UNUSED(e)
-  PLOG_W("You are updating a script that hasn't been initialized!");
-}
-void resources::defaultNativeScript::onRender(Renderer2d &renderer,
-                                              bool isMinimized,
-                                              DeltaTime currentTime)
-{
-  UNUSED(renderer)
-  UNUSED(isMinimized)
-  UNUSED(currentTime)
-  PLOG_W("You are trying to render a script that hasn't been initialized!");
-}
-void resources::defaultNativeScript::onDestroy()
-{
-  PLOG_W("You are trying to destroy the default script, not sure if that is "
-         "suppose to happen");
-}
 void resources::clearScript() { m_luaScriptSource.clear(); }
 
 } // namespace pain

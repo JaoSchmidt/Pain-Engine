@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreFiles/RenderPipeline.h"
-#include "ECS/Scene.h"
+#include "ECS/UIScene.h"
+#include "ECS/WorldScene.h"
 #include "pch.h"
 
 #include "Assets/DeltaTime.h"
@@ -8,18 +9,40 @@
 #include "CoreFiles/EndGameFlags.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/DebuggingImGui.h"
-#include "ECS/Scene.h"
 #include "GUI/ImGuiSys.h"
+#include "profile.h"
 #include <sol/state.hpp>
+
+template <class F> class with_result_of_t
+{
+  F &&fun;
+
+public:
+  using T = decltype(std::declval<F &&>()());
+  explicit with_result_of_t(F &&f) : fun(std::forward<F>(f)) {}
+  operator T() { return fun(); }
+};
+
+template <class F> inline with_result_of_t<F> with_result_of(F &&f)
+{
+  return with_result_of_t<F>(std::forward<F>(f));
+}
 
 namespace pain
 {
+struct AppContext {
+  static constexpr const char *configIniFile = "config.ini";
+  static constexpr const char *internalConfigFile = "internalConfig.ini";
+  const char *title;
+  int defaultWidth = 800;
+  int defaultHeight = 600;
+};
+
 class Application
 {
 public:
-  static constexpr const char *configIniFile = "config.ini";
   static Application *
-  createApplication(const char *title, int w, int h,
+  createApplication(AppContext &&context,
                     FrameBufferCreationInfo &&frameBufferCreationInfo = {
                         .swapChainTarget = false});
   ~Application();
@@ -63,11 +86,11 @@ public:
   }
   template <typename... Components> UIScene &createUIScene(Components... args)
   {
-    m_uiScene = std::make_unique<UIScene>(
-        UIScene::create(m_eventDispatcher, m_luaState));
+    m_uiScene =
+        std::make_unique<UIScene>(m_eventDispatcher, m_luaState, m_threadPool);
     m_uiScene->createComponents(m_uiScene->getEntity(),
                                 std::forward<Components>(args)...);
-    m_uiScene->addSystem<Systems::ImGuiSys>(m_context, m_window);
+    m_uiScene->addSystem<Systems::ImGuiSys>(m_sdlContext, m_window);
     // m_worldSceneSys = std::make_unique<WorldSystems>(
     //     m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
 
@@ -75,9 +98,9 @@ public:
   }
 
 private:
-  Application(sol::state &&luaState, SDL_Window *window, void *context,
-              FrameBufferCreationInfo &&fbci, int fallbackWidth = 600,
-              int fallbackHeight = 600);
+  Application(sol::state &&luaState, SDL_Window *window, void *sdlContext,
+              FrameBufferCreationInfo &&fbci, AppContext &&context,
+              auto worldSceneFactory);
   // =============================================================== //
   // VARIABLES/CONSTANTS
   // =============================================================== //
@@ -96,10 +119,9 @@ private:
     double fpsSamples[FPS_SAMPLE_COUNT] = {0};
     int currentSample =
         1; // begins in 1 to loop all the way to 0 before calculation
-    int defaultWidth = 600;
-    int defaultHeight = 600;
   };
   DefaultApplicationValues m;
+  const AppContext m_context;
   // =============================================================== //
   // OWNED CLASSES
   // =============================================================== //
@@ -108,6 +130,7 @@ private:
   Renderer2d m_renderer;
 
   EngineController *m_defaultImGuiInstance;
+  ThreadPool m_threadPool;
   sol::state m_luaState;
   reg::EventDispatcher m_eventDispatcher;
   Scene m_worldScene;
@@ -116,7 +139,7 @@ private:
   EndGameFlags m_endGameFlags = {};
   // Refers to the game window
   SDL_Window *m_window = nullptr;
-  SDL_GLContext m_context = nullptr;
+  SDL_GLContext m_sdlContext = nullptr;
 
   RenderPipeline m_renderPipeline;
   friend struct Pain;

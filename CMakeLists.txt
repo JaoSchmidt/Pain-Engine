@@ -6,7 +6,6 @@ set(CMAKE_BUILD_TYPE "Debug")
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
 set(MACRO_DEFINITIONS "PAIN_RENDERER_OPENGL")
-remove_definitions("-DNDEBUG")
 project(${PROJECT_NAME} VERSION 0.1.0)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
@@ -37,6 +36,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  remove_definitions("-DNDEBUG")
   target_compile_options(
     ${LIBRARY_NAME}
     PRIVATE -Wall
@@ -48,13 +48,30 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
             -Wno-unused-parameter
             -Wmissing-field-initializers
             -Wno-sign-conversion
-            -ftemplate-backtrace-limit=0
+            -fdiagnostics-color=always
+            -std=c++20
+            # specifc to gcc -fmodules-ts
+            -Wpessimizing-move)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL
+                                                "Release")
+  add_definitions("-DNDEBUG")
+  target_compile_options(
+    ${LIBRARY_NAME}
+    PRIVATE -Wall
+            -O3
+            -Wextra
+            -Wpedantic
+            -Wconversion
+            -Wno-unused-parameter
+            -Wmissing-field-initializers
+            -Wno-sign-conversion
             -fdiagnostics-color=always
             -std=c++20
             # specifc to gcc -fmodules-ts
             -Wpessimizing-move)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL
                                                   "Debug")
+  remove_definitions("-DNDEBUG")
   target_compile_options(
     ${LIBRARY_NAME}
     PRIVATE -Wall
@@ -72,6 +89,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL
             -Wreturn-std-move
             -Wself-move)
 elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  remove_definitions("-DNDEBUG")
   target_compile_options(
     ${LIBRARY_NAME}
     PUBLIC /Zc:preprocessor # Required for __VA_OPT__

@@ -17,7 +17,7 @@ class Archetype
 public:
   using Deleter = void (*)(void *);
   using ErasedVector = std::unique_ptr<void, Deleter>;
-
+  std::vector<std::function<Column(Column)>> m_removers;
   std::vector<reg::Entity> m_entities;
 
 private:
@@ -39,6 +39,9 @@ public:
       auto deleter = [](void *vector) {
         delete static_cast<std::vector<C> *>(vector);
       };
+      m_removers.push_back([this](reg::Column column) {
+        return removeFromComponent<C>(column);
+      });
       auto [newIt, isInserted] =
           m_componentMap.emplace(std::type_index(typeid(C)),
                                  ErasedVector{new std::vector<C>(), deleter});
@@ -82,6 +85,19 @@ public:
   // remove
   // ---------------------------------------------------- //
 
+  std::pair<Column, Entity> remove(Column column)
+  {
+    Column lastColumn = Column{-1};
+    Entity swappedEntity = m_entities[m_entities.size() - 1];
+
+    for (std::function<Column(Column)> &remover : m_removers) {
+      lastColumn = remover(column);
+    }
+    std::iter_swap(m_entities.begin() + column, m_entities.end() - 1);
+    m_entities.pop_back();
+    return std::make_pair(lastColumn, swappedEntity);
+  }
+
   template <typename... Components>
   std::pair<Column, Entity> remove(Column column)
   {
@@ -102,7 +118,7 @@ public:
     std::vector<C> &v = getComponent<C>();
     std::iter_swap(v.begin() + index, v.end() - 1);
     v.pop_back();
-    return Column{static_cast<Column>(v.size())};
+    return Column{static_cast<int>(v.size())};
   }
 
   // ---------------------------------------------------- //

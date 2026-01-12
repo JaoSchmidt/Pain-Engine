@@ -18,14 +18,13 @@ reg::Entity createBasicCamera(pain::Scene &scene, int resolutionHeight,
                               int resolutionWeigh, float zoomLevel);
 } // namespace Dummy2dCamera
 
-class OrthoCameraScript : public ExtendedEntity
+class OrthoCameraScript : public WorldObject
 {
 public:
-  using ExtendedEntity::ExtendedEntity;
+  using WorldObject::WorldObject;
   void onUpdate(DeltaTime deltaTimeSec);
   void onCreate();
   void onEvent(const SDL_Event &e);
-  inline void recalculatePosition(const glm::vec2 &position, float rotation);
 
 protected:
   float m_zoomSpeed = 0.25f;

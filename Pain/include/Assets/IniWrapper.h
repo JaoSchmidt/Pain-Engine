@@ -54,4 +54,26 @@ inline int getInteger(mINI::INIStructure &ini, const std::string &section,
     return def;
   }
 }
+
+inline float getFloat(mINI::INIStructure &ini, const std::string &section,
+                      const std::string &key, float def = 0)
+{
+  std::string value = get(ini, section, key, std::to_string(def));
+  try {
+    return std::stof(value);
+  } catch (...) {
+    return def;
+  }
+}
+
+inline double getDouble(mINI::INIStructure &ini, const std::string &section,
+                        const std::string &key, double def = 0)
+{
+  std::string value = get(ini, section, key, std::to_string(def));
+  try {
+    return std::stod(value);
+  } catch (...) {
+    return def;
+  }
+}
 } // namespace IniWrapper

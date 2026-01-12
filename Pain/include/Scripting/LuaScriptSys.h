@@ -6,12 +6,15 @@
 namespace pain
 {
 struct Renderer2d;
+struct LuaScriptComponent;
+
 namespace Systems
 {
-struct LuaScript : public System<ComponentManager>,
+struct LuaScript : public System<WorldComponents>,
                    IOnUpdate,
                    IOnEvent,
                    IOnRender {
+  using Tags = TypeList<LuaScriptComponent>;
   using System::System;
   void onUpdate(DeltaTime deltaTime) override;
   void onEvent(const SDL_Event &e) override;

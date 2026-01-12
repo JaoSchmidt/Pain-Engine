@@ -3,14 +3,13 @@
 
 #include "Assets/DeltaTime.h"
 #include "Core.h"
-#include "ECS/Components/ComponentManager.h"
-#include "ECS/Components/NativeScript.h"
+#include "CoreFiles/ThreadPool.h"
 #include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Registry/Bitmask.h"
 #include "ECS/Registry/Entity.h"
 #include "ECS/Systems.h"
-#include "GUI/ImGuiComponent.h"
+#include "Scripting/Component.h"
 
 #include <sol/sol.hpp>
 #include <utility>
@@ -23,95 +22,23 @@ struct Render;
 struct Kinematics;
 struct ImGuiSys;
 struct LuaScript;
-struct NativeScript;
 struct NaiveCollisionSys;
 struct SweepAndPruneSys;
 struct CameraSys;
 } // namespace Systems
 
-struct NormalEntity;
-
 template <reg::CompileTimeBitMaskType Manager> class AbstractScene
 {
 
 public:
+  // =============================================================== //
+  // =============================================================== //
+  // REGISTRY RELATED
+  // =============================================================== //
+  // =============================================================== //
   reg::ArcheRegistry<Manager> &getRegistry() { return m_registry; };
   reg::Entity getEntity() const { return m_entity; }
-  sol::state &getSharedLuaState() { return m_luaState; }
   inline reg::Entity createEntity() { return m_registry.createEntity(); }
-
-  // insert an object batch into the collider
-  void insertColliders(std::initializer_list<
-                       std::reference_wrapper<const std::vector<reg::Entity>>>
-                           vectors);
-
-  // ---------------------------------------------------- //
-  // Constructors
-  // ---------------------------------------------------- //
-
-  static AbstractScene create(reg::EventDispatcher &eventDispatcher,
-                              sol::state &solState);
-
-  // ---------------------------------------------------- //
-  // Helper function to "emplace" Scripts
-  // ---------------------------------------------------- //
-
-  void emplaceLuaScript(reg::Entity entity, const char *scriptPath)
-    requires(Manager::template isRegistered<LuaScriptComponent>());
-
-  // Move already made script to the registry
-  template <typename T>
-    requires(Manager::template isRegistered<NativeScriptComponent>())
-  T &emplaceScript(reg::Entity entity, T &&t)
-  {
-    NativeScriptComponent &nsc =
-        m_registry.template getComponent<NativeScriptComponent>(entity);
-    nsc.bindAndInitiate<T>(std::move(t));
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-    return static_cast<T &>(*nsc.instance);
-  }
-
-  // Emplace script inside the registry
-  template <typename T, typename... Args>
-    requires std::constructible_from<T, reg::Entity, AbstractScene &,
-                                     Args...> &&
-             (Manager::template isRegistered<NativeScriptComponent>())
-  T &emplaceScript(reg::Entity entity, Args &&...args)
-  {
-    NativeScriptComponent &nsc =
-        m_registry.template getComponent<NativeScriptComponent>(entity);
-    nsc.bindAndInitiate<T>(entity, *this, std::forward<Args>(args)...);
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-    return static_cast<T &>(*nsc.instance);
-  }
-
-  // Move already made script to the registry
-  template <typename T>
-    requires(Manager::template isRegistered<ImGuiComponent>())
-  T &emplaceImGuiScript(reg::Entity entity, T &&t)
-  {
-    ImGuiComponent &nsc =
-        m_registry.template getComponent<ImGuiComponent>(entity);
-    nsc.bindAndInitiate<T>(std::move(t));
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-    return static_cast<T &>(*nsc.instance);
-  }
-  template <typename T, typename... Args>
-    requires std::constructible_from<T, reg::Entity, AbstractScene &,
-                                     Args...> &&
-             (Manager::template isRegistered<ImGuiComponent>())
-  T &emplaceImGuiScript(reg::Entity entity, Args &&...args)
-  {
-    ImGuiComponent &nsc =
-        m_registry.template getComponent<ImGuiComponent>(entity);
-    nsc.bindAndInitiate<T>(entity, *this, std::forward<Args>(args)...);
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-    return static_cast<T &>(*nsc.instance);
-  }
 
   // ---------------------------------------------------- //
   // Create components for the Archetype
@@ -119,14 +46,14 @@ public:
 
   // Move multiple components at once and create a single archetype in the
   // process
-  template <typename... Components>
+  template <reg::ECSComponent... Components>
   std::tuple<Components &...> createComponents(reg::Entity entity,
                                                Components &&...components)
   {
     return m_registry.template createComponents<Components...>(
         entity, std::forward<Components>(components)...);
   }
-  template <typename T, typename... Args>
+  template <reg::ECSComponent T, typename... Args>
   T &createComponent(reg::Entity entity, Args &&...args)
   {
     return m_registry.template createComponent<T>(entity,
@@ -137,14 +64,14 @@ public:
   // Add components
   // ---------------------------------------------------- //
 
-  template <typename... Components>
+  template <reg::ECSComponent... Components>
   std::tuple<Components &...> addComponents(reg::Entity entity,
                                             Components &&...components)
   {
     return m_registry.template addComponents<Components...>(
         entity, std::forward<Components>(components)...);
   }
-  template <typename Component> reg::Bitmask getSingleBitmask()
+  template <reg::ECSComponent Component> reg::Bitmask getSingleBitmask()
   {
     return Manager::template singleComponentBitmask<Component>();
   }
@@ -153,14 +80,14 @@ public:
   // Iterate archetypes
   // ---------------------------------------------------- //
 
-  template <typename... Components, typename... ExcludeComponents>
+  template <reg::ECSComponent... Components, typename... ExcludeComponents>
   inline std::vector<reg::ChunkView<Components...>>
   query(exclude_t<ExcludeComponents...> = {})
   {
     return m_registry.template query<Components...>(
         exclude<ExcludeComponents...>);
   }
-  template <typename... Components, typename... ExcludeComponents>
+  template <reg::ECSComponent... Components, typename... ExcludeComponents>
   inline std::vector<reg::ChunkView<const Components...>>
   queryConst(exclude_t<ExcludeComponents...> = {}) const
   {
@@ -173,13 +100,13 @@ public:
   // ---------------------------------------------------- //
 
   // get multiple components together as a tuple
-  template <typename... Components>
+  template <reg::ECSComponent... Components>
   std::tuple<Components &...> getComponents(reg::Entity entity)
   {
     return m_registry.template getComponents<Components...>(entity);
   }
   // get multiple components together as a tuple
-  template <typename... Components>
+  template <reg::ECSComponent... Components>
   const std::tuple<const Components &...>
   getComponents(reg::Entity entity) const
   {
@@ -187,56 +114,51 @@ public:
         .template getComponents<Components...>(entity);
   }
   // get a single component
-  template <typename T> T &getComponent(reg::Entity entity)
+  template <reg::ECSComponent T> T &getComponent(reg::Entity entity)
   {
     return m_registry.template getComponent<T>(entity);
   }
   // get a single component
-  template <typename T> const T &getComponent(reg::Entity entity) const
+  template <reg::ECSComponent T> const T &getComponent(reg::Entity entity) const
   {
     return std::as_const(m_registry).template getComponent<T>(entity);
   }
   // ---------------------------------------------------- //
   // "Has" functions
   // ---------------------------------------------------- //
-  template <typename... TargetComponents>
+  template <reg::ECSComponent... TargetComponents>
   bool hasAnyComponents(reg::Entity entity) const
   {
     return std::as_const(m_registry)
         .template hasAny<TargetComponents...>(entity);
   }
-  template <typename... TargetComponents>
+  template <reg::ECSComponent... TargetComponents>
   constexpr bool containsAllComponents(reg::Entity entity) const
   {
     return m_registry.template containsAll<TargetComponents...>(entity);
   }
   // remove an entity, alongside its components from it's archetype,
-  // NOTE: The caller needs to tell me the components of the entity
-  template <typename... Components> bool removeEntity(reg::Entity entity)
-  {
-    return m_registry.template remove<Components...>(entity);
-  }
-  // Remove components of an entity
-  // template <typename... TargetComponents, typename... ObjectComponents>
-  // void rmComponent(reg::Entity entity)
-  // {
-  //   m_registry->remove<TargetComponents..., ObjectComponents...>(entity);
-  // }
+  void removeEntity(reg::Entity entity) { m_registry.remove(entity); }
+
+  // =============================================================== //
+  // LUA SCRIPTING RELATED
+  // =============================================================== //
+
+  void emplaceLuaScript(reg::Entity entity, const char *scriptPath)
+    requires(Manager::template isRegistered<LuaScriptComponent>());
+  sol::state &getSharedLuaState() { return m_luaState; }
+  void addEntityFunctions(const char *sceneName, sol::state &lua);
+
+  // =============================================================== //
+  // =============================================================== //
+  // SYSTEMS RELATED
+  // =============================================================== //
+  // =============================================================== //
 
   void updateSystems(DeltaTime deltaTime);
   void updateSystems(const SDL_Event &event);
   void renderSystems(Renderer2d &renderer, bool isMinimized,
                      DeltaTime currentTime);
-
-  // NOTE: this might need to be modified if I ever want modular systems
-  // Systems::SweepAndPruneSys *getCollisionSys() { return
-  // m_sweepAndPruneSystem; }
-
-  reg::EventDispatcher &getEventDispatcher() { return m_eventDispatcher; }
-  const reg::EventDispatcher &getEventDispatcher() const
-  {
-    return m_eventDispatcher;
-  }
 
   template <typename Sys> Sys *getSys()
   {
@@ -274,22 +196,60 @@ public:
       m_updateSystems.emplace_back(s);
   }
 
-  void addEntityFunctions(const char *sceneName, sol::state &lua);
+  // =============================================================== //
+  // =============================================================== //
+  // MULTI THREAD RELATED
+  // =============================================================== //
+  // =============================================================== //
 
-private:
-  AbstractScene(reg::EventDispatcher &ed, sol::state &solState);
-  sol::state &enchanceLuaState(sol::state &state);
+  ThreadPool &getThreadPool() { return m_threadPool; }
+  const ThreadPool &getThreadPool() const { return m_threadPool; }
+  using MainThreadJob = std::function<void()>;
+  void enqueueMainThread(MainThreadJob job);
+  void flushMainThreadJobs(); // call once per frame
 
+  // =============================================================== //
+  // =============================================================== //
+  // ENGINE EVENTS RELATED
+  // =============================================================== //
+  // =============================================================== //
+
+  reg::EventDispatcher &getEventDispatcher() { return m_eventDispatcher; }
+  const reg::EventDispatcher &getEventDispatcher() const
+  {
+    return m_eventDispatcher;
+  }
+
+  // =============================================================== //
+  // Constructors
+  // =============================================================== //
+
+  AbstractScene(reg::EventDispatcher &ed, sol::state &solState,
+                ThreadPool &threadPool);
+  AbstractScene() = delete;
+
+protected:
+  // Registry related
   reg::ArcheRegistry<Manager> m_registry;
-  reg::EventDispatcher &m_eventDispatcher;
-  sol::state &m_luaState;
   reg::Entity m_entity;
+
+  // Lua scripting related
+  sol::state &enchanceLuaState(sol::state &state);
+  sol::state &m_luaState;
+
+  // ECS Systems related
   std::map<std::type_index, std::unique_ptr<System<Manager>>> m_systems;
   std::vector<IOnUpdate *> m_updateSystems;
   std::vector<IOnEvent *> m_eventSystems;
   std::vector<IOnRender *> m_renderSystems;
+
+  // Multi Thread Related
+  ThreadPool &m_threadPool;
+  std::mutex m_mainThreadMutex;
+  std::queue<MainThreadJob> m_mainThreadJobs;
+
+  // Engine Events Related
+  reg::EventDispatcher &m_eventDispatcher;
 };
-using Scene = AbstractScene<ComponentManager>;
-using UIScene = AbstractScene<UIManager>;
 
 } // namespace pain

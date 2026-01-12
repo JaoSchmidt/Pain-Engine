@@ -5,8 +5,8 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/NativeScript.h"
-#include "ECS/Scene.h"
 #include "ECS/Scriptable.h"
+#include "ECS/UIScene.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
@@ -16,17 +16,17 @@
 namespace pain
 {
 
-class ImGuiLauncher : public ExtendedEntity
+class ImGuiLauncher : public UIObject
 {
 public:
   ImGuiLauncher(reg::Entity entity, UIScene &scene, Application *app)
-      : ExtendedEntity(entity, scene), m_init(), m_app(app) {};
+      : UIObject(entity, scene), m_init(), m_app(app) {};
   std::vector<std::string> m_availableResolutions;
 
   ~ImGuiLauncher() = default;
   NONCOPYABLE(ImGuiLauncher);
   ImGuiLauncher(ImGuiLauncher &&other) noexcept
-      : ExtendedEntity(std::move(other)),
+      : UIObject(std::move(other)),
         m_availableResolutions(std::move(other.m_availableResolutions)),
         m_windowFlags(std::exchange(other.m_windowFlags, 0)),
         m_dockspaceOpen(std::exchange(other.m_dockspaceOpen, true)),
@@ -37,8 +37,8 @@ public:
   // void init(Application *app) { m_app = app; }
   void onCreate()
   {
-    if (resources::exists_file(m_app->configIniFile)) {
-      m_init.readAndUpdate(m_app->configIniFile);
+    if (resources::existsFile(AppContext::configIniFile)) {
+      m_init.readAndUpdate(AppContext::configIniFile);
     }
     // clang-format on
   }
@@ -58,15 +58,15 @@ public:
 
     ImGui::PopStyleVar(2);
 
-    const char *items[] = {"1920x1080", "1680x1050", "1400x1050",
-                           "1600x900",  "1280x1024", "1400x900",
-                           "1280x960",  "800x600",   "640x480"};
-    static const char *current_item = NULL;
+    static constexpr std::array<const char *, 9> items = {
+        "1920x1080", "1680x1050", "1400x1050", "1600x900", "1280x1024",
+        "1400x900",  "1280x960",  "800x600",   "640x480"};
+    static const char *current_item = items[items.size() - 2];
 
     if (ImGui::BeginCombo("##combo", "Resolution"))
     // The second parameter is the label previewed before opening the combo.
     {
-      for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
+      for (size_t n = 0; n < items.size(); n++) {
         bool is_selected = (current_item == items[n]);
         // You can store your selection however you want, outside or inside your
         // objects
@@ -107,14 +107,14 @@ public:
     ImGui::SetCursorPosX(windowWidth - totalWidth);
 
     if (ImGui::Button("Exit", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(m_app->configIniFile);
+      m_init.write(AppContext::configIniFile);
       m_app->stopLoop();
     }
 
     ImGui::SameLine(0.0f, spacing);
 
     if (ImGui::Button("Play", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(m_app->configIniFile);
+      m_init.write(AppContext::configIniFile);
       m_app->stopLoop(true);
     }
 
@@ -140,9 +140,11 @@ Application *createLauncher()
   const int height = 200;
 
   Application *settingsApp = Application::createApplication(
-      title, width, height, {.swapChainTarget = true});
+      {.title = title, .defaultWidth = width, .defaultHeight = height},
+      {.swapChainTarget = true});
   pain::UIScene &uiscene = settingsApp->createUIScene(pain::ImGuiComponent{});
-  uiscene.emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), settingsApp);
+  UIScene::emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), uiscene,
+                                             settingsApp);
 
   return settingsApp;
 }

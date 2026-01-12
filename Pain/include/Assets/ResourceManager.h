@@ -1,9 +1,16 @@
 #pragma once
 #include "Assets/IniWrapper.h"
-#include "ECS/Scriptable.h"
+#include "Core.h"
 #include "mini/ini.h"
 #include "pch.h"
+#include <filesystem>
 #include <utility>
+
+#define SETTINGS_STRING "settings"
+#define SETTINGS_FILE "config.ini"
+#define INTERNAL_SETTINGS_STRING "internalSettings.ini"
+#define INTERNAL_SETTINGS_FILE "internalConfig.ini"
+namespace fs = std::filesystem;
 
 namespace pain
 {
@@ -21,18 +28,20 @@ const std::string &getLuaScriptSource(const char *filepath);
 void initiateDefaultScript();
 std::string getCurrentWorkingDir();
 std::string getCurrentWorkingDir(std::string append);
-bool exists_file(const char *name);
-bool exists_file(const std::string &name);
-bool exists_file(const std::string_view &name);
-void clearScript();
-
-class defaultNativeScript : public ExtendedEntity
+bool existsFile(const char *name);
+bool existsFile(const std::string &name);
+bool existsFile(const std::string_view &name);
+bool isFile(const std::string &name);
+bool isDir(const std::string &name);
+bool createFile(const std::string &filename);
+template <typename... P> std::string pathJoin(const P &...parts)
 {
-  void onUpdate(DeltaTime deltaTimeSec);
-  void onEvent(const SDL_Event &e);
-  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);
-  void onDestroy();
-};
+  std::filesystem::path result;
+  (result /= ... /= parts);
+  return result.string();
+}
+
+void clearScript();
 
 } // namespace resources
 template <typename T> struct Config {
@@ -40,6 +49,7 @@ private:
   T m_def;
 
 public:
+  inline T get() const { return value; };
   const T getDefault() const { return std::as_const(m_def); }
   T value = m_def;
   const char *name;
@@ -55,42 +65,64 @@ public:
   }
   Config(Config &&o) : m_def(o.m_def), value(o.value), name(o.name) {}
   NONCOPYABLE(Config);
-};
-struct IniConfig {
-  Config<bool> hideConfig{false, "HideConfig"};
-  Config<bool> fullscreen{false, "Fullscreen"};
-  Config<std::string> assetsPath{
-      pain::resources::getCurrentWorkingDir("resources"), "AssetPath"};
-  void readAndUpdate(const char *filename)
+  void initValue(mINI::INIStructure &ini, const std::string &settingsName)
   {
-    mINI::INIFile file(filename);
-    mINI::INIStructure ini;
-    file.read(ini);
     // clang-format off
-    hideConfig.value = IniWrapper::getBoolean(
-        ini, "settings", hideConfig.name, hideConfig.getDefault());
-    fullscreen.value = IniWrapper::getBoolean(
-        ini, "settings", fullscreen.name, fullscreen.getDefault());
-    assetsPath.value = IniWrapper::get(
-        ini, "settings", assetsPath.name, assetsPath.getDefault());
+    if constexpr (std::is_same_v<T, float>) {
+      value = IniWrapper::getFloat(ini, settingsName, name, m_def);
+    } else if constexpr (std::is_same_v<T, int>) {
+      value = IniWrapper::getInteger(ini, settingsName, name, m_def);
+    } else if constexpr (std::is_same_v<T, double>) {
+      value = IniWrapper::getDouble(ini, settingsName, name, m_def);
+    } else if constexpr (std::is_same_v<T, bool>) {
+      value = IniWrapper::getBoolean(ini, settingsName, name, m_def);
+    } else if constexpr (std::is_same_v<T, std::string>) {
+      value = IniWrapper::get(ini, settingsName, name, m_def);
+    }
     // clang-format on
   }
-  void write(const char *filename)
+  void writeBuffer(mINI::INIStructure &ini, const std::string &settingsName)
   {
-    mINI::INIFile file(filename);
-    mINI::INIStructure ini;
-    file.read(ini);
-    ini["settings"][hideConfig.name] = hideConfig.value ? "true" : "false";
-    ini["settings"][fullscreen.name] = fullscreen.value ? "true" : "false";
-    ini["settings"][assetsPath.name] = assetsPath.value;
-    file.write(ini);
+    if constexpr (std::is_same_v<T, bool>) {
+      ini[settingsName][name] = value ? "true" : "false";
+    } else if constexpr (std::is_same_v<T, std::string>) {
+      ini[settingsName][name] = value;
+    } else {
+      ini[settingsName][name] = std::to_string(value);
+    };
   }
+};
 
-  IniConfig(IniConfig &&) = default;
-  IniConfig &operator=(IniConfig &&) = default;
-  IniConfig() = default;
-  ~IniConfig() = default;
-  NONCOPYABLE(IniConfig)
+struct IConfig {
+  virtual ~IConfig() = default;
+
+  void readAndUpdate(const char *dirname, const char *fileName);
+  virtual void readAndUpdate(const char *fileName) = 0;
+};
+
+struct InternalConfig : public IConfig {
+  using IConfig::readAndUpdate;
+
+  Config<float> zoomLevel{2.f, "InitialZoom"};
+  Config<float> gridSize{0.5f, "DebugGridSize"};
+  Config<std::string> title{"Unnamed Game", "GameTitle"};
+
+  void readAndUpdate(const char *filename) override;
+  void write(const char *filename);
+};
+
+struct IniConfig : public IConfig {
+  using IConfig::readAndUpdate;
+
+  Config<bool> hideConfig{false, "HideConfig"};
+  Config<bool> fullscreen{false, "Fullscreen"};
+  Config<int> defaultWidth{800, "Default Width"};
+  Config<int> defaultHeight{600, "Default Height"};
+  Config<std::string> assetsPath{
+      pain::resources::getCurrentWorkingDir("resources"), "AssetPath"};
+
+  void readAndUpdate(const char *filename) override;
+  void write(const char *filename);
 };
 
 } // namespace pain

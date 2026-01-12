@@ -15,6 +15,7 @@ struct SheetStruct {
 };
 
 struct SpriteComponent {
+  using tag = tag::Sprite;
   using TextureVariant = std::variant<Texture *, SheetStruct>;
 
   glm::vec2 m_size{0.1f, 0.1f};
@@ -113,6 +114,7 @@ struct SpriteComponent {
 };
 
 struct SpritelessComponent {
+  using tag = tag::Spriteless;
   std::variant<CircleShape, QuadShape> m_shape = QuadShape();
   glm::vec4 m_color{0.8f, 0.2f, 0.1f, 0.8f};
   static SpritelessComponent createQuad(const glm::vec2 &size)
@@ -136,6 +138,7 @@ struct SpritelessComponent {
 };
 
 struct TrianguleComponent {
+  using tag = tag::Triangule;
   glm::vec2 m_height{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   static TrianguleComponent create(const glm::vec2 &height)
@@ -148,4 +151,5 @@ struct TrianguleComponent {
     return TrianguleComponent{.m_height = height, .m_color = color};
   }
 };
+
 } // namespace pain

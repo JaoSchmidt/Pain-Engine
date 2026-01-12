@@ -55,17 +55,16 @@ void resources::initiateDefaultTextures()
 
   // Error textures
   getTexture(DEFAULT_TEXTURE_PATH);
-  createTextureSheet("GENERAL", DEFAULT_TEXTURE_PATH, 1, 1, {{0, 0}});
+  createWithDivisions("GENERAL", DEFAULT_TEXTURE_PATH, 1, 1, {{0, 0}});
 }
 
 // ---------------------------------------------------------- //
 // TextureSheet
 // ---------------------------------------------------------- //
-
-TextureSheet &
-resources::createTextureSheet(const char *name, const char *texturePath,
-                              unsigned nlinesX, unsigned ncolumnsY,
-                              std::initializer_list<std::pair<int, int>> coords)
+TextureSheet &resources::createWithDimensions(
+    const char *name, const char *texturePath, float spriteWidth,
+    float spriteHeight, std::initializer_list<std::pair<int, int>> coords,
+    float padding)
 {
   auto search = m_textureSheetMap.find(name);
   if (search != m_textureSheetMap.end()) {
@@ -74,8 +73,26 @@ resources::createTextureSheet(const char *name, const char *texturePath,
   }
 
   Texture &tex = getTexture(texturePath);
-  TextureSheet sheet =
-      TextureSheet::createTextureSheet(tex, nlinesX, ncolumnsY, coords);
+  TextureSheet sheet = TextureSheet::createWithDimensions(
+      tex, spriteWidth, spriteHeight, coords, padding);
+
+  auto [it, inserted] = m_textureSheetMap.emplace(name, std::move(sheet));
+  return it->second;
+}
+TextureSheet &resources::createWithDivisions(
+    const char *name, const char *texturePath, unsigned nlinesX,
+    unsigned ncolumnsY, std::initializer_list<std::pair<int, int>> coords,
+    float padding)
+{
+  auto search = m_textureSheetMap.find(name);
+  if (search != m_textureSheetMap.end()) {
+    PLOG_W("TextureSheet {} already exists", name);
+    return search->second;
+  }
+
+  Texture &tex = getTexture(texturePath);
+  TextureSheet sheet = TextureSheet::createWithDivisions(
+      tex, nlinesX, ncolumnsY, coords, padding);
 
   auto [it, inserted] = m_textureSheetMap.emplace(name, std::move(sheet));
   return it->second;

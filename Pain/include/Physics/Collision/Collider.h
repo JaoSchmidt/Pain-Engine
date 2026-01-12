@@ -2,13 +2,13 @@
 
 #include "ECS/Registry/Entity.h"
 #include "Misc/BasicShape.h"
-#include "Physics/Collision/CollisionNaiveSys.h"
-#include "Physics/Collision/SweepAndPruneSys.h"
+#include "Physics/MovementComponent.h"
 #include <variant>
 namespace pain
 {
 
 struct ColliderComponent {
+  using tag = tag::Collider;
   // Offset from transform position
   glm::vec2 m_offset{0.0f, 0.0f};
   std::variant<CircleShape, AABBShape, CapsuleShape> m_shape{AABBShape{}};
@@ -45,6 +45,7 @@ struct ColliderComponent {
 
 // SAP needs an extra id to work with the entity
 struct SAPCollider {
+  using tag = tag::SAPCollider;
   // TODO: capsuple collider case
   glm::vec2 m_offset{0.0f, 0.0f}; // Offset from transform position
   std::variant<CircleShape, AABBShape, CapsuleShape> m_shape = AABBShape();

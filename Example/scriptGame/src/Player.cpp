@@ -7,8 +7,9 @@
 #include <pain.h>
 
 reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
-                           glm::vec2 size, int resolutionHeight,
-                           int resolutionWeigh, float zoomLevel)
+                           glm::vec2 initialPos, glm::vec2 size,
+                           int resolutionHeight, int resolutionWeigh,
+                           float zoomLevel)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(                          //
@@ -19,10 +20,12 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
       pain::Movement2dComponent{},                 //
       pain::SAPCollider::createAABB(size, true),
       pain::ParticleSprayComponent{}, //
-      Component::OrthoCamera::create(zoomLevel, resolutionWeigh,
-                                     resolutionHeight), //
-      pain::NativeScriptComponent{},
-      pain::LuaScriptComponent::create(entity, scene));
+      Component::OrthoCamera::create(resolutionWeigh, resolutionHeight,
+                                     zoomLevel), //
+      pain::NativeScriptComponent{},             //
+      pain::LuaScriptComponent::create(entity)   //
+  );
+  pain::Scene::emplaceScript<pain::OrthoCameraScript>(entity, scene);
   return entity;
 }
 

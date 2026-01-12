@@ -33,15 +33,15 @@ std::optional<Texture> Texture::createTexture(const char *path, bool clamp)
   std::unique_ptr<SDL_Surface, void (*)(SDL_Surface *)> surface(
       IMG_Load(path), SDL_FreeSurface);
 
+  if (!surface) {
+    PLOG_E("Failed to load texture {}", path);
+    return {};
+  }
   ImageFormat dataFormat;
   if (surface->format->BytesPerPixel == 3) {
     dataFormat = ImageFormat::RGB8;
   } else if (surface->format->BytesPerPixel == 4) {
     dataFormat = ImageFormat::RGBA8;
-  }
-  if (!surface) {
-    PLOG_W("Failed to load texture {}", path);
-    return {};
   }
 
   backend::TextureFromFileInfo info{path, surface.get(), clamp};

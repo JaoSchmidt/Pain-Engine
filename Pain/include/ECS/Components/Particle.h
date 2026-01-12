@@ -2,6 +2,7 @@
 
 #include "Assets/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Components/ComponentManager.h"
 #include "pch.h"
 
 #include "glm/fwd.hpp"
@@ -20,6 +21,7 @@ struct Particle {
 };
 
 struct ParticleSprayComponent {
+  using tag = tag::ParticleSpray;
   float m_velocity = 1.f;
   uint64_t m_lifeTime = DeltaTime::oneSecond();
   float m_sizeChangeSpeed = 0.f;

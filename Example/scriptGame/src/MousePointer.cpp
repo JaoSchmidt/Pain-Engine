@@ -19,7 +19,7 @@ reg::Entity MousePointer::create(pain::Scene &scene)
 MousePointerScript::MousePointerScript(reg::Entity entity, pain::Scene &scene,
                                        reg::Entity cameraEntity)
 
-    : pain::ExtendedEntity(entity, scene), m_cameraEntity(cameraEntity) {};
+    : pain::WorldObject(entity, scene), m_cameraEntity(cameraEntity) {};
 
 void MousePointerScript::onCreate()
 {

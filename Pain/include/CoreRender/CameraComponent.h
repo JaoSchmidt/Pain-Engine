@@ -2,6 +2,7 @@
 #include "pch.h"
 
 #include "Core.h"
+#include "ECS/Components/ComponentManager.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 namespace pain
@@ -50,6 +51,7 @@ struct CameraResolution {
 };
 
 struct OrthoCamera : CameraResolution {
+  using tag = pain::tag::OrthoCamera;
   float m_zoomLevel = 1.0f;
   pain::OrthographicMatrices m_matrices;
 

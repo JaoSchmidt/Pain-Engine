@@ -17,6 +17,7 @@ reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionHeight,
                          Component::OrthoCamera::create(
                              resolutionWidth, resolutionHeight, zoomLevel), //
                          pain::NativeScriptComponent{});
+  pain::Scene::emplaceScript<OrthoCameraScript>(entity, scene);
   return entity;
 }
 reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
@@ -35,13 +36,6 @@ reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
 void OrthoCameraScript::onCreate()
 {
   getComponent<Movement2dComponent>().m_rotationSpeed = 1.f;
-}
-// OrthoCameraScript inherits ExtendedEntity
-inline void OrthoCameraScript::recalculatePosition(const glm::vec2 &position,
-                                                   const float rotation)
-{
-  getComponent<Component::OrthoCamera>().recalculateViewMatrix(position,
-                                                               rotation);
 }
 
 void OrthoCameraScript::onUpdate(DeltaTime deltaTime)

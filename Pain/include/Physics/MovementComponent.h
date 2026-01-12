@@ -1,11 +1,13 @@
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
+#include "ECS/Components/ComponentManager.h"
 #include "pch.h"
 
 namespace pain
 {
 struct Transform2dComponent {
+  using tag = tag::Transform2d;
   glm::vec2 m_position{0.0f, 0.0f};
   static Transform2dComponent create() { return {}; }
   static Transform2dComponent create(const glm::vec2 &position)
@@ -18,6 +20,7 @@ struct Transform2dComponent {
 };
 
 struct Movement2dComponent {
+  using tag = tag::Movement2d;
   glm::vec2 m_velocity{0.0f, 0.0f};
   float m_rotationSpeed{0.0f};
   static Movement2dComponent create() { return {}; }

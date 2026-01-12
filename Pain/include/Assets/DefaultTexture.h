@@ -17,9 +17,15 @@ enum DefaultTexture {
 // TextureSheet
 // ---------------------------------------------------------- //
 TextureSheet &
-createTextureSheet(const char *name, const char *texturePath, unsigned nlinesX,
-                   unsigned ncolumnsY,
-                   std::initializer_list<std::pair<int, int>> coords);
+createWithDimensions(const char *name, const char *texturePath,
+                     float spriteWidth, float spriteHeight,
+                     std::initializer_list<std::pair<int, int>> coords,
+                     float padding = 0.5f);
+TextureSheet &
+createWithDivisions(const char *name, const char *texturePath, unsigned nlinesX,
+                    unsigned ncolumnsY,
+                    std::initializer_list<std::pair<int, int>> coords,
+                    float padding = 0.5f);
 TextureSheet &getTextureSheet(const char *filepath);
 // ---------------------------------------------------------- //
 // Texture

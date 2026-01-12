@@ -20,7 +20,7 @@ struct DebugGrid {
   Shader shader;
   bool enableGrid = true;
 
-  static DebugGrid create();
+  static DebugGrid create(float gridSize = 2.f);
   void flush();
 
 private:

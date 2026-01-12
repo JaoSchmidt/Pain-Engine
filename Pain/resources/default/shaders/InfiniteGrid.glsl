@@ -35,15 +35,18 @@ in float v_zoomLevel;
 in vec2 v_WorldPos;
 out vec4 color;
 
+
 void main()
 {
-    vec2 p = v_WorldPos; // Already in world space!
-
+    vec2 p = v_WorldPos; 
+    
+    // fix grid disappearing when in low res
+    float u_Thickness = u_Thickness * 1080.0/u_resolution_y; 
     // BIG GRID -----------------------------------------------------
     float majorEvery = 16.0; 
     float majorCellSize = u_CellSize * majorEvery;
 
-    vec2 pWrappedMajor = mod(p, majorCellSize) -0.5;
+    vec2 pWrappedMajor = mod(p, majorCellSize) - u_CellSize;
     vec2 gridMajor = abs((pWrappedMajor / majorCellSize) - 0.5);
     float lineDistMajor = min(gridMajor.x, gridMajor.y);
 

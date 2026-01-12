@@ -11,6 +11,6 @@ reg::Entity Spawner::create(pain::Scene &scene)
       pain::SpriteComponent::create(), //
       pain::SpritelessComponent{.m_color =
                                     glm::vec4(0.8f, 0.3f, 0.2f, 0.4f)}, //
-      pain::LuaScriptComponent::create(entity, scene));
+      pain::LuaScriptComponent::create(entity));
   return entity;
 }
