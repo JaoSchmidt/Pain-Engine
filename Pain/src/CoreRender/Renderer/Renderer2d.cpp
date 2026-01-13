@@ -96,7 +96,7 @@ void Renderer2d::endScene()
 // ================================================================= //
 
 void Renderer2d::drawCircle(const glm::vec2 &position, const float radius,
-                            const glm::vec4 &tintColor,
+                            const Color &tintColor,
                             const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
@@ -115,7 +115,7 @@ void Renderer2d::drawCircle(const glm::vec2 &position, const float radius,
 // ================================================================= //
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor, RenderLayer layer,
+                          const Color &tintColor, RenderLayer layer,
                           Texture &texture, float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
@@ -134,9 +134,9 @@ void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
 }
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor,
-                          const float rotationRadians, RenderLayer layer,
-                          Texture &texture, float tilingFactor,
+                          const Color &tintColor, const float rotationRadians,
+                          RenderLayer layer, Texture &texture,
+                          float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();

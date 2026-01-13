@@ -32,12 +32,12 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
             [&](auto &&tex) {
               using T = std::decay_t<decltype(tex)>;
               if constexpr (std::is_same_v<T, SheetStruct>) {
-                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].color,
                                   r[i].m_rotationAngle, s[i].layer,
                                   s[i].getTextureFromTextureSheet(),
                                   s[i].m_tilingFactor, s[i].getCoords());
               } else {
-                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].color,
                                   r[i].m_rotationAngle, s[i].layer,
                                   s[i].getTexture(), s[i].m_tilingFactor);
               }
@@ -58,11 +58,11 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
             [&](auto &tex) {
               using T = std::decay_t<decltype(tex)>;
               if constexpr (std::is_same_v<T, SheetStruct>) {
-                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].color,
                                   s[i].layer, s[i].getTextureFromTextureSheet(),
                                   s[i].m_tilingFactor, s[i].getCoords());
               } else {
-                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].color,
                                   s[i].layer, s[i].getTexture(),
                                   s[i].m_tilingFactor);
               }
@@ -82,13 +82,12 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
             [&](auto &&shape1) {
               using T1 = std::decay_t<decltype(shape1)>;
               if constexpr (std::is_same_v<T1, QuadShape>) {
-                renderer.drawQuad(t[i].m_position, shape1.size, s[i].m_color,
+                renderer.drawQuad(t[i].m_position, shape1.size, s[i].color,
                                   s[i].layer,
                                   resources::getDefaultTexture(
                                       resources::DefaultTexture::Blank, false));
               } else if constexpr (std::is_same_v<T1, CircleShape>) {
-                renderer.drawCircle(t[i].m_position, shape1.radius,
-                                    s[i].m_color);
+                renderer.drawCircle(t[i].m_position, shape1.radius, s[i].color);
               }
             },
             s[i].m_shape);

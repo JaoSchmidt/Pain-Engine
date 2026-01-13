@@ -70,33 +70,33 @@ public:
                 pain::DeltaTime currentTime)
   {
     renderer.drawQuad(
-        {-0.2, -0.2f}, {0.2f, 0.2f}, {0.8f, 0.2f, 0.1f, 1.f},
+        {-0.2f, -0.2f}, {0.2f, 0.2f}, {204, 51, 25, 255},
         std::numbers::pi * -currentTime.getSeconds(),
         pain::RenderLayer::Default,
         pain::resources::getTexture("resources/textures/Checkerboard.png"));
     renderer.drawQuad(
-        {0.0f, 0.0f}, {0.2f, 0.2f}, {0.9f, 0.9f, 0.2f, 1.f},
+        {0.0f, 0.0f}, {0.2f, 0.2f}, {230, 230, 51, 255},
         pain::RenderLayer::Default,
         pain::resources::getDefaultTexture(pain::resources::Blank, false));
-    renderer.drawQuad({-0.5f, 0.5f}, {0.2f, 0.2f}, {1.f, 1.f, 1.f, 1.f},
+
+    renderer.drawQuad({-0.5f, 0.5f}, {0.2f, 0.2f}, {255, 255, 255, 255},
                       pain::RenderLayer::Default,
                       pain::resources::getTexture(
                           "resources/textures/Checkerboard original.png"));
-
     renderer.drawQuad(
-        {0.2, -0.2f}, {0.2f, 0.2f}, {0.8f, 0.2f, 0.1f, 1.f},
+        {0.2f, -0.2f}, {0.2f, 0.2f}, {204, 51, 26, 255},
         std::numbers::pi * currentTime.getSeconds(),
         pain::RenderLayer::MuchCloser,
         pain::resources::getTexture("resources/textures/Checkerboard.png"));
     renderer.drawQuad(
-        {0.2f, 0.2f}, {0.2f, 0.2f}, {0.9f, 0.9f, 0.2f, 1.f},
+        {0.2f, 0.2f}, {0.2f, 0.2f}, {230, 230, 51, 255},
         pain::RenderLayer::MuchCloser,
         pain::resources::getDefaultTexture(pain::resources::Blank, false));
-    renderer.drawQuad({-0.2f, 0.2f}, {0.2f, 0.2f}, {1.f, 1.f, 1.f, 1.f},
+    renderer.drawQuad({-0.2f, 0.2f}, {0.2f, 0.2f}, {255, 255, 255, 255},
                       pain::RenderLayer::MuchCloser,
                       pain::resources::getTexture(
                           "resources/textures/Checkerboard original.png"));
-    renderer.drawCircle({0.5f, 0.5f}, 0.1f, {0.2f, 0.3f, 0.9f, 1.f});
+    renderer.drawCircle({0.5f, 0.5f}, 0.1f, {51, 75, 230, 255});
     renderer.drawTri({-0.5f, -0.5f}, {0.2f, 0.2f}, {0.2f, 0.3f, 0.9f, 1.f});
   }
 };

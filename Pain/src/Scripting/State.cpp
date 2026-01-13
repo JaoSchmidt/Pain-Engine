@@ -41,13 +41,17 @@ sol::state createLuaState()
   lua.new_usertype<glm::vec4>(
       "vec4", sol::constructors<glm::vec4(), glm::vec4(float, float, float, float)>(),
       "r", &glm::vec4::r, "g", &glm::vec4::g, "b", &glm::vec4::b, "a", &glm::vec4::a);
+
   // clang-format on
+  lua.new_usertype<Color>(
+      "Color", sol::constructors<Color(), Color(uint32_t),
+                                 Color(uint8_t, uint8_t, uint8_t, uint8_t)>());
   // ------ COMPONENTS ----------------------------------------
   // type returned by get_sprite(self)
   lua.new_usertype<SpriteComponent>(
       "SpriteComponent", sol::no_constructor,            //
       "m_size", &SpriteComponent::m_size,                //
-      "m_color", &SpriteComponent::m_color,              //
+      "m_color", &SpriteComponent::color,                //
       "m_tilingFactor", &SpriteComponent::m_tilingFactor //
       // NOTE: not going to put texture right now because too much work
   );

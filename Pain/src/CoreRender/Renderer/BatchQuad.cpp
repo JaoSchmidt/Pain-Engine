@@ -35,7 +35,7 @@ QuadBatch QuadBatch::create()
           MaxVertices * sizeof(Vertex),
           {
               {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::Float4, "a_Color"},
+              {ShaderDataType::UByte4, "a_Color", true},
               {ShaderDataType::Float2, "a_TexCoord"},
               {ShaderDataType::Float, "a_TexIndex"},
               {ShaderDataType::Float, "a_TilingFactor"},
@@ -90,8 +90,7 @@ void QuadBatch::flush(const std::array<Texture *, MaxTextureSlots> &textures,
 #endif
 }
 
-void QuadBatch::allocateQuad(const glm::mat4 &transform,
-                             const glm::vec4 &tintColor,
+void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
                              const float tilingFactor, const float textureIndex,
                              const std::array<glm::vec2, 4> &textureCoordinate,
                              float order)
@@ -106,7 +105,7 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform,
   for (unsigned i = 0; i < 4; i++) {
     ptr->position =
         glm::vec3(glm::vec2(transform * QuadVertexPositions[i]), order);
-    ptr->color = tintColor;
+    ptr->color = tintColor.value;
     ptr->texCoord = textureCoordinate[i];
     ptr->texIndex = textureIndex;
     ptr->tilingFactor = tilingFactor;

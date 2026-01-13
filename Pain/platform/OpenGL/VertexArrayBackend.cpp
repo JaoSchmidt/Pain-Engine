@@ -24,7 +24,11 @@ constexpr GLint getComponentCount(ShaderDataType type)
       2,     // Int2
       3,     // Int3
       4,     // Int4
-      1      // Bool
+      1,     // Bool
+      1,     // UBtye
+      2,     // UBtye2
+      3,     // UBtye3
+      4,     // UBtye4
   };
   static_assert(static_cast<uint32_t>(ShaderDataType::Bool) <
                     sizeof(counts) / sizeof(counts[0]),
@@ -35,18 +39,22 @@ constexpr GLint getComponentCount(ShaderDataType type)
 constexpr GLenum getComponentGLType(ShaderDataType type)
 {
   constexpr GLenum types[] = {
-      GL_FLOAT, // NONE
-      GL_FLOAT, // Float
-      GL_FLOAT, // Float2
-      GL_FLOAT, // Float3
-      GL_FLOAT, // Float4
-      GL_FLOAT, // Mat3
-      GL_FLOAT, // Mat4
-      GL_INT,   // Int
-      GL_INT,   // Int2
-      GL_INT,   // Int3
-      GL_INT,   // Int4
-      GL_BOOL   // Bool
+      GL_FLOAT,         // NONE
+      GL_FLOAT,         // Float
+      GL_FLOAT,         // Float2
+      GL_FLOAT,         // Float3
+      GL_FLOAT,         // Float4
+      GL_FLOAT,         // Mat3
+      GL_FLOAT,         // Mat4
+      GL_INT,           // Int
+      GL_INT,           // Int2
+      GL_INT,           // Int3
+      GL_INT,           // Int4
+      GL_BOOL,          // Bool
+      GL_UNSIGNED_BYTE, // UByte
+      GL_UNSIGNED_BYTE, // UByte
+      GL_UNSIGNED_BYTE, // UByte
+      GL_UNSIGNED_BYTE, // UByte
   };
 
   static_assert(static_cast<GLenum>(ShaderDataType::Bool) <
@@ -93,7 +101,7 @@ void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId)
         getComponentCount(element.type),          //
         getComponentGLType(element.type),         //
         element.normalized ? GL_TRUE : GL_FALSE,  //
-        static_cast<GLsizei>(layout.GetStride()), //
+        static_cast<GLsizei>(layout.getStride()), //
         // same as `(const void *)element.offset`, but won't generate warning
         reinterpret_cast<const void *>(static_cast<uintptr_t>(element.offset)));
     index++;

@@ -18,7 +18,7 @@ struct DebugGrid {
   IndexBuffer ib;
   VertexArray vao;
   Shader shader;
-  bool enableGrid = true;
+  bool enableGrid = false;
 
   static DebugGrid create(float gridSize = 2.f);
   void flush();

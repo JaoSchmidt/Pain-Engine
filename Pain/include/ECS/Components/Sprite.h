@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Assets/DefaultTexture.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Texture.h"
 #include "Misc/BasicShape.h"
 #include "Misc/TextureSheet.h"
@@ -16,7 +17,7 @@ struct SheetStruct {
 
 struct SpriteCreationInfo {
   glm::vec2 m_size{0.1f, 0.1f};
-  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  Color color = {255, 255, 255, 255};
   float m_tilingFactor = 1.f;
   RenderLayer layer = RenderLayer::Default;
 };
@@ -26,7 +27,7 @@ struct SpriteComponent {
   using TextureVariant = std::variant<Texture *, SheetStruct>;
 
   glm::vec2 m_size{0.1f, 0.1f};
-  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  Color color = {255, 255, 255, 255};
   float m_tilingFactor = 1.f;
   RenderLayer layer = RenderLayer::Default;
   TextureVariant m_tex = TextureVariant{
@@ -52,7 +53,7 @@ struct SpriteComponent {
   static SpriteComponent create(const SpriteCreationInfo &info = {})
   {
     return SpriteComponent{.m_size = info.m_size,
-                           .m_color = info.m_color,
+                           .color = info.color,
                            .m_tilingFactor = info.m_tilingFactor,
                            .layer = info.layer,
                            .m_tex = &resources::getDefaultTexture(
@@ -64,7 +65,7 @@ struct SpriteComponent {
                                 const char *textureFilePath)
   {
     return SpriteComponent{.m_size = info.m_size,
-                           .m_color = info.m_color,
+                           .color = info.color,
                            .m_tilingFactor = info.m_tilingFactor,
                            .layer = info.layer,
                            .m_tex = &resources::getTexture(textureFilePath)};
@@ -75,7 +76,7 @@ struct SpriteComponent {
   {
     return SpriteComponent{
         .m_size = info.m_size,
-        .m_color = info.m_color,
+        .color = info.color,
         .m_tilingFactor = info.m_tilingFactor,
         .layer = info.layer,
         .m_tex = SheetStruct{&resources::getTextureSheet(sheetFilePath), id}};
@@ -86,7 +87,7 @@ struct SpriteComponent {
                                 Texture &texture)
   {
     return SpriteComponent{.m_size = info.m_size,
-                           .m_color = info.m_color,
+                           .color = info.color,
                            .m_tilingFactor = info.m_tilingFactor,
                            .layer = info.layer,
                            .m_tex = &texture};
@@ -96,7 +97,7 @@ struct SpriteComponent {
                                 TextureSheet &sheet, unsigned short id)
   {
     return SpriteComponent{.m_size = info.m_size,
-                           .m_color = info.m_color,
+                           .color = info.color,
                            .m_tilingFactor = info.m_tilingFactor,
                            .layer = info.layer,
                            .m_tex = SheetStruct{&sheet, id}};
@@ -137,7 +138,7 @@ struct SpriteComponent {
 struct SpritelessComponent {
   using tag = tag::Spriteless;
   std::variant<CircleShape, QuadShape> m_shape = QuadShape();
-  glm::vec4 m_color{0.8f, 0.2f, 0.1f, 0.3f};
+  Color color = {204, 51, 25, 76};
   RenderLayer layer = RenderLayer::MuchCloser;
   static SpritelessComponent createQuad(const glm::vec2 &size)
   {
@@ -148,14 +149,13 @@ struct SpritelessComponent {
     return SpritelessComponent{.m_shape = CircleShape(radius)};
   }
   static SpritelessComponent createQuad(const glm::vec2 &size,
-                                        const glm::vec4 &color)
+                                        const Color &color)
   {
-    return SpritelessComponent{.m_shape = QuadShape(size), .m_color = color};
+    return SpritelessComponent{.m_shape = QuadShape(size), .color = color};
   }
-  static SpritelessComponent createCircle(float radius, const glm::vec4 &color)
+  static SpritelessComponent createCircle(float radius, const Color &color)
   {
-    return SpritelessComponent{.m_shape = CircleShape(radius),
-                               .m_color = color};
+    return SpritelessComponent{.m_shape = CircleShape(radius), .color = color};
   }
 };
 

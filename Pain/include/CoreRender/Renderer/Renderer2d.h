@@ -7,6 +7,7 @@
 #include "CoreRender/Renderer/BatchSpray.h"
 #include "CoreRender/Renderer/BatchText.h"
 #include "CoreRender/Renderer/BatchTri.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/MiscDebugGrid.h"
 #include "CoreRender/Text/Font.h"
 #include "CoreRender/Texture.h"
@@ -20,17 +21,6 @@ namespace pain
 // Frwd declare Scene
 class Scene;
 class UIScene;
-
-enum class RenderLayer : uint8_t {
-  Distant = 0,
-  FurtherBack = 1,
-  Background = 2,
-  Default = 3,
-  Closer = 4,
-  MuchCloser = 5,
-  TouchingCamera = 6,
-};
-static constexpr uint8_t NumLayers = 7;
 
 struct Renderer2d {
   struct Stats {
@@ -64,7 +54,7 @@ struct Renderer2d {
 
   /** Draws a circle */
   void drawCircle(const glm::vec2 &position, const float radius,
-                  const glm::vec4 &tintColor,
+                  const Color &tintColor,
                   const std::array<glm::vec2, 4> &textureCoordinate = {
                       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                       glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
@@ -74,7 +64,7 @@ struct Renderer2d {
 
   /** Draws a quad */
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                const glm::vec4 &tintColor, RenderLayer layer, Texture &texture,
+                const Color &tintColor, RenderLayer layer, Texture &texture,
                 const float tilingFactor = 1.0f,
                 const std::array<glm::vec2, 4> &textureCoordinate = {
                     glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
@@ -82,7 +72,7 @@ struct Renderer2d {
 
   /** Draws a quad with rotation, new rotationRadians (angle)*/
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                const glm::vec4 &tintColor, const float rotationRadians,
+                const Color &tintColor, const float rotationRadians,
                 RenderLayer layer, Texture &texture,
                 const float tilingFactor = 1.0f,
                 const std::array<glm::vec2, 4> &textureCoordinate = {

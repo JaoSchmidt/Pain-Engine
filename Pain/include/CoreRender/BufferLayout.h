@@ -17,7 +17,11 @@ enum class ShaderDataType {
   Int2,
   Int3,
   Int4,
-  Bool
+  Bool,
+  UByte,
+  UByte2,
+  UByte3,
+  UByte4,
 };
 
 struct BufferElement {
@@ -52,7 +56,11 @@ struct BufferElement {
         4 * 2,     // Int2
         4 * 3,     // Int3
         4 * 4,     // Int4
-        1          // Bool
+        1,         // Bool
+        1,         // UByte
+        2,         // UByte2
+        3,         // UByte3
+        4          // UByte4
     };
 
     static_assert(static_cast<uint32_t>(ShaderDataType::Bool) <
@@ -85,7 +93,7 @@ public:
     calculateOffsetsAndStride();
   }
 
-  inline uint32_t GetStride() const { return m_Stride; }
+  inline uint32_t getStride() const { return m_Stride; }
   inline const std::vector<BufferElement> &getElements() const
   {
     return m_Elements;

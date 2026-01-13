@@ -2,6 +2,7 @@
 #pragma once
 
 #include "ContextBackend.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
@@ -10,7 +11,7 @@ namespace pain
 
 struct QuadVertex {
   glm::vec3 position;
-  glm::vec4 color;
+  uint32_t color;
   glm::vec2 texCoord;
   float texIndex;
   float tilingFactor;
@@ -43,7 +44,7 @@ struct QuadBatch {
 
   static QuadBatch create();
 
-  void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
+  void allocateQuad(const glm::mat4 &transform, const Color &tintColor,
                     const float tilingFactor, const float textureIndex,
                     const std::array<glm::vec2, 4> &textureCoordinate,
                     float order = 0);

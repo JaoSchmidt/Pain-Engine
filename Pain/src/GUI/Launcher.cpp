@@ -37,14 +37,16 @@ public:
   // void init(Application *app) { m_app = app; }
   void onCreate()
   {
+    PLOG_I("Creating Launcher");
     if (resources::existsFile(AppContext::configIniFile)) {
       m_init.readAndUpdate(AppContext::configIniFile);
     }
     // clang-format on
   }
-  void onRender(Renderer2d &renderer, bool isMinimized)
+  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime deltaTime)
   {
     UNUSED(renderer)
+    UNUSED(deltaTime)
     UNUSED(isMinimized)
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);

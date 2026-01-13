@@ -22,7 +22,7 @@ CircleBatch CircleBatch::create()
           MaxVertices * sizeof(CircleVertex),
           {
               {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::Float4, "a_Color"},
+              {ShaderDataType::UByte4, "a_Color", true},
               {ShaderDataType::Float2, "a_Coord"},
           }),
       *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
@@ -70,7 +70,7 @@ void CircleBatch::flush()
 }
 
 void CircleBatch::allocateCircle(const glm::mat4 &transform,
-                                 const glm::vec4 &tintColor,
+                                 const Color &tintColor,
                                  const std::array<glm::vec2, 4> &coordinate)
 {
   PROFILE_FUNCTION();
@@ -82,7 +82,7 @@ void CircleBatch::allocateCircle(const glm::mat4 &transform,
   };
   for (unsigned i = 0; i < 4; i++) {
     ptr->position = transform * QuadVertexPositions[i];
-    ptr->color = tintColor;
+    ptr->color = tintColor.value;
     ptr->coord = coordinate[i];
     ptr++;
   }

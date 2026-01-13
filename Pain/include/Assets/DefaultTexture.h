@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Texture.h"
 #include "Misc/TextureSheet.h"

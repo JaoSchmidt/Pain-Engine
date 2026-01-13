@@ -45,9 +45,9 @@ template <typename SceneT> class GameObject
 {
 public:
   using SceneType = SceneTraits<SceneT>;
-  GameObject<SceneT>(reg::Entity entity, SceneT &scene);
+  GameObject(reg::Entity entity, SceneT &scene);
 
-  static GameObject<SceneT> create(reg::Entity entity, SceneT &scene);
+  static GameObject create(reg::Entity entity, SceneT &scene);
 
   // ------------------------------------------------------------
   // Self entity access

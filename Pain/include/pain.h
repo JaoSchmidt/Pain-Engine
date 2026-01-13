@@ -18,6 +18,7 @@
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/Buffers.h"
 #include "CoreRender/RenderSys.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "CoreRender/Shader.h"

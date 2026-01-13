@@ -1,5 +1,6 @@
 // CircleBatch.h
 #pragma once
+#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/VertexArray.h"
 
@@ -8,7 +9,7 @@ namespace pain
 
 struct CircleVertex {
   glm::vec3 position;
-  glm::vec4 color;
+  uint32_t color;
   glm::vec2 coord;
 };
 struct CircleBatch {
@@ -33,7 +34,7 @@ struct CircleBatch {
   void resetPtr();
   void flush();
 
-  void allocateCircle(const glm::mat4 &transform, const glm::vec4 &tintColor,
+  void allocateCircle(const glm::mat4 &transform, const Color &tintColor,
                       const std::array<glm::vec2, 4> &coordinate);
 
 private:

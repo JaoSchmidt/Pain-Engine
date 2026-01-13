@@ -70,7 +70,7 @@ void AbstractScene<Manager>::addEntityFunctions(const char *sceneName,
     scene.set_function(
         "Spriteless",
         sol::overload(
-            [&](glm::vec2 size, sol::optional<glm::vec4> oColor) {
+            [&](glm::vec2 size, sol::optional<Color> oColor) {
               return LuaComponentDesc{
                   getSingleBitmask<SpritelessComponent>(),
                   [=, this](reg::Entity e, reg::Bitmask b) {
@@ -83,7 +83,7 @@ void AbstractScene<Manager>::addEntityFunctions(const char *sceneName,
                     }
                   }};
             },
-            [&](float radius, sol::optional<glm::vec4> oColor) {
+            [&](float radius, sol::optional<Color> oColor) {
               return LuaComponentDesc{
                   getSingleBitmask<SpritelessComponent>(),
                   [=, this](reg::Entity e, reg::Bitmask b) {

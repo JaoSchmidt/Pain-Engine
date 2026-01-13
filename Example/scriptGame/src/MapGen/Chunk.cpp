@@ -105,7 +105,7 @@ void Chunk::Script::onRender(pain::Renderer2d &renderer2d, bool isMinimized,
                index);
         renderer2d.drawQuad({1.f * (x + m_offsetX * m_chunkSize),
                              1.f * (y + m_offsetY * m_chunkSize)},
-                            {1.f, 1.f}, {1.0f, 1.0f, 1.0f, 1.0f},
+                            {1.f, 1.f}, {255, 255, 255, 255},
                             pain::RenderLayer::Distant,
                             m_spriteSheet.getTexture(), 1.0f,
                             m_spriteSheet.getTexCoord(m_data[index]));
