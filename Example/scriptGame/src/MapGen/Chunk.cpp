@@ -100,12 +100,13 @@ void Chunk::Script::onRender(pain::Renderer2d &renderer2d, bool isMinimized,
   if (m_data.size() == m_chunkSize * m_chunkSize)
     for (int x = 0; x < m_chunkSize; x++) {
       for (int y = 0; y < m_chunkSize; y++) {
-        int index = y * 32 + x;
+        int index = y * m_chunkSize + x;
         ASSERT(m_data[index] != 0, "Texture of index {} cannot be 0 in a chunk",
                index);
         renderer2d.drawQuad({1.f * (x + m_offsetX * m_chunkSize),
                              1.f * (y + m_offsetY * m_chunkSize)},
                             {1.f, 1.f}, {1.0f, 1.0f, 1.0f, 1.0f},
+                            pain::RenderLayer::Distant,
                             m_spriteSheet.getTexture(), 1.0f,
                             m_spriteSheet.getTexCoord(m_data[index]));
       }

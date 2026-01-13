@@ -48,11 +48,11 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
   glm::vec3 moveDir{0.0f};
 
   if (state[SDL_SCANCODE_W])
-    moveDir += glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+    moveDir -= glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
   if (state[SDL_SCANCODE_S])
-    moveDir += -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+    moveDir += glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
   if (state[SDL_SCANCODE_A])
-    moveDir += -rc.m_rotation;
+    moveDir -= rc.m_rotation;
   if (state[SDL_SCANCODE_D])
     moveDir += rc.m_rotation;
 

@@ -21,9 +21,11 @@ static constexpr uint32_t MaxTextureSlots = 32;
 
 struct QuadBatch {
   using Vertex = QuadVertex;
-  static constexpr uint32_t MaxPolygons = 40000;
+  static constexpr uint32_t IndiceSize = 6;
+  static constexpr uint32_t VerticesPerQuad = 4;
+  static constexpr uint32_t MaxPolygons = 5000;
   static constexpr uint32_t MaxVertices = MaxPolygons * 4;
-  static constexpr uint32_t MaxIndices = MaxPolygons * 6;
+  static constexpr uint32_t MaxIndices = MaxPolygons * IndiceSize;
   uint32_t statsCount = 0;
   uint32_t drawCount = 0;
 
@@ -32,15 +34,19 @@ struct QuadBatch {
   VertexArray vao;
   Shader shader;
 
-  std::unique_ptr<Vertex[]> cpuBuffer;
+  std::unique_ptr<Vertex[]> ptrInit;
   Vertex *ptr = nullptr;
-  uint32_t indexCount = 0;
+  // std::vector<int> drawOrder;
+  uint32_t indexCount = 0; // works for both draw order indexes and gpu indices
+
+  // std::unique_ptr<Vertex[]> sortBuffer;
 
   static QuadBatch create();
 
   void allocateQuad(const glm::mat4 &transform, const glm::vec4 &tintColor,
                     const float tilingFactor, const float textureIndex,
-                    const std::array<glm::vec2, 4> &textureCoordinate);
+                    const std::array<glm::vec2, 4> &textureCoordinate,
+                    float order = 0);
   void resetAll();
   void resetPtr();
   void flush(const std::array<Texture *, MaxTextureSlots> &textures,
@@ -48,5 +54,7 @@ struct QuadBatch {
 
 private:
   QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_);
+  // void swapQuadVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
+  // void sortByDrawOrder();
 };
 } // namespace pain

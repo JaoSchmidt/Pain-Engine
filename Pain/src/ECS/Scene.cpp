@@ -109,8 +109,8 @@ void AbstractScene<Manager>::addEntityFunctions(const char *sceneName,
               return LuaComponentDesc{
                   getSingleBitmask<SpriteComponent>(),
                   [=, this](reg::Entity e, reg::Bitmask b) { //
-                    m_registry.manualPush(e, b,
-                                          SpriteComponent::create(path, size));
+                    m_registry.manualPush(
+                        e, b, SpriteComponent::create({.m_size = size}, path));
                   }};
             },
             [&](const char *path, unsigned short id,
@@ -120,7 +120,8 @@ void AbstractScene<Manager>::addEntityFunctions(const char *sceneName,
                   getSingleBitmask<SpriteComponent>(),
                   [=, this](reg::Entity e, reg::Bitmask b) {
                     m_registry.manualPush(
-                        e, b, SpriteComponent::create(path, id, size));
+                        e, b,
+                        SpriteComponent::create({.m_size = size}, path, id));
                   }};
             }));
   // ------------------------------------------------------------

@@ -19,29 +19,6 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
   UNUSED(isMinimized)
   PROFILE_FUNCTION();
   {
-    PROFILE_SCOPE("Scene::renderSystems - texture quads");
-    auto chunks = queryConst<Transform2dComponent, SpriteComponent>();
-    for (auto &chunk : chunks) {
-      auto *t = std::get<0>(chunk.arrays);
-      auto *s = std::get<1>(chunk.arrays);
-      for (size_t i = 0; i < chunk.count; ++i) {
-        std::visit(
-            [&](auto &tex) {
-              using T = std::decay_t<decltype(tex)>;
-              if constexpr (std::is_same_v<T, SheetStruct>) {
-                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
-                                  s[i].getTextureFromTextureSheet(),
-                                  s[i].m_tilingFactor, s[i].getCoords());
-              } else {
-                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
-                                  s[i].getTexture(), s[i].m_tilingFactor);
-              }
-            },
-            s[i].m_tex);
-      }
-    }
-  }
-  {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");
 
     auto chunks =
@@ -56,12 +33,37 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
               using T = std::decay_t<decltype(tex)>;
               if constexpr (std::is_same_v<T, SheetStruct>) {
                 renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
-                                  r[i].m_rotationAngle,
+                                  r[i].m_rotationAngle, s[i].layer,
                                   s[i].getTextureFromTextureSheet(),
                                   s[i].m_tilingFactor, s[i].getCoords());
               } else {
                 renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
-                                  r[i].m_rotationAngle, s[i].getTexture(),
+                                  r[i].m_rotationAngle, s[i].layer,
+                                  s[i].getTexture(), s[i].m_tilingFactor);
+              }
+            },
+            s[i].m_tex);
+      }
+    }
+  }
+  {
+    PROFILE_SCOPE("Scene::renderSystems - texture quads");
+    auto chunks = queryConst<Transform2dComponent, SpriteComponent>(
+        exclude<RotationComponent>);
+    for (auto &chunk : chunks) {
+      auto *t = std::get<0>(chunk.arrays);
+      auto *s = std::get<1>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        std::visit(
+            [&](auto &tex) {
+              using T = std::decay_t<decltype(tex)>;
+              if constexpr (std::is_same_v<T, SheetStruct>) {
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                                  s[i].layer, s[i].getTextureFromTextureSheet(),
+                                  s[i].m_tilingFactor, s[i].getCoords());
+              } else {
+                renderer.drawQuad(t[i].m_position, s[i].m_size, s[i].m_color,
+                                  s[i].layer, s[i].getTexture(),
                                   s[i].m_tilingFactor);
               }
             },
@@ -81,6 +83,7 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
               using T1 = std::decay_t<decltype(shape1)>;
               if constexpr (std::is_same_v<T1, QuadShape>) {
                 renderer.drawQuad(t[i].m_position, shape1.size, s[i].m_color,
+                                  s[i].layer,
                                   resources::getDefaultTexture(
                                       resources::DefaultTexture::Blank, false));
               } else if constexpr (std::is_same_v<T1, CircleShape>) {

@@ -15,6 +15,7 @@ CMakeDoxygenDefaults.cmake
 resources/*
 .luarc.json
 lua_types/
+target
 
 ##### Windows
 # Windows thumbnail cache files

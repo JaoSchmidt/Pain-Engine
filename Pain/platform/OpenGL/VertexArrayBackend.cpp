@@ -79,7 +79,7 @@ void unbindVertexArray() { glBindVertexArray(0); }
 void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId)
 {
   P_ASSERT(
-      vertexBuffer.getLayout().GetElements().size() > 0,
+      vertexBuffer.getLayout().getElements().size() > 0,
       "VertexArray.h: Can't add a vertexBuffer that doesn't have a layout");
   bindVertexArray(rendererId);
   vertexBuffer.bind();

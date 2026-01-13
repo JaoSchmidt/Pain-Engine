@@ -91,12 +91,6 @@ void MainMap::onCreate(pain::Scene &scene)
   }
 }
 
-// : m_spriteSize({spriteWidth, spriteHeight}),
-//       m_spriteSheet(
-//           new
-//           pain::Texture("resources/textures/kenney_roguelike/Spritesheet/"
-//                             "roguelikeSheet_transparent.png"))
-
 // given the index x and y, return the four corners
 void MainMap::updateSurroundingChunks(glm::vec2 &playerPos, pain::Scene &scene)
 {

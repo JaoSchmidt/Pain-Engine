@@ -69,9 +69,10 @@ public:
   // ECS
   void stopLoop(bool restartFlag = false);
   // clang-format on
-  void setRendererCamera(const reg::Entity camera)
+  void setRendererCamera(const reg::Entity camera, int width, int height)
   {
     m_renderer.changeCamera(camera);
+    m_renderer.setViewport(0, 0, width, height);
   }
 
   template <typename... Components>

@@ -131,13 +131,13 @@ Component::OrthoCamera::create(int resWidth, int resHeight, float zoomLevel)
 {
   const float aspectRatio =
       static_cast<float>(resWidth) / static_cast<float>(resHeight);
-  glm::mat4 projectionMatrix{glm::ortho(-aspectRatio * zoomLevel,
-                                        aspectRatio * zoomLevel, -zoomLevel,
-                                        zoomLevel, -1.0f, 1.0f)};
-  glm::mat4 viewMatrix{glm::mat4(1.f)};
 
   return Component::OrthoCamera{
-      zoomLevel, pain::OrthographicMatrices(projectionMatrix, viewMatrix),
+      zoomLevel,
+      pain::OrthographicMatrices( //
+          glm::ortho(-aspectRatio * zoomLevel, aspectRatio * zoomLevel,
+                     -zoomLevel, zoomLevel, -1.0f, 1.0f),
+          glm::mat4(1.f)),
       aspectRatio, resWidth, resHeight};
 }
 Component::OrthoCamera::OrthoCamera(float zoomLevel,

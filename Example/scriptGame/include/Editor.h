@@ -16,7 +16,8 @@ public:
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::Renderer2d &renderer, bool isMinimized)
+  void onRender(pain::Renderer2d &renderer, bool isMinimized,
+                pain::DeltaTime dt)
   {
     UNUSED(isMinimized)
 
@@ -132,7 +133,8 @@ public:
               {glm::vec2(avail.x, avail.y)});
         }
 
-        ImGui::Image((ImTextureID)(uintptr_t)textureID, m_avail);
+        ImGui::Image((ImTextureID)(uintptr_t)textureID, m_avail, {0, 1},
+                     {1, 0});
       }
       ImGui::End();
 

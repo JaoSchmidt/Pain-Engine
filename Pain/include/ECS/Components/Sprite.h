@@ -14,6 +14,13 @@ struct SheetStruct {
   unsigned short id;
 };
 
+struct SpriteCreationInfo {
+  glm::vec2 m_size{0.1f, 0.1f};
+  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  float m_tilingFactor = 1.f;
+  RenderLayer layer = RenderLayer::Default;
+};
+
 struct SpriteComponent {
   using tag = tag::Sprite;
   using TextureVariant = std::variant<Texture *, SheetStruct>;
@@ -21,8 +28,9 @@ struct SpriteComponent {
   glm::vec2 m_size{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
   float m_tilingFactor = 1.f;
+  RenderLayer layer = RenderLayer::Default;
   TextureVariant m_tex = TextureVariant{
-      &resources::getDefaultTexture(resources::DefaultTexture::Error, false)};
+      &resources::getDefaultTexture(resources::DefaultTexture::Error)};
   void printptr(const char *a) const
   {
     std::visit(
@@ -41,46 +49,59 @@ struct SpriteComponent {
   //  Factory functions
   // ------------------------------------------------------------
 
-  static SpriteComponent create(glm::vec2 size = {0.1f, 0.1f})
+  static SpriteComponent create(const SpriteCreationInfo &info = {})
   {
-    return SpriteComponent{.m_size = size,
+    return SpriteComponent{.m_size = info.m_size,
+                           .m_color = info.m_color,
+                           .m_tilingFactor = info.m_tilingFactor,
+                           .layer = info.layer,
                            .m_tex = &resources::getDefaultTexture(
                                resources::DefaultTexture::General, false)};
   }
-  // -- Texture by file path
-  static SpriteComponent create(const char *textureFilePath,
-                                glm::vec2 size = {0.1f, 0.1f})
+
+  //  Texture by file path
+  static SpriteComponent create(const SpriteCreationInfo &info,
+                                const char *textureFilePath)
   {
-    return SpriteComponent{.m_size = size,
+    return SpriteComponent{.m_size = info.m_size,
+                           .m_color = info.m_color,
+                           .m_tilingFactor = info.m_tilingFactor,
+                           .layer = info.layer,
                            .m_tex = &resources::getTexture(textureFilePath)};
   }
-  static SpriteComponent create(const char *sheetFilePath, unsigned short id,
-                                glm::vec2 size = {0.1f, 0.1f})
+
+  static SpriteComponent create(const SpriteCreationInfo &info,
+                                const char *sheetFilePath, unsigned short id)
   {
     return SpriteComponent{
-        .m_size = size,
+        .m_size = info.m_size,
+        .m_color = info.m_color,
+        .m_tilingFactor = info.m_tilingFactor,
+        .layer = info.layer,
         .m_tex = SheetStruct{&resources::getTextureSheet(sheetFilePath), id}};
   }
 
-  // -- Texture by reference
-  static SpriteComponent create(Texture &texture, glm::vec2 size = {0.1f, 0.1f})
+  //  Texture by reference
+  static SpriteComponent create(const SpriteCreationInfo &info,
+                                Texture &texture)
   {
-    return SpriteComponent{.m_size = size, .m_tex = &texture};
-  }
-  static SpriteComponent create(TextureSheet &sheet, unsigned short id,
-                                glm::vec2 size = {0.1f, 0.1f})
-  {
-    return SpriteComponent{.m_size = size, .m_tex = SheetStruct{&sheet, id}};
-  }
-  static SpriteComponent create(Texture &texture, const glm::vec2 &size,
-                                const glm::vec4 &color,
-                                float tilingFactor = 1.f)
-  {
-    return SpriteComponent{.m_size = size,
-                           .m_color = color,
-                           .m_tilingFactor = tilingFactor,
+    return SpriteComponent{.m_size = info.m_size,
+                           .m_color = info.m_color,
+                           .m_tilingFactor = info.m_tilingFactor,
+                           .layer = info.layer,
                            .m_tex = &texture};
   }
+
+  static SpriteComponent create(const SpriteCreationInfo &info,
+                                TextureSheet &sheet, unsigned short id)
+  {
+    return SpriteComponent{.m_size = info.m_size,
+                           .m_color = info.m_color,
+                           .m_tilingFactor = info.m_tilingFactor,
+                           .layer = info.layer,
+                           .m_tex = SheetStruct{&sheet, id}};
+  }
+
   // ------------------------------------------------------------
   //  GETTERS with type-enforced stuff
   // ------------------------------------------------------------
@@ -116,7 +137,8 @@ struct SpriteComponent {
 struct SpritelessComponent {
   using tag = tag::Spriteless;
   std::variant<CircleShape, QuadShape> m_shape = QuadShape();
-  glm::vec4 m_color{0.8f, 0.2f, 0.1f, 0.8f};
+  glm::vec4 m_color{0.8f, 0.2f, 0.1f, 0.3f};
+  RenderLayer layer = RenderLayer::MuchCloser;
   static SpritelessComponent createQuad(const glm::vec2 &size)
   {
     return SpritelessComponent{.m_shape = QuadShape(size)};

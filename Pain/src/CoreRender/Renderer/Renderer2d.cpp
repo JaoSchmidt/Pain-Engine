@@ -10,6 +10,25 @@
 #include "platform/ContextBackend.h"
 namespace pain
 {
+struct QuadDrawParams {
+  glm::vec2 position{0.f, 0.f};
+  glm::vec2 size{1.0f, 1.0f};
+  glm::u8vec4 tintColor{255};
+  float tilingFactor = 1.0f;
+  Texture &texture;
+  std::array<glm::vec2, 4> texCoords = {
+      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
+      glm::vec2(0.0f, 1.0f)};
+};
+struct CircleDrawParams {
+  glm::vec2 position{0.f, 0.f};
+  glm::vec2 size{0.1f, 0.1f};
+  glm::vec4 tintColor{1.0f};
+  std::array<glm::vec2, 4> texCoords = {
+      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
+      glm::vec2(0.0f, 1.0f)};
+};
+
 extern const Texture *m_fontAtlasTexture;
 
 // ================================================================= //
@@ -53,7 +72,9 @@ void Renderer2d::flush()
 {
   PROFILE_FUNCTION();
   // bindTextures();
-  m.quadBatch.flush(m.textureSlots, m.textureSlotIndex);
+  for (uint8_t i = 0; i < NumLayers; i++) {
+    m.quadBatches[i].flush(m.textureSlots, m.textureSlotIndex);
+  }
   m.circleBatch.flush();
   m.sprayBatch.flush();
   m.triBatch.flush();
@@ -94,37 +115,42 @@ void Renderer2d::drawCircle(const glm::vec2 &position, const float radius,
 // ================================================================= //
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const glm::vec4 &tintColor, Texture &texture,
-                          float tilingFactor,
+                          const glm::vec4 &tintColor, RenderLayer layer,
+                          Texture &texture, float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
-  if (m.quadBatch.indexCount >= QuadBatch::MaxIndices) {
-    m.quadBatch.flush(m.textureSlots, m.textureSlotIndex);
-    m.quadBatch.resetPtr();
+  QuadBatch &batch = m.quadBatches[static_cast<uint8_t>(layer)];
+
+  if (batch.indexCount >= QuadBatch::MaxIndices) {
+    batch.flush(m.textureSlots, m.textureSlotIndex);
+    batch.resetPtr();
   }
 
   const float texIndex = allocateTextures(texture);
   const glm::mat4 transform = getTransform(position, size);
-  m.quadBatch.allocateQuad(transform, tintColor, tilingFactor, texIndex,
-                           textureCoordinate);
+  batch.allocateQuad(transform, tintColor, tilingFactor, texIndex,
+                     textureCoordinate);
 }
 
 void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                           const glm::vec4 &tintColor,
-                          const float rotationRadians, Texture &texture,
-                          float tilingFactor,
+                          const float rotationRadians, RenderLayer layer,
+                          Texture &texture, float tilingFactor,
                           const std::array<glm::vec2, 4> &textureCoordinate)
 {
-  if (m.quadBatch.indexCount >= QuadBatch::MaxIndices) {
-    m.quadBatch.flush(m.textureSlots, m.textureSlotIndex);
-    m.quadBatch.resetPtr();
-  }
   PROFILE_FUNCTION();
+  QuadBatch &batch = m.quadBatches[static_cast<uint8_t>(layer)];
+
+  if (batch.indexCount >= QuadBatch::MaxIndices) {
+    batch.flush(m.textureSlots, m.textureSlotIndex);
+    batch.resetPtr();
+  }
+
   const float texIndex = allocateTextures(texture);
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
-  m.quadBatch.allocateQuad(transform, tintColor, tilingFactor, texIndex,
-                           textureCoordinate);
+  batch.allocateQuad(transform, tintColor, tilingFactor, texIndex,
+                     textureCoordinate);
 }
 
 // ================================================================= //
@@ -266,19 +292,27 @@ Renderer2d Renderer2d::createRenderer2d()
 
   backend::InitRenderer();
 
-  return Renderer2d( //
-      [] {
-        return M{
-            .quadBatch = QuadBatch::create(),     //
-            .triBatch = TriBatch::create(),       //
-            .circleBatch = CircleBatch::create(), //
-            .sprayBatch = SprayBatch::create(),   //
-            .textBatch = TextBatch::create(),     //
-            .debugGrid = DebugGrid::create(),
-            .textureSlots = // First texture is a  1x1 white texture
-            {&resources::getDefaultTexture(resources::DefaultTexture::Blank)} //
-        };
-      }); //
+  return Renderer2d([] {
+    return M{
+        .quadBatches =
+            {
+                QuadBatch::create(),
+                QuadBatch::create(),
+                QuadBatch::create(),
+                QuadBatch::create(),
+                QuadBatch::create(),
+                QuadBatch::create(),
+                QuadBatch::create(),
+            },
+        .triBatch = TriBatch::create(),       //
+        .circleBatch = CircleBatch::create(), //
+        .sprayBatch = SprayBatch::create(),   //
+        .textBatch = TextBatch::create(),     //
+        .debugGrid = DebugGrid::create(),
+        .textureSlots = // First texture is a  1x1 white texture
+        {&resources::getDefaultTexture(resources::DefaultTexture::Blank)} //
+    };
+  }); //
 }
 
 void Renderer2d::bindTextures()
@@ -291,7 +325,9 @@ void Renderer2d::bindTextures()
 void Renderer2d::goBackToFirstVertex()
 {
   PROFILE_FUNCTION();
-  m.quadBatch.resetAll();
+  for (uint8_t i = 0; i < NumLayers; i++) {
+    m.quadBatches[i].resetAll();
+  }
   m.textBatch.resetAll();
   m.sprayBatch.resetAll();
   m.circleBatch.resetAll();
@@ -306,10 +342,12 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                                      float zoomLevel)
 {
   PROFILE_FUNCTION();
-  m.quadBatch.shader.bind();
-  m.quadBatch.shader.uploadUniformMat4("u_ViewProjection",
-                                       viewProjectionMatrix);
-  m.quadBatch.shader.uploadUniformMat4("u_Transform", transform);
+  for (uint8_t i = 0; i < NumLayers; i++) {
+    m.quadBatches[i].shader.bind();
+    m.quadBatches[i].shader.uploadUniformMat4("u_ViewProjection",
+                                              viewProjectionMatrix);
+    m.quadBatches[i].shader.uploadUniformMat4("u_Transform", transform);
+  }
 
   m.triBatch.shader.bind();
   m.triBatch.shader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);

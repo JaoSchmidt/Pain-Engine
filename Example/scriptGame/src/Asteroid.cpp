@@ -10,11 +10,11 @@ reg::Entity Asteroid::create(pain::Scene &scene, pain::TextureSheet &texSheet,
   const glm::vec2 diameter = glm::vec2(2.f * radius);
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
-      entity, pain::Transform2dComponent{pos},               //
-      pain::Movement2dComponent{vel},                        //
-      pain::RotationComponent{},                             //
-      pain::SpriteComponent::create(texSheet, id, diameter), //
-      pain::SpritelessComponent::createCircle(radius),       //
+      entity, pain::Transform2dComponent{pos},                           //
+      pain::Movement2dComponent{vel},                                    //
+      pain::RotationComponent{},                                         //
+      pain::SpriteComponent::create({.m_size = diameter}, texSheet, id), //
+      pain::SpritelessComponent::createCircle(radius),                   //
       pain::SAPCollider::createCircle(radius));
   return entity;
 }
@@ -23,11 +23,12 @@ reg::Entity Asteroid::create(pain::Scene &scene, pain::TextureSheet &texSheet,
                              glm::vec2 size)
 {
   reg::Entity entity = scene.createEntity();
-  scene.createComponents(entity, pain::Transform2dComponent{pos},           //
-                         pain::Movement2dComponent{vel},                    //
-                         pain::RotationComponent{},                         //
-                         pain::SpriteComponent::create(texSheet, id, size), //
-                         pain::SpritelessComponent::createQuad(size),       //
-                         pain::SAPCollider::createAABB(size));
+  scene.createComponents(
+      entity, pain::Transform2dComponent{pos},                       //
+      pain::Movement2dComponent{vel},                                //
+      pain::RotationComponent{},                                     //
+      pain::SpriteComponent::create({.m_size = size}, texSheet, id), //
+      pain::SpritelessComponent::createQuad(size),                   //
+      pain::SAPCollider::createAABB(size));
   return entity;
 }

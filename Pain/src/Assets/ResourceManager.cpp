@@ -31,6 +31,8 @@ void InternalConfig::readAndUpdate(const char *filename)
 
   zoomLevel.initValue(ini, INTERNAL_SETTINGS_STRING);
   gridSize.initValue(ini, INTERNAL_SETTINGS_STRING);
+  title.initValue(ini, INTERNAL_SETTINGS_STRING);
+  swapChainTarget.initValue(ini, INTERNAL_SETTINGS_STRING);
 }
 
 void InternalConfig::write(const char *filename)
@@ -41,6 +43,8 @@ void InternalConfig::write(const char *filename)
   file.read(ini);
   zoomLevel.writeBuffer(ini, INTERNAL_SETTINGS_STRING);
   gridSize.writeBuffer(ini, INTERNAL_SETTINGS_STRING);
+  title.writeBuffer(ini, INTERNAL_SETTINGS_STRING);
+  swapChainTarget.writeBuffer(ini, INTERNAL_SETTINGS_STRING);
   file.write(ini);
 }
 

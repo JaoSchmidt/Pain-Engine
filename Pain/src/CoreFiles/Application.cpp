@@ -113,7 +113,7 @@ EndGameFlags Application::run()
     PLOG_W("You didn't set a camera, using the default camera");
     reg::Entity camera = Dummy2dCamera::create(
         m_worldScene, m_context.defaultWidth, m_context.defaultHeight, 1.f);
-    setRendererCamera(camera);
+    setRendererCamera(camera, m_context.defaultWidth, m_context.defaultHeight);
   }
 
   // creates a dummy ui scene. Altough this maybe not necessary, probably need

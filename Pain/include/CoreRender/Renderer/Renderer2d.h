@@ -21,12 +21,23 @@ namespace pain
 class Scene;
 class UIScene;
 
+enum class RenderLayer : uint8_t {
+  Distant = 0,
+  FurtherBack = 1,
+  Background = 2,
+  Default = 3,
+  Closer = 4,
+  MuchCloser = 5,
+  TouchingCamera = 6,
+};
+static constexpr uint8_t NumLayers = 7;
+
 struct Renderer2d {
   struct Stats {
-    const uint32_t &count;
+    uint32_t count;
     uint32_t indices;
     uint32_t vertices;
-    const uint32_t &draws;
+    uint32_t draws;
     const char *name;
   };
   static Renderer2d createRenderer2d();
@@ -63,7 +74,7 @@ struct Renderer2d {
 
   /** Draws a quad */
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                const glm::vec4 &tintColor, Texture &texture,
+                const glm::vec4 &tintColor, RenderLayer layer, Texture &texture,
                 const float tilingFactor = 1.0f,
                 const std::array<glm::vec2, 4> &textureCoordinate = {
                     glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
@@ -72,7 +83,8 @@ struct Renderer2d {
   /** Draws a quad with rotation, new rotationRadians (angle)*/
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                 const glm::vec4 &tintColor, const float rotationRadians,
-                Texture &texture, const float tilingFactor = 1.0f,
+                RenderLayer layer, Texture &texture,
+                const float tilingFactor = 1.0f,
                 const std::array<glm::vec2, 4> &textureCoordinate = {
                     glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                     glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
@@ -115,9 +127,6 @@ struct Renderer2d {
     if constexpr (std::is_same_v<Batch, TriBatch>)
       return {m.triBatch.statsCount, m.triBatch.statsCount * 3,
               m.triBatch.statsCount * 3, m.triBatch.drawCount, "Triangules"};
-    else if constexpr (std::is_same_v<Batch, QuadBatch>)
-      return {m.quadBatch.statsCount, m.quadBatch.statsCount * 6,
-              m.quadBatch.statsCount * 4, m.quadBatch.drawCount, "Quads"};
     else if constexpr (std::is_same_v<Batch, TextBatch>)
       return {m.textBatch.statsCount, m.textBatch.statsCount * 6,
               m.textBatch.statsCount * 4, m.textBatch.drawCount, "Glyphs"};
@@ -127,9 +136,19 @@ struct Renderer2d {
     else if constexpr (std::is_same_v<Batch, SprayBatch>)
       return {m.sprayBatch.statsCount, m.sprayBatch.statsCount * 6,
               m.sprayBatch.statsCount * 4, m.sprayBatch.drawCount, "Sprays"};
+    else if constexpr (std::is_same_v<Batch, QuadBatch>) {
+      uint32_t statsCount = 0;
+      uint32_t drawCount = 0;
+      for (QuadBatch &batch : m.quadBatches) {
+        statsCount += batch.statsCount;
+        drawCount += batch.drawCount;
+      }
+      return {statsCount, statsCount * 6, statsCount * 4, drawCount, "Quads"};
+    }
   }
 
 private:
+  float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                            DeltaTime globalTime, const glm::mat4 &transform,
@@ -140,7 +159,7 @@ private:
   float allocateTextures(Texture &texture);
 
   struct M {
-    QuadBatch quadBatch;
+    std::array<QuadBatch, NumLayers> quadBatches;
     TriBatch triBatch;
     CircleBatch circleBatch;
     SprayBatch sprayBatch;

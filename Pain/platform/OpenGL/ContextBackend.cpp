@@ -44,16 +44,19 @@ void InitRenderer()
   // =============================================================== //
   // Create Renderer
   // =============================================================== //
+
+  // NOTE: This enable 3d and can be changed later in case we need some camera
+  // mechanic
+  // Also, must be enable iff you clear
+  // GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
+  // glEnable(GL_DEPTH_TEST);
+
   // allow transparency
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   // HACK: allow textures with 3 channels to align properly, e.g. font textures.
   // No idea why it works tho, perhaps I will find a proper doc later
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-  // NOTE: This enable 3d and can be changed later in case we need some camera
-  // mechanic
-  // glEnable(GL_DEPTH_TEST);
 }
 void setViewPort(int x, int y, int width, int height)
 {
@@ -65,9 +68,9 @@ void setClearColor(const glm::vec4 &color)
 }
 void clear()
 {
-  // cherno has used
+  // Enable iff DEPTH_TEST is enabled
   // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  // don't remember why tho
+  // Otherwise
   glClear(GL_COLOR_BUFFER_BIT);
 }
 void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount)

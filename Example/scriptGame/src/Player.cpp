@@ -12,12 +12,13 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
                            float zoomLevel)
 {
   reg::Entity entity = scene.createEntity();
-  scene.createComponents(                          //
-      entity, pain::Transform2dComponent{},        //
-      pain::SpriteComponent::create(tex, size),    //
-      pain::SpritelessComponent::createQuad(size), //
-      pain::RotationComponent{},                   //
-      pain::Movement2dComponent{},                 //
+  scene.createComponents(                   //
+      entity, pain::Transform2dComponent{}, //
+      pain::SpriteComponent::create(
+          {.m_size = size, .layer = pain::RenderLayer::Closer}, tex), //
+      pain::SpritelessComponent::createQuad(size),                    //
+      pain::RotationComponent{},                                      //
+      pain::Movement2dComponent{},                                    //
       pain::SAPCollider::createAABB(size, true),
       pain::ParticleSprayComponent{}, //
       Component::OrthoCamera::create(resolutionWeigh, resolutionHeight,

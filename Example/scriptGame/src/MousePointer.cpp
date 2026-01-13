@@ -10,8 +10,8 @@ reg::Entity MousePointer::create(pain::Scene &scene)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
-      entity, pain::Transform2dComponent{},                            //
-      pain::SpriteComponent::create("resources/textures/pointer.png"), //
+      entity, pain::Transform2dComponent{},                                //
+      pain::SpriteComponent::create({}, "resources/textures/pointer.png"), //
       pain::NativeScriptComponent{});
   return entity;
 }

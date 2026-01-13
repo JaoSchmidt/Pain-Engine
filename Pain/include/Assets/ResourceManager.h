@@ -103,9 +103,10 @@ struct IConfig {
 struct InternalConfig : public IConfig {
   using IConfig::readAndUpdate;
 
-  Config<float> zoomLevel{2.f, "InitialZoom"};
-  Config<float> gridSize{0.5f, "DebugGridSize"};
-  Config<std::string> title{"Unnamed Game", "GameTitle"};
+  Config<float> zoomLevel{2.f, "initial_zoom"};
+  Config<float> gridSize{0.5f, "debug_grid_size"};
+  Config<bool> swapChainTarget{true, "swap_chain_target"};
+  Config<std::string> title{"Unnamed Game", "game_title"};
 
   void readAndUpdate(const char *filename) override;
   void write(const char *filename);

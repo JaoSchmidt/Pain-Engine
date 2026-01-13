@@ -2,6 +2,7 @@
 #include <pain.h>
 
 #include "Asteroid.h"
+#include "CoreRender/CameraComponent.h"
 #include "Editor.h"
 #include "MapGen/MainGen.h"
 #include "Misc/CameraSys.h"
@@ -26,9 +27,11 @@ public:
     pain::Texture &shipTex =
         pain::resources::getTexture("resources/textures/ship_H.png");
     reg::Entity playerCam =
-        Player::create(scene, shipTex, {0.2f, 0.2f}, playerPos, cameraWidth,
+        Player::create(scene, shipTex, playerPos, {0.3f, 0.3f}, cameraWidth,
                        cameraHeight, zoom);
-    app->setRendererCamera(playerCam);
+    app->setRendererCamera(playerCam, cameraWidth, cameraHeight);
+    scene.getComponent<Component::OrthoCamera>(playerCam).setProjection(
+        cameraWidth, cameraHeight);
 
     // add objects to collision System
     // scene.getSys<pain::Systems::SweepAndPruneSys>().insertColliders(walls);
@@ -41,27 +44,61 @@ public:
 
     auto factory = [&] {
       // Force NRVO at last point
-      return MainMap::create(16.f, 16.f, playerPos, 32, 1);
+      return MainMap::create(16.f, 16.f, playerPos, 2, 1);
     };
 
     return pain::Scene::emplaceScript<MainScript>(scene.getEntity(), scene,
                                                   factory, playerCam);
   }
-  void onCreate() { m_mainMap.onCreate(getScene()); }
-  void onUpdate(pain::DeltaTime dt)
-  {
-    m_mainMap.updateSurroundingChunks(
-        getComponent<pain::Transform2dComponent>(m_player), getScene());
-  }
+  // void onCreate() { m_mainMap.onCreate(getScene()); }
   MainScript(reg::Entity entity, pain::Scene &scene, auto mainMapFactory,
              reg::Entity player)
       : pain::WorldObject(entity, scene), //
-        m_player(player),                 //
-        m_mainMap(mainMapFactory())       //
+        m_player(player)                  //
+  // m_mainMap(mainMapFactory())       //
   {};
   std::vector<std::vector<int>> m_backgroundMap;
   reg::Entity m_player = reg::Entity{-1};
-  MainMap m_mainMap;
+  // MainMap m_mainMap;
+
+  void onUpdate(pain::DeltaTime dt)
+  {
+    // m_mainMap.updateSurroundingChunks(
+    //     getComponent<pain::Transform2dComponent>(m_player), getScene());
+  }
+  void onRender(pain::Renderer2d &renderer, bool isMinimazed,
+                pain::DeltaTime currentTime)
+  {
+    renderer.drawQuad(
+        {-0.2, -0.2f}, {0.2f, 0.2f}, {0.8f, 0.2f, 0.1f, 1.f},
+        std::numbers::pi * -currentTime.getSeconds(),
+        pain::RenderLayer::Default,
+        pain::resources::getTexture("resources/textures/Checkerboard.png"));
+    renderer.drawQuad(
+        {0.0f, 0.0f}, {0.2f, 0.2f}, {0.9f, 0.9f, 0.2f, 1.f},
+        pain::RenderLayer::Default,
+        pain::resources::getDefaultTexture(pain::resources::Blank, false));
+    renderer.drawQuad({-0.5f, 0.5f}, {0.2f, 0.2f}, {1.f, 1.f, 1.f, 1.f},
+                      pain::RenderLayer::Default,
+                      pain::resources::getTexture(
+                          "resources/textures/Checkerboard original.png"));
+
+    renderer.drawQuad(
+        {0.2, -0.2f}, {0.2f, 0.2f}, {0.8f, 0.2f, 0.1f, 1.f},
+        std::numbers::pi * currentTime.getSeconds(),
+        pain::RenderLayer::MuchCloser,
+        pain::resources::getTexture("resources/textures/Checkerboard.png"));
+    renderer.drawQuad(
+        {0.2f, 0.2f}, {0.2f, 0.2f}, {0.9f, 0.9f, 0.2f, 1.f},
+        pain::RenderLayer::MuchCloser,
+        pain::resources::getDefaultTexture(pain::resources::Blank, false));
+    renderer.drawQuad({-0.2f, 0.2f}, {0.2f, 0.2f}, {1.f, 1.f, 1.f, 1.f},
+                      pain::RenderLayer::MuchCloser,
+                      pain::resources::getTexture(
+                          "resources/textures/Checkerboard original.png"));
+    renderer.drawCircle({0.5f, 0.5f}, 0.1f, {0.2f, 0.3f, 0.9f, 1.f});
+    renderer.drawTri({-0.5f, -0.5f}, {0.2f, 0.2f}, {0.2f, 0.3f, 0.9f, 1.f});
+  }
 };
 
 pain::Application *pain::createApplication()
@@ -84,10 +121,11 @@ pain::Application *pain::createApplication()
   const int width = ini.defaultWidth.get();
   const float zoom = internalIni.zoomLevel.get();
   const float gridSize = internalIni.gridSize.get();
+  const bool swapChainTarget = internalIni.swapChainTarget.get();
 
   Application *app = Application::createApplication(
       {.title = title.c_str(), .defaultWidth = width, .defaultHeight = height},
-      {.swapChainTarget = false});
+      {.swapChainTarget = swapChainTarget});
 
   pain::Scene &scene =
       app->createWorldSceneComponents(gridSize, pain::NativeScriptComponent{});

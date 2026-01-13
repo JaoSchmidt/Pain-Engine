@@ -67,7 +67,8 @@ void ImGuiSys::onRender(Renderer2d &renderer, bool isMinimized,
       for (size_t i = 0; i < chunk.count; ++i) {
         auto &nsc = nscs[i];
         if (nsc.instance && nsc.onRenderFunction)
-          nsc.onRenderFunction(nsc.instance, renderer, isMinimized);
+          nsc.onRenderFunction(nsc.instance, renderer, isMinimized,
+                               currentTime);
       }
     }
   }

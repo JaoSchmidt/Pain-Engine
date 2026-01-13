@@ -10,16 +10,6 @@
 
 namespace pain
 {
-
-template <typename T>
-concept has_imgui_onRender_method =
-    requires(T &&t, pain::Renderer2d &r, bool m) {
-      { t.onRender(r, m) };
-    };
-template <typename T>
-concept has_imgui_private_onRender =
-    requires { sizeof(&T::onRender); } && !has_imgui_onRender_method<T>;
-
 template <typename SceneT> class GameObject;
 class UIScene;
 
@@ -34,7 +24,8 @@ public:
   void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
-  void (*onRenderFunction)(Scriptable *, Renderer2d &, bool) = nullptr;
+  void (*onRenderFunction)(Scriptable *, Renderer2d &, bool,
+                           DeltaTime dt) = nullptr;
   void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
 
   template <typename T> void bindAndInitiate(T &&t)
@@ -73,10 +64,11 @@ public:
       onDestroyFunction = nullptr;
     }
 
-    if constexpr (has_imgui_onRender_method<T>) {
+    if constexpr (has_onRender_method<T>) {
       onRenderFunction = [](Scriptable *instance, Renderer2d &renderer,
-                            bool isMinimized) {
-        static_cast<T *>(instance)->onRender(renderer, isMinimized);
+                            bool isMinimized, DeltaTime currentTime) {
+        static_cast<T *>(instance)->onRender(renderer, isMinimized,
+                                             currentTime);
       };
     } else {
       onRenderFunction = nullptr;
@@ -130,10 +122,11 @@ public:
       onDestroyFunction = nullptr;
     }
 
-    if constexpr (has_imgui_onRender_method<T>) {
+    if constexpr (has_onRender_method<T>) {
       onRenderFunction = [](Scriptable *instance, Renderer2d &renderer,
-                            bool isMinimized) {
-        static_cast<T *>(instance)->onRender(renderer, isMinimized);
+                            bool isMinimized, DeltaTime currentTime) {
+        static_cast<T *>(instance)->onRender(renderer, isMinimized,
+                                             currentTime);
       };
     } else {
       onRenderFunction = nullptr;
