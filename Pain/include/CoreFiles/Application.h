@@ -10,7 +10,6 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/DebuggingImGui.h"
 #include "GUI/ImGuiSys.h"
-#include "profile.h"
 #include <sol/state.hpp>
 
 template <class F> class with_result_of_t
