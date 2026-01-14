@@ -18,7 +18,10 @@ struct TextureCreateInfo {
 
 struct TextureFromFileInfo {
   const char *path;
-  SDL_Surface *surface;
+  int width = 0;
+  int height = 0;
+  int channels = 0; // 3 = RGB, 4 = RGBA
+  unsigned char *pixels = nullptr;
   bool clampToEdge;
 };
 

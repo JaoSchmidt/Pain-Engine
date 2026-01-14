@@ -4,8 +4,11 @@
 #include <filesystem>
 namespace pain
 {
+// -----------------------------------------------------------------
+// Internal Config
+// -----------------------------------------------------------------
 
-void IConfig::readAndUpdate(const char *dirname, const char *fileName)
+void InternalConfig::readAndUpdate(const char *dirname, const char *fileName)
 {
   fs::path fullPath = dirname;
   fullPath /= fileName;
@@ -46,6 +49,17 @@ void InternalConfig::write(const char *filename)
   title.writeBuffer(ini, INTERNAL_SETTINGS_STRING);
   swapChainTarget.writeBuffer(ini, INTERNAL_SETTINGS_STRING);
   file.write(ini);
+}
+
+// -----------------------------------------------------------------
+// Ini Config
+// -----------------------------------------------------------------
+
+void IniConfig::readAndUpdate(const char *dirname, const char *fileName)
+{
+  fs::path fullPath = dirname;
+  fullPath /= fileName;
+  readAndUpdate(fullPath.c_str());
 }
 
 void IniConfig::readAndUpdate(const char *filename)

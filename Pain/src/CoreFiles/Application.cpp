@@ -1,5 +1,6 @@
 #include "CoreFiles/Application.h"
 #include "Assets/DefaultTexture.h"
+#include "Assets/HighResolutionTimer.h"
 #include "Assets/ResourceManager.h"
 #include "ContextBackend.h"
 #include "Core.h"
@@ -11,7 +12,6 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/Events.h"
 #include "Scripting/State.h"
-#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_version.h>
 #include <memory>
 #include <thread>
@@ -105,7 +105,6 @@ void Application::stopLoop(bool restartFlag)
   PLOG_I("Game has been stopped on {}", fmt::ptr(this));
   m_endGameFlags.restartGame = restartFlag;
 }
-
 EndGameFlags Application::run()
 {
   // creates a dummy camera in case it doesn't exist
@@ -116,34 +115,29 @@ EndGameFlags Application::run()
     setRendererCamera(camera, m_context.defaultWidth, m_context.defaultHeight);
   }
 
-  // creates a dummy ui scene. Altough this maybe not necessary, probably need
-  // to guarantee that swapChainTarget is false tho
+  // creates a dummy ui scene
   if (m_uiScene.get() == nullptr)
     createUIScene();
 
   // With all scenes created, we can now properly use it
   m_renderPipeline.subscribeToViewportChange(m_worldScene);
 
-  DeltaTime deltaTime;
+  HighResolutionTimer frameTimer;
   DeltaTime accumulator = 0.0;
-  // double renderAccumulator = 0.0;
 
-  DeltaTime lastFrameTime = SDL_GetPerformanceCounter();
   while (m.isGameRunning) {
-    uint64_t start = SDL_GetPerformanceCounter();
-    deltaTime = start - lastFrameTime;
-    lastFrameTime = start;
+    DeltaTime deltaTime = frameTimer.tick();
+    uint64_t elapsedTime = frameTimer.elapsedNanos();
 
     // =============================================================== //
     // Calculate FPS sample
     // =============================================================== //
 
-    // The purpose of this is to calculate the fps inside as an average of the
-    // previous "FPS_SAMPLE_COUNT" measurements
     m.fpsSamples[m.currentSample] =
-        static_cast<double>(SDL_GetPerformanceFrequency()) /
+        static_cast<double>(DeltaTime::oneSecond()) /
         deltaTime.getNanoSeconds();
     m.currentSample = (m.currentSample + 1) % m.FPS_SAMPLE_COUNT;
+
     if (m.currentSample % 64 == 0) { // update displayed fps
       m_defaultImGuiInstance->m_currentTPS = 0.0;
       for (const double fpsSample : m.fpsSamples) {
@@ -151,17 +145,15 @@ EndGameFlags Application::run()
       }
       m_defaultImGuiInstance->m_currentTPS /= m.FPS_SAMPLE_COUNT;
     }
+
     // =============================================================== //
     // Handle Updates
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Updates");
       DeltaTime deltaSeconds = deltaTime * m.timeMultiplier;
-      // Uncomment this to create an accumulator cap
-      // accumulator = fmod(accumulator + deltaSeconds, 15.0);
       accumulator += deltaSeconds;
 
-      // renderAccumulator += deltaSeconds;
       while (accumulator >= m.maxFrameRate) {
         m_worldScene.updateSystems(m.maxFrameRate);
         accumulator -= m.maxFrameRate;
@@ -174,7 +166,6 @@ EndGameFlags Application::run()
     {
       PROFILE_SCOPE("Application::run - Handle Events");
       SDL_Event event;
-      // Start our event loop (goes until the queue is free)
       while (SDL_PollEvent(&event)) {
         switch (event.type) {
         case SDL_QUIT:
@@ -199,29 +190,28 @@ EndGameFlags Application::run()
           m_uiScene->updateSystems(event);
       }
     }
+
     // =============================================================== //
     // Handle rendering
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Rendering");
-      m_renderPipeline.pipeline(m_renderer, m.isMinimized, lastFrameTime,
+      m_renderPipeline.pipeline(m_renderer, m.isMinimized, elapsedTime,
                                 m_worldScene, *m_uiScene);
       P_ASSERT(m_window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_window);
     }
 
     // =============================================================== //
-    // Fix clock if it's too ahead
+    // Frame rate limiting
     // =============================================================== //
-    uint64_t end = SDL_GetPerformanceCounter();
-    double frameDurationSeconds =
-        static_cast<double>(end - start) /
-        static_cast<double>(SDL_GetPerformanceFrequency());
-    if (frameDurationSeconds < m.fixedFPS) {
-      SDL_Delay(
-          static_cast<uint32_t>((m.fixedFPS - frameDurationSeconds) * 1000.0));
+    if (deltaTime.getSeconds() < m.fixedFPS) {
+      uint32_t sleepMs =
+          static_cast<uint32_t>((m.fixedFPS - deltaTime.getSeconds()) * 1000.0);
+      HighResolutionTimer::sleep(sleepMs);
     }
   };
+
   PLOG_I("Reaching the end of run");
   return m_endGameFlags;
 }

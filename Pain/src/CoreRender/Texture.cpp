@@ -3,10 +3,13 @@
 #include "Core.h"
 
 #include "CoreFiles/LogWrapper.h"
-#include "SDL_image.h"
+
 #include "TextureBackend.h"
 #include <cstdint>
 #include <optional>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 namespace pain
 {
@@ -29,28 +32,32 @@ std::optional<Texture> Texture::createTexture(const char *name, uint32_t width,
 
 std::optional<Texture> Texture::createTexture(const char *path, bool clamp)
 {
+  backend::TextureFromFileInfo info{.path = path, .clampToEdge = clamp};
+  stbi_set_flip_vertically_on_load(true);
 
-  std::unique_ptr<SDL_Surface, void (*)(SDL_Surface *)> surface(
-      IMG_Load(path), SDL_FreeSurface);
+  info.pixels = stbi_load(path, &info.width, &info.height, &info.channels, 0);
 
-  if (!surface) {
-    PLOG_E("Failed to load texture {}", path);
-    return {};
+  if (!info.pixels) {
+    PLOG_E("Failed to load texture {} : {}", path, stbi_failure_reason());
+    return std::nullopt;
   }
+
   ImageFormat dataFormat;
-  if (surface->format->BytesPerPixel == 3) {
+  if (info.channels == 3) {
     dataFormat = ImageFormat::RGB8;
-  } else if (surface->format->BytesPerPixel == 4) {
+  } else if (info.channels == 4) {
     dataFormat = ImageFormat::RGBA8;
+  } else {
+    PLOG_E("Unsupported channel count {} for {}", info.channels, path);
+    return std::nullopt;
   }
 
-  backend::TextureFromFileInfo info{path, surface.get(), clamp};
   uint32_t id = backend::createTextureFromFile(info);
   if (!id)
     return std::nullopt;
 
-  return Texture(path, static_cast<unsigned>(surface.get()->w),
-                 static_cast<unsigned>(surface.get()->h), dataFormat, id);
+  return Texture(path, static_cast<unsigned>(info.width),
+                 static_cast<unsigned>(info.height), dataFormat, id);
 }
 
 void Texture::bind() const { backend::bindTexture(m_textureId); }

@@ -92,28 +92,19 @@ public:
     };
   }
 };
-
-struct IConfig {
-  virtual ~IConfig() = default;
-
-  void readAndUpdate(const char *dirname, const char *fileName);
-  virtual void readAndUpdate(const char *fileName) = 0;
-};
-
-struct InternalConfig : public IConfig {
-  using IConfig::readAndUpdate;
+struct InternalConfig {
 
   Config<float> zoomLevel{2.f, "initial_zoom"};
   Config<float> gridSize{0.5f, "debug_grid_size"};
   Config<bool> swapChainTarget{true, "swap_chain_target"};
   Config<std::string> title{"Unnamed Game", "game_title"};
 
-  void readAndUpdate(const char *filename) override;
+  void readAndUpdate(const char *dirname, const char *fileName);
+  void readAndUpdate(const char *filename);
   void write(const char *filename);
 };
 
-struct IniConfig : public IConfig {
-  using IConfig::readAndUpdate;
+struct IniConfig {
 
   Config<bool> hideConfig{false, "HideConfig"};
   Config<bool> fullscreen{false, "Fullscreen"};
@@ -122,7 +113,8 @@ struct IniConfig : public IConfig {
   Config<std::string> assetsPath{
       pain::resources::getCurrentWorkingDir("resources"), "AssetPath"};
 
-  void readAndUpdate(const char *filename) override;
+  void readAndUpdate(const char *dirname, const char *fileName);
+  void readAndUpdate(const char *filename);
   void write(const char *filename);
 };
 

@@ -3,8 +3,6 @@
 #ifdef PAIN_RENDERER_OPENGL
 
 #include "platform/OpenGL/OpenGLDebugger.h"
-#include <SDL2/SDL_surface.h>
-#include <SDL_image.h>
 #include <glad/gl.h>
 
 #include "CoreFiles/LogWrapper.h"
@@ -15,28 +13,6 @@ namespace pain::backend
 // ------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------
-
-SDL_Surface *flipVertical(const SDL_Surface &surface)
-{
-  SDL_Surface *result = SDL_CreateRGBSurface(
-      surface.flags, surface.w, surface.h, surface.format->BytesPerPixel * 8,
-      surface.format->Rmask, surface.format->Gmask, surface.format->Bmask,
-      surface.format->Amask);
-
-  const size_t pitch = static_cast<unsigned long>(surface.pitch);
-  const size_t pxlength = pitch * (static_cast<unsigned long>(surface.h - 1));
-
-  auto *src = static_cast<unsigned char *>(surface.pixels) + pxlength;
-  auto *dst = static_cast<unsigned char *>(result->pixels);
-
-  for (int y = 0; y < surface.h; ++y) {
-    std::memcpy(dst, src, pitch);
-    src -= pitch;
-    dst += pitch;
-  }
-
-  return result;
-}
 
 static constexpr unsigned getInternalFormat(ImageFormat format)
 {
@@ -95,21 +71,18 @@ uint32_t createTexture(const TextureCreateInfo &info)
 /// Sets a texture given a specific texture image path
 uint32_t createTextureFromFile(const TextureFromFileInfo &info)
 {
-  // SDL_Surface *flipped = flipVertical(*surface);
+  GLenum dataFormat;
+  GLenum internalFormat;
 
-  GLenum dataFormat, internalFormat;
-  SDL_Surface *surface = info.surface;
-  surface = flipVertical(*surface);
-  if (surface->format->BytesPerPixel == 3) {
+  if (info.channels == 3) {
     dataFormat = GL_RGB;
     internalFormat = GL_RGB8;
-  } else if (surface->format->BytesPerPixel == 4) {
+  } else if (info.channels == 4) {
     dataFormat = GL_RGBA;
     internalFormat = GL_RGBA8;
   } else {
-    PLOG_W(
-        "Texture \"{}\" not created, unsupported number of bytes per pixel {}",
-        info.path, surface->format->BytesPerPixel);
+    PLOG_W("Texture \"{}\" not created, unsupported channel count {}",
+           info.path, info.channels);
     return 0;
   }
 
@@ -119,20 +92,21 @@ uint32_t createTextureFromFile(const TextureFromFileInfo &info)
     PLOG_W("Texture \"{}\" could not be created!", info.path);
     return 0;
   }
+
   glBindTexture(GL_TEXTURE_2D, id);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-  // https://stackoverflow.com/questions/10568390/difference-between-uv-and-st-texture-coordinates
   if (info.clampToEdge) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 
   glTexImage2D(GL_TEXTURE_2D, 0, static_cast<int32_t>(internalFormat),
-               surface->w, surface->h, 0, dataFormat, GL_UNSIGNED_BYTE,
-               surface->pixels);
+               info.width, info.height, 0, dataFormat, GL_UNSIGNED_BYTE,
+               info.pixels);
+
   P_OPENGL_CHECK("Failed glTexImage2D inside Texture");
 
   PLOG_I("Texture created id = {}, path = {}", id, info.path);

@@ -77,7 +77,7 @@ public:
     renderer.drawQuad(
         {0.0f, 0.0f}, {0.2f, 0.2f}, {230, 230, 51, 255},
         pain::RenderLayer::Default,
-        pain::resources::getDefaultTexture(pain::resources::Blank, false));
+        pain::resources::getDefaultTexture(pain::resources::Error, false));
 
     renderer.drawQuad({-0.5f, 0.5f}, {0.2f, 0.2f}, {255, 255, 255, 255},
                       pain::RenderLayer::Default,
@@ -91,7 +91,7 @@ public:
     renderer.drawQuad(
         {0.2f, 0.2f}, {0.2f, 0.2f}, {230, 230, 51, 255},
         pain::RenderLayer::MuchCloser,
-        pain::resources::getDefaultTexture(pain::resources::Blank, false));
+        pain::resources::getDefaultTexture(pain::resources::Error, false));
     renderer.drawQuad({-0.2f, 0.2f}, {0.2f, 0.2f}, {255, 255, 255, 255},
                       pain::RenderLayer::MuchCloser,
                       pain::resources::getTexture(

@@ -10,24 +10,26 @@
 #include "platform/ContextBackend.h"
 namespace pain
 {
-struct QuadDrawParams {
-  glm::vec2 position{0.f, 0.f};
-  glm::vec2 size{1.0f, 1.0f};
-  glm::u8vec4 tintColor{255};
-  float tilingFactor = 1.0f;
-  Texture &texture;
-  std::array<glm::vec2, 4> texCoords = {
-      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-      glm::vec2(0.0f, 1.0f)};
-};
-struct CircleDrawParams {
-  glm::vec2 position{0.f, 0.f};
-  glm::vec2 size{0.1f, 0.1f};
-  glm::vec4 tintColor{1.0f};
-  std::array<glm::vec2, 4> texCoords = {
-      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-      glm::vec2(0.0f, 1.0f)};
-};
+// TODO: use struct for draw parameters
+// struct QuadDrawParams {
+//   glm::vec2 position{0.f, 0.f};
+//   glm::vec2 size{1.0f, 1.0f};
+//   Color tintColor{255};
+//   float tilingFactor = 1.0f;
+//   RenderLayer layer = RenderLayer::Default;
+//   Texture *texture;
+//   std::array<glm::vec2, 4> texCoords = {
+//       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
+//       glm::vec2(0.0f, 1.0f)};
+// };
+// struct CircleDrawParams {
+//   glm::vec2 position{0.f, 0.f};
+//   glm::vec2 size{0.1f, 0.1f};
+//   glm::vec4 tintColor{1.0f};
+//   std::array<glm::vec2, 4> texCoords = {
+//       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
+//       glm::vec2(0.0f, 1.0f)};
+// };
 
 extern const Texture *m_fontAtlasTexture;
 

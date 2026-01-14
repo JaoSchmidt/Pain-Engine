@@ -25,9 +25,10 @@ target_include_directories(
   ${LIBRARY_NAME}
   PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/platform>
+         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
+         # vendor libraries
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
-         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/mINI/src>
-         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>)
+         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/mINI/src>)
 set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20
                                                  CXX_STANDARD_REQUIRED ON)
 target_compile_features(${LIBRARY_NAME} PUBLIC cxx_std_20)
@@ -43,7 +44,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
             -g
             -O0
             -Wextra
-            -Wpedantic
             -Wconversion
             -Wno-unused-parameter
             -Wmissing-field-initializers
@@ -197,18 +197,20 @@ else()
   add_subdirectory(Pain/external/SDL)
 endif()
 
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/SDL_image/CMakeLists.txt")
-  message("Fetching SDL_image")
-  FetchContent_Declare(
-    SDL_image
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-    GIT_TAG release-2.8.2)
-  FetchContent_MakeAvailable(SDL_image)
+# stb
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/stb/.git")
+  message("Fetching stb")
+  FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git)
+  FetchContent_MakeAvailable(stb)
+  target_include_directories(${LIBRARY_NAME} PUBLIC SYSTEM ${stb_INCLUDE_DIR})
 else()
-  message("Using submodule for SDL_image")
-  add_subdirectory(Pain/external/SDL_image)
+  message("Using submodule for stb")
+  target_include_directories(
+    ${LIBRARY_NAME} SYSTEM
+    PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/stb>)
 endif()
 
+# IMGUI
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/.git")
   message("Fetching Imgui")
   FetchContent_Declare(
@@ -240,6 +242,7 @@ else()
   add_subdirectory("Pain/external/msdf-atlas-gen")
 endif()
 
+# Lua
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/Lua/CMakeLists.txt")
   message("Fetching Lua")
   FetchContent_Declare(
@@ -280,7 +283,6 @@ target_link_libraries(
   PUBLIC ${CMAKE_DL_LIBS}
          ${OPENGL_LIBRARIES}
          SDL2::SDL2-static
-         SDL2_image
          lua_static
          glad
          mINI
