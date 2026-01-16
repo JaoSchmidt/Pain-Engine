@@ -1,6 +1,7 @@
 #include "CoreRender/Renderer/CubeVertex.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreRender/Renderer/BatchSpray.h"
 
 namespace pain
 {

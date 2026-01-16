@@ -19,7 +19,7 @@ DebugGrid DebugGrid::create(float gridSize)
       *Shader::createFromFile("resources/default/shaders/InfiniteGrid.glsl");
   shader.bind();
   shader.uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
-  shader.uploadUniformFloat("u_CellSize", gridSize * 0.1f);
+  shader.uploadUniformFloat("u_CellSize", gridSize);
   shader.uploadUniformFloat("u_Thickness", 0.005f);
   return DebugGrid(
       *VertexBuffer::createStaticVertexBuffer(

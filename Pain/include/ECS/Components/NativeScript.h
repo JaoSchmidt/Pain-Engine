@@ -47,9 +47,9 @@ public:
     // instantiateFunction = [](Scriptable *&instance) { instance = new T();
     // }
     destroyInstanceFunction = [](Scriptable *&instance) {
-      PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
-             "called",
-             fmt::ptr(instance));
+      // PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
+      //        "called",
+      //        fmt::ptr(instance));
       delete static_cast<T *>(instance);
       instance = nullptr;
     };
@@ -114,9 +114,9 @@ public:
     // instantiateFunction = [](Scriptable *&instance) { instance = new T();
     // }
     destroyInstanceFunction = [](Scriptable *&instance) {
-      PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
-             "called",
-             fmt::ptr(instance));
+      // PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
+      //        "called",
+      //        fmt::ptr(instance));
       delete static_cast<T *>(instance);
       instance = nullptr;
     };

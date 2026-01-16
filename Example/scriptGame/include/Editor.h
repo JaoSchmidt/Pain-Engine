@@ -1,4 +1,5 @@
 #pragma once
+#include "CoreFiles/Application.h"
 #include "CoreRender/FrameBuffer.h"
 #include "Misc/Events.h"
 #include "imgui_internal.h"
@@ -11,7 +12,7 @@ class PainlessEditor : public pain::UIObject
 {
 
 public:
-  ~PainlessEditor() = default;
+  ~PainlessEditor() { m_imGuiDebugMenu.onDestroy(); };
   NONCOPYABLE(PainlessEditor);
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
@@ -120,6 +121,8 @@ public:
       showStats(renderer.getStatistics<pain::SprayBatch>());
       showStats(renderer.getStatistics<pain::TriBatch>());
 
+      m_imGuiDebugMenu.onRender(renderer, isMinimized, dt);
+
       ImGui::End();
 
       ImGui::Begin("Viewport");
@@ -144,7 +147,7 @@ public:
 
   PainlessEditor(reg::Entity entity, pain::UIScene &scene,
                  pain::Application &app)
-      : pain::UIObject(entity, scene), m_app(app) {};
+      : pain::UIObject(entity, scene), m_app(app), m_imGuiDebugMenu() {};
   std::vector<std::string> m_availableResolutions;
 
 private:
@@ -157,4 +160,5 @@ private:
   ImVec2 m_avail = {200.f, 200.f};
   bool m_dockspaceOpen = true;
   pain::Application &m_app;
+  pain::ImGuiDebugMenu::Script m_imGuiDebugMenu;
 };

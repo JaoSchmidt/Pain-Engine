@@ -43,22 +43,22 @@ void main()
     // fix grid disappearing when in low res
     float u_Thickness = u_Thickness * 1080.0/u_resolution_y; 
     // BIG GRID -----------------------------------------------------
-    float majorEvery = 16.0; 
+    float majorEvery = 32.0; 
     float majorCellSize = u_CellSize * majorEvery;
 
-    vec2 pWrappedMajor = mod(p, majorCellSize) - u_CellSize;
-    vec2 gridMajor = abs((pWrappedMajor / majorCellSize) - 0.5);
+    vec2 posWrappedMajor = mod(p, majorCellSize);
+    vec2 gridMajor = abs((posWrappedMajor / majorCellSize) - 0.5);
     float lineDistMajor = min(gridMajor.x, gridMajor.y);
 
     float majorThickness = u_Thickness * v_zoomLevel / majorCellSize;
     float line = 1.0 - step(majorThickness, lineDistMajor);
 
     // SMALL GRID -----------------------------------------------------
-    vec2 pWrapped = mod(p, u_CellSize);
-    vec2 grid = abs((pWrapped / u_CellSize) - 0.5);
+    vec2 posWrapped = mod(p, u_CellSize);
+    vec2 grid = abs(posWrapped / u_CellSize);
     float lineDist = min(grid.x, grid.y);
 
-    float minorThickness = u_Thickness * 0.3 * v_zoomLevel / u_CellSize;
+    float minorThickness = u_Thickness * 0.4 * v_zoomLevel / u_CellSize;
     float lineMinor = 1.0 - step(minorThickness, lineDist);
 
     float cellScreenPixels = (u_CellSize / v_zoomLevel) * u_resolution_y;

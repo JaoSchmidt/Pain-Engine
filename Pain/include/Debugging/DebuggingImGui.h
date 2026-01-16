@@ -2,19 +2,25 @@
 // processes
 
 #include "Core.h"
+#include "ECS/Scriptable.h"
 #include "GUI/ImGuiSys.h"
 namespace pain
 {
-class EngineController : public ImGuiInstance
+namespace ImGuiDebugMenu
+{
+reg::Entity create(pain::UIScene &scene);
+
+class Script
 {
 public:
-  EngineController();
-  ~EngineController() = default;
-  NONCOPYABLE(EngineController);
-  EngineController(EngineController &&) = delete;
-  EngineController &operator=(EngineController &&) = delete;
+  Script();
+  ~Script() = default;
+  NONCOPYABLE(Script);
+  Script(Script &&) = delete;
+  Script &operator=(Script &&) = delete;
 
-  void onImGuiUpdate() override;
+  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);
+  void onDestroy();
   double m_currentTPS = 60.0;
 
 private:
@@ -26,5 +32,7 @@ private:
   int m_displayedCount = 1;
   int m_frameCount = 1;
 };
+
+} // namespace ImGuiDebugMenu
 
 } // namespace pain

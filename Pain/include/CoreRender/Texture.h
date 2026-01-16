@@ -16,7 +16,9 @@ class Texture
 {
 public:
   static std::optional<Texture> createTexture(const char *path,
-                                              bool clamp = false);
+                                              bool clamp = false,
+                                              bool keepOnCPUMemory = false,
+                                              bool isError = true);
   static std::optional<Texture>
   createTexture(const char *name, uint32_t width, uint32_t height,
                 ImageFormat format = ImageFormat::RGBA8);
@@ -40,12 +42,15 @@ public:
   // this variable should only be modified inside the renderer
   uint32_t m_slot = 0;
 
+  unsigned char *m_pixels = nullptr;
   std::string m_path = "NULL texture string"; // or name
 private:
   uint32_t m_width = 1, m_height = 1;
   ImageFormat m_dataFormat = ImageFormat::R8;
   uint32_t m_textureId = 0;
 
+  Texture(const char *path, uint32_t width, uint32_t height,
+          ImageFormat dataFormat, uint32_t rendererId, unsigned char *pixels);
   Texture(const char *path, uint32_t width, uint32_t height,
           ImageFormat dataFormat, uint32_t rendererId);
 };

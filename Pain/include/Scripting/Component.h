@@ -2,7 +2,7 @@
 #include "Core.h"
 #include <SDL2/SDL_events.h>
 
-#include "Assets/ResourceManager.h"
+#include "Assets/ManagerFile.h"
 #include "ECS/Components/ComponentManager.h"
 #include <sol/sol.hpp>
 
@@ -18,7 +18,7 @@ struct LuaScriptComponent {
   std::optional<sol::protected_function> m_onEventFunction;
   std::optional<sol::protected_function> m_onRenderFunction;
   std::optional<sol::protected_function> m_onDestroy;
-  const char *m_scriptPath = resources::getDefaultLuaFile();
+  const char *m_scriptPath = FileManager::getDefaultLuaFile();
   reg::Entity entity;
 
   LuaScriptComponent(reg::Entity entity);

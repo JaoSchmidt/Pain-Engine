@@ -1,5 +1,6 @@
 #include "GUI/Launcher.h"
-#include "Assets/ResourceManager.h"
+#include "Assets/ManagerFile.h"
+#include "Assets/ManagerIni.h"
 #include "Core.h"
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
@@ -38,10 +39,7 @@ public:
   void onCreate()
   {
     PLOG_I("Creating Launcher");
-    if (resources::existsFile(AppContext::configIniFile)) {
-      m_init.readAndUpdate(AppContext::configIniFile);
-    }
-    // clang-format on
+    m_init.readAndUpdate(true);
   }
   void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime deltaTime)
   {

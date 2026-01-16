@@ -3,7 +3,7 @@
 namespace pain
 {
 
-namespace resources
+namespace ScriptAssetManager
 {
 
 class DefaultNativeScript : public WorldObject
@@ -14,5 +14,5 @@ class DefaultNativeScript : public WorldObject
   void onDestroy();
 };
 
-} // namespace resources
+} // namespace ScriptAssetManager
 } // namespace pain

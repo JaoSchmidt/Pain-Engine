@@ -20,12 +20,13 @@ class MainMap
 {
 public:
   static MainMap create(float spriteWidth, float spriteHeight,
-                        glm::vec2 &playerPos, int chunkSize, int radius);
+                        glm::vec2 &playerPos, int chunkNum, int radius,
+                        float chunkSize);
 
   NONCOPYABLE(MainMap);
   NONMOVABLE(MainMap);
   void onCreate(pain::Scene &scene);
-  void updateSurroundingChunks(glm::vec2 &playerPos, pain::Scene &scene);
+  void updateSurroundingChunks(const glm::vec2 &playerPos, pain::Scene &scene);
 
   const std::vector<std::vector<int>> &getDefaultMap() const;
   const std::vector<std::vector<int>> &getSceneryMap() const;
@@ -35,13 +36,14 @@ public:
   reg::Entity getChunk(int x, int y) const;
 
 private:
-  int m_radius = 1;
-  int m_chunkSize = 32;
+  int m_radius = 2;
+  int m_numDiv = 32;
+  float m_chunkSize = 4.f;
   glm::ivec2 m_chunkAt;
   std::map<std::pair<int, int>, reg::Entity> m_chunks;
   pain::TextureSheet &m_spriteSheet;
 
   void createVecFromMap();
-  MainMap(int radius, int chunkSize, glm::ivec2 chunkAt, float spriteWidth,
-          float spriteHeight);
+  MainMap(int radius, int chunkNum, float chunkSize, glm::ivec2 chunkAt,
+          float spriteWidth, float spriteHeight);
 };

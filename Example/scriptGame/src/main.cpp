@@ -1,6 +1,7 @@
 #include <iostream>
 #include <pain.h>
 
+#include "Assets/ManagerIni.h"
 #include "Asteroid.h"
 #include "CoreRender/CameraComponent.h"
 #include "Editor.h"
@@ -23,11 +24,11 @@ public:
                                        int cameraHeight, float zoom,
                                        pain::Application *app)
   {
-    glm::vec2 playerPos{0.1, 0.1f};
+    glm::vec2 playerPos{0};
     pain::Texture &shipTex =
-        pain::resources::getTexture("resources/textures/ship_H.png");
+        pain::TextureManager::createTexture("resources/textures/ship_H.png");
     reg::Entity playerCam =
-        Player::create(scene, shipTex, playerPos, {0.3f, 0.3f}, cameraWidth,
+        Player::create(scene, shipTex, playerPos, {0.25f, 0.25f}, cameraWidth,
                        cameraHeight, zoom);
     app->setRendererCamera(playerCam, cameraWidth, cameraHeight);
     scene.getComponent<Component::OrthoCamera>(playerCam).setProjection(
@@ -41,79 +42,75 @@ public:
     // MOUSE POINTER
     // ---------------------------------------------------------------
     // scene.emplaceScript<MousePointerScript>(mp, cameraEntity);
-
+    pain::TextureManager::createTexture("resources/textures/Checkerboard.png");
+    pain::TextureManager::createTexture(
+        "resources/textures/Checkerboard original.png");
     auto factory = [&] {
       // Force NRVO at last point
-      return MainMap::create(16.f, 16.f, playerPos, 2, 1);
+      return MainMap::create(16.f, 16.f, playerPos, 32, 0, 4.f);
     };
 
     return pain::Scene::emplaceScript<MainScript>(scene.getEntity(), scene,
                                                   factory, playerCam);
   }
-  // void onCreate() { m_mainMap.onCreate(getScene()); }
+  void onCreate() { m_mainMap.onCreate(getScene()); }
   MainScript(reg::Entity entity, pain::Scene &scene, auto mainMapFactory,
              reg::Entity player)
       : pain::WorldObject(entity, scene), //
-        m_player(player)                  //
-  // m_mainMap(mainMapFactory())       //
+        m_player(player),                 //
+        m_mainMap(mainMapFactory())       //
   {};
   std::vector<std::vector<int>> m_backgroundMap;
   reg::Entity m_player = reg::Entity{-1};
-  // MainMap m_mainMap;
+  MainMap m_mainMap;
 
   void onUpdate(pain::DeltaTime dt)
   {
-    // m_mainMap.updateSurroundingChunks(
-    //     getComponent<pain::Transform2dComponent>(m_player), getScene());
+    m_mainMap.updateSurroundingChunks(
+        getComponent<pain::Transform2dComponent>(m_player), getScene());
   }
   void onRender(pain::Renderer2d &renderer, bool isMinimazed,
                 pain::DeltaTime currentTime)
   {
-    renderer.drawQuad(
-        {-0.2f, -0.2f}, {0.2f, 0.2f}, {204, 51, 25, 255},
-        std::numbers::pi * -currentTime.getSeconds(),
-        pain::RenderLayer::Default,
-        pain::resources::getTexture("resources/textures/Checkerboard.png"));
-    renderer.drawQuad(
-        {0.0f, 0.0f}, {0.2f, 0.2f}, {230, 230, 51, 255},
-        pain::RenderLayer::Default,
-        pain::resources::getDefaultTexture(pain::resources::Error, false));
-
-    renderer.drawQuad({-0.5f, 0.5f}, {0.2f, 0.2f}, {255, 255, 255, 255},
+    renderer.drawQuad({-0.2f, -0.2f}, {0.25f, 0.25f}, {204, 51, 25, 255},
+                      std::numbers::pi * -currentTime.getSeconds(),
                       pain::RenderLayer::Default,
-                      pain::resources::getTexture(
+                      pain::TextureManager::getTexture(
+                          "resources/textures/Checkerboard.png"));
+    renderer.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f}, {230, 230, 51, 255},
+                      pain::RenderLayer::Default,
+                      pain::TextureManager::getDefaultTexture(
+                          pain::TextureManager::General, false));
+
+    renderer.drawQuad({-0.5f, 0.5f}, {0.25f, 0.25f}, {255, 255, 255, 255},
+                      pain::RenderLayer::Default,
+                      pain::TextureManager::getTexture(
                           "resources/textures/Checkerboard original.png"));
-    renderer.drawQuad(
-        {0.2f, -0.2f}, {0.2f, 0.2f}, {204, 51, 26, 255},
-        std::numbers::pi * currentTime.getSeconds(),
-        pain::RenderLayer::MuchCloser,
-        pain::resources::getTexture("resources/textures/Checkerboard.png"));
-    renderer.drawQuad(
-        {0.2f, 0.2f}, {0.2f, 0.2f}, {230, 230, 51, 255},
-        pain::RenderLayer::MuchCloser,
-        pain::resources::getDefaultTexture(pain::resources::Error, false));
-    renderer.drawQuad({-0.2f, 0.2f}, {0.2f, 0.2f}, {255, 255, 255, 255},
+    renderer.drawQuad({0.2f, -0.2f}, {0.25f, 0.25f}, {204, 51, 26, 255},
+                      std::numbers::pi * currentTime.getSeconds(),
                       pain::RenderLayer::MuchCloser,
-                      pain::resources::getTexture(
+                      pain::TextureManager::getTexture(
+                          "resources/textures/Checkerboard.png"));
+    renderer.drawQuad({0.2f, 0.2f}, {0.25f, 0.25f}, {230, 230, 51, 255},
+                      pain::RenderLayer::MuchCloser,
+                      pain::TextureManager::getDefaultTexture(
+                          pain::TextureManager::General, false));
+    renderer.drawQuad({-0.2f, 0.2f}, {0.25f, 0.25f}, {255, 255, 255, 255},
+                      pain::RenderLayer::MuchCloser,
+                      pain::TextureManager::getTexture(
                           "resources/textures/Checkerboard original.png"));
-    renderer.drawCircle({0.5f, 0.5f}, 0.1f, {51, 75, 230, 255});
-    renderer.drawTri({-0.5f, -0.5f}, {0.2f, 0.2f}, {0.2f, 0.3f, 0.9f, 1.f});
+    renderer.drawCircle({0.5f, 0.5f}, 0.25f, {51, 75, 230, 255});
+    renderer.drawTri({-0.5f, -0.5f}, {0.25f, 0.25f}, {0.2f, 0.3f, 0.9f, 1.f});
   }
 };
 
 pain::Application *pain::createApplication()
 {
-  if (!resources::existsFile(AppContext::configIniFile)) {
-    PLOG_W("config.ini file should exist at the beginning! Did you skip the "
-           "launcher?");
-  }
   IniConfig ini;
-  ini.readAndUpdate(AppContext::configIniFile);
-  resources::setDefaultPath(ini.assetsPath.value.c_str());
+  ini.readAndUpdate();
 
   InternalConfig internalIni;
-  internalIni.readAndUpdate(ini.assetsPath.value.c_str(),
-                            INTERNAL_SETTINGS_STRING);
+  internalIni.readAndUpdate(ini.assetsPath.value.c_str());
 
   LOG_T("Creating app");
   std::string title = internalIni.title.get();

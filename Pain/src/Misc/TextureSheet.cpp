@@ -62,6 +62,7 @@ TextureSheet TextureSheet::createWithDimensions(
     std::initializer_list<std::pair<int, int>> coords, float padding)
 {
   std::vector<std::array<glm::vec2, 4>> textureIds = {};
+  textureIds.reserve(coords.size());
   for (auto [x, y] : coords) {
     textureIds.push_back(
         createVecFromCoord(texture, spriteWidth, spriteHeight, x, y, padding));

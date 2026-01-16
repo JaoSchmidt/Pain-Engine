@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Assets/DefaultTexture.h"
+#include "Assets/ManagerTexture.h"
+#include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Texture.h"
+#include "ECS/Components/ComponentManager.h"
 #include "Misc/BasicShape.h"
 #include "Misc/TextureSheet.h"
 
@@ -30,8 +32,8 @@ struct SpriteComponent {
   Color color = {255, 255, 255, 255};
   float m_tilingFactor = 1.f;
   RenderLayer layer = RenderLayer::Default;
-  TextureVariant m_tex = TextureVariant{
-      &resources::getDefaultTexture(resources::DefaultTexture::Error)};
+  TextureVariant m_tex = TextureVariant{&TextureManager::getDefaultTexture(
+      TextureManager::DefaultTexture::Error)};
   void printptr(const char *a) const
   {
     std::visit(
@@ -56,8 +58,8 @@ struct SpriteComponent {
                            .color = info.color,
                            .m_tilingFactor = info.m_tilingFactor,
                            .layer = info.layer,
-                           .m_tex = &resources::getDefaultTexture(
-                               resources::DefaultTexture::General, false)};
+                           .m_tex = &TextureManager::getDefaultTexture(
+                               TextureManager::DefaultTexture::General, false)};
   }
 
   //  Texture by file path
@@ -68,7 +70,8 @@ struct SpriteComponent {
                            .color = info.color,
                            .m_tilingFactor = info.m_tilingFactor,
                            .layer = info.layer,
-                           .m_tex = &resources::getTexture(textureFilePath)};
+                           .m_tex =
+                               &TextureManager::getTexture(textureFilePath)};
   }
 
   static SpriteComponent create(const SpriteCreationInfo &info,
@@ -79,7 +82,8 @@ struct SpriteComponent {
         .color = info.color,
         .m_tilingFactor = info.m_tilingFactor,
         .layer = info.layer,
-        .m_tex = SheetStruct{&resources::getTextureSheet(sheetFilePath), id}};
+        .m_tex =
+            SheetStruct{&TextureManager::getTextureSheet(sheetFilePath), id}};
   }
 
   //  Texture by reference
@@ -127,7 +131,7 @@ struct SpriteComponent {
   void setTexture(Texture &texture) { m_tex = TextureVariant{&texture}; }
   void setTexture(const char *filepath)
   {
-    m_tex = TextureVariant{&resources::getTexture(filepath)};
+    m_tex = TextureVariant{&TextureManager::getTexture(filepath)};
   }
   void setTextureSheet(TextureSheet &sheet, unsigned short id)
   {

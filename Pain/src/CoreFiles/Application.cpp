@@ -1,13 +1,14 @@
 #include "CoreFiles/Application.h"
-#include "Assets/DefaultTexture.h"
 #include "Assets/HighResolutionTimer.h"
-#include "Assets/ResourceManager.h"
+#include "Assets/ManagerFile.h"
+#include "Assets/ManagerTexture.h"
 #include "ContextBackend.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
+#include "GUI/ImGuiDebugRegistry.h"
 #include "GUI/ImGuiSys.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/Events.h"
@@ -26,7 +27,6 @@ unsigned Application::getProcessorCount()
 Application *Application::createApplication(AppContext &&context,
                                             FrameBufferCreationInfo &&fbci)
 {
-  PLOG_T(resources::getCurrentWorkingDir());
   // =========================================================================//
   // SDL Initial setup
   // =========================================================================//
@@ -67,15 +67,22 @@ Application *Application::createApplication(AppContext &&context,
   // =========================================================================//
   // Default Values to increase redundancy
   // =========================================================================//
-  resources::initiateDefaultScript();
-  resources::initiateDefaultTextures();
+  FileManager::initiateDefaultScript();
+  TextureManager::initiateDefaultTextures();
   // =========================================================================//
   // config.ini file
   // =========================================================================//
 
-  return new Application(std::move(luaState), std::move(window),
-                         std::move(sdlContext), std::move(fbci),
-                         std::move(context));
+  Application *app = new Application(std::move(luaState), std::move(window),
+                                     std::move(sdlContext), std::move(fbci),
+                                     std::move(context));
+
+  addComponentFunctions(app->m_luaState, app->m_worldScene);
+  addScheduler(app->m_luaState, app->m_worldScene);
+  app->m_worldScene.addEntityFunctions("World", app->m_luaState);
+  createLuaEventMap(app->m_luaState, app->m_eventDispatcher);
+  TextureManager::addRendererForDeletingTextures(&(app->m_renderer));
+  return app;
 }
 /* Creates window, opengl context and init glew*/
 // renderer is created BEFORE the asset manager, as the asset manager retrives
@@ -84,20 +91,14 @@ Application::Application(sol::state &&luaState, SDL_Window *window,
                          void *sdlContext, FrameBufferCreationInfo &&fbci,
                          AppContext &&context)
     : m(), m_context(context), m_renderer(Renderer2d::createRenderer2d()),
-      m_defaultImGuiInstance(new EngineController()),
       m_threadPool(ThreadPool{}), m_luaState(std::move(luaState)),
       m_eventDispatcher(m_luaState),
       m_worldScene(Scene::create(m_eventDispatcher, m_luaState, m_threadPool)),
       m_endGameFlags(), m_window(window), m_sdlContext(sdlContext),
       m_renderPipeline(fbci.swapChainTarget
                            ? RenderPipeline::create(m_eventDispatcher)
-                           : RenderPipeline::create(fbci, m_eventDispatcher))
-{
-  addComponentFunctions(m_luaState, m_worldScene);
-  addScheduler(m_luaState, m_worldScene);
-  m_worldScene.addEntityFunctions("World", m_luaState);
-  createLuaEventMap(m_luaState, m_eventDispatcher);
-};
+                           : RenderPipeline::create(fbci, m_eventDispatcher)) {
+      };
 
 void Application::stopLoop(bool restartFlag)
 {
@@ -139,11 +140,15 @@ EndGameFlags Application::run()
     m.currentSample = (m.currentSample + 1) % m.FPS_SAMPLE_COUNT;
 
     if (m.currentSample % 64 == 0) { // update displayed fps
-      m_defaultImGuiInstance->m_currentTPS = 0.0;
+      double currentTPS = 0.0;
       for (const double fpsSample : m.fpsSamples) {
-        m_defaultImGuiInstance->m_currentTPS += fpsSample;
+        currentTPS += fpsSample;
       }
-      m_defaultImGuiInstance->m_currentTPS /= m.FPS_SAMPLE_COUNT;
+      currentTPS /= m.FPS_SAMPLE_COUNT;
+      IMGUI_PLOG_NAME("FPS", [currentTPS]() {
+        const std::string fps = "FPS: " + std::to_string(currentTPS);
+        ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
+      });
     }
 
     // =============================================================== //
@@ -219,8 +224,8 @@ EndGameFlags Application::run()
 Application::~Application()
 {
   PLOG_I("Deleting application");
-  resources::clearTextures();
-  resources::getDefaultLuaFile();
+  TextureManager::clearTextures();
+  FileManager::getDefaultLuaFile();
   SDL_GL_DeleteContext(m_sdlContext);
   SDL_DestroyWindow(m_window);
   SDL_Quit();

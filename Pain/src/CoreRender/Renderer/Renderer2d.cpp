@@ -1,5 +1,5 @@
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "Assets/DefaultTexture.h"
+#include "Assets/ManagerTexture.h"
 #include "CoreRender/CameraComponent.h"
 #include "Debugging/Profiling.h"
 
@@ -97,7 +97,7 @@ void Renderer2d::endScene()
 // Draw Circles
 // ================================================================= //
 
-void Renderer2d::drawCircle(const glm::vec2 &position, const float radius,
+void Renderer2d::drawCircle(const glm::vec2 &position, const float diameter,
                             const Color &tintColor,
                             const std::array<glm::vec2, 4> &textureCoordinate)
 {
@@ -106,7 +106,6 @@ void Renderer2d::drawCircle(const glm::vec2 &position, const float radius,
     m.circleBatch.flush();
     m.circleBatch.resetPtr();
   }
-  const float diameter = 2.f * radius;
   const glm::mat4 transform =
       getTransform(position, glm::vec2(diameter, diameter));
   m.circleBatch.allocateCircle(transform, tintColor, textureCoordinate);
@@ -312,7 +311,8 @@ Renderer2d Renderer2d::createRenderer2d()
         .textBatch = TextBatch::create(),     //
         .debugGrid = DebugGrid::create(),
         .textureSlots = // First texture is a  1x1 white texture
-        {&resources::getDefaultTexture(resources::DefaultTexture::Blank)} //
+        {&TextureManager::getDefaultTexture(
+            TextureManager::DefaultTexture::Blank)} //
     };
   }); //
 }
@@ -410,7 +410,7 @@ void Renderer2d::removeTexture(const Texture &texture)
     return;
   P_ASSERT_W(*m.textureSlots[texture.m_slot] == texture,
              "Attempted to remove a texture that wasn't allocated.");
-  for (uint32_t i = texture.m_slot; i < m.textureSlotIndex; i++) {
+  for (uint32_t i = texture.m_slot; i < m.textureSlotIndex - 1; i++) {
     m.textureSlots[i] = m.textureSlots[i + 1];
     m.textureSlots[i]->m_slot = i; // Update the slot value in the Texture
   }

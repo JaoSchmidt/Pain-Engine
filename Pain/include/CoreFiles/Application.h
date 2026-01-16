@@ -128,7 +128,6 @@ private:
 
   Renderer2d m_renderer;
 
-  EngineController *m_defaultImGuiInstance;
   ThreadPool m_threadPool;
   sol::state m_luaState;
   reg::EventDispatcher m_eventDispatcher;

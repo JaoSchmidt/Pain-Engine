@@ -1,20 +1,100 @@
 #include "MapGen/Chunk.h"
+#include "Assets/ManagerFile.h"
+#include "Assets/ManagerTexture.h"
 #include "MapGen/MainGen.h"
 #include "Physics/MovementComponent.h"
 
 #include <PerlinNoise.hpp>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
-std::vector<int> generateTerrainMatrix(int chunkSize, int offSetX, int offSetY)
+#define FILE_FORMAT "resources/textures/chunks/chunk_{}_{}.png"
+
+void blitTileRGBA(const unsigned char *atlasPixels, int atlasWidth,
+                  int atlasHeight, unsigned char *outPixels, int outWidth,
+                  int outHeight, int dstX, int dstY, int tileSizeX,
+                  int tileSizeY, const std::array<glm::vec2, 4> &uv)
+{
+  // Convert UVs to pixel coordinates in atlas
+  int srcX = static_cast<int>(uv[0].x * atlasWidth);
+  int srcY = static_cast<int>(uv[0].y * atlasHeight);
+
+  for (int x = 0; x < tileSizeX; ++x) {
+    for (int y = 0; y < tileSizeY; ++y) {
+      // Flip Y when reading from atlas
+      int atlasIndex = ((srcY + y) * atlasWidth + (srcX + x)) * 4;
+      int outIndex = ((dstY + y) * outWidth + (dstX + x)) * 4;
+      outPixels[outIndex + 0] = atlasPixels[atlasIndex + 0];
+      outPixels[outIndex + 1] = atlasPixels[atlasIndex + 1];
+      outPixels[outIndex + 2] = atlasPixels[atlasIndex + 2];
+      outPixels[outIndex + 3] = atlasPixels[atlasIndex + 3];
+    }
+  }
+}
+
+bool saveChunkAsPNG(const std::vector<int> &tileIds, int numDiv,
+                    pain::TextureSheet &spriteSheet, const char *filename)
+{
+  pain::Texture &atlas = spriteSheet.getTexture();
+
+  if (!atlas.m_pixels) {
+    PLOG_W("Trying to save texture as png, but texture isn't on the CPU! Try "
+           "loading with keepOnCPUMemory = true");
+    return false;
+  }
+  int tilePixelSizeX = spriteSheet.getSpriteWidth();
+  int tilePixelSizeY = spriteSheet.getSpriteHeight();
+
+  const int outWidth = numDiv * tilePixelSizeX;
+  const int outHeight = numDiv * tilePixelSizeY;
+
+  std::vector<unsigned char> outputPixels(outWidth * outHeight * 4, 255);
+
+  const unsigned char *atlasPixels = atlas.m_pixels;
+  const int atlasWidth = atlas.getWidth();
+  const int atlasHeight = atlas.getHeight();
+
+  for (int x = 0; x < numDiv; ++x) {
+    for (int y = 0; y < numDiv; ++y) {
+      int index = y * numDiv + x;
+      int tileId = tileIds[index];
+
+      auto uv = spriteSheet.getTexCoord(tileId);
+
+      int dstX = x * tilePixelSizeX;
+      // int dstY = (numDiv - y - 1) * tilePixelSizeY;
+      int dstY = y * tilePixelSizeY;
+      blitTileRGBA(atlasPixels, atlasWidth, atlasHeight, outputPixels.data(),
+                   outWidth, outHeight, dstX, dstY, tilePixelSizeX,
+                   tilePixelSizeY, uv);
+    }
+  }
+  //
+  // std::vector<unsigned char> flippedPixels(outWidth * outHeight * 4);
+  // for (int y = 0; y < outHeight; ++y) {
+  //   int srcRow = y * outWidth * 4;
+  //   int dstRow = (outHeight - 1 - y) * outWidth * 4;
+  //   std::memcpy(&flippedPixels[dstRow], &outputPixels[srcRow], outWidth * 4);
+  // }
+  stbi_flip_vertically_on_write(true);
+  // Write PNG (stride = width * 4)
+  int result = stbi_write_png(filename, outWidth, outHeight, 4,
+                              outputPixels.data(), outWidth * 4);
+
+  return result != 0;
+}
+
+std::vector<int> generateTerrainMatrix(int numDiv, int offSetX, int offSetY)
 {
   const siv::PerlinNoise::seed_type seed = 123456u;
   const siv::PerlinNoise perlin{seed};
-  const int areaSize = chunkSize * chunkSize;
+  const int areaSize = numDiv * numDiv;
   std::vector<int> matrix(areaSize);
-  for (int x = 0; x < chunkSize; ++x) {
-    for (int y = 0; y < chunkSize; ++y) {
-      double noise = perlin.octave2D_01((x + offSetX * chunkSize) * 0.1,
-                                        (y + offSetY * chunkSize) * 0.1, 4);
-      int index = y * chunkSize + x; // Compute 1D index
+  for (int x = 0; x < numDiv; ++x) {
+    for (int y = 0; y < numDiv; ++y) {
+      double noise = perlin.octave2D_01((x + offSetX * numDiv) * 0.1,
+                                        (y + offSetY * numDiv) * 0.1, 4);
+      int index = y * numDiv + x; // Compute 1D index
 
       if (noise < 0.3) {
         matrix[index] = 36; // dirt 1
@@ -38,52 +118,79 @@ std::vector<int> generateTerrainMatrix(int chunkSize, int offSetX, int offSetY)
   return matrix;
 }
 
-reg::Entity Chunk::create(pain::Scene &scene, glm::ivec2 offset, int chunkSize,
-                          MainMap &mainMap)
+struct GenerateChunkJob {
+  pain::Scene *scene;
+  MainMap *mainMap;
+  glm::ivec2 offSet;
+  int numDiv;
+  const char *file;
+
+  void operator()()
+  {
+    std::vector<int> data = generateTerrainMatrix(numDiv, offSet.x, offSet.y);
+
+    scene->enqueueMainThread([=, this, data = std::move(data)]() mutable {
+      bool result =
+          saveChunkAsPNG(data, numDiv, mainMap->getTextureSheet(), file);
+      if (!result)
+        PLOG_E("Failed to generate chunk texture");
+
+      reg::Entity correctEntity = mainMap->getChunk(offSet.x, offSet.y);
+      if (correctEntity == reg::Entity{-1})
+        return;
+      scene->getComponent<pain::SpriteComponent>(correctEntity)
+          .setTexture(pain::TextureManager::getTexture(file));
+    });
+  }
+};
+
+reg::Entity Chunk::create(pain::Scene &scene, glm::ivec2 offSet, int numDiv,
+                          float chunkSize, MainMap &mainMap)
 
 {
   reg::Entity entity = scene.createEntity();
-  scene.createComponents(                   //
-      entity, pain::Transform2dComponent{}, //
-      pain::NativeScriptComponent{}         //
-  );
-  pain::Scene::emplaceScript<Chunk::Script>(entity, scene, offset, chunkSize,
-                                            mainMap);
 
-  // PLOG_I("getting inside chunk.cpp {}", entity);
-  // pain::NativeScriptComponent &nsc =
-  scene.getComponent<pain::NativeScriptComponent>(entity);
+  std::string file = std::format(FILE_FORMAT, offSet.x, offSet.y);
+  scene.createComponents(                                                //
+      entity, pain::Transform2dComponent{glm::vec2(offSet) * chunkSize}, //
+      pain::NativeScriptComponent{},                                     //
+      pain::SpriteComponent{.m_size = glm::vec2(chunkSize),
+                            .m_tex = &pain::TextureManager::createTexture(
+                                file.c_str(), false, true, false, false)} //
+  );
+
+  pain::Scene::emplaceScript<Chunk::Script>(entity, scene, offSet, numDiv,
+                                            mainMap, file.c_str());
+  if (!pain::FileManager::existsFile(file))
+    // Generate Chunk Texture
+    scene.getThreadPool().enqueue([=, &mainMap, &scene]() {
+      std::vector<int> data = generateTerrainMatrix(numDiv, offSet.x, offSet.y);
+
+      scene.enqueueMainThread([=, &scene, &mainMap,
+                               data = std::move(data)]() mutable {
+        bool result = saveChunkAsPNG(data, numDiv, mainMap.getTextureSheet(),
+                                     file.c_str());
+        if (!result)
+          PLOG_E("Failed to generate chunk texture");
+
+        reg::Entity correctEntity = mainMap.getChunk(offSet.x, offSet.y);
+        if (correctEntity == reg::Entity{-1})
+          return;
+        scene.getComponent<pain::SpriteComponent>(correctEntity)
+            .setTexture(pain::TextureManager::createTexture(file.c_str()));
+      });
+    });
+  // scene.getThreadPool().enqueue(
+  //     GenerateChunkJob{&scene, &mainMap, offSet, numDiv, file.c_str()});
+
   return entity;
 }
 
 Chunk::Script::Script(reg::Entity entity, pain::Scene &scene, glm::ivec2 offSet,
-                      int chunkSize, MainMap &mainMap)
-    : pain::WorldObject(entity, scene), m_spriteSheet(mainMap.getTextureSheet())
-
-{
-  m_offsetX = offSet.x;
-  m_offsetY = offSet.y;
-  // nsc.m_name = "chunk (" + std::to_string(offSet.x) + ", " +
-  //              std::to_string(offSet.y) + ")";
-  m_chunkSize = chunkSize;
-  auto &pool = getThreadPool();
-
-  pool.enqueue([=, &mainMap, &scene]() {
-    std::vector<int> data =
-        generateTerrainMatrix(chunkSize, offSet.x, offSet.y);
-
-    scene.enqueueMainThread(
-        [=, &scene, &mainMap, data = std::move(data)]() mutable {
-          reg::Entity correctEntity = mainMap.getChunk(offSet.x, offSet.y);
-          if (correctEntity == reg::Entity{-1})
-            return;
-
-          // NOTE: possible that correctEntity != entity
-          scene.getNativeScript<Chunk::Script>(correctEntity)
-              .setData(std::move(data));
-        });
-  });
-}
+                      int numDiv, MainMap &mainMap, const char *filename)
+    : pain::WorldObject(entity, scene), m_offsetX(offSet.x),
+      m_offsetY(offSet.y), m_filename(filename),
+      m_spriteSheet(mainMap.getTextureSheet()) {};
 
 bool Chunk::Script::isOutsideRadius(glm::ivec2 &playerChunkCoord, int radius)
 {
@@ -93,22 +200,9 @@ bool Chunk::Script::isOutsideRadius(glm::ivec2 &playerChunkCoord, int radius)
          m_offsetY < playerChunkCoord.y - radius ||
          m_offsetY >= playerChunkCoord.y + radius;
 }
-void Chunk::Script::onRender(pain::Renderer2d &renderer2d, bool isMinimized,
-                             pain::DeltaTime currentTime)
+
+Chunk::Script::~Script()
 {
-  PROFILE_FUNCTION();
-  if (m_data.size() == m_chunkSize * m_chunkSize)
-    for (int x = 0; x < m_chunkSize; x++) {
-      for (int y = 0; y < m_chunkSize; y++) {
-        int index = y * m_chunkSize + x;
-        ASSERT(m_data[index] != 0, "Texture of index {} cannot be 0 in a chunk",
-               index);
-        renderer2d.drawQuad({1.f * (x + m_offsetX * m_chunkSize),
-                             1.f * (y + m_offsetY * m_chunkSize)},
-                            {1.f, 1.f}, {255, 255, 255, 255},
-                            pain::RenderLayer::Distant,
-                            m_spriteSheet.getTexture(), 1.0f,
-                            m_spriteSheet.getTexCoord(m_data[index]));
-      }
-    }
+  pain::TextureManager::deleteTexture(m_filename);
+  // PLOG_T("Deleting chunk in ({},{})", m_offsetX, m_offsetY);
 }

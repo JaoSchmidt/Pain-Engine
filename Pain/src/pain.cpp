@@ -1,4 +1,5 @@
 #include "pain.h"
+#include "Assets/ManagerIni.h"
 #include "Core.h"
 #include "CoreFiles/EndGameFlags.h"
 #include <glad/gl.h>
@@ -11,7 +12,7 @@ bool Pain::initiate()
   // start log
   logWrapper::InitLogger();
   PLOG_T("Initialized Log!");
-  return resources::isSettingsGuiNeeded();
+  return IniConfig::isSettingsGuiNeeded();
 }
 
 EndGameFlags Pain::runAndDeleteApplication(Application *app)

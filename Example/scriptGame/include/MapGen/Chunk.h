@@ -7,32 +7,30 @@ class MainMap;
 
 namespace Chunk
 {
-reg::Entity create(pain::Scene &scene, glm::ivec2 offset, int chunkSize,
-                   MainMap &mainMap);
+reg::Entity create(pain::Scene &scene, glm::ivec2 offset, int chunkNum,
+                   float chunkSize, MainMap &mainMap);
 
 class Script : public pain::WorldObject
 {
 public:
   Script(reg::Entity entity, pain::Scene &scene, glm::ivec2 offSet,
-         int chunkSize, MainMap &mainMap);
+         int chunkSize, MainMap &mainMap, const char *filename);
   // void onCreate();
   // void onUpdate(pain::DeltaTime deltaTime);
-  void onRender(pain::Renderer2d &renderer2d, bool isMinimized,
-                pain::DeltaTime currentTime);
+  // void onRender(pain::Renderer2d &renderer2d, bool isMinimized,
+  //               pain::DeltaTime currentTime);
   bool isOutsideRadius(glm::ivec2 &chunkAt, int radius);
-  void setData(std::vector<int> &&data) { m_data = std::move(data); }
   // TODO: Implement chunk file saving
   // - checkChunkOnFile
   // - loadChunkOnFile
   // - saveChunkOnFIle
   int m_offsetX = 0;
   int m_offsetY = 0;
-
-  ~Script() { PLOG_T("Deleting chunk in ({},{})", m_offsetX, m_offsetY); };
+  const std::string m_filename;
+  ~Script();
 
 private:
-  std::vector<int> m_data = {};
-  int m_chunkSize = 0;
+  // std::vector<int> m_data = {};
   pain::TextureSheet &m_spriteSheet;
 };
 

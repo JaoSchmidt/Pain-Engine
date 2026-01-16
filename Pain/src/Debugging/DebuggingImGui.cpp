@@ -1,21 +1,35 @@
 #include "Debugging/DebuggingImGui.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
+#include "GUI/ImGuiComponent.h"
+#include "GUI/ImGuiDebugRegistry.h"
 #include "imgui.h"
 #include <string>
 
 namespace pain
 {
 
-EngineController::EngineController()
+reg::Entity ImGuiDebugMenu::create(pain::UIScene &scene)
+{
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(entity, pain::ImGuiComponent{});
+  return entity;
+}
+
+ImGuiDebugMenu::Script::Script()
 {
   // Default result file name: profile-<datetime>.json
   m_resultFileName = generateTimestampedFilename("profile-", ".json");
 }
 
-void EngineController::onImGuiUpdate()
+void ImGuiDebugMenu::Script::onRender(Renderer2d &renderer, bool isMinimized,
+                                      DeltaTime currentTime)
 {
-  ImGui::Begin("Engine Controller");
+  UNUSED(renderer)
+  UNUSED(isMinimized)
+  UNUSED(currentTime)
+
+  ImGui::Begin("Debug Info");
   const std::string fps = "FPS: " + std::to_string(m_currentTPS);
   ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
   ImGui::InputText("Profile Base Name", &m_baseProfileName[0],
@@ -47,12 +61,15 @@ void EngineController::onImGuiUpdate()
       m_frameCount = -1; // Use -1 to indicate "not running"
     }
   }
+
+  ImGui::Separator();
+  ImGuiDebugRegistry::renderAll();
+
   ImGui::End();
 }
 
-std::string
-EngineController::generateTimestampedFilename(const std::string &prefix,
-                                              const std::string &extension)
+std::string ImGuiDebugMenu::Script::generateTimestampedFilename(
+    const std::string &prefix, const std::string &extension)
 {
   UNUSED(extension)
   std::ostringstream oss;
@@ -63,7 +80,7 @@ EngineController::generateTimestampedFilename(const std::string &prefix,
 }
 
 std::string
-EngineController::getNextAvailableFileName(const std::string &baseStem)
+ImGuiDebugMenu::Script::getNextAvailableFileName(const std::string &baseStem)
 {
   namespace fs = std::filesystem;
 
@@ -77,5 +94,6 @@ EngineController::getNextAvailableFileName(const std::string &baseStem)
 
   return name;
 }
+void ImGuiDebugMenu::Script::onDestroy() { ImGuiDebugRegistry::clear(); }
 
 } // namespace pain

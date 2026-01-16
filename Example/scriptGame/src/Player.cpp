@@ -12,8 +12,8 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
                            float zoomLevel)
 {
   reg::Entity entity = scene.createEntity();
-  scene.createComponents(                   //
-      entity, pain::Transform2dComponent{}, //
+  scene.createComponents(                             //
+      entity, pain::Transform2dComponent{initialPos}, //
       pain::SpriteComponent::create(
           {.m_size = size, .layer = pain::RenderLayer::Closer}, tex), //
       pain::SpritelessComponent::createQuad(size),                    //

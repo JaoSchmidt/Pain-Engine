@@ -9,23 +9,28 @@
 
 using Chunk::Script;
 
-glm::ivec2 getChunkCoordinate(glm::vec2 &playerCoord, int chunkSize)
+glm::ivec2 getChunkCoordinate(const glm::vec2 &playerCoord, float chunkSize)
 {
-  return {playerCoord.x / chunkSize, playerCoord.y / chunkSize};
+  return {static_cast<int>(
+              std::floor((playerCoord.x + chunkSize / 2.0f) / chunkSize)),
+          static_cast<int>(
+              std::floor((playerCoord.y + chunkSize / 2.0f) / chunkSize))};
 }
 
 MainMap MainMap::create(float spriteWidth, float spriteHeight,
-                        glm::vec2 &playerPos, int chunkSize, int radius)
+                        glm::vec2 &playerPos, int chunkNum, int radius,
+                        float chunkSize)
 {
 
-  glm::ivec2 chunkAt = getChunkCoordinate(playerPos, chunkSize);
-  return MainMap{radius, chunkSize, chunkAt, spriteWidth, spriteHeight};
+  glm::ivec2 chunkAt = getChunkCoordinate(playerPos, chunkNum);
+  return MainMap{radius,  chunkNum,    chunkSize,
+                 chunkAt, spriteWidth, spriteHeight};
 }
 
-MainMap::MainMap(int radius, int chunkSize, glm::ivec2 chunkAt,
+MainMap::MainMap(int radius, int chunkNum, float chunkSize, glm::ivec2 chunkAt,
                  float spriteWidth, float spriteHeight)
     : m_radius(radius), m_chunkSize(chunkSize), m_chunkAt(chunkAt),
-      m_spriteSheet(pain::resources::createWithDimensions(
+      m_spriteSheet(pain::TextureManager::createWithDimensions(
           "terrain",
           "resources/textures/kenney_roguelike/Spritesheet/"
           "roguelikeSheet_transparent.png",
@@ -78,31 +83,28 @@ MainMap::MainMap(int radius, int chunkSize, glm::ivec2 chunkAt,
               {9, 29}, // 35 grass-rock
               {6, 30}, // 36 dirt 1
               {6, 29}  // 37 dirt 2
-          })) {};
+          },
+          true)) {};
 
 void MainMap::onCreate(pain::Scene &scene)
 {
-  for (int x = m_chunkAt.x - m_radius; x < m_chunkAt.x + m_radius; x++) {
-    for (int y = m_chunkAt.y - m_radius; y < m_chunkAt.y + m_radius; y++) {
-      reg::Entity e = Chunk::create(scene, {x, y}, m_chunkSize, *this);
+  for (int x = m_chunkAt.x - m_radius; x <= m_chunkAt.x + m_radius; x++) {
+    for (int y = m_chunkAt.y - m_radius; y <= m_chunkAt.y + m_radius; y++) {
+      reg::Entity e =
+          Chunk::create(scene, {x, y}, m_numDiv, m_chunkSize, *this);
       m_chunks.emplace(std::make_pair(x, y), e);
-      PLOG_I("Chunk created {}", e);
     }
   }
 }
 
 // given the index x and y, return the four corners
-void MainMap::updateSurroundingChunks(glm::vec2 &playerPos, pain::Scene &scene)
+void MainMap::updateSurroundingChunks(const glm::vec2 &playerPos,
+                                      pain::Scene &scene)
 {
   PROFILE_FUNCTION()
   if (m_chunkAt != getChunkCoordinate(playerPos, m_chunkSize)) {
-    // glm::ivec2 dif = getChunkCoordinate(playerPos, m_chunkSize) - m_chunkAt;
     m_chunkAt = getChunkCoordinate(playerPos, m_chunkSize);
     for (auto it = m_chunks.begin(); it != m_chunks.end();) {
-      const pain::Transform2dComponent &tc =
-          scene.getComponent<pain::Transform2dComponent>(it->second);
-      PLOG_I("position ({},{})", TP_VEC2(tc.m_position));
-      PLOG_I("trying to get {}", it->second);
       Chunk::Script &cs = scene.getNativeScript<Chunk::Script>(it->second);
 
       if (cs.isOutsideRadius(m_chunkAt, m_radius + 1)) {
@@ -112,10 +114,11 @@ void MainMap::updateSurroundingChunks(glm::vec2 &playerPos, pain::Scene &scene)
         ++it;
       }
     }
-    for (int x = m_chunkAt.x - m_radius; x < m_chunkAt.x + m_radius; x++) {
-      for (int y = m_chunkAt.y - m_radius; y < m_chunkAt.y + m_radius; y++) {
+    for (int x = m_chunkAt.x - m_radius; x <= m_chunkAt.x + m_radius; x++) {
+      for (int y = m_chunkAt.y - m_radius; y <= m_chunkAt.y + m_radius; y++) {
         if (!m_chunks.contains({x, y})) {
-          reg::Entity e = Chunk::create(scene, {x, y}, m_chunkSize, *this);
+          reg::Entity e =
+              Chunk::create(scene, {x, y}, m_numDiv, m_chunkSize, *this);
           m_chunks.emplace(std::make_pair(x, y), e);
         }
       }

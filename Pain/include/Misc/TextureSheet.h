@@ -1,6 +1,5 @@
 #pragma once
 #include "Core.h"
-#include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Texture.h"
 #include "pch.h"
 
@@ -36,8 +35,8 @@ public:
   };
   const Texture &getTexture() const { return m_texture; }
   Texture &getTexture() { return m_texture; }
-  float getSpriteWidth() const { return m_spriteSize.x; }
-  float getSpriteHeight() const { return m_spriteSize.y; }
+  int getSpriteWidth() const { return m_spriteSize.x; }
+  int getSpriteHeight() const { return m_spriteSize.y; }
   size_t size() const { return m_size; }
   MOVABLE(TextureSheet);
   NONCOPYABLE(TextureSheet)
@@ -45,23 +44,13 @@ public:
 
 private:
   std::vector<glm::vec2> m_chunksCoord = {};
-  glm::vec2 m_spriteSize = {0.0f, 0.0f};
+  glm::ivec2 m_spriteSize = {0, 0};
   size_t m_size = 1;
   std::reference_wrapper<Texture> m_texture;
   // this is what the renderer needs
   std::vector<std::array<glm::vec2, 4>> m_textureIds = {};
 
   void createVecFromMap();
-  // static std::array<glm::vec2, 4> createVecFromCoord(pain::Texture &texture,
-  //                                                    float spriteWidth,
-  //                                                    float spriteHeight, int
-  //                                                    x, int y);
-  // static std::array<glm::vec2, 4> createVecFromCoord(pain::Texture &texture,
-  //                                                    unsigned ndivisionX,
-  //                                                    unsigned ndivisionY, int
-  //                                                    x, int y);
-  // static std::array<glm::vec2, 4>
-  // createVecFromCoord(const char *atlasFilenameXML, int SubTextureId);
   glm::ivec2 getChunkCoordinate(glm::vec3 &playerCood);
   TextureSheet(Texture &texture, float spriteWidth, float spriteHeight,
                std::vector<std::array<glm::vec2, 4>> texturesIds, size_t size);

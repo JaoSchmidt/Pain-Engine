@@ -17,7 +17,7 @@ struct TextureCreateInfo {
 };
 
 struct TextureFromFileInfo {
-  const char *path;
+  std::string path;
   int width = 0;
   int height = 0;
   int channels = 0; // 3 = RGB, 4 = RGBA

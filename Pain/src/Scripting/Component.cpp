@@ -1,5 +1,5 @@
 #include "Scripting/Component.h"
-#include "Assets/ResourceManager.h"
+#include "Assets/ManagerFile.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Scriptable.h"
@@ -42,7 +42,7 @@ void LuaScriptComponent::bind(sol::state &lua, const char *scriptPath)
   m_scriptPath = scriptPath;
   lua["Script"] = script_api;
   sol::load_result script =
-      lua.load(resources::getLuaScriptSource(m_scriptPath), m_scriptPath);
+      lua.load(FileManager::getLuaScriptSource(m_scriptPath), m_scriptPath);
   if (!script.valid()) {
     sol::error err = script;
     PLOG_E("Error loading Lua script: {}", err.what());

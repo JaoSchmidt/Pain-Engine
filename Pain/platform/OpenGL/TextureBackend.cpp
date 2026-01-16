@@ -65,7 +65,7 @@ uint32_t createTexture(const TextureCreateInfo &info)
   glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-  PLOG_I("Texture created id = {}, name = {}", id, info.debugName);
+  PLOG_I("OpenGL Texture created id = {}, name = {}", id, info.debugName);
   return id;
 }
 /// Sets a texture given a specific texture image path
@@ -109,7 +109,7 @@ uint32_t createTextureFromFile(const TextureFromFileInfo &info)
 
   P_OPENGL_CHECK("Failed glTexImage2D inside Texture");
 
-  PLOG_I("Texture created id = {}, path = {}", id, info.path);
+  PLOG_I("OpenGL Texture created id = {}, path = {}", id, info.path);
   return id;
 }
 

@@ -6,6 +6,7 @@
 
 #include "TextureBackend.h"
 #include <cstdint>
+#include <iostream>
 #include <optional>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -30,7 +31,9 @@ std::optional<Texture> Texture::createTexture(const char *name, uint32_t width,
   return Texture(name, width, height, format, id);
 }
 
-std::optional<Texture> Texture::createTexture(const char *path, bool clamp)
+std::optional<Texture> Texture::createTexture(const char *path, bool clamp,
+                                              bool keepOnCPUMemory,
+                                              bool isError)
 {
   backend::TextureFromFileInfo info{.path = path, .clampToEdge = clamp};
   stbi_set_flip_vertically_on_load(true);
@@ -38,7 +41,8 @@ std::optional<Texture> Texture::createTexture(const char *path, bool clamp)
   info.pixels = stbi_load(path, &info.width, &info.height, &info.channels, 0);
 
   if (!info.pixels) {
-    PLOG_E("Failed to load texture {} : {}", path, stbi_failure_reason());
+    if (isError)
+      PLOG_E("Failed to load texture {} : {}", path, stbi_failure_reason());
     return std::nullopt;
   }
 
@@ -56,8 +60,13 @@ std::optional<Texture> Texture::createTexture(const char *path, bool clamp)
   if (!id)
     return std::nullopt;
 
+  if (!keepOnCPUMemory) {
+    stbi_image_free(info.pixels);
+    info.pixels = nullptr;
+  }
   return Texture(path, static_cast<unsigned>(info.width),
-                 static_cast<unsigned>(info.height), dataFormat, id);
+                 static_cast<unsigned>(info.height), dataFormat, id,
+                 info.pixels);
 }
 
 void Texture::bind() const { backend::bindTexture(m_textureId); }
@@ -87,6 +96,8 @@ Texture::~Texture()
 {
   if (m_textureId)
     backend::destroyTexture(m_textureId);
+  if (m_pixels)
+    stbi_image_free(m_pixels);
 }
 
 bool Texture::operator==(const Texture &other) const
@@ -102,11 +113,19 @@ Texture::Texture(const char *path, uint32_t width, uint32_t height,
     : m_path(path), m_width(width), m_height(height), m_dataFormat(dataFormat),
       m_textureId(rendererId) {};
 
+Texture::Texture(const char *path, uint32_t width, uint32_t height,
+                 ImageFormat dataFormat, uint32_t rendererId,
+                 unsigned char *pixels)
+    : m_pixels(pixels), m_path(path), m_width(width), m_height(height),
+      m_dataFormat(dataFormat), m_textureId(rendererId) {};
+
 Texture::Texture(Texture &&other) noexcept
-    : m_path(other.m_path), m_width(other.m_width), m_height(other.m_height),
-      m_dataFormat(other.m_dataFormat), m_textureId(other.m_textureId)
+    : m_pixels(other.m_pixels), m_path(other.m_path), m_width(other.m_width),
+      m_height(other.m_height), m_dataFormat(other.m_dataFormat),
+      m_textureId(other.m_textureId)
 {
-  other.m_textureId = 0; // prevent double delete
+  other.m_textureId = 0;    // prevent double delete
+  other.m_pixels = nullptr; // prevent double delete
 }
 
 Texture &Texture::operator=(Texture &&other) noexcept
@@ -117,9 +136,12 @@ Texture &Texture::operator=(Texture &&other) noexcept
     m_height = other.m_height;
     m_dataFormat = other.m_dataFormat;
     m_textureId = other.m_textureId;
+    m_pixels = other.m_pixels;
 
     other.m_textureId =
         0; // prevent deleting texture case the remaining texture is deleted
+    other.m_pixels = nullptr; // prevent deleting texture case the remaining
+                              // texture is deleted
   }
   return *this;
 }

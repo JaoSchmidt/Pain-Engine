@@ -3,7 +3,7 @@
 
 #include "Core.h"
 
-#include "Assets/DefaultTexture.h"
+#include "Assets/ManagerTexture.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
@@ -44,7 +44,7 @@ private:
   VertexBuffer m_vertexBuffer;
   Shader m_textureShader;
   Texture &m_whiteTexture =
-      resources::getDefaultTexture(resources::DefaultTexture::Blank);
+      TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
 
   CubeVertex *m_vertexBufferBase = nullptr;
   CubeVertex *m_vertexBufferPtr = nullptr;
