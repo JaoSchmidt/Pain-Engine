@@ -1,3 +1,10 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 // based on cherno's profiler
 // https://gist.github.com/TheCherno/31f135eea6ee729ab5f26a6908eb3a5e
 #pragma once

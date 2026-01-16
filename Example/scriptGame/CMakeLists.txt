@@ -6,6 +6,12 @@ set(TARGET_NAME "scriptGame")
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_executable(${TARGET_NAME} ${SOURCES})
+
+# setting c++20 for the executable
+set_target_properties(${TARGET_NAME} PROPERTIES CXX_STANDARD 20
+                                                CXX_STANDARD_REQUIRED ON)
+target_compile_features(${TARGET_NAME} PRIVATE cxx_std_20)
+
 if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_options(${TARGET_NAME} PRIVATE /W4 /std:c++20 /Zi)
   set_target_properties(${TARGET_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
