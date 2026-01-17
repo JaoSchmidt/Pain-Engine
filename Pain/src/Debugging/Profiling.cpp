@@ -4,13 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
+// Profiling.cpp
 
 #include "Debugging/Profiling.h"
 #include "CoreFiles/LogWrapper.h"
@@ -48,26 +42,6 @@ void writeFooter()
   m_outputStream.flush();
 }
 
-void openStream(const char *name, const char *filepath)
-{
-  m_outputStream.open(filepath);
-  writeHeader();
-  m_currentSession = new ProfileStream{name};
-  m_zeroTime = SDL_GetPerformanceCounter();
-}
-
-void closeStream()
-{
-  if (m_outputStream.is_open()) {
-    writeFooter();
-    m_outputStream.close();
-    PLOG_T("Closing stream \"{}\"", m_currentSession->m_name);
-    delete m_currentSession;
-    m_currentSession = nullptr;
-    m_profileCount = 0;
-  }
-}
-
 void writeProfile(const ProfileResult &result)
 {
   if (m_profileCount++ > 0) {
@@ -97,6 +71,27 @@ void writeProfile(const ProfileResult &result)
 
   m_outputStream.flush();
 }
+
+void openStream(const char *name, const char *filepath)
+{
+  m_outputStream.open(filepath);
+  writeHeader();
+  m_currentSession = new ProfileStream{name};
+  m_zeroTime = SDL_GetPerformanceCounter();
+}
+
+void closeStream()
+{
+  if (m_outputStream.is_open()) {
+    writeFooter();
+    m_outputStream.close();
+    PLOG_T("Closing stream \"{}\"", m_currentSession->m_name);
+    delete m_currentSession;
+    m_currentSession = nullptr;
+    m_profileCount = 0;
+  }
+}
+
 } // namespace Profiler
 
 ProfileTimer::ProfileTimer(const char *name) : m_name(name), m_stopped(false)

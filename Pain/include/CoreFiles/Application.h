@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
+// Application.h
 #pragma once
 #include "CoreFiles/RenderPipeline.h"
 #include "ECS/UIScene.h"
@@ -19,78 +19,155 @@
 #include "GUI/ImGuiSys.h"
 #include <sol/state.hpp>
 
-template <class F> class with_result_of_t
-{
-  F &&fun;
-
-public:
-  using T = decltype(std::declval<F &&>()());
-  explicit with_result_of_t(F &&f) : fun(std::forward<F>(f)) {}
-  operator T() { return fun(); }
-};
-
-template <class F> inline with_result_of_t<F> with_result_of(F &&f)
-{
-  return with_result_of_t<F>(std::forward<F>(f));
-}
-
 namespace pain
 {
+
+/**
+ * @struct AppContext
+ * @brief Configuration structure used to initialize the Application.
+ *
+ * Provides window parameters and configuration file paths used during startup.
+ */
 struct AppContext {
+  /** Default external configuration file name. */
   static constexpr const char *configIniFile = "config.ini";
+
+  /** Default internal configuration file name. */
   static constexpr const char *internalConfigFile = "internalConfig.ini";
-  const char *title;
+
+  /** Window title displayed in the OS window. */
+  const char *title = "Unnamed Game";
+
+  /** Initial window width in pixels. */
   int defaultWidth = 800;
+
+  /** Initial window height in pixels. */
   int defaultHeight = 600;
 };
 
+/**
+ * @class Application
+ * @brief Main engine application controller and runtime loop.
+ *
+ * Responsible for:
+ * - SDL initialization and window creation
+ * - Renderer setup
+ * - Lua state management
+ * - Scene creation and updates
+ * - Event processing
+ * - Rendering pipeline execution
+ * - Frame timing and synchronization
+ *
+ * Only one Application instance should exist at a time.
+ */
 class Application
 {
 public:
+  /**
+   * @brief Creates and initializes a new Application instance.
+   *
+   * Initializes SDL, graphics context, renderer, scripting, and default assets.
+   *
+   * @param context Application startup configuration.
+   * @param frameBufferCreationInfo Framebuffer configuration.
+   * @return Pointer to the created Application.
+   */
   static Application *
   createApplication(AppContext &&context,
                     FrameBufferCreationInfo &&frameBufferCreationInfo = {
                         .swapChainTarget = false});
+
+  /** Destroys the application and releases all owned resources. */
   ~Application();
 
-  // TODO: This is useful to mess with time e.g. set speed to as high as
-  // possible
+  /** Enables or disables infinite simulation speed (ignores frame limiting). */
   void setInfiniteSimulation(bool isSimulation)
   {
     m.isSimulation = isSimulation;
   };
+
+  /** Returns the number of available hardware threads. */
   static unsigned getProcessorCount();
+
+  /** Disables rendering execution. */
   void inline disableRendering() { m.isRendering = false; }
+
+  /** Enables rendering execution. */
   void inline enableRendering() { m.isRendering = true; }
+
+  /** Sets the global simulation time multiplier. */
   void inline setTimeMultiplier(double time) { m.timeMultiplier = time; }
+
+  /** Returns a pointer to the time multiplier value. */
   double inline *getTimeMultiplier() { return &m.timeMultiplier; }
+
+  /** Returns a pointer to the simulation flag. */
   bool inline *getIsSimulation() { return &m.isSimulation; }
+
+  /** Returns the Lua state used by the application. */
   sol::state &getLuaState() { return m_luaState; };
+
+  /** Returns the 2D renderer instance. */
   Renderer2d &getRenderer() { return m_renderer; }
+
+  /** Returns the framebuffer specification used by the render pipeline. */
   const FrameBufferCreationInfo &getFrameInfo() const
   {
     return m_renderPipeline.m_frameBuffer.getSpecification();
   }
 
-  // ECS
+  // =============================================================== //
+  // ECS / Scene Control
+  // =============================================================== //
+
+  /**
+   * @brief Stops the main loop.
+   *
+   * @param restartFlag If true, signals the engine to restart after shutdown.
+   */
   void stopLoop(bool restartFlag = false);
-  // clang-format on
+
+  /**
+   * @brief Assigns the renderer camera and viewport dimensions.
+   *
+   * @param camera Camera entity to use.
+   * @param width Viewport width in pixels.
+   * @param height Viewport height in pixels.
+   */
   void setRendererCamera(const reg::Entity camera, int width, int height)
   {
     m_renderer.changeCamera(camera);
     m_renderer.setViewport(0, 0, width, height);
   }
 
+  /**
+   * @brief Creates the world scene with user-defined component types.
+   *
+   * Automatically configures collision grid size in the renderer.
+   *
+   * @tparam Components Component types to attach.
+   * @param collisionGridSize Grid size used for spatial partitioning.
+   * @param args Component constructor arguments.
+   * @return Reference to the created world Scene.
+   */
   template <typename... Components>
   Scene &createWorldSceneComponents(float collisionGridSize, Components... args)
   {
     m_worldScene.createComponents(m_worldScene.getEntity(),
                                   std::forward<Components>(args)...);
-    // m_worldSceneSys = std::make_unique<WorldSystems>(
-    //     m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
     m_renderer.setCellGridSize(collisionGridSize);
     return m_worldScene;
   }
+
+  /**
+   * @brief Creates the UI scene with user-defined components.
+   *
+   * Automatically attaches the ImGui system.
+   *
+   * @tparam Components Component types to attach.
+   * @param args Component constructor arguments.
+   * @return Reference to the created UIScene.
+   */
   template <typename... Components> UIScene &createUIScene(Components... args)
   {
     m_uiScene =
@@ -98,17 +175,15 @@ public:
     m_uiScene->createComponents(m_uiScene->getEntity(),
                                 std::forward<Components>(args)...);
     m_uiScene->addSystem<Systems::ImGuiSys>(m_sdlContext, m_window);
-    // m_worldSceneSys = std::make_unique<WorldSystems>(
-    //     m_worldScene->getRegistry(), collisionGridSize, m_context, m_window);
-
     return *m_uiScene;
   }
 
 private:
   Application(sol::state &&luaState, SDL_Window *window, void *sdlContext,
               FrameBufferCreationInfo &&fbci, AppContext &&context);
+
   // =============================================================== //
-  // VARIABLES/CONSTANTS
+  // VARIABLES / CONSTANTS
   // =============================================================== //
   struct DefaultApplicationValues {
     bool isGameRunning = true;
@@ -118,23 +193,22 @@ private:
     const double fixedUpdateTime = 1.0 / 60.0;
     const double fixedFPS = 1.0 / 60.0;
     double timeMultiplier = 1.0;
-    DeltaTime maxFrameRate = 16'666'666; // 1/60 seconds in nanoseconds
+    DeltaTime maxFrameRate = 16'666'666; /** 1/60 seconds in nanoseconds */
 
-    // FPS Calculation
+    /** FPS sample buffer size. */
     constexpr static int FPS_SAMPLE_COUNT = 64;
     double fpsSamples[FPS_SAMPLE_COUNT] = {0};
-    int currentSample =
-        1; // begins in 1 to loop all the way to 0 before calculation
+    int currentSample = 1;
   };
+
   DefaultApplicationValues m;
   const AppContext m_context;
+
   // =============================================================== //
-  // OWNED CLASSES
+  // OWNED OBJECTS
   // =============================================================== //
   std::unique_ptr<UIScene> m_uiScene = nullptr;
-
   Renderer2d m_renderer;
-
   ThreadPool m_threadPool;
   sol::state m_luaState;
   reg::EventDispatcher m_eventDispatcher;
@@ -142,15 +216,21 @@ private:
 
   EndGameFlags run();
   EndGameFlags m_endGameFlags = {};
-  // Refers to the game window
-  SDL_Window *m_window = nullptr;
-  SDL_GLContext m_sdlContext = nullptr;
 
+  /** Refers to the game window. */
+  SDL_Window *m_window = nullptr;
+
+  SDL_GLContext m_sdlContext = nullptr;
   RenderPipeline m_renderPipeline;
+
   friend struct Pain;
 };
 
-// To be defined in CLIENT
-
+/**
+ * @brief User-defined factory function implemented by the client application.
+ *
+ * Must return a newly created Application instance.
+ */
 Application *createApplication();
+
 } // namespace pain

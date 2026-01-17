@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // MiscDebugGrid.h
 #pragma once
 
@@ -25,9 +24,9 @@ struct DebugGrid {
   IndexBuffer ib;
   VertexArray vao;
   Shader shader;
-  bool enableGrid = false;
+  bool enableGrid = true;
 
-  static DebugGrid create(float gridSize = 2.f);
+  static DebugGrid create(float gridSize = 0.5f);
   void flush();
 
 private:

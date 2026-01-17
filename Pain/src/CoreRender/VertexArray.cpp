@@ -4,14 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-
 #include "CoreRender/VertexArray.h"
 #include "CoreRender/Buffers.h"
 #include "VertexArrayBackend.h"
@@ -39,16 +31,7 @@ VertexArray::VertexArray(VertexArray &&o)
 {
   o.m_rendererId = 0;
 }
-VertexArray &VertexArray::operator=(VertexArray &&o)
-{
-  if (this != &o) {
-    m_vertexBuffer = std::move(o.m_vertexBuffer);
-    m_indexBuffer = std::move(o.m_indexBuffer);
-    m_rendererId = o.m_rendererId;
-    o.m_rendererId = 0;
-  }
-  return *this;
-}
+
 VertexArray::~VertexArray()
 {
   if (m_rendererId)

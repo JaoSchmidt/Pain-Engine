@@ -4,26 +4,41 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
+/** CameraComponent.h */
 #pragma once
-#include "pch.h"
 
 #include "Core.h"
 #include "ECS/Components/ComponentManager.h"
+#include "pch.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+
 namespace pain
 {
 
-// ================================================================= //
-// Basic Camera Matrices required to change the view/perspective
-// ================================================================= //
+/**
+ * ============================================================================
+ * **Camera Matrices**
+ * ============================================================================
+ */
 
+/**
+ * @class CameraMatrices
+ * @brief **Base container for camera matrices.**
+ *
+ * Holds projection, view and cached view-projection matrices.
+ * Designed to be reused by different camera models.
+ */
 class CameraMatrices
 {
 public:
+  /** Returns the projection matrix. */
   const glm::mat4 &getProjectionMatrix() const;
+
+  /** Returns the view matrix. */
   const glm::mat4 &getViewMatrix() const;
+
+  /** Returns the cached view-projection matrix. */
   const glm::mat4 &getViewProjectionMatrix() const;
 
   glm::mat4 m_projection;
@@ -31,12 +46,20 @@ public:
   glm::mat4 m_viewProjectionCache;
 };
 
+/**
+ * @class OrthographicMatrices
+ * @brief **Orthographic camera matrix bundle.**
+ */
 class OrthographicMatrices : public CameraMatrices
 {
 public:
   OrthographicMatrices(glm::mat4 projectionMatrix, glm::mat4 viewMatrix);
 };
 
+/**
+ * @class PerspectiveMatrices
+ * @brief **Perspective camera matrix bundle.**
+ */
 class PerspectiveMatrices : public CameraMatrices
 {
 public:
@@ -44,35 +67,60 @@ public:
 };
 
 } // namespace pain
-// ================================================================= //
-// OrthoCamera Component for the ECS
-// ================================================================= //
+
+/*
+ * ============================================================================
+ * **ECS Camera Components**
+ * ============================================================================
+ */
 
 namespace cmp
 {
+
+/**
+ * @struct CameraResolution
+ * @brief **Resolution and aspect ratio container for cameras.**
+ */
 struct CameraResolution {
   glm::ivec2 m_resolution;
   float m_aspectRatio;
+
+  /** Returns the current resolution. */
   const glm::ivec2 &getResolution() const;
+
+  /** Updates resolution and derived values. */
   void setResolution(int w, int h);
 };
 
+/**
+ * @struct OrthoCamera
+ * @brief **Orthographic camera ECS component.**
+ *
+ * Used for 2D rendering and editor-style projections.
+ */
 struct OrthoCamera : CameraResolution {
   using tag = pain::tag::OrthoCamera;
+
   float m_zoomLevel = 1.0f;
   pain::OrthographicMatrices m_matrices;
 
+  /** Returns the cached view-projection matrix. */
   const glm::mat4 &getViewProjectionMatrix() const;
+
+  /** Creates a new orthographic camera component. */
   static OrthoCamera create(int resWidth, int resHeight, float zoomLevel);
+
+  /** Recomputes the view matrix from position and rotation. */
   void recalculateViewMatrix(const glm::vec2 &m_position,
                              const float m_rotation);
 
-  // reset the entire projection using screen edges
+  /** Sets projection explicitly using screen bounds. */
   void setProjection(float left, float right, float bottom, float top);
-  // slightly easier projection setter that uses only aspectRatio and zoomLevel
+
+  /** Sets projection using aspect ratio and zoom level. */
   void setProjection(float aspectRatio, float zoomLevel);
-  // even easier projection setter that recalculates aspectRatio and
-  // uses the internal zoomLevel
+
+  /** Sets projection using window dimensions. */
   void setProjection(int width, int height);
 
   OrthoCamera() = delete;
@@ -82,15 +130,28 @@ private:
               int resWidth, int resHeight);
 };
 
+/**
+ * @struct PerspCamera
+ * @brief **Perspective camera ECS component.**
+ *
+ * Used for 3D rendering.
+ */
 struct PerspCamera : CameraResolution {
   pain::PerspectiveMatrices m_matrices;
 
+  /** Returns the cached view-projection matrix. */
   const glm::mat4 &getViewProjectionMatrix() const;
+
+  /** Creates a new perspective camera component. */
   static PerspCamera create(int resWidth, int resHeight,
                             float fieldOfViewDegrees);
+
+  /** Recomputes the view matrix from camera transform. */
   void recalculateViewMatrix(glm::vec3 m_position, glm::vec3 m_rotation);
-  // reset the entire projection using aspectRatio and fieldOfViewDegrees
+
+  /** Updates the projection matrix. */
   void setProjection(float aspectRatio, float fieldOfViewDegrees);
+
   PerspCamera() = delete;
 
 private:
@@ -99,4 +160,5 @@ private:
 };
 
 } // namespace cmp
+
 namespace Component = cmp;

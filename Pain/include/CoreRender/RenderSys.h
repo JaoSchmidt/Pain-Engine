@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
+/** RenderSys.h */
 #pragma once
 
 #include "Assets/DeltaTime.h"
@@ -22,7 +22,10 @@ struct SpriteComponent;
 
 namespace Systems
 {
+/** ECS system responsible for submitting all visible 2D renderable components
+ * to the renderer. */
 struct Render : public System<WorldComponents>, IOnRender {
+  /** Component signature required by this system. */
   using Tags = TypeList<Transform2dComponent, //
                         SpriteComponent,      //
                         RotationComponent>;

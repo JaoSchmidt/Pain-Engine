@@ -17,6 +17,9 @@ resources/*
 lua_types/
 target
 
+## Doxygen
+docs/
+
 ##### Windows
 # Windows thumbnail cache files
 Thumbs.db

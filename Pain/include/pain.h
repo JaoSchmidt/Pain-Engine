@@ -4,11 +4,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
+/// @file pain.h
+/// @brief Public umbrella header for the Pain engine API.
 
-// For use specifically for games build with Pain
-
+/// For use specifically for games built with Pain.
+#include "Assets/ManagerIni.h"
 #include "Assets/ManagerTexture.h"
 #include "Assets/RandNumberGenerator.h"
 #include "CoreFiles/Application.h"
@@ -24,6 +25,7 @@
 // Renderer
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/Buffers.h"
+#include "CoreRender/CameraComponent.h"
 #include "CoreRender/RenderSys.h"
 #include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/Renderer2d.h"
@@ -56,12 +58,17 @@
 
 #include "imgui.h"
 
+/// @name Logging Macros
+/// @{
 #define LOG_T(...) ::pain::logWrapper::GetClientLogger()->trace(__VA_ARGS__)
 #define LOG_I(...) ::pain::logWrapper::GetClientLogger()->info(__VA_ARGS__)
 #define LOG_W(...) ::pain::logWrapper::GetClientLogger()->warn(__VA_ARGS__)
 #define LOG_E(...) ::pain::logWrapper::GetClientLogger()->error(__VA_ARGS__)
 #define LOG_F(...) ::pain::logWrapper::GetClientLogger()->critical(__VA_ARGS__)
+/// @}
 
+/// @name Assertion Macro
+/// @{
 #ifndef NDEBUG
 #define ASSERT(x, s, ...)                                                      \
   {                                                                            \
@@ -73,11 +80,24 @@
 #else
 #define ASSERT(x, ...)
 #endif
+/// @}
 
 namespace pain
 {
+
+/**
+ * @brief Engine bootstrap utilities.
+ *
+ * This struct provides static helpers used by applications to initialize
+ * configuration and run the main Application lifetime.
+ */
 struct Pain {
-  static bool initiate();
+  /// @brief Initializes logging and checks whether the settings GUI is
+  /// required.
+  /// @return True if the settings GUI should be shown.
+  static bool initiateIni();
+
+  /// @brief Runs an application, deletes it, and returns its end flags.
   static EndGameFlags runAndDeleteApplication(Application *app);
 };
 } // namespace pain

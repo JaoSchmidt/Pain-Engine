@@ -4,15 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-
-
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/CameraComponent.h"
 #include "ECS/UIScene.h"
@@ -75,7 +66,7 @@ RenderPipeline RenderPipeline::create(reg::EventDispatcher &eventDispatcher)
 RenderPipeline RenderPipeline::create(const FrameBufferCreationInfo &info,
                                       reg::EventDispatcher &eventDispatcher)
 {
-  std::optional<FrameBuffer> fb = FrameBuffer::createFrameBuffer(info);
+  std::optional<FrameBuffer> fb = FrameBuffer::create(info);
   if (!fb.has_value()) {
     PLOG_E("FrameBuffer wasn't able to be created!");
     std::exit(1);

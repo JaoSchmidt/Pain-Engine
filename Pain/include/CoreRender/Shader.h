@@ -4,8 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-// Shader.h
+/** Shader.h */
 #pragma once
 #include "Core.h"
 #include "pch.h"
@@ -18,15 +17,29 @@
 namespace pain
 {
 
+/** GPU shader program abstraction with API-agnostic uniform uploads. */
 class Shader
 {
 public:
+  // ============================================================= //
+  // **Creation**
+  // ============================================================= //
+
+  /** Creates a shader by parsing a combined shader file. */
   static std::optional<Shader> createFromFile(const char *filepath);
+
+  /** Creates a shader with an explicit debug name from a combined shader file.
+   */
   static std::optional<Shader> createFromFile(const std::string &name,
                                               const char *filepath);
+
+  /** Creates a shader directly from vertex and fragment source strings. */
   static std::optional<Shader> createFromStrings(const std::string &name,
                                                  const std::string &vertex,
                                                  const std::string &fragment);
+
+  /** Creates a shader from a generator function returning vertex and fragment
+   * sources. */
   static std::optional<Shader>
   createFromFn(const std::string &name,
                std::function<std::pair<std::string, std::string>()> fn);
@@ -35,13 +48,23 @@ public:
   NONCOPYABLE(Shader);
   Shader(Shader &&o);
   Shader &operator=(Shader &&o);
+
+  /** Returns the backend shader program handle. */
   uint32_t getId() const { return m_programId; }
 
+  /** Binds the shader for rendering. */
   void bind() const;
+
+  /** Unbinds the currently active shader. */
   void unbind() const;
+
+  /** Returns the shader debug name. */
   inline const std::string &getName() const { return m_name; }
 
-  // Uniform uploads (API-agnostic)
+  // ============================================================= //
+  // **Uniform uploads**
+  // ============================================================= //
+
   void uploadUniformInt(const std::string &name, int value);
   void uploadUniformInt2(const std::string &name, const glm::ivec2 &value);
   void uploadUniformInt3(const std::string &name, const glm::ivec3 &value);
@@ -52,15 +75,20 @@ public:
   void uploadUniformFloat4(const std::string &name, const glm::vec4 &value);
   void uploadUniformMat3(const std::string &name, const glm::mat3 &matrix);
   void uploadUniformMat4(const std::string &name, const glm::mat4 &matrix);
+  /** Uploads an array of int uniforms. */
   void uploadUniformIntArray(const std::string &name, int *values,
                              uint32_t count);
 
+  // ============================================================= //
+  // **Utilities**
+  // ============================================================= //
+
+  /** Parses a combined shader file into vertex and fragment source strings. */
   static std::pair<std::string, std::string> parseShader(const char *filepath);
 
 private:
-  int getUniformLocation(const std::string &name) const;
   Shader() = default;
-
+  int getUniformLocation(const std::string &name) const;
   std::string m_name = "undefined";
   uint32_t m_programId = 0;
 };

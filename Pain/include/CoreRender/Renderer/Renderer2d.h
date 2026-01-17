@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
 
 #include "Core.h"
@@ -29,7 +28,21 @@ namespace pain
 class Scene;
 class UIScene;
 
+/**
+ * @brief 2D renderer facade built on top of batched OpenGL rendering.
+ *
+ * Renderer2d owns and coordinates multiple batch renderers (quads, circles,
+ * triangles, text, particles, debug grid) and provides a simple API for
+ * drawing primitives inside a scene.
+ *
+ * Typical usage:
+ *  - Create using createRenderer2d().
+ *  - Call beginScene().
+ *  - Issue draw calls.
+ *  - Call endScene().
+ */
 struct Renderer2d {
+  /// @brief Aggregated rendering statistics for a batch type.
   struct Stats {
     uint32_t count;
     uint32_t indices;
@@ -37,39 +50,64 @@ struct Renderer2d {
     uint32_t draws;
     const char *name;
   };
+  /// @brief Factory function to create a renderer instance.
   static Renderer2d createRenderer2d();
   Renderer2d &operator=(Renderer2d &&o) noexcept;
-  // void changeCamera(const OrthographicMatrices &cameraMatrices);
+  /// @brief Change the active camera entity used for rendering.
   void changeCamera(reg::Entity camera);
+  /// @brief Returns true if a valid camera is currently bound.
   bool hasCamera();
+
   // ================================================================= //
-  // Renderer basic wrapper around opengl
+  // Renderer basic wrapper around OpenGL
   // ================================================================= //
 
+  /// @brief Immediately draw and end the current scene using a vertex array.
   void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
+
+  /**
+   * @brief Begin a new rendering scene.
+   *
+   * @param globalTime Global engine time.
+   * @param scene      Scene being rendered.
+   * @param transform  Optional root transform applied to all draws.
+   */
   void beginScene(DeltaTime globalTime, const Scene &scene,
                   const glm::mat4 &transform = glm::mat4(1.0f));
+
+  // @brief Flush all batches and finalize the scene.
   void endScene();
+
   void setViewport(int x, int y, int width, int height);
   void setClearColor(const glm::vec4 &color);
   void clear();
+
+  /// @brief Clears all renderer state and internal caches.
   void clearEntireRenderer();
 
   // ================================================================= //
   // Draw Circles
   // ================================================================= //
 
-  /** Draws a circle */
+  /**
+   * @brief Draw a 2D circle.
+   *
+   * @param position Circle center in world space.
+   * @param radius   Circle radius.
+   * @param tintColor Color multiplier.
+   * @param textureCoordinate Optional texture coordinates.
+   */
   void drawCircle(const glm::vec2 &position, const float radius,
                   const Color &tintColor,
                   const std::array<glm::vec2, 4> &textureCoordinate = {
                       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                       glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
+
   // ================================================================= //
   // Draw Quads
   // ================================================================= //
 
-  /** Draws a quad */
+  /// @brief Draw an axis-aligned textured quad.
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                 const Color &tintColor, RenderLayer layer, Texture &texture,
                 const float tilingFactor = 1.0f,
@@ -77,7 +115,11 @@ struct Renderer2d {
                     glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                     glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
 
-  /** Draws a quad with rotation, new rotationRadians (angle)*/
+  /**
+   * @brief Draw a rotated textured quad.
+   *
+   * @param rotationRadians Rotation angle in radians.
+   */
   void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
                 const Color &tintColor, const float rotationRadians,
                 RenderLayer layer, Texture &texture,
@@ -85,38 +127,75 @@ struct Renderer2d {
                 const std::array<glm::vec2, 4> &textureCoordinate = {
                     glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
                     glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
+
   // ================================================================= //
-  // Draw Tri
+  // Draw Triangles
   // ================================================================= //
 
+  /// @brief Draw a colored triangle primitive.
   void drawTri(const glm::vec2 &position, const glm::vec2 &size,
                const glm::vec4 &tintColor);
 
-  /** Draws triangles with rotation, new rotationRadians (angle)*/
+  /// @brief Draw a rotated triangle primitive.
   void drawTri(const glm::vec2 &position, const glm::vec2 &size,
                const glm::vec4 &tintColor, const float rotationRadians);
 
-  /** Draws a bunch of particles in a spray format */
+  // ================================================================= //
+  // Particles
+  // ================================================================= //
+
+  /// @brief Begin rendering a particle spray batch.
   void beginSprayParticle(const DeltaTime globalTime,
                           const ParticleSprayComponent &particleSprayComponent);
+
+  /// @brief Submit a single particle to the current spray batch.
   void drawSprayParticle(const Particle &p);
 
-  /** Draws a string of glyphs from a font atlas */
+  // ================================================================= //
+  // Text
+  // ================================================================= //
+
+  /// @brief Draw a UTF-8 string using a font atlas.
   void drawString(const glm::vec2 &position, const char *string,
                   const Font &font, const glm::vec4 &color);
 
+  // ================================================================= //
+  // Transforms
+  // ================================================================= //
+
+  /// @brief Build a transform matrix with rotation.
   const glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size,
                                const float rotationRadians);
+
+  /// @brief Build a transform matrix without rotation.
   const glm::mat4 getTransform(const glm::vec2 &position,
                                const glm::vec2 &size);
 
+  // ================================================================= //
+  // Resources / Debug
+  // ================================================================= //
+
+  /// @brief Remove a texture from the internal texture slot cache.
   void removeTexture(const Texture &texture);
-  // set a debug grid size. Pass size 0 to disable the grid
+
+  /**
+   * @brief Enable or disable the debug grid.
+   *
+   * @param size Cell size. Pass 0 to disable the grid.
+   */
   void setCellGridSize(float size);
 
-  // // TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
+  /// @brief Maximum number of texture slots supported per batch.
   static constexpr uint32_t MaxTextureSlots = 32;
 
+  /**
+   * @brief Retrieve rendering statistics for a specific batch type.
+   *
+   * Example:
+   * @code
+   * auto stats = renderer.getStatistics<QuadBatch>();
+   * @endcode
+   */
   template <typename Batch>
     requires requires(Batch &b) { b.statsCount; }
   Stats getStatistics()

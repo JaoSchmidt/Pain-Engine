@@ -4,9 +4,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
-#include "Assets/IniWrapper.h"
+
+/// @file ManagerIni.h
+/// @brief INI-based configuration management for engine and application settings.
+
 #include "Assets/ManagerFile.h"
 #include "Core.h"
 #include "mini/ini.h"
@@ -16,56 +18,56 @@
 namespace pain
 {
 
-template <typename T> struct Config {
+/**
+ * @brief Strongly-typed configuration value bound to an INI key.
+ *
+ * Config stores a default value, the current value loaded from disk,
+ * and the associated INI key name. Supported types are:
+ * float, int, double, bool, and std::string.
+ *
+ * @tparam T Value type.
+ */
+template <typename T>
+struct Config
+{
 private:
-  T m_def;
+    T m_def;
 
 public:
-  inline T get() const { return value; };
-  const T getDefault() const { return std::as_const(m_def); }
-  T value = m_def;
-  const char *name;
-  Config(T t, const char *name) : m_def(t), value(m_def), name(name) {}
-  Config &operator=(Config &&o)
-  {
-    if (this != &o) {
-      m_def = o.m_def;
-      name = o.name;
-      value = o.value;
-    }
-    return *this;
-  }
-  Config(Config &&o) : m_def(o.m_def), value(o.value), name(o.name) {}
-  NONCOPYABLE(Config);
-  inline void initValue(mINI::INIStructure &ini,
-                        const std::string &settingsName)
-  {
-    // clang-format off
-    if constexpr (std::is_same_v<T, float>) {
-      value = IniWrapper::getFloat(ini, settingsName, name, m_def);
-    } else if constexpr (std::is_same_v<T, int>) {
-      value = IniWrapper::getInteger(ini, settingsName, name, m_def);
-    } else if constexpr (std::is_same_v<T, double>) {
-      value = IniWrapper::getDouble(ini, settingsName, name, m_def);
-    } else if constexpr (std::is_same_v<T, bool>) {
-      value = IniWrapper::getBoolean(ini, settingsName, name, m_def);
-    } else if constexpr (std::is_same_v<T, std::string>) {
-      value = IniWrapper::get(ini, settingsName, name, m_def);
-    }
-    // clang-format on
-  }
-  inline void writeBuffer(mINI::INIStructure &ini,
-                          const std::string &settingsName)
-  {
-    if constexpr (std::is_same_v<T, bool>) {
-      ini[settingsName][name] = value ? "true" : "false";
-    } else if constexpr (std::is_same_v<T, std::string>) {
-      ini[settingsName][name] = value;
-    } else {
-      ini[settingsName][name] = std::to_string(value);
-    };
-  }
-};
+    /// @brief Returns the current value.
+    T get() const;
+    /// @brief Returns the default value.
+    const T getDefault() const;
+    /// @brief Current value loaded from the INI file.
+    T value;
+    /// @brief INI key name.
+    const char* name;
+    /// @brief Constructs a configuration entry with a default value and key name.
+    Config(T t, const char* name);
+    Config& operator=(Config&& o);
+    Config(Config&& o);
+    NONCOPYABLE(Config);
+    /// @brief Initializes the value from an INI structure.
+    void initValue(mINI::INIStructure& ini,
+                   const std::string& settingsName);
+    /// @brief Writes the current value into an INI structure.
+    void writeBuffer(mINI::INIStructure& ini,
+                     const std::string& settingsName);
+
+ };
+
+extern template struct Config<int>;
+extern template struct Config<float>;
+extern template struct Config<double>;
+extern template struct Config<bool>;
+extern template struct Config<std::string>;
+
+/**
+ * @brief Engine internal configuration loaded from internalConfig.ini.
+ *
+ * These settings are intended for engine behavior and debugging rather than
+ * user-facing options.
+ */
 struct InternalConfig {
 
 // # define INTERNAL_INI_CONFIGS X(type, variable, default,name)
@@ -80,11 +82,18 @@ struct InternalConfig {
   INTERNAL_INI_CONFIGS
 #undef X
 
+  /// @brief Reads or creates the internal configuration file and updates values.
   void readAndUpdate(const std::string &resourceFolder);
+
+  /// @brief Writes the current configuration to disk.
   void write(const std::string &filename);
 };
 
+/**
+ * @brief User-facing application configuration loaded from config.ini.
+ */
 struct IniConfig {
+
   // clang-format off
 #define INI_CONFIGS                                                            \
   X(bool, hideConfig, false, "HideConfig");                                    \
@@ -99,8 +108,13 @@ struct IniConfig {
   INI_CONFIGS
 #undef X
 
+  /// @brief Returns true if the settings GUI should be displayed on startup.
   static bool isSettingsGuiNeeded();
+
+  /// @brief Reads config.ini and updates all configuration values.
   void readAndUpdate(bool isLauncher = false);
+
+  /// @brief Writes the current configuration to disk.
   void write(const std::string &filename);
 };
 

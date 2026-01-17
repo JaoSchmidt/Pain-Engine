@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // CircleBatch.h
 #pragma once
 #include "CoreRender/Renderer/Misc.h"

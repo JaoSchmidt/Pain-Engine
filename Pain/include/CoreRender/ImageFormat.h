@@ -4,7 +4,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
+/** ImageFormat.h */
 #pragma once
+
 #include <cstdint>
-enum class ImageFormat { None = 0, R8, RGB8, RGBA8, RGBA32F };
+
+/** Pixel format used for texture and image resources. */
+enum class ImageFormat {
+  None = 0, /** No valid format. */
+  R8,       /** 8-bit single channel. */
+  RGB8,     /** 8-bit RGB. */
+  RGBA8,    /** 8-bit RGBA. */
+  RGBA32F   /** 32-bit float RGBA. */
+};

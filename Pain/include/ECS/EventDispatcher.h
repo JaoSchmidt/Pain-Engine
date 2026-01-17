@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
 
 #include "Core.h"
@@ -16,6 +15,18 @@
 #include <sol/forward.hpp>
 #include <sol/sol.hpp>
 
+/**
+ * @brief Concept that constrains events that can be forwarded to Lua.
+ *
+ * An event type must provide a function:
+ *
+ * @code
+ * sol::table Event::toLuaTable(sol::state& s);
+ * @endcode
+ *
+ * This allows native C++ events to be automatically converted and dispatched
+ * to Lua subscribers.
+ */
 template <typename Event>
 concept LuaConvertable = requires(Event &e, sol::state &s) {
   { e.toLuaTable(s) };
@@ -24,6 +35,23 @@ concept LuaConvertable = requires(Event &e, sol::state &s) {
 namespace reg
 {
 
+/**
+ * @brief Type-erased event dispatcher supporting C++ and Lua listeners.
+ *
+ * EventDispatcher acts as a central event bus that allows:
+ *
+ * - Subscribing native C++ listeners to strongly-typed events.
+ * - Subscribing Lua functions to strongly-typed C++ events.
+ * - Dispatching events immediately (trigger).
+ * - Deferring events until the end of a frame (enqueue + update).
+ * - Custom Lua-to-Lua events identified by numeric IDs.
+ *
+ * Events are internally type-erased using hashed type information so that
+ * heterogeneous event types can coexist in the same dispatcher.
+ *
+ * @note This class is not thread-safe. All interaction is expected to happen
+ *       on the main thread.
+ */
 class EventDispatcher
 {
   // type erasure stuff
@@ -41,16 +69,38 @@ class EventDispatcher
   };
 
 public:
+  /**
+   * @brief Constructs a new EventDispatcher bound to a Lua state.
+   *
+   * @param lua Reference to the active Lua state used for event conversion and
+   * dispatch.
+   */
   EventDispatcher(sol::state &lua) : m_lua(lua) {};
   // --------------------------------------------------
   // C++ Events and Dispatch (not fully static tho)
   // --------------------------------------------------
+  /**
+   * @brief Subscribes a native C++ listener to a specific event type.
+   *
+   * @tparam Event Event type to subscribe to.
+   * @param listener Callback invoked whenever the event is triggered.
+   */
   template <LuaConvertable Event> void subscribe(Listener<Event> listener)
   {
     std::vector<Listener<Event>> &list = getSubscribers<Event>();
     list.emplace_back(listener);
   }
 
+  /**
+   * @brief Immediately triggers an event.
+   *
+   * The event is delivered synchronously to:
+   *  - All native C++ subscribers of this event type.
+   *  - All Lua subscribers after converting the event to a Lua table.
+   *
+   * @tparam Event Event type.
+   * @param event Event instance to dispatch.
+   */
   template <LuaConvertable Event> void trigger(const Event &event)
   {
     std::vector<Listener<Event>> &list = getSubscribers<Event>();
@@ -59,7 +109,19 @@ public:
     }
     trigger<Event>(event.toLuaTable(m_lua));
   }
-
+  /**
+   * @brief Enqueues an event to be dispatched later during update().
+   *
+   * The event is stored internally and replayed when update() is called.
+   * This is useful for avoiding mutation during iteration or for deferring
+   * gameplay events until the end of a frame.
+   *
+   * If no subscriber exists for the event type, a warning is logged and the
+   * event is discarded.
+   *
+   * @tparam Event Event type.
+   * @param event Event instance to enqueue.
+   */
   template <LuaConvertable Event> void enqueue(const Event &event)
   {
     if (hasEventHandler<Event>()) {
@@ -72,7 +134,13 @@ public:
              typeid(Event).name());
     }
   };
-
+  /**
+   * @brief Dispatches all queued events and Lua pending events.
+   *
+   * This function should typically be called once per frame.
+   * It processes all pending native events first, then processes
+   * pending Lua events.
+   */
   void update()
   {
     for (auto &[type, pendingQueue] : m_pending)
@@ -83,6 +151,15 @@ public:
   // --------------------------------------------------
   // Lua Events and Dispatch
   // --------------------------------------------------
+  /**
+   * @brief Subscribes a Lua function to a strongly-typed C++ event.
+   *
+   * The event will be converted into a Lua table before being passed
+   * to the Lua handler.
+   *
+   * @tparam Event Event type.
+   * @param fn Lua callback function.
+   */
   template <LuaConvertable Event> void subscribe(sol::function &fn)
   {
     std::vector<sol::function> &list = getSubscribersLua<Event>();
@@ -105,6 +182,12 @@ public:
              typeid(Event).name());
     }
   }
+  /**
+   * @brief Immediately triggers a Lua event for a strongly-typed C++ event.
+   *
+   * @tparam Event Event type.
+   * @param event Lua table representing the event.
+   */
   template <LuaConvertable Event> void trigger(const sol::table &event)
   {
     std::vector<sol::function> &list = getSubscribersLua<Event>();
@@ -112,9 +195,26 @@ public:
       handler(event);
     }
   }
-  // Lua versions below are exclusively for custom events FROM lua TO lua
+  /**
+   * @brief Subscribes a Lua function to a custom Lua-only event.
+   *
+   * @param id Numeric event identifier.
+   * @param fn Lua callback function.
+   */
   void subscribe(size_t id, sol::function &fn);
+  /**
+   * @brief Enqueues a Lua-only event to be dispatched during update().
+   *
+   * @param id Numeric event identifier.
+   * @param data Lua table payload.
+   */
   void enqueue(size_t id, const sol::table &data);
+  /**
+   * @brief Immediately triggers a Lua-only event.
+   *
+   * @param id Numeric event identifier.
+   * @param event Lua table payload.
+   */
   void trigger(size_t id, const sol::table &event);
 
 private:

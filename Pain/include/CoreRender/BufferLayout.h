@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
+// BufferLayout.h
 #pragma once
 
 #include "Core.h"
@@ -12,6 +12,25 @@
 
 namespace pain
 {
+
+/**
+ * @enum ShaderDataType
+ * @brief **GPU shader attribute data types** used by vertex buffers.
+ *
+ * ---
+ * ## **Purpose**
+ * Defines the supported element formats that can be sent to the GPU.
+ * Each type maps directly to a byte size and component layout used when
+ * building vertex buffer layouts.
+ *
+ * ---
+ * ## **Usage**
+ * Typically used when defining a `BufferLayout`:
+ * ```
+ * { ShaderDataType::Float3, "a_Position" }
+ * { ShaderDataType::UByte4, "a_Color", true }
+ * ```
+ */
 enum class ShaderDataType {
   None = 0,
   Float,
@@ -31,6 +50,16 @@ enum class ShaderDataType {
   UByte4,
 };
 
+/**
+ * @struct BufferElement
+ * @brief **Single vertex attribute description** inside a buffer layout.
+ *
+ * ---
+ * ## **Represents**
+ * One attribute in a vertex buffer (position, color, UVs, etc).
+ * Stores type information, byte size, offset, normalization state,
+ * and the attribute name used by shaders.
+ */
 struct BufferElement {
 
   ShaderDataType type;
@@ -38,9 +67,17 @@ struct BufferElement {
   uint32_t offset;
   bool normalized;
   std::string name;
+  /** Returns the attribute name used in the shader. */
   std::string const &getName() { return name; }
 
   BufferElement() = default;
+  /**
+   * @brief Creates a buffer element definition.
+   *
+   * @param type        Attribute data type.
+   * @param name        Shader attribute name.
+   * @param normalized  Whether the data should be normalized by the GPU.
+   */
   BufferElement(ShaderDataType type, const std::string &name,
                 bool normalized = false)
       : type(type), size(getComponentSize()), offset(0), normalized(normalized),
@@ -48,7 +85,14 @@ struct BufferElement {
   MOVABLE(BufferElement);
   COPYABLE(BufferElement);
   ~BufferElement() = default;
-
+  /**
+   * @brief Returns the **byte size** of this element type.
+   *
+   * ---
+   * ## **Notes**
+   * - Size is derived directly from the underlying `ShaderDataType`.
+   * - Used internally when calculating stride and offsets.
+   */
   constexpr uint32_t getComponentSize() const
   {
     constexpr uint32_t sizes[] = {
@@ -78,6 +122,30 @@ struct BufferElement {
   }
 };
 
+/**
+ * @class BufferLayout
+ * @brief **Describes the memory layout of a vertex buffer.**
+ *
+ * ---
+ * ## **Purpose**
+ * BufferLayout defines how vertex attributes are packed in memory:
+ * - Attribute ordering
+ * - Byte offsets
+ * - Total stride per vertex
+ *
+ * This information is consumed by the renderer when configuring
+ * vertex array bindings.
+ *
+ * ---
+ * ## **Example**
+ * ```
+ * BufferLayout layout = {
+ *   { ShaderDataType::Float3, "a_Position" },
+ *   { ShaderDataType::UByte4, "a_Color", true },
+ *   { ShaderDataType::Float2, "a_TexCoord" }
+ * };
+ * ```
+ */
 class BufferLayout
 {
 public:
@@ -94,27 +162,39 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Constructs a layout from a list of buffer elements.
+   *
+   * Automatically computes byte offsets and total stride.
+   *
+   * @param elements Initializer list of buffer elements.
+   */
   BufferLayout(const std::initializer_list<BufferElement> &elements)
       : m_Elements(elements)
   {
     calculateOffsetsAndStride();
   }
 
+  /** Returns the total stride (in bytes) of a single vertex. */
   inline uint32_t getStride() const { return m_Stride; }
+  /** Returns the ordered list of buffer elements. */
   inline const std::vector<BufferElement> &getElements() const
   {
     return m_Elements;
   }
-
+  /** Iterator access to buffer elements. */
   inline std::vector<BufferElement>::iterator begin()
   {
     return m_Elements.begin();
   }
+  /** Iterator access to buffer elements. */
   inline std::vector<BufferElement>::iterator end() { return m_Elements.end(); }
+  /** Const iterator access to buffer elements. */
   inline std::vector<BufferElement>::const_iterator begin() const
   {
     return m_Elements.begin();
   }
+  /** Const iterator access to buffer elements. */
   inline std::vector<BufferElement>::const_iterator end() const
   {
     return m_Elements.end();

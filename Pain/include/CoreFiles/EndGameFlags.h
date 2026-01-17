@@ -4,9 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
 
+// NOTE: might be useful for a modding manager later idk
 struct EndGameFlags {
   bool restartGame = false;
 };

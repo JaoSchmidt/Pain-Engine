@@ -4,14 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-
+// pain.cpp
 #include "pain.h"
 #include "Assets/ManagerIni.h"
 #include "Core.h"
@@ -21,7 +14,7 @@
 namespace pain
 {
 
-bool Pain::initiate()
+bool Pain::initiateIni()
 {
   // start log
   logWrapper::InitLogger();
