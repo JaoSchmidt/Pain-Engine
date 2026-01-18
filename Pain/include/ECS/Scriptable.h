@@ -1,135 +1,170 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
+// Scriptable.h
 #pragma once
 
 #include "Core.h"
-#include "CoreFiles/LogWrapper.h"
-#include "Debugging/Profiling.h"
-#include "ECS/Entity.h"
+#include "ECS/Registry/Entity.h"
 #include "ECS/Scene.h"
+#include "UIScene.h"
+#include "WorldScene.h"
+#include "aliases.h"
 
-#include "ECS/Components/NativeScript.h"
-#include "GUI/ImGuiComponent.h"
 namespace pain
 {
 
-// this function will replace GameObject, please remove GameObject later
-template <typename... Components> class NormalEntity
-{
-public:
-  std::tuple<Components &...> createComponents(Scene &scene,
-                                               Components &&...args)
+// ------------------------------------------------------------
+// SceneTraits
+// ------------------------------------------------------------
+//
+template <typename SceneT> struct SceneTraits;
+template <> struct SceneTraits<Scene> {
+  template <typename T> static constexpr bool isRegistered()
   {
-    static_assert(sizeof...(Components) > 0,
-                  "No components in the scripted object. Did you create "
-                  "an object constructor but forgot to add its components?");
-    return scene.createComponents<Components...>(
-        m_entity, std::forward<Components>(args)...);
+    return WorldComponents::isRegistered<T>();
   }
-  template <typename T> T &getComponent(Scene &scene)
+  template <typename... Ts> static constexpr bool allRegistered()
   {
-    return scene.getComponent<T>(m_entity, getBitMask());
+    return WorldComponents::allRegistered<Ts...>();
   }
-  template <typename T> const T &getComponent(const Scene &scene) const
+};
+template <> struct SceneTraits<UIScene> {
+  template <typename T> static constexpr bool isRegistered()
   {
-    return scene.getComponent<T>(m_entity, getBitMask());
+    return UIComponents::isRegistered<T>();
   }
-  static constexpr Bitmask getBitMask()
+  template <typename... Ts> static constexpr bool allRegistered()
   {
-    return ComponentManager::multiComponentBitmask<Components...>();
+    return UIComponents::allRegistered<Ts...>();
   }
-  template <typename T, typename... Args>
-  void withScript(Scene &scene, Args... args)
-  {
-    NativeScriptComponent &nsc = getComponent<NativeScriptComponent>(scene);
-    nsc.bindAndInitiate<T>(m_entity, getBitMask(), scene,
-                           std::forward<Args>(args)...);
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-  }
-  template <typename T, typename... Args>
-  void withImGuiScript(Scene &scene, Args... args)
-  {
-    ImGuiComponent &nsc = getComponent<ImGuiComponent>(scene);
-    nsc.bindAndInitiate<T>(m_entity, getBitMask(), scene,
-                           std::forward<Args>(args)...);
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-  }
-
-  NormalEntity(Scene &scene) { m_entity = scene.createEntity(); }
-  inline Entity getEntity() const { return m_entity; }
-
-protected:
-  Entity m_entity = 0;
 };
 
-// ExtendedEntity, meaning that it has additional functions to more
-// easily get components. This can be useful for scripts where the extra space
-// isn't necessary
-class ExtendedEntity
+// ------------------------------------------------------------
+// GameObject
+// ------------------------------------------------------------
+
+template <typename SceneT> class GameObject
 {
 public:
-  ExtendedEntity(Entity entity, Bitmask bitmask, Scene &scene)
-      : m_scene(scene), m_entity(entity), m_bitmask(bitmask) {};
-  // ---------------------------------------------------- //
-  // Get components from archetypes
-  // ---------------------------------------------------- //
-  template <typename... TargetComponents>
-  std::tuple<TargetComponents &...> getComponents()
+  using SceneType = SceneTraits<SceneT>;
+  GameObject(reg::Entity entity, SceneT &scene);
+
+  static GameObject create(reg::Entity entity, SceneT &scene);
+
+  // ------------------------------------------------------------
+  // Self entity access
+  // ------------------------------------------------------------
+  template <typename... Ts> std::tuple<Ts &...> getComponents()
   {
-    return m_scene.get().getComponents<TargetComponents...>(m_entity,
-                                                            m_bitmask);
+    return getComponents<Ts...>(m_entity);
   }
-  // return the components of an entity, as a tuple
-  template <typename... TargetComponents>
-  const std::tuple<TargetComponents &...> getComponents() const
+  template <typename... Ts> std::tuple<const Ts &...> getComponents() const
   {
-    return m_scene.get().getComponents<TargetComponents...>(m_entity,
-                                                            m_bitmask);
+    return getComponents<Ts...>(m_entity);
   }
-  template <typename T> T &getComponent()
-  {
-    PROFILE_FUNCTION();
-    return m_scene.get().getComponent<T>(m_entity, m_bitmask);
-  }
+  template <typename T> T &getComponent() { return getComponent<T>(m_entity); }
   template <typename T> const T &getComponent() const
   {
-    PROFILE_FUNCTION();
-    return static_cast<const Scene &>(m_scene.get())
-        .getComponent<T>(m_entity, m_bitmask);
-  }
-  // ---------------------------------------------------- //
-  // "Has" all components
-  // ---------------------------------------------------- //
-  // Does archetype has any of the target components?
-  template <typename... TargetComponents> bool hasAnyComponents() const
-  {
-    return m_scene.get().hasAnyComponents<TargetComponents...>(m_bitmask);
+    return getComponent<T>(m_entity);
   }
 
-  // Does archetype has all of the target components?
-  template <typename... TargetComponents> bool hasAllComponents() const
+  // ------------------------------------------------------------
+  // Other entity access
+  // ------------------------------------------------------------
+  template <typename... Ts>
+    requires(SceneType::template allRegistered<Ts...>())
+  std::tuple<Ts &...> getComponents(reg::Entity e)
   {
-    return m_scene.get().containsAllComponents<TargetComponents...>(m_bitmask);
+    return m_scene.get().template getComponents<Ts...>(e);
   }
-  explicit operator bool() const { return m_entity != -1; }
-  ExtendedEntity(ExtendedEntity &&other) noexcept
-      : m_scene(other.m_scene), m_entity(std::exchange(other.m_entity, -1)),
-        m_bitmask(std::exchange(other.m_bitmask, 0)) {};
-  ExtendedEntity &operator=(ExtendedEntity &&other) noexcept
+  template <typename... Ts>
+    requires(SceneType::template allRegistered<Ts...>())
+  std::tuple<const Ts &...> getComponents(reg::Entity e) const
   {
-    if (this != &other) {
-      m_scene = other.m_scene;
-      m_entity = std::exchange(other.m_entity, -1);
-      m_bitmask = std::exchange(other.m_bitmask, 0);
-    }
-    return *this;
+    return m_scene.get().template getComponents<Ts...>(e);
+  }
+  template <typename T>
+    requires(SceneType::template isRegistered<T>())
+  T &getComponent(reg::Entity e)
+  {
+    return m_scene.get().template getComponent<T>(e);
+  }
+  template <typename T>
+    requires(SceneType::template isRegistered<T>())
+  const T &getComponent(reg::Entity e) const
+  {
+    return m_scene.get().template getComponent<T>(e);
   }
 
-protected:
-  std::reference_wrapper<Scene> m_scene;
-  Entity m_entity;
-  Bitmask m_bitmask;
-  friend class Scene;
+  // ------------------------------------------------------------
+  // Script Helpers
+  // ------------------------------------------------------------
+
+  template <typename S>
+    requires(SceneType::template isRegistered<NativeScriptComponent>())
+  S &getNativeScript(reg::Entity entity)
+  {
+    NativeScriptComponent &nsc = getComponent<NativeScriptComponent>(entity);
+    return static_cast<S &>(*nsc.instance);
+  }
+
+  template <typename S>
+    requires(SceneType::template isRegistered<ImGuiComponent>())
+  S &getImGuiScript(reg::Entity entity)
+  {
+    ImGuiComponent &nsc = getComponent<ImGuiComponent>(entity);
+    return static_cast<S &>(*nsc.instance);
+  }
+
+  // ------------------------------------------------------------
+  // Removal
+  // ------------------------------------------------------------
+
+  void removeEntity(reg::Entity entity);
+
+  // ------------------------------------------------------------
+  // Queries
+  // ------------------------------------------------------------
+  template <typename... Ts>
+    requires(SceneType::template allRegistered<Ts...>())
+  bool hasAnyComponents() const
+  {
+    return m_scene.get().template hasAnyComponents<Ts...>(m_entity);
+  }
+  template <typename... Ts>
+    requires(SceneType::template allRegistered<Ts...>())
+  bool hasAllComponents() const
+  {
+    return m_scene.get().template hasAllComponents<Ts...>(m_entity);
+  }
+
+  // ------------------------------------------------------------
+  // Misc
+  // ------------------------------------------------------------
+  reg::Entity getEntity() const { return m_entity; }
+  reg::EventDispatcher &getEventDispatcher();
+  const reg::EventDispatcher &getEventDispatcher() const;
+
+  SceneT &getScene();
+  const SceneT &getScene() const;
+
+  ThreadPool &getThreadPool();
+  const ThreadPool &getThreadPool() const;
+
+private:
+  aRefWrap<SceneT> m_scene;
+  reg::Entity m_entity;
 };
+// Explicit instantiation declarations
+extern template class GameObject<Scene>;
+extern template class GameObject<UIScene>;
+
+using WorldObject = GameObject<Scene>;
+using UIObject = GameObject<UIScene>;
 
 } // namespace pain

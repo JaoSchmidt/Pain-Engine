@@ -1,36 +1,26 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+// Texture.cpp
 #include "CoreRender/Texture.h"
 #include "Core.h"
 
-#include "CoreRender/Renderer/Renderer2d.h"
-#include "glad/gl.h"
-#include <SDL2/SDL_surface.h>
-#include <SDL_image.h>
+#include "CoreFiles/LogWrapper.h"
+
+#include "TextureBackend.h"
 #include <cstdint>
+#include <iostream>
+#include <optional>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 namespace pain
 {
-SDL_Surface flipVertical(const SDL_Surface &surface)
-{
-  SDL_Surface result = *SDL_CreateRGBSurface(
-      surface.flags, surface.w, surface.h, surface.format->BytesPerPixel * 8,
-      surface.format->Rmask, surface.format->Gmask, surface.format->Bmask,
-      surface.format->Amask);
-  const auto pitch = surface.pitch;
-  const auto pxlength = pitch * (surface.h - 1);
-  auto pixels = static_cast<unsigned char *>(surface.pixels) + pxlength;
-  auto rpixels = static_cast<unsigned char *>(result.pixels);
-  for (auto line = 0; line < surface.h; ++line) {
-    memcpy(rpixels, pixels, pitch);
-    pixels -= pitch;
-    rpixels += pitch;
-  }
-  return result;
-}
 
-bool Texture::operator==(const Texture &other) const
-{
-  return m_rendererId == other.m_rendererId;
-}
 /*
  * Sets a dump texture
  */
@@ -38,124 +28,126 @@ std::optional<Texture> Texture::createTexture(const char *name, uint32_t width,
                                               uint32_t height,
                                               ImageFormat format)
 {
-  uint32_t internalFormat = getInternalFormat(format);
-  uint32_t dataFormat = getGLDataFormat(format);
+  backend::TextureCreateInfo info{name, width, height, format};
 
-  uint32_t rendererId;
-  glCreateTextures(GL_TEXTURE_2D, 1, &rendererId);
-  glBindTexture(GL_TEXTURE_2D, rendererId);
-  glTextureStorage2D(rendererId, 1, internalFormat, width, height);
+  uint32_t id = backend::createTexture(info);
+  if (!id)
+    return std::nullopt;
 
-  glTextureParameteri(rendererId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTextureParameteri(rendererId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glTextureParameteri(rendererId, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTextureParameteri(rendererId, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  return Texture(name, width, height, dataFormat, internalFormat, rendererId);
+  return Texture(name, width, height, format, id);
 }
-/*
- * Sets a texture given a specific texture image path
- */
-std::optional<Texture> Texture::createTexture(const char *path,
-                                              bool gl_clamp_to_edge)
+
+std::optional<Texture> Texture::createTexture(const char *path, bool clamp,
+                                              bool keepOnCPUMemory,
+                                              bool isError)
 {
-  std::unique_ptr<SDL_Surface, void (*)(SDL_Surface *)> surface = {
-      IMG_Load(path), SDL_FreeSurface};
-  P_ASSERT_W(surface != nullptr, "Texture path \"{}\" was not found!", path);
-  if (surface == nullptr)
-    return {};
+  backend::TextureFromFileInfo info{.path = path, .clampToEdge = clamp};
+  stbi_set_flip_vertically_on_load(true);
 
-  uint32_t rendererId;
-  glCreateTextures(GL_TEXTURE_2D, 1, &rendererId);
-  glBindTexture(GL_TEXTURE_2D, rendererId);
+  info.pixels = stbi_load(path, &info.width, &info.height, &info.channels, 0);
 
-  uint32_t dataFormat, internalFormat;
-  if (surface->format->BytesPerPixel == 3) {
-    dataFormat = GL_RGB;
-    internalFormat = GL_RGB8;
-  } else if (surface->format->BytesPerPixel == 4) {
-    dataFormat = GL_RGBA;
-    internalFormat = GL_RGBA8;
+  if (!info.pixels) {
+    if (isError)
+      PLOG_E("Failed to load texture {} : {}", path, stbi_failure_reason());
+    return std::nullopt;
+  }
+
+  ImageFormat dataFormat;
+  if (info.channels == 3) {
+    dataFormat = ImageFormat::RGB8;
+  } else if (info.channels == 4) {
+    dataFormat = ImageFormat::RGBA8;
   } else {
-    P_ASSERT(false, "Unsupported number of bytes per pixel {}",
-             surface->format->BytesPerPixel);
+    PLOG_E("Unsupported channel count {} for {}", info.channels, path);
+    return std::nullopt;
   }
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-  // https://stackoverflow.com/questions/10568390/difference-between-uv-and-st-texture-coordinates
-  if (gl_clamp_to_edge) {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  uint32_t id = backend::createTextureFromFile(info);
+  if (!id)
+    return std::nullopt;
+
+  if (!keepOnCPUMemory) {
+    stbi_image_free(info.pixels);
+    info.pixels = nullptr;
   }
-  glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, surface->w, surface->h, 0,
-               dataFormat, GL_UNSIGNED_BYTE, surface->pixels);
-  return Texture(path, surface->w, surface->h, dataFormat, internalFormat,
-                 rendererId);
+  return Texture(path, static_cast<unsigned>(info.width),
+                 static_cast<unsigned>(info.height), dataFormat, id,
+                 info.pixels);
 }
 
-void Texture::setData(const void *data, uint32_t size)
-{
-  uint32_t bytesPerPixel = m_dataFormat == GL_RGBA ? 4 : 3;
-  P_ASSERT_W(size == m_width * m_height * bytesPerPixel,
-             "Data must be entire texture!");
-  glTextureSubImage2D(m_rendererId, 0, 0, 0, m_width, m_height, m_dataFormat,
-                      GL_UNSIGNED_BYTE, data);
-}
+void Texture::bind() const { backend::bindTexture(m_textureId); }
 
 // bind texture unit i.e. has a slot in a sample array. In theory this is
 // depreciated because I'm caching the slots inside the Texture Object
-void Texture::bindToSlot(const uint32_t slot) const
+void Texture::bindToSlot(uint32_t slot) const
 {
-  glBindTextureUnit(slot, m_rendererId);
+  backend::bindTextureToSlot(m_textureId, slot);
 }
+
 // bind texture to cached slot, clear the slot value
 void Texture::bindAndClearSlot()
 {
-  glBindTextureUnit(m_slot, m_rendererId);
+  backend::bindTextureToSlot(m_textureId, m_slot);
   m_slot = 0;
 }
-void Texture::bind() const { glBindTexture(GL_TEXTURE_2D, m_rendererId); }
+void Texture::setData(const void *data, uint32_t size)
+{
+  backend::setTextureData(m_textureId, m_width, m_height, m_dataFormat, data,
+                          size);
+}
+
 // Delete the texture, note that this doesn't modify the texture slot array
 // inside the Renderer. That task should be done elsewhere
-
 Texture::~Texture()
 {
-  if (m_rendererId != 0) {
-    glDeleteTextures(1, &m_rendererId);
-  }
+  if (m_textureId)
+    backend::destroyTexture(m_textureId);
+  if (m_pixels)
+    stbi_image_free(m_pixels);
+}
+
+bool Texture::operator==(const Texture &other) const
+{
+  return m_textureId == other.m_textureId;
 }
 Texture Texture::clone()
 {
-  return Texture(m_path, m_width, m_height, m_dataFormat, m_internalFormat,
-                 m_rendererId);
+  return Texture(m_path.c_str(), m_width, m_height, m_dataFormat, m_textureId);
 }
 Texture::Texture(const char *path, uint32_t width, uint32_t height,
-                 uint32_t dataFormat, uint32_t internalFormat,
-                 uint32_t rendererId)
+                 ImageFormat dataFormat, uint32_t rendererId)
     : m_path(path), m_width(width), m_height(height), m_dataFormat(dataFormat),
-      m_internalFormat(internalFormat), m_rendererId(rendererId) {};
+      m_textureId(rendererId) {};
+
+Texture::Texture(const char *path, uint32_t width, uint32_t height,
+                 ImageFormat dataFormat, uint32_t rendererId,
+                 unsigned char *pixels)
+    : m_pixels(pixels), m_path(path), m_width(width), m_height(height),
+      m_dataFormat(dataFormat), m_textureId(rendererId) {};
 
 Texture::Texture(Texture &&other) noexcept
-    : m_path(std::move(other.m_path)), m_width(other.m_width),
+    : m_pixels(other.m_pixels), m_path(other.m_path), m_width(other.m_width),
       m_height(other.m_height), m_dataFormat(other.m_dataFormat),
-      m_internalFormat(other.m_internalFormat), m_rendererId(other.m_rendererId)
+      m_textureId(other.m_textureId)
 {
-  other.m_rendererId = 0; // prevent double delete
+  other.m_textureId = 0;    // prevent double delete
+  other.m_pixels = nullptr; // prevent double delete
 }
 
 Texture &Texture::operator=(Texture &&other) noexcept
 {
   if (this != &other) {
-    m_path = std::move(other.m_path);
+    m_path = other.m_path;
     m_width = other.m_width;
     m_height = other.m_height;
     m_dataFormat = other.m_dataFormat;
-    m_internalFormat = other.m_internalFormat;
-    m_rendererId = other.m_rendererId;
+    m_textureId = other.m_textureId;
+    m_pixels = other.m_pixels;
 
-    other.m_rendererId =
+    other.m_textureId =
         0; // prevent deleting texture case the remaining texture is deleted
+    other.m_pixels = nullptr; // prevent deleting texture case the remaining
+                              // texture is deleted
   }
   return *this;
 }

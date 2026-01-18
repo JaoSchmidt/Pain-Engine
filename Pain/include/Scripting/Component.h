@@ -1,36 +1,34 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 #pragma once
 #include "Core.h"
-#include "ECS/Scriptable.h"
 #include <SDL2/SDL_events.h>
 
-#include "Assets/ResourceManager.h"
+#include "Assets/ManagerFile.h"
+#include "ECS/Components/ComponentManager.h"
 #include <sol/sol.hpp>
+
 namespace pain
 {
-struct LuaScriptComponent : public ExtendedEntity {
-  LuaScriptComponent(Entity entity, Bitmask Bitmask, Scene &scene,
-                     sol::state &solState);
-  void bind(const char *scriptPath);
-  void onCreate();
-  void onDestroy();
-  void onEvent(const SDL_Event *event);
-  sol::state &getLuaState() { return m_lua; };
-
-  NONCOPYABLE(LuaScriptComponent);
-  LuaScriptComponent &operator=(LuaScriptComponent &&other) noexcept;
-  LuaScriptComponent(LuaScriptComponent &&other) noexcept;
-  ~LuaScriptComponent() = default;
-  void initializeScript();
+struct LuaScriptComponent {
+  using tag = tag::LuaScript;
+  static LuaScriptComponent create(reg::Entity entity);
+  void bind(sol::state &solstate, const char *scriptPath);
 
   std::optional<sol::protected_function> m_onCreate;
   std::optional<sol::protected_function> m_onUpdateFunction;
   std::optional<sol::protected_function> m_onEventFunction;
   std::optional<sol::protected_function> m_onRenderFunction;
   std::optional<sol::protected_function> m_onDestroy;
+  const char *m_scriptPath = FileManager::getDefaultLuaFile();
+  reg::Entity entity;
 
-private:
-  const char *m_scriptPath = resources::getDefaultLuaFile();
-  sol::state &m_lua;
+  LuaScriptComponent(reg::Entity entity);
 };
 
 } // namespace pain

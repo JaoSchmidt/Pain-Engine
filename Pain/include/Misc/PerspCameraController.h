@@ -1,9 +1,17 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 #pragma once
+#include "Assets/DeltaTime.h"
 #include "pch.h"
 
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Camera.h"
+#include "CoreRender/CameraComponent.h"
 
 namespace pain
 {
@@ -14,22 +22,22 @@ public:
   PerspectiveCameraController(float windowWidth, float windowHeight,
                               float fieldOfViewDegrees);
 
-  void onUpdate(double deltaTimeSec);
+  void onUpdate(DeltaTime deltaTimeSec);
   void onEvent(const SDL_Event &e);
 
-  const PerspectiveCamera &getCamera() const { return m_camera; }
+  const Component::PerspCamera &getCamera() const { return m_camera; }
 
   inline void setPosition(const glm::vec3 &position)
   {
     m_position = position;
-    m_camera.RecalculateViewMatrix(m_position, m_cameraFront);
+    m_camera.recalculateViewMatrix(m_position, m_cameraFront);
   }
   inline const glm::vec3 &getPosition() const { return m_position; }
 
   inline void setFrontVector(glm::vec3 rotation)
   {
     m_cameraFront = rotation;
-    m_camera.RecalculateViewMatrix(m_position, m_cameraFront);
+    m_camera.recalculateViewMatrix(m_position, m_cameraFront);
   }
   inline glm::vec3 getFrontVector() const { return m_cameraFront; }
 
@@ -43,10 +51,10 @@ private:
   template <bool IsMoving> void setMovementState();
 
   // window
-  float m_aspectRatio = 800.0 / 600.0;
-  float m_windowWidth = 800.0;
-  float m_windowHeight = 600.0;
-  PerspectiveCamera m_camera;
+  float m_aspectRatio = 800.f / 600.f;
+  float m_windowWidth = 800.f;
+  float m_windowHeight = 600.f;
+  Component::PerspCamera m_camera;
   bool m_isMovementEnable = true;
 
   // vectors

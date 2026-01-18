@@ -4,9 +4,6 @@
 [submodule "Pain/external/spdlog"]
 	path = Pain/external/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "Pain/external/SDL_image"]
-	path = Pain/external/SDL_image
-	url = https://github.com/libsdl-org/SDL_image
 [submodule "Pain/external/SDL"]
 	path = Pain/external/SDL
 	url = https://github.com/libsdl-org/SDL
@@ -37,3 +34,6 @@
 [submodule "Pain/external/mINI"]
 	path = Pain/external/mINI
 	url = https://github.com/metayeti/mINI.git
+[submodule "Pain/external/stb"]
+	path = Pain/external/stb
+	url = https://github.com/nothings/stb.git

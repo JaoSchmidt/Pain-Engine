@@ -1,27 +1,34 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 #pragma once
 
 #include "Core.h"
-#include "CoreRender/Texture.h"
-#include "ECS/Components/Movement.h"
-#include "ECS/Components/Sprite.h"
-#include "ECS/Scriptable.h"
+#include "glm/ext/vector_float2.hpp"
 
 namespace pain
 {
 
-class RectangleSprite : public NormalEntity<TransformComponent, SpriteComponent>
-{
-public:
-  RectangleSprite(Scene *scene, const glm::vec2 &position,
-                  const glm::vec2 &size, const glm::vec4 &color,
-                  Texture *ptexture, float tilingFactor);
+struct CircleShape {
+  float radius = 0.1f;
+};
+struct AABBShape {
+  glm::vec2 halfSize = {0.1f, 0.1f}; // half of a size of the rectangle
+};
+struct QuadShape {
+  glm::vec2 size = {0.1f, 0.1f}; // full size of the rectangle ?
 };
 
-class Rectangle : public NormalEntity<TransformComponent, SpritelessComponent>
-{
-public:
-  Rectangle(Scene *scene, const glm::vec2 &position, const glm::vec2 &size,
-            const glm::vec4 &color);
+struct CapsuleShape {
+  float height = 0.1f;
+  float radius = 0.1f;
+};
+struct PolygonShape {
+  // TODO: not in the mood to make this right now
 };
 
 } // namespace pain

@@ -1,5 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #include "Scripting/Component.h"
-#include "Assets/ResourceManager.h"
+#include "Assets/ManagerFile.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Scriptable.h"
@@ -11,14 +17,16 @@ namespace pain
 {
 void custom_print(const std::string &str) { PLOG_I("{}", str); }
 
-LuaScriptComponent::LuaScriptComponent(Entity entity, Bitmask bitmask,
-                                       Scene &scene, sol::state &solState)
-    : ExtendedEntity(entity, bitmask, scene), m_lua(solState) {};
-void LuaScriptComponent::initializeScript() {}
-void LuaScriptComponent::bind(const char *scriptPath)
+LuaScriptComponent LuaScriptComponent::create(reg::Entity entity)
+{
+  return LuaScriptComponent{entity};
+};
+LuaScriptComponent::LuaScriptComponent(reg::Entity entity) : entity(entity) {};
+
+void LuaScriptComponent::bind(sol::state &lua, const char *scriptPath)
 {
 
-  sol::table script_api = m_lua.create_table();
+  sol::table script_api = lua.create_table();
 
   // Temporary table that store references to possible callbacks... lambda is
   // only invoked if the function exists inside lua script
@@ -37,16 +45,14 @@ void LuaScriptComponent::bind(const char *scriptPath)
   script_api["on_destroy"] = [&](sol::function f) {
     m_onDestroy = sol::protected_function(std::move(f));
   };
-
   m_scriptPath = scriptPath;
-  m_lua["Script"] = script_api;
+  lua["Script"] = script_api;
   sol::load_result script =
-      m_lua.load(resources::getLuaScriptSource(m_scriptPath), m_scriptPath);
+      lua.load(FileManager::getLuaScriptSource(m_scriptPath), m_scriptPath);
   if (!script.valid()) {
     sol::error err = script;
     PLOG_E("Error loading Lua script: {}", err.what());
   }
-  PLOG_I("has transform? {}", hasAnyComponents<TransformComponent>());
   sol::protected_function_result result =
       script(); // will place everything inside an anonymous function and run
   if (!result.valid()) {
@@ -54,45 +60,5 @@ void LuaScriptComponent::bind(const char *scriptPath)
     PLOG_E("Error loading lua script: {}", err.what());
     return;
   }
-}
-
-void LuaScriptComponent::onCreate()
-{
-  if (m_onCreate) {
-    sol::protected_function_result result = (*m_onCreate)(*this);
-    if (!result.valid()) {
-      PLOG_E("Lua error (onCreate): {}", result.get<sol::error>().what());
-    }
-  }
-}
-void LuaScriptComponent::onDestroy()
-{
-  if (m_onDestroy) {
-    sol::protected_function_result result = (*m_onDestroy)(*this);
-    if (!result.valid()) {
-      PLOG_E("Lua error (onDestroy): {}", result.get<sol::error>().what());
-    }
-  }
-}
-
-LuaScriptComponent::LuaScriptComponent(LuaScriptComponent &&other) noexcept
-    : ExtendedEntity(std::move(other)), // base class
-      m_onCreate(std::move(other.m_onCreate)),
-      m_onDestroy(std::move(other.m_onDestroy)),
-      m_scriptPath(std::exchange(other.m_scriptPath, nullptr)),
-      m_lua(other.m_lua) {};
-
-LuaScriptComponent &
-LuaScriptComponent::operator=(LuaScriptComponent &&other) noexcept
-{
-  if (this != &other) {
-    ExtendedEntity::operator=(std::move(other)); // assign base
-
-    m_scriptPath = std::exchange(other.m_scriptPath, nullptr);
-    m_onCreate = std::move(other.m_onCreate);
-    m_onDestroy = std::move(other.m_onDestroy);
-    // m_lua is a reference, no need to assign again
-  }
-  return *this;
 }
 } // namespace pain

@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <glad/gl.h>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <memory>

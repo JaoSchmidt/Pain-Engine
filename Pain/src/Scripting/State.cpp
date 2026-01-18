@@ -1,9 +1,25 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
+// State.cpp
 #include "Scripting/State.h"
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/Movement.h"
 #include "ECS/Components/Sprite.h"
+#include "Physics/MovementComponent.h"
 #include "Scripting/Component.h"
 #include "Scripting/InputManager.h"
+#include "Scripting/SchedulerComponent.h"
 #include <sol/object.hpp>
 #include <sol/sol.hpp>
 
@@ -15,7 +31,17 @@ sol::state createLuaState()
   lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
   lua.set_function("print", [](sol::variadic_args va) {
     for (auto arg : va) {
-      PLOG_I("{}", arg.get<std::string>());
+      LUA_LOG_I("{}", arg.get<std::string>());
+    }
+  });
+  lua.set_function("print_error", [](sol::variadic_args va) {
+    for (auto arg : va) {
+      LUA_LOG_E("{}", arg.get<std::string>());
+    }
+  });
+  lua.set_function("print_warning", [](sol::variadic_args va) {
+    for (auto arg : va) {
+      LUA_LOG_W("{}", arg.get<std::string>());
     }
   });
   // clang-format off
@@ -29,51 +55,31 @@ sol::state createLuaState()
   lua.new_usertype<glm::vec4>(
       "vec4", sol::constructors<glm::vec4(), glm::vec4(float, float, float, float)>(),
       "r", &glm::vec4::r, "g", &glm::vec4::g, "b", &glm::vec4::b, "a", &glm::vec4::a);
+
   // clang-format on
+  lua.new_usertype<Color>(
+      "Color", sol::constructors<Color(), Color(uint32_t),
+                                 Color(uint8_t, uint8_t, uint8_t, uint8_t)>());
   // ------ COMPONENTS ----------------------------------------
   // type returned by get_sprite(self)
   lua.new_usertype<SpriteComponent>(
       "SpriteComponent", sol::no_constructor,            //
       "m_size", &SpriteComponent::m_size,                //
-      "m_color", &SpriteComponent::m_color,              //
+      "m_color", &SpriteComponent::color,                //
       "m_tilingFactor", &SpriteComponent::m_tilingFactor //
       // NOTE: not going to put texture right now because too much work
   );
   // type returned by get_movement(self)
-  lua.new_usertype<MovementComponent>(
-      "MovementComponent", sol::no_constructor,                     //
-      "m_velocity", &MovementComponent::m_velocityDir,              //
-      "m_translationSpeed", &MovementComponent::m_translationSpeed, //
-      "m_rotationSpeed", &MovementComponent::m_rotationSpeed);
+  lua.new_usertype<Movement2dComponent>(
+      "Movement2dComponent", sol::no_constructor,     //
+      "m_velocity", &Movement2dComponent::m_velocity, //
+      "m_rotationSpeed", &Movement2dComponent::m_rotationSpeed);
 
   // type returned by get_position(self)
-  lua.new_usertype<TransformComponent>(             //
-      "TransformComponent", sol::no_constructor,    //
-      "m_position", &TransformComponent::m_position //
+  lua.new_usertype<Transform2dComponent>(             //
+      "Transform2dComponent", sol::no_constructor,    //
+      "m_position", &Transform2dComponent::m_position //
   );
-
-  lua.new_usertype<LuaScriptComponent>(
-      "LuaScriptComponent", "get_position",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<TransformComponent>())
-          return sol::make_reference(
-              c.getLuaState(), std::ref(c.getComponent<TransformComponent>()));
-        return sol::nil;
-      },
-      "get_sprite",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<SpriteComponent>())
-          return sol::make_reference(
-              c.getLuaState(), std::ref(c.getComponent<SpriteComponent>()));
-        return sol::nil;
-      },
-      "get_movement",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (c.hasAnyComponents<MovementComponent>())
-          return sol::make_reference(
-              c.getLuaState(), std::ref(c.getComponent<MovementComponent>()));
-        return sol::nil;
-      });
 
   // ------ EVENTS ----------------------------------------
   // Usage in Lua: "Input.isKeyPressed(Scancode.SPACE)"
@@ -101,6 +107,62 @@ sol::state createLuaState()
       "Input", sol::no_constructor, //
       "is_key_pressed",
       static_cast<bool (*)(SDL_Scancode)>(&InputManager::isKeyPressed));
+
+  // ------ GAME ENGINE EVENTS -----------------------------
   return lua;
 };
+
+template <typename AbstractScene>
+void addComponentFunctions(sol::state &lua, AbstractScene &worldScene)
+{
+  lua.new_usertype<pain::LuaScriptComponent>(
+      "LuaScriptComponent", "get_position",
+      [&](pain::LuaScriptComponent &c) -> sol::object {
+        if (worldScene.template hasAnyComponents<pain::Transform2dComponent>(
+                c.entity))
+          return sol::make_reference(
+              lua,
+              std::ref(
+                  worldScene.template getComponent<pain::Transform2dComponent>(
+                      c.entity)));
+        return sol::nil;
+      },
+      "get_sprite",
+      [&](LuaScriptComponent &c) -> sol::object {
+        if (worldScene.template hasAnyComponents<SpriteComponent>(c.entity))
+          return sol::make_reference(
+              lua, std::ref(worldScene.template getComponent<SpriteComponent>(
+                       c.entity)));
+        return sol::nil;
+      },
+      "get_movement",
+      [&](LuaScriptComponent &c) -> sol::object {
+        if (worldScene.template hasAnyComponents<Movement2dComponent>(c.entity))
+          return sol::make_reference(
+              lua,
+              std::ref(worldScene.template getComponent<Movement2dComponent>(
+                  c.entity)));
+        return sol::nil;
+      });
+}
+
+// NOTE: maybe I should move this into a single space?
+void addScheduler(sol::state &lua, Scene &worldScene)
+{
+  sol::table scheduler_api = lua.create_table();
+  scheduler_api["every"] = [&](float interval, sol::function f) {
+    reg::Entity e = worldScene.createEntity();
+    worldScene.createComponents(
+        e, cmp::LuaScheduleTask{.onScheduleFunction = std::move(f),
+                                .interval = interval});
+  };
+  lua["Scheduler"] = scheduler_api;
+}
+
+template void pain::addComponentFunctions<pain::Scene>(sol::state &,
+                                                       pain::Scene &);
+
+// template void pain::addComponentFunctions<pain::UIScene>(sol::state &,
+//                                                          pain::UIScene &);
+//
 } // namespace pain

@@ -1,38 +1,63 @@
+/** VertexArray.h */
 #pragma once
 #include "pch.h"
 
 #include "Core.h"
-
-#include "CoreRender/AllBuffers.h"
+#include "CoreRender/Buffers.h"
 
 namespace pain
 {
+
+/**
+ * GPU vertex array object that binds a vertex buffer and an index buffer.
+ *
+ * **Lifetime:** The referenced buffers must outlive this object.
+ */
 class VertexArray
 {
 public:
   NONCOPYABLE(VertexArray);
   VertexArray(VertexArray &&o);
-  VertexArray &operator=(VertexArray &&o);
-  std::optional<VertexArray> static createVertexArray(
-      VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer);
+
+  // ============================================================= //
+  // **Creation**
+  // ============================================================= //
+
+  /** Creates a vertex array from an existing vertex and index buffer. */
+  static std::optional<VertexArray>
+  createVertexArray(VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer);
 
   ~VertexArray();
+
+  // ============================================================= //
+  // **Binding**
+  // ============================================================= //
+
+  /** Binds this vertex array. */
   void bind() const;
+
+  /** Unbinds the currently bound vertex array. */
   void unbind() const;
-  // const std::vector<std::shared_ptr<VertexBuffer>> &getVertexBuffers() const
-  // {
-  //   return m_vertexBuffer;
-  // };
+
+  // ============================================================= //
+  // **Access**
+  // ============================================================= //
+
+  /** Returns the associated index buffer. */
   const IndexBuffer &getIndexBuffer() const
   {
     return std::as_const(m_indexBuffer);
   }
+
+  /** Returns the backend vertex array handle. */
+  uint32_t getId() const { return m_rendererId; }
 
 private:
   static void addVertexBuffer(const VertexBuffer &vertexBuffer,
                               uint32_t rendererId);
   static void setIndexBuffer(const IndexBuffer &indexBuffer,
                              uint32_t rendererId);
+
   VertexArray(VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer,
               uint32_t rendererId);
   // NOTE: in theory, even thought opengl can create multiple vertex arrays, it

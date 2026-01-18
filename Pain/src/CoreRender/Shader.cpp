@@ -1,23 +1,30 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 
+// Shader.cpp
 #include "CoreRender/Shader.h"
+#include "ShaderBackend.h"
 
-#include <glm/gtc/type_ptr.hpp>
-
-#include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 
 namespace pain
 {
+
 Shader::~Shader()
 {
-  if (m_programId != 0)
-    glDeleteProgram(m_programId);
-};
+  if (m_programId)
+    backend::destroyShaderProgram(m_programId);
+}
+
 Shader::Shader(Shader &&o)
     : m_name(std::move(o.m_name)), m_programId(o.m_programId)
 {
   o.m_programId = 0;
 }
+
 Shader &Shader::operator=(Shader &&o)
 {
   if (this != &o) {
@@ -28,108 +35,85 @@ Shader &Shader::operator=(Shader &&o)
   return *this;
 }
 
-void Shader::bind() const { glUseProgram(m_programId); };
-void Shader::unbind() const { glUseProgram(0); };
+void Shader::bind() const { backend::bindShader(m_programId); }
 
-// ========================================================== //
-// Upload stuff to Shader
-// ========================================================== //
+void Shader::unbind() const { backend::unbindShader(); }
 
-GLint Shader::getUniformLocation(const std::string &name) const
+// ----------------------------------------------------------
+// Uniform uploads
+// ----------------------------------------------------------
+
+int Shader::getUniformLocation(const std::string &name) const
 {
-  GLint location = glGetUniformLocation(m_programId, name.c_str());
-  P_ASSERT_W(location != -1, "Uniform {} was not found on shader program {}",
-             name, std::to_string(m_programId));
-  return location;
+  return backend::getUniformLocation(m_programId, name);
 }
-void Shader::uploadUniformInt(const std::string &name, int value)
+
+void Shader::uploadUniformInt(const std::string &name, int v)
 {
-  GLint location = getUniformLocation(name);
-  glUniform1i(location, value);
+  backend::uploadUniformInt(getUniformLocation(name), v);
 }
-void Shader::uploadUniformFloat(const std::string &name, float value)
+void Shader::uploadUniformInt2(const std::string &name, const glm::ivec2 &v)
 {
-  GLint location = getUniformLocation(name);
-  glUniform1f(location, value);
+  backend::uploadUniformInt2(getUniformLocation(name), v);
 }
-void Shader::uploadUniformFloat2(const std::string &name, const glm::vec2 &val)
+void Shader::uploadUniformInt3(const std::string &name, const glm::ivec3 &v)
 {
-  GLint location = getUniformLocation(name);
-  glUniform2f(location, val.x, val.y);
+  backend::uploadUniformInt3(getUniformLocation(name), v);
 }
-void Shader::uploadUniformFloat3(const std::string &name, const glm::vec3 &val)
+void Shader::uploadUniformInt4(const std::string &name, const glm::ivec4 &v)
 {
-  GLint location = getUniformLocation(name);
-  glUniform3f(location, val.x, val.y, val.z);
+  backend::uploadUniformInt4(getUniformLocation(name), v);
 }
-void Shader::uploadUniformFloat4(const std::string &name, const glm::vec4 &val)
+
+void Shader::uploadUniformFloat(const std::string &name, float v)
 {
-  GLint location = getUniformLocation(name);
-  glUniform4f(location, val.x, val.y, val.z, val.w);
+  backend::uploadUniformFloat(getUniformLocation(name), v);
 }
-void Shader::uploadUniformMat3(const std::string &name, const glm::mat3 &matrix)
+void Shader::uploadUniformFloat2(const std::string &name, const glm::vec2 &v)
 {
-  GLint location = getUniformLocation(name);
-  glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+  backend::uploadUniformFloat2(getUniformLocation(name), v);
 }
-void Shader::uploadUniformMat4(const std::string &name, const glm::mat4 &matrix)
+void Shader::uploadUniformFloat3(const std::string &name, const glm::vec3 &v)
 {
-  GLint location = getUniformLocation(name);
-  glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+  backend::uploadUniformFloat3(getUniformLocation(name), v);
 }
+void Shader::uploadUniformFloat4(const std::string &name, const glm::vec4 &v)
+{
+  backend::uploadUniformFloat4(getUniformLocation(name), v);
+}
+
+void Shader::uploadUniformMat3(const std::string &name, const glm::mat3 &m)
+{
+  backend::uploadUniformMat3(getUniformLocation(name), m);
+}
+void Shader::uploadUniformMat4(const std::string &name, const glm::mat4 &m)
+{
+  backend::uploadUniformMat4(getUniformLocation(name), m);
+}
+
 void Shader::uploadUniformIntArray(const std::string &name, int *values,
                                    uint32_t count)
 {
-  GLint location = getUniformLocation(name);
-  glUniform1iv(location, count, values);
+  backend::uploadUniformIntArray(getUniformLocation(name), values, count);
 }
 
-// ========================================================== //
-// Shader interpretation and link
-// ========================================================== //
+// ----------------------------------------------------------
+// Creation
+// ----------------------------------------------------------
 
-uint32_t Shader::compileShader(uint32_t type, const std::string &source)
+std::optional<Shader> Shader::createFromStrings(const std::string &name,
+                                                const std::string &vertex,
+                                                const std::string &fragment)
 {
-  uint32_t id = glCreateShader(type);
-  const char *src = source.c_str();
-  glShaderSource(id, 1, &src, nullptr);
-  glCompileShader(id);
+  Shader shader;
+  shader.m_name = name;
+  shader.m_programId = backend::createShaderProgram(name, vertex, fragment);
 
-  int result;
-  glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-  if (result == GL_FALSE) {
-    int length;
-    glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-    char *message = (char *)alloca(length * sizeof(char));
-    glGetShaderInfoLog(id, length, &length, message);
-    PLOG_W("Failed to compile {}",
-           type == GL_VERTEX_SHADER ? "vertex" : "fragment");
-    PLOG_W("{}", message);
-    glDeleteShader(id);
-    return 0;
-  }
-  return id;
-};
+  if (!shader.m_programId)
+    return std::nullopt;
 
-bool Shader::checkLinkProgram(uint32_t programID)
-{
-  int linkStatus;
-  glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
-  if (linkStatus == GL_FALSE) {
-    int infoLenght;
-    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLenght);
-    char *buffer = (char *)alloca(infoLenght * sizeof(char));
-    glGetProgramInfoLog(programID, infoLenght, &infoLenght, buffer);
-    PLOG_W("Failed to Link Program {}", programID);
-    PLOG_W("{}", buffer);
-    return false;
-  }
-  return true;
+  return shader;
 }
-
-// ========================================================== //
-// Shader creation
-// ========================================================== //
 
 std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
 {
@@ -190,49 +174,12 @@ std::optional<Shader> Shader::createFromFile(const std::string &name,
   return createFromStrings(name, vertexShader, fragmentShader);
 }
 
-std::optional<Shader> Shader::createFromStrings(const std::string &name,
-                                                const std::string &vertex,
-                                                const std::string &fragment)
-{
-  Shader shader;
-  shader.m_name = name;
-  shader.createShaderFromStrings(vertex, fragment);
-  if (shader.m_programId == 0) {
-    return std::nullopt;
-  }
-  return shader;
-}
-
 std::optional<Shader>
 Shader::createFromFn(const std::string &name,
                      std::function<std::pair<std::string, std::string>()> fn)
 {
   auto [vertex, fragment] = fn();
   return createFromStrings(name, vertex, fragment);
-}
-
-void Shader::createShaderFromStrings(const std::string &vertexShader,
-                                     const std::string &fragmentShader)
-{
-
-  uint32_t vs = compileShader(GL_VERTEX_SHADER, vertexShader);
-  uint32_t fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
-  m_programId = glCreateProgram();
-  glAttachShader(m_programId, vs);
-  glAttachShader(m_programId, fs);
-  glLinkProgram(m_programId);
-
-  if (!checkLinkProgram(m_programId)) {
-    PLOG_W("Program {} name: {}", m_programId, m_name);
-    glDetachShader(m_programId, vs);
-    glDetachShader(m_programId, fs);
-    return;
-  }
-  glValidateProgram(m_programId);
-
-  glDeleteShader(vs);
-  glDeleteShader(fs);
-  PLOG_I("Shader programId = {} created. Name: {}", m_programId, m_name);
 }
 
 } // namespace pain

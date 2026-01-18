@@ -1,4 +1,4 @@
 {
   "workspace.library": ["./lua_types"],
-  "diagnostics.globals": ["Script", "Input", "Scancode", "LuaScriptComponent"]
+  "diagnostics.globals": ["Script", "Input", "Scancode", "LuaScriptComponent", "Events"]
 }

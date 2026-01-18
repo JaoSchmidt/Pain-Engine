@@ -45,7 +45,7 @@ public:
     m_orthocamera =
         std::make_unique<pain::OrthoCameraEntity>(scene, aspectRatio, zoom);
     pain::Renderer2d::init(*m_orthocamera);
-    auto &a = m_orthocamera->addComponent<pain::NativeScriptComponent>();
+    auto &a = m_orthocamera->getComponent<pain::NativeScriptComponent>();
     a.bind<pain::OrthoCameraController>();
     m_texture.reset(new pain::Texture("resources/textures/Checkerboard.png"));
 

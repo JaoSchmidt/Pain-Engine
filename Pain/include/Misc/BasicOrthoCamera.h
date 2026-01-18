@@ -1,35 +1,42 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
+// BasicOrthoCamera.h
 #pragma once
 
 #include "Core.h"
-#include "ECS/Components/Camera.h"
+#include "CoreRender/CameraComponent.h"
 #include "ECS/Scriptable.h"
 #include <type_traits>
 
 namespace pain
 {
 
-class OrthoCamera
-    : public NormalEntity<MovementComponent, RotationComponent,
-                          TransformComponent, OrthoCameraComponent,
-                          NativeScriptComponent>
+namespace Dummy2dCamera
 {
-public:
-  OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel);
-};
+reg::Entity create(pain::Scene &scene, int resolutionHeight,
+                   int resolutionWeigh, float zoomLevel);
 
-class OrthoCameraScript : public ExtendedEntity
+reg::Entity createBasicCamera(pain::Scene &scene, int resolutionHeight,
+                              int resolutionWeigh, float zoomLevel);
+} // namespace Dummy2dCamera
+
+class OrthoCameraScript : public WorldObject
 {
 public:
-  using ExtendedEntity::ExtendedEntity;
-  void onUpdate(double deltaTimeSec);
-  void onRender(double currentTime) {};
+  using WorldObject::WorldObject;
+  void onUpdate(DeltaTime deltaTimeSec);
+  void onCreate();
   void onEvent(const SDL_Event &e);
-  inline void recalculatePosition(const glm::vec3 &position, float rotation);
 
-private:
+protected:
   float m_zoomSpeed = 0.25f;
-  void onMouseScrolled(const SDL_Event &e, OrthoCameraComponent &cc);
-  void onWindowResized(const SDL_Event &e, OrthoCameraComponent &cc);
+  void onMouseScrolled(const SDL_Event &e, Component::OrthoCamera &cc);
+  void onWindowResized(const SDL_Event &e, Component::OrthoCamera &cc);
 };
 
 } // namespace pain

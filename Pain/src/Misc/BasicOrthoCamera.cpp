@@ -1,86 +1,106 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 #include "Misc/BasicOrthoCamera.h"
-#include "CoreRender/Camera.h"
-#include "CoreRender/Renderer/Renderer2d.h"
-#include "ECS/Components/Camera.h"
-#include "ECS/Components/Movement.h"
+#include "CoreRender/CameraComponent.h"
 #include "ECS/Components/NativeScript.h"
-#include "ECS/Components/Rotation.h"
+#include "GUI/ImGuiDebugRegistry.h"
+#include "Physics/MovementComponent.h"
+#include "Physics/RotationComponent.h"
 #include "glm/fwd.hpp"
 namespace pain
 {
-
-OrthoCamera::OrthoCamera(Scene *scene, float aspectRatio, float zoomLevel)
-    : NormalEntity(*scene)
+reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionHeight,
+                                  int resolutionWidth, float zoomLevel)
 {
-  // clang-format off
-  createComponents(*scene,
-      MovementComponent{},
-      RotationComponent{},
-      TransformComponent{},
-      OrthoCameraComponent{aspectRatio, zoomLevel},
-      NativeScriptComponent{}
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(entity, pain::Transform2dComponent{}, //
+                         pain::RotationComponent{},            //
+                         pain::Movement2dComponent{},          //
+                         Component::OrthoCamera::create(
+                             resolutionWidth, resolutionHeight, zoomLevel), //
+                         pain::NativeScriptComponent{});
+  pain::Scene::emplaceScript<OrthoCameraScript>(entity, scene);
+  return entity;
+}
+reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
+                                             int resolutionHeight,
+                                             int resolutionWeigh,
+                                             float zoomLevel)
+{
+  reg::Entity entity = scene.createEntity();
+  scene.createComponents(entity, pain::Transform2dComponent{},
+                         Component::OrthoCamera::create(
+                             resolutionWeigh, resolutionHeight, zoomLevel) //
   );
-  // clang-format off
-};
-// OrthoCameraScript inherits ExtendedEntity
-inline void
-OrthoCameraScript::recalculatePosition(const glm::vec3 &position,
-                                           const float rotation)
-{
-  getComponent<OrthoCameraComponent>().m_camera->RecalculateViewMatrix(
-      position, rotation);
+  return entity;
 }
 
-void OrthoCameraScript::onUpdate(double deltaTimeSec)
+void OrthoCameraScript::onCreate()
+{
+  getComponent<Movement2dComponent>().m_rotationSpeed = 1.f;
+}
+
+void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
 {
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-  auto [mc, tc, cc, rc] = getComponents<MovementComponent,TransformComponent,OrthoCameraComponent,RotationComponent>();
+  auto [mc, tc, cc, rc] =
+      getComponents<Movement2dComponent, Transform2dComponent,
+                    Component::OrthoCamera, RotationComponent>();
 
-  // mc.m_velocityDir =
-  //     (state[SDL_SCANCODE_W] ? -glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
-  //                            : glm::vec3(0.0)) +
-  //     (state[SDL_SCANCODE_S] ? glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f})
-  //                            : glm::vec3(0.0)) +
-  //     (state[SDL_SCANCODE_A] ? -rc.m_rotation : glm::vec3(0.0)) +
-  //     (state[SDL_SCANCODE_D] ? rc.m_rotation : glm::vec3(0.0));
-  //
-  // if (state[SDL_SCANCODE_Q])
-  //   rc.m_rotationAngle += mc.m_rotationSpeed * (float) deltaTimeSec;
-  // if (state[SDL_SCANCODE_E])
-  //   rc.m_rotationAngle -= mc.m_rotationSpeed * (float) deltaTimeSec;
-  //
-  mc.m_translationSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
-  recalculatePosition(tc.m_position, rc.m_rotationAngle);
+  glm::vec3 moveDir{0.0f};
+
+  if (state[SDL_SCANCODE_W])
+    moveDir -= glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+  if (state[SDL_SCANCODE_S])
+    moveDir += glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+  if (state[SDL_SCANCODE_A])
+    moveDir -= rc.m_rotation;
+  if (state[SDL_SCANCODE_D])
+    moveDir += rc.m_rotation;
+
+  // Normalize movement direction (avoid diagonal speed boost)
+  if (glm::length(moveDir) > 0.0001f)
+    moveDir = glm::normalize(moveDir);
+
+  float moveSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
+  mc.m_velocity = moveDir * moveSpeed;
+
+  if (state[SDL_SCANCODE_Q])
+    rc.m_rotationAngle += mc.m_rotationSpeed * deltaTime.getSecondsf();
+  if (state[SDL_SCANCODE_E])
+    rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTime.getSecondsf();
+
+  tc.m_position += mc.m_velocity * deltaTime.getSecondsf();
+  cc.recalculateViewMatrix(tc.m_position, rc.m_rotationAngle);
 }
 
 void OrthoCameraScript::onEvent(const SDL_Event &event)
 {
-  OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
+  Component::OrthoCamera &cc = getComponent<Component::OrthoCamera>();
   if (event.type == SDL_MOUSEWHEEL)
     onMouseScrolled(event, cc);
-  if (event.type == SDL_WINDOWEVENT) {
-    if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-      onWindowResized(event, cc);
-    }
-  }
 }
 
 void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
-                                            OrthoCameraComponent &cc)
+                                        Component::OrthoCamera &cc)
 {
-  cc.m_zoomLevel -= (float) event.wheel.y * m_zoomSpeed;
+  cc.m_zoomLevel -= (float)event.wheel.y * m_zoomSpeed;
   cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
-  cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
-                             cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
-                             cc.m_zoomLevel);
+  cc.setProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
+                   cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
+                   cc.m_zoomLevel);
 }
 
-void OrthoCameraScript::onWindowResized(const SDL_Event &event,
-                                            OrthoCameraComponent &cc)
-{
-  cc.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
-  cc.m_camera->SetProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
-                             cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
-                             cc.m_zoomLevel);
-}
 } // namespace pain

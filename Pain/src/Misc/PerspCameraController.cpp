@@ -1,3 +1,17 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 #include "Assets/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Renderer3d.h"
@@ -11,7 +25,9 @@ namespace pain
 PerspectiveCameraController::PerspectiveCameraController(
     float windowWidth, float windowHeight, float fieldOfViewDegrees)
     : m_aspectRatio(windowWidth / windowHeight),
-      m_camera(m_aspectRatio, fieldOfViewDegrees),
+      m_camera(cmp::PerspCamera::create(static_cast<int>(windowWidth),
+                                        static_cast<int>(windowHeight),
+                                        fieldOfViewDegrees)),
       m_fieldOfViewDegrees(fieldOfViewDegrees)
 {
   m_translationSpeed = 1.0f;
@@ -19,19 +35,19 @@ PerspectiveCameraController::PerspectiveCameraController(
   m_zoomSpeed = 10.0f;
   m_windowWidth = windowWidth;
   m_windowHeight = windowHeight;
-  Renderer3d::setViewport(0, 0, windowWidth, windowHeight);
+  Renderer3d::setViewport(0, 0, (int)windowWidth, (int)windowHeight);
   setFrontVector({0.0f, 0.0f, 1.0f});
   setPosition({0.0f, 0.0f, 0.0f});
   SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
-void PerspectiveCameraController::onUpdate(double deltaTimeSec)
+void PerspectiveCameraController::onUpdate(DeltaTime deltaTimeSec)
 {
   if (!m_isMovementEnable)
     return;
 
   const Uint8 *state = SDL_GetKeyboardState(NULL);
-  float moveAmount = (float)(deltaTimeSec * m_translationSpeed *
+  float moveAmount = (float)(deltaTimeSec.getSecondsf() * m_translationSpeed *
                              (1.0 + 10.0 * state[SDL_SCANCODE_LSHIFT]));
   if (state[SDL_SCANCODE_W])
     m_position += m_cameraFront * moveAmount;
@@ -98,8 +114,8 @@ void PerspectiveCameraController::onMouseMoved(const SDL_Event &e)
   if (!m_isMovementEnable)
     return;
 
-  float xoffset = e.motion.xrel * m_sensitivitySpeed;
-  float yoffset = e.motion.yrel * m_sensitivitySpeed;
+  float xoffset = static_cast<float>(e.motion.xrel) * m_sensitivitySpeed;
+  float yoffset = static_cast<float>(e.motion.yrel) * m_sensitivitySpeed;
 
   m_yaw += xoffset;
   m_pitch -= yoffset;
@@ -122,13 +138,13 @@ void PerspectiveCameraController::onMouseScrolled(const SDL_Event &event)
   if (!m_isMovementEnable)
     return;
 
-  m_fieldOfViewDegrees += event.wheel.y * m_zoomSpeed;
+  m_fieldOfViewDegrees += static_cast<float>(event.wheel.y) * m_zoomSpeed;
   if (m_fieldOfViewDegrees < 1.0f)
     m_fieldOfViewDegrees = 1.0f;
   else if (m_fieldOfViewDegrees > 100.0f)
     m_fieldOfViewDegrees = 100.0f;
 
-  m_camera.SetProjection(m_aspectRatio, m_fieldOfViewDegrees);
+  m_camera.setProjection(m_aspectRatio, m_fieldOfViewDegrees);
 }
 
 void PerspectiveCameraController::onWindowResized(const SDL_Event &event)
@@ -137,6 +153,6 @@ void PerspectiveCameraController::onWindowResized(const SDL_Event &event)
   m_windowWidth = (float)event.window.data1;
   m_windowHeight = (float)event.window.data2;
   m_aspectRatio = m_windowWidth / m_windowHeight;
-  m_camera.SetProjection(m_aspectRatio, m_fieldOfViewDegrees);
+  m_camera.setProjection(m_aspectRatio, m_fieldOfViewDegrees);
 }
 } // namespace pain

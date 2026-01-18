@@ -1,55 +1,188 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 #pragma once
 
-#include "Assets/DefaultTexture.h"
+#include "Assets/ManagerTexture.h"
+#include "CoreFiles/LogWrapper.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Texture.h"
+#include "ECS/Components/ComponentManager.h"
+#include "Misc/BasicShape.h"
+#include "Misc/TextureSheet.h"
+
+#include <variant>
 
 namespace pain
 {
-struct SpriteComponent {
+struct SheetStruct {
+  TextureSheet *sheet;
+  unsigned short id;
+};
+
+struct SpriteCreationInfo {
   glm::vec2 m_size{0.1f, 0.1f};
-  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
+  Color color = {255, 255, 255, 255};
   float m_tilingFactor = 1.f;
-  Texture *m_texture = &resources::getDefaultTexture(resources::ERROR);
-  void setTexture(Texture &texture) { m_texture = &texture; };
-  Texture &getTexture() const { return *m_texture; };
+  RenderLayer layer = RenderLayer::Default;
+};
 
-  // Constructors
-  SpriteComponent(const glm::vec2 &size, const glm::vec4 &color,
-                  float tilingFactor, Texture &texture)
-      : m_size(size), m_color(color), m_tilingFactor(tilingFactor),
-        m_texture(&texture) {};
-  SpriteComponent() = default;
+struct SpriteComponent {
+  using tag = tag::Sprite;
+  using TextureVariant = std::variant<Texture *, SheetStruct>;
 
-  // Move
-  SpriteComponent(SpriteComponent &&other) noexcept
-      : m_size(std::move(other.m_size)), m_color(std::move(other.m_color)),
-        m_tilingFactor(other.m_tilingFactor), m_texture(other.m_texture) {};
-  SpriteComponent &operator=(SpriteComponent &&other) noexcept
+  glm::vec2 m_size{0.1f, 0.1f};
+  Color color = {255, 255, 255, 255};
+  float m_tilingFactor = 1.f;
+  RenderLayer layer = RenderLayer::Default;
+  TextureVariant m_tex = TextureVariant{&TextureManager::getDefaultTexture(
+      TextureManager::DefaultTexture::Error)};
+  void printptr(const char *a) const
   {
-    if (this != &other) {
-      m_size = std::move(other.m_size);
-      m_color = std::move(other.m_color);
-      m_tilingFactor = other.m_tilingFactor;
-      m_texture = other.m_texture;
-    }
-    return *this;
+    std::visit(
+        [&](auto &&obj) {
+          using T = std::decay_t<decltype(obj)>;
+          if constexpr (std::is_same_v<T, SheetStruct>) {
+            PLOG_I("ptr = {} on {}", fmt::ptr(obj.sheet), a);
+          } else {
+            PLOG_I("ptr = {} on {}", fmt::ptr(obj), a);
+          }
+        },
+        m_tex);
+  }
+
+  // ------------------------------------------------------------
+  //  Factory functions
+  // ------------------------------------------------------------
+
+  static SpriteComponent create(const SpriteCreationInfo &info = {})
+  {
+    return SpriteComponent{.m_size = info.m_size,
+                           .color = info.color,
+                           .m_tilingFactor = info.m_tilingFactor,
+                           .layer = info.layer,
+                           .m_tex = &TextureManager::getDefaultTexture(
+                               TextureManager::DefaultTexture::General, false)};
+  }
+
+  //  Texture by file path
+  static SpriteComponent create(const SpriteCreationInfo &info,
+                                const char *textureFilePath)
+  {
+    return SpriteComponent{.m_size = info.m_size,
+                           .color = info.color,
+                           .m_tilingFactor = info.m_tilingFactor,
+                           .layer = info.layer,
+                           .m_tex =
+                               &TextureManager::getTexture(textureFilePath)};
+  }
+
+  static SpriteComponent create(const SpriteCreationInfo &info,
+                                const char *sheetFilePath, unsigned short id)
+  {
+    return SpriteComponent{
+        .m_size = info.m_size,
+        .color = info.color,
+        .m_tilingFactor = info.m_tilingFactor,
+        .layer = info.layer,
+        .m_tex =
+            SheetStruct{&TextureManager::getTextureSheet(sheetFilePath), id}};
+  }
+
+  //  Texture by reference
+  static SpriteComponent create(const SpriteCreationInfo &info,
+                                Texture &texture)
+  {
+    return SpriteComponent{.m_size = info.m_size,
+                           .color = info.color,
+                           .m_tilingFactor = info.m_tilingFactor,
+                           .layer = info.layer,
+                           .m_tex = &texture};
+  }
+
+  static SpriteComponent create(const SpriteCreationInfo &info,
+                                TextureSheet &sheet, unsigned short id)
+  {
+    return SpriteComponent{.m_size = info.m_size,
+                           .color = info.color,
+                           .m_tilingFactor = info.m_tilingFactor,
+                           .layer = info.layer,
+                           .m_tex = SheetStruct{&sheet, id}};
+  }
+
+  // ------------------------------------------------------------
+  //  GETTERS with type-enforced stuff
+  // ------------------------------------------------------------
+
+  // Assuming sprite is part of a Texture Atlas, get its coordinates
+  const std::array<glm::vec2, 4> &getCoords() const
+  {
+    SheetStruct sheet = std::get<SheetStruct>(m_tex);
+    return (*sheet.sheet)[sheet.id];
+  }
+  Texture &getTexture() const { return *std::get<Texture *>(m_tex); }
+  Texture &getTextureFromTextureSheet() const
+  {
+    return std::get<SheetStruct>(m_tex).sheet->getTexture();
+  }
+
+  // ------------------------------------------------------------
+  //  SETTERS
+  // ------------------------------------------------------------
+
+  // set a single texture
+  void setTexture(Texture &texture) { m_tex = TextureVariant{&texture}; }
+  void setTexture(const char *filepath)
+  {
+    m_tex = TextureVariant{&TextureManager::getTexture(filepath)};
+  }
+  void setTextureSheet(TextureSheet &sheet, unsigned short id)
+  {
+    m_tex = TextureVariant{SheetStruct{&sheet, id}};
   }
 };
 
 struct SpritelessComponent {
-  glm::vec2 m_size{0.1f, 0.1f};
-  glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
-  SpritelessComponent() = default;
-  SpritelessComponent(const glm::vec2 &size, const glm::vec4 &color)
-      : m_size(size), m_color(color) {};
+  using tag = tag::Spriteless;
+  std::variant<CircleShape, QuadShape> m_shape = QuadShape();
+  Color color = {204, 51, 25, 76};
+  RenderLayer layer = RenderLayer::MuchCloser;
+  static SpritelessComponent createQuad(const glm::vec2 &size)
+  {
+    return SpritelessComponent{.m_shape = QuadShape(size)};
+  }
+  static SpritelessComponent createCircle(float radius)
+  {
+    return SpritelessComponent{.m_shape = CircleShape(radius)};
+  }
+  static SpritelessComponent createQuad(const glm::vec2 &size,
+                                        const Color &color)
+  {
+    return SpritelessComponent{.m_shape = QuadShape(size), .color = color};
+  }
+  static SpritelessComponent createCircle(float radius, const Color &color)
+  {
+    return SpritelessComponent{.m_shape = CircleShape(radius), .color = color};
+  }
 };
 
 struct TrianguleComponent {
+  using tag = tag::Triangule;
   glm::vec2 m_height{0.1f, 0.1f};
   glm::vec4 m_color{1.0f, 1.0f, 1.0f, 1.0f};
-  TrianguleComponent() = default;
-  TrianguleComponent(const glm::vec2 &height, const glm::vec4 &color)
-      : m_height(height), m_color(color) {};
+  static TrianguleComponent create(const glm::vec2 &height)
+  {
+    return TrianguleComponent{.m_height = height};
+  }
+  static TrianguleComponent create(const glm::vec2 &height,
+                                   const glm::vec4 &color)
+  {
+    return TrianguleComponent{.m_height = height, .m_color = color};
+  }
 };
 
 } // namespace pain

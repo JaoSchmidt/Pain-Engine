@@ -2,15 +2,23 @@
 # generated ini
 imgui.ini
 config.ini
+# syncthing stuff
+.stfolder
+.stfolder
 
 
 CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
 .cmake/
 ## Debug stuff
+/resources/
 resources/*
 .luarc.json
 lua_types/
+target
+
+## Doxygen
+docs/
 
 ##### Windows
 # Windows thumbnail cache files
@@ -86,6 +94,8 @@ Temporary Items
 .gradle/
 build/
 build*
+dkr_build/
+dkr_build*
 
 # Local configuration file (sdk path, etc)
 local.properties

@@ -1,9 +1,16 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+
 #pragma once
 #include "pch.h"
 
 #include "Core.h"
 
-#include "Assets/DefaultTexture.h"
+#include "Assets/ManagerTexture.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
@@ -44,7 +51,7 @@ private:
   VertexBuffer m_vertexBuffer;
   Shader m_textureShader;
   Texture &m_whiteTexture =
-      resources::getDefaultTexture(resources::DEFAULT_TEXTURE::BLANK);
+      TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
 
   CubeVertex *m_vertexBufferBase = nullptr;
   CubeVertex *m_vertexBufferPtr = nullptr;

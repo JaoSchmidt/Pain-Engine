@@ -12,19 +12,22 @@ Script.on_update(function(self, dt)
 		end
 		if Input.is_key_pressed(Scancode.S) then
 			tr.m_position.y = tr.m_position.y - 0.04
+			Event.enqueueCustom(2, { msg = "this is a custom event table" })
 		end
 	end
 end)
 
-Script.on_create(function(self)
-	-- print("this is onCreate function, x later is " .. transform.m_position.x)
+Script.on_create(function(_)
+	Event.subscribe(EventType.Collision, function(event)
+		print("Collision between " .. tostring(event.a) .. " and " .. tostring(event.b))
+	end)
+	Event.subscribeCustom(2, function(event)
+		print("Custom Event type number 2")
+		print(event["msg"])
+	end)
+	print("this is onCreate function")
 end)
 
-Script.on_event(function(self, event)
-	-- print("this is on event function")
-	-- print(type(event))
-end)
-
-Script.on_destroy(function(self)
+Script.on_destroy(function(_)
 	print("this is onDestroy function")
 end)
