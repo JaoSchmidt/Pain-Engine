@@ -42,7 +42,7 @@
 #include "ECS/Scriptable.h"
 #include "Physics/MovementComponent.h"
 // Scripts
-#include "Scripting/Component.h"
+#include "Scripting/LuaScriptComponent.h"
 #include "Scripting/LuaScriptSys.h"
 #include "Scripting/NativeScriptSys.h"
 #include "Scripting/SchedulerComponent.h"

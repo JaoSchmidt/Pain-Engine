@@ -9,7 +9,7 @@
 #include "GUI/ImGuiDebugRegistry.h"
 #include "Misc/Events.h"
 #include "Physics/Collision/Collider.h"
-#include "Scripting/Component.h"
+#include "Scripting/LuaScriptComponent.h"
 #include <pain.h>
 
 reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,

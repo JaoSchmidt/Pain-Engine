@@ -4,6 +4,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * @file RotationComponent.h
+ * @brief Component representing rotational state of an entity.
+ */
 
 #pragma once
 
@@ -14,22 +18,17 @@
 namespace pain
 {
 
+/**
+ * @brief Stores rotation parameters for an entity.
+ *
+ * Defines the rotation angle and axis used by rendering or transformation
+ * systems to orient an entity in world space.
+ */
 struct RotationComponent {
   using tag = tag::Rotation;
-  float m_rotationAngle{0.0f};
-  glm::vec3 m_rotation{0.0f, 1.0f, 0.0f};
-  static RotationComponent create(const glm::vec3 &rotation)
-  {
-    return RotationComponent{.m_rotation = rotation};
-  }
-  static RotationComponent create(const glm::vec3 &rotation,
-                                  float rotationAngle)
-  {
-    return RotationComponent{
-        .m_rotationAngle = rotationAngle,
-        .m_rotation = rotation,
-    };
-  }
+
+  float m_rotationAngle{0.0f}; /**< Rotation angle, typically in radians. */
+  glm::vec3 m_rotation{0.0f, 1.0f, 0.0f}; /**< Rotation axis vector. */
 };
 
 } // namespace pain

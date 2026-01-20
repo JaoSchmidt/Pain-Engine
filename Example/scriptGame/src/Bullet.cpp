@@ -6,7 +6,7 @@
 
 #include "Bullet.h"
 #include "ECS/Components/Particle.h"
-#include "Scripting/Component.h"
+#include "Scripting/LuaScriptComponent.h"
 #include <pain.h>
 
 reg::Entity Bullet::create(pain::Scene &scene)

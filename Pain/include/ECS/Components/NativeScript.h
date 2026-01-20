@@ -4,8 +4,25 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * @file NativeScript.h
+ * @brief Native C++ scripting component for attaching behavior to entities.
+ *
+ * Defines NativeScriptComponent, which allows entities to own and execute
+ * user-defined C++ script objects. Script instances are type-erased and
+ * interacted with through stored function pointers to avoid virtual dispatch
+ * and RTTI at runtime.
+ *
+ * Script types may optionally implement the following callbacks:
+ *  - onCreate()
+ *  - onDestroy()
+ *  - onRender(Renderer2d&, bool, DeltaTime)
+ *  - onUpdate(DeltaTime)
+ *  - onEvent(const SDL_Event&)
+ *
+ * Presence of each callback is detected at compile time using concepts.
+ */
 
-// NativeScript.h
 #pragma once
 
 #include "Assets/DeltaTime.h"
@@ -17,22 +34,53 @@
 
 namespace pain
 {
+// forward declare
 struct Renderer2d;
-}
-namespace pain
-{
 template <typename SceneT> class GameObject;
 class Scene;
 
+/**
+ * @struct NativeScriptComponent
+ * @brief ECS component that owns and executes a native C++ script instance.
+ *
+ * A NativeScriptComponent binds a user-defined script type to an entity and
+ * manages its lifetime. The script instance is stored as a type-erased pointer
+ * and invoked through generated function pointers.
+ *
+ * Scripts are validated at compile time using scripting concepts to ensure
+ * compatible method signatures.
+ *
+ * Typical usage:
+ * @code
+ * entity.addComponent<NativeScriptComponent>()
+ *       .bindAndInitiate<MyScript>(constructorArgs...);
+ * @endcode
+ *
+ * The component automatically destroys the script instance when the component
+ * is destroyed or moved.
+ */
 struct NativeScriptComponent {
 private:
   using Scriptable = GameObject<Scene>;
 
 public:
+  /// @brief ECS component tag used for compile-time registration.
   using tag = tag::NativeScript;
-
+  /**
+   * @brief Pointer to the bound script instance (type-erased).
+   *
+   * Lifetime is owned by the component. The instance is destroyed automatically
+   * when the component is destroyed or reassigned.
+   */
   Scriptable *instance = nullptr;
-
+  /**
+   * @name Script lifecycle function pointers
+   * @brief Generated wrappers for optional script callbacks.
+   *
+   * These function pointers are initialized during binding depending on which
+   * callbacks the script type implements.
+   */
+  ///@{
   void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
@@ -40,23 +88,28 @@ public:
                            DeltaTime) = nullptr;
   void (*onUpdateFunction)(Scriptable *, DeltaTime) = nullptr;
   void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
+  ///@}
 
+  /**
+   * @brief Bind and initialize a script instance using an existing object.
+   *
+   * The provided object is moved into a newly allocated script instance and
+   * bound to this component. Script callbacks are detected at compile time and
+   * corresponding function wrappers are generated automatically.
+   *
+   * TODO:
+   * This function both binds and initializes the script. If only binding is
+   * required, a separate function must be implemented.
+   *
+   * @tparam T Script type.
+   * @param t Script instance to move into this component.
+   */
   template <typename T> void bindAndInitiate(T &&t)
   {
     check_script_methods<T>();
-    // static_assert(
-    //     std::is_constructible_v<T, Scene &, Entity, Bitmask, Args...>,
-    //     "Error: You are binding a function whose constructor doesn't
-    //     implement " "Scriptable constructor: (Scene&, Entity, Bitmask).
-    //     Pherhaps you " "are using the defualt constructor instead of coding
-    //     `using " "Scriptable::SceneObject;`?");
+
     instance = new T(std::move(t));
-    // instantiateFunction = [](Scriptable *&instance) { instance = new T();
-    // }
     destroyInstanceFunction = [](Scriptable *&instance) {
-      // PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
-      //        "called",
-      //        fmt::ptr(instance));
       delete static_cast<T *>(instance);
       instance = nullptr;
     };
@@ -104,26 +157,28 @@ public:
       onEventFunction = nullptr;
     }
   };
-  /* Bind the script to the entity, also initialize the script instance.
-   * Previously this was only "bind()" function without iniating the script
-   * instance, but I just never need those two things separate, so I joined
-   * them.
+
+  /**
+   * @brief Bind and initialize a script instance by constructing it in place.
+   *
+   * The script instance is constructed dynamically using the provided
+   * arguments. Script callbacks are detected at compile time and corresponding
+   * function wrappers are generated automatically.
+   *
+   * @tparam T Script type.
+   * @tparam Args Constructor argument types.
+   * @param args Arguments forwarded to the script constructor.
    */
-  template <typename T, typename... Args> void bindAndInitiate(Args &&...args)
+  template <typename T, typename... Args> void bindAndEmplace(Args &&...args)
   {
     check_script_methods<T>();
     static_assert(std::is_constructible_v<T, Args...>,
                   "Error: You are binding a function whose constructor doesn't "
-                  "implement Scriptable constructor: (Scene&, Entity, "
-                  "Bitmask). Pherhaps you are using the defualt constructor "
+                  "implement constructor: (Scene&, Entity, "
+                  "Args...). Pherhaps you are using the defualt constructor "
                   "instead of coding `using Scriptable::SceneObject;`?");
     instance = new T(std::forward<Args>(args)...);
-    // instantiateFunction = [](Scriptable *&instance) { instance = new T();
-    // }
     destroyInstanceFunction = [](Scriptable *&instance) {
-      // PLOG_I("NativeScriptComponent instance {}: destructorInstanceFunction "
-      //        "called",
-      //        fmt::ptr(instance));
       delete static_cast<T *>(instance);
       instance = nullptr;
     };
@@ -175,6 +230,7 @@ public:
   NativeScriptComponent() = default;
   NativeScriptComponent(const NativeScriptComponent &) = delete;
   NativeScriptComponent &operator=(const NativeScriptComponent &) = delete;
+  /// @brief Destroys the bound script instance if present.
   ~NativeScriptComponent()
   {
     if (instance != nullptr) {
@@ -182,7 +238,12 @@ public:
     } // else means this component is unbinded
   }
 
-  // Move Assigment deals with "instance"
+  /**
+   * @brief Move assignment operator.
+   *
+   * Transfers ownership of the script instance and all callback bindings from
+   * another component. The source component is left in a safe empty state.
+   */
   NativeScriptComponent &operator=(NativeScriptComponent &&other) noexcept
   {
     if (this != &other) {
@@ -209,7 +270,13 @@ public:
     }
     return *this;
   }
-  // Move constructor deals with "instance"
+  /**
+   * @brief Move constructor.
+   *
+   * Transfers ownership of the script instance and all callback bindings from
+   * another component. The source component is cleared to avoid double
+   * deletion.
+   */
   NativeScriptComponent(NativeScriptComponent &&other) noexcept
   {
     instance = other.instance;
@@ -230,6 +297,5 @@ public:
     other.onEventFunction = nullptr;
   }
 };
-// initialize the pointers of the Scripts functions
 
 } // namespace pain

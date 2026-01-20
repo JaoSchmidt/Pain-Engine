@@ -4,23 +4,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-
 #include "Scripting/SchedulerSys.h"
 #include "Debugging/Profiling.h"
 #include "Scripting/SchedulerComponent.h"
 
 // NOTE: I believe lua script can be tough to paralize because of the OOP nature
 // of scripts
-namespace pain
-{
-namespace Systems
+namespace pain ::Systems
 {
 
 void LuaSchedulerSys::onUpdate(DeltaTime deltaTime)
@@ -50,5 +40,4 @@ void LuaSchedulerSys::onUpdate(DeltaTime deltaTime)
     }
   }
 }
-} // namespace Systems
-} // namespace pain
+} // namespace pain::Systems

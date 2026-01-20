@@ -4,14 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-
 // SweepAndPruneSys.cpp
 #include "Physics/Collision/SweepAndPruneSys.h"
 
@@ -22,9 +14,7 @@
 #include "Physics/Collision/Collider.h"
 #include "Physics/MovementComponent.h"
 
-namespace pain
-{
-namespace Systems
+namespace pain::Systems
 {
 
 void sortSAP(std::vector<EndPoint> &vec, std::vector<EndPointKey> &keyVec,
@@ -178,10 +168,10 @@ size_t insertEndPoint(reg::Entity entity, std::vector<EndPoint> &vecX,
   colComp.m_index = static_cast<int>(key_index);
   return key_index;
 }
-size_t SweepAndPruneSys::insertCollider(reg::Entity entity)
+size_t SweepAndPruneSys::insertColliderDirectly(reg::Entity entity,
+                                                const Transform2dComponent &tc,
+                                                SAPCollider &sc)
 {
-  auto [tc, sc] = getComponents<Transform2dComponent, SAPCollider>(entity);
-
   const bool isDynamic = hasAnyComponents<Movement2dComponent>(entity);
 
   auto &endPointsX = isDynamic ? m_endPointsX : m_staticEndPointsX;
@@ -189,6 +179,11 @@ size_t SweepAndPruneSys::insertCollider(reg::Entity entity)
   auto &endPointKeys = isDynamic ? m_endPointKeys : m_staticEndPointKeys;
 
   return insertEndPoint(entity, endPointsX, endPointsY, endPointKeys, tc, sc);
+}
+size_t SweepAndPruneSys::insertCollider(reg::Entity entity)
+{
+  auto [tc, sc] = getComponents<Transform2dComponent, SAPCollider>(entity);
+  return SweepAndPruneSys::insertColliderDirectly(entity, tc, sc);
 }
 
 void SweepAndPruneSys::insertColliderSpan(
@@ -539,5 +534,4 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
   }
 }
 
-} // namespace Systems
-} // namespace pain
+} // namespace pain::Systems

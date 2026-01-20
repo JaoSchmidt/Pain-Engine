@@ -4,6 +4,34 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * @file NaiveCollisionSys.h
+ * @brief Simple brute-force collision detection and response system.
+ *
+ * NaiveCollisionSys performs pairwise collision checks between all relevant
+ * entities each update tick. It is intended primarily for debugging,
+ * prototyping, and small scenes where correctness and simplicity are more
+ * important than performance.
+ *
+ * The system executes:
+ *  - Broad iteration over all entities containing Transform2dComponent,
+ *    Movement2dComponent, and ColliderComponent.
+ *  - Narrow-phase collision tests between collider shapes.
+ *  - Basic collision response by modifying movement state.
+ *
+ * Because this implementation scales quadratically with entity count, it is
+ * not suitable for large scenes or production-scale physics workloads.
+ *
+ * @note As with any systems in the engine, system headers follow the naming
+ * convention and end with the suffix "Sys.h".
+ *
+ * @note As with any system, the callback execution is only enabled because the
+ * system inherits the corresponding interface:
+ *  - IOnUpdate  → enables onUpdate() callbacks.
+ *
+ * If the interface is removed, the engine will no longer invoke the associated
+ * callback.
+ */
 
 #pragma once
 
@@ -11,61 +39,88 @@
 #include "ECS/Systems.h"
 #include "Physics/Collision/Collider.h"
 #include "Physics/MovementComponent.h"
+
 namespace pain
 {
-
 namespace Systems
 {
 
-/* NOTE: Trying to setup a logic that would only alert the developer when he/she
- * uses addSystem isn't working. The problem is that "query" is requesting
- * ColliderComponent even in the case where the compiler should clearly fail.
- * One method to resolve this perhaps would be altering "System" itself
+/**
+ * @brief Brute-force collision detection system for dynamic and static
+ * entities.
  *
- * I've confirmed the following solution works:
-
- // declere require
- template <typename... Components, typename... ExcludeComponents>
-    requires(CM::template allRegistered<Components...>())
-  inline std::vector<reg::ChunkView<Components...>>
-  query(exclude_t<ExcludeComponents...> = {})
-  {
-    return m_registry.template query<Components...>(
-        exclude<ExcludeComponents...>);
-  }
-
- // DO NOT declere require
-  template <typename... Components, typename... ExcludeComponents>
-  inline std::vector<reg::ChunkView<Components...>>
-  query(exclude_t<ExcludeComponents...> = {})
-  {
-    return reg::ChunkView<Components...>{};
-  }
-
-  That would require me to:
-  1. remove the m_entity of ChunkView, replace with nothing since I don't want
- to count entities anymore
-  2. replace every function inside system with an alternative where the return
- is just dummy and CM::AllRegistered is false
-  3. Add a small check inside addSystem that, only then, will see if the
- function is valid
-
-  Another option, would be to modify archeregistry a bit to allow bitmasks to
- work
-
-*/
-
-// NaiveCollisionSys
+ * NaiveCollisionSys iterates through all entities that contain the required
+ * components and performs collision checks between every valid pair. Depending
+ * on whether both entities are dynamic or one is static, different narrow-phase
+ * resolution paths are executed.
+ *
+ * This system is primarily useful as:
+ *  - A correctness reference for more optimized collision systems.
+ *  - A lightweight solution for very small worlds.
+ *  - A debugging tool during engine development.
+ *
+ * @note As with any system, the callback execution is only enabled because the
+ * system inherits the corresponding interface:
+ *  - IOnUpdate  → enables onUpdate() callbacks.
+ *
+ * @note The Tags list is validated at compile time to ensure that all required
+ * components are registered in the component manager before this system can be
+ * added to a scene.
+ *
+ * @see Transform2dComponent
+ * @see Movement2dComponent
+ * @see ColliderComponent
+ * @see System
+ * @see IOnUpdate
+ */
 struct NaiveCollisionSys : public System<WorldComponents>, IOnUpdate {
+  /**
+   * @brief Component tags required by this system.
+   *
+   * Declares that this system operates on entities containing:
+   *  - Transform2dComponent
+   *  - Movement2dComponent
+   *  - ColliderComponent
+   */
   using Tags = TypeList<Transform2dComponent, //
                         Movement2dComponent,  //
                         ColliderComponent>;
+
+  /** @brief Inherit base System constructors. */
   using System<WorldComponents>::System;
+
+  /** @brief Prevent default construction. */
   NaiveCollisionSys() = delete;
 
+  /**
+   * @brief Performs collision detection and resolution for the current frame.
+   *
+   * Iterates through all valid entity pairs and executes narrow-phase collision
+   * tests and response logic.
+   *
+   * @param dt Frame delta time.
+   *
+   * @note This method is invoked only because the system inherits from
+   * IOnUpdate.
+   */
   void onUpdate(DeltaTime dt) override;
 
 private:
+  /**
+   * @brief Resolves collision between a dynamic entity and a static entity.
+   *
+   * Performs narrow-phase collision detection between a moving entity and a
+   * static collider, and applies the appropriate response to the dynamic
+   * movement component.
+   *
+   * @param t_i        Transform of the dynamic entity.
+   * @param c_i        Collider of the dynamic entity.
+   * @param m_i        Movement of the dynamic entity.
+   * @param entity_i  Entity identifier of the dynamic entity.
+   * @param t_j        Transform of the static entity.
+   * @param c_j        Collider of the static entity.
+   * @param entity_j  Entity identifier of the static entity.
+   */
   void narrowPhaseCollisionStatic(Transform2dComponent &t_i,
                                   ColliderComponent &c_i,
                                   Movement2dComponent &m_i,
@@ -73,6 +128,22 @@ private:
                                   const Transform2dComponent &t_j,
                                   const ColliderComponent &c_j,
                                   reg::Entity entity_j);
+
+  /**
+   * @brief Resolves collision between two dynamic entities.
+   *
+   * Performs narrow-phase collision detection and applies response logic to
+   * both participating entities.
+   *
+   * @param t_i        Transform of the first entity.
+   * @param c_i        Collider of the first entity.
+   * @param m_i        Movement of the first entity.
+   * @param entity_i  Entity identifier of the first entity.
+   * @param t_j        Transform of the second entity.
+   * @param c_j        Collider of the second entity.
+   * @param m_j        Movement of the second entity.
+   * @param entity_j  Entity identifier of the second entity.
+   */
   void narrowPhaseCollision(Transform2dComponent &t_i, ColliderComponent &c_i,
                             Movement2dComponent &m_i, reg::Entity entity_i,
                             Transform2dComponent &t_j, ColliderComponent &c_j,
@@ -80,5 +151,4 @@ private:
 };
 
 } // namespace Systems
-
 } // namespace pain

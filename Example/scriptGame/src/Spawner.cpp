@@ -5,7 +5,7 @@
  */
 
 #include "Spawner.h"
-#include "Scripting/Component.h"
+#include "Scripting/LuaScriptComponent.h"
 #include <pain.h>
 
 reg::Entity Spawner::create(pain::Scene &scene)

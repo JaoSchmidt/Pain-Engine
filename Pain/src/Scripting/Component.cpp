@@ -4,11 +4,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "Scripting/Component.h"
 #include "Assets/ManagerFile.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Scriptable.h"
+#include "Scripting/LuaScriptComponent.h"
 #include <sol/forward.hpp>
 #include <sol/sol.hpp>
 #include <sol/types.hpp>

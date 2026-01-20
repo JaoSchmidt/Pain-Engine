@@ -4,24 +4,26 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-
 // State.cpp
 #include "Scripting/State.h"
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/Sprite.h"
 #include "Physics/MovementComponent.h"
-#include "Scripting/Component.h"
-#include "Scripting/InputManager.h"
+#include "Scripting/LuaScriptComponent.h"
 #include "Scripting/SchedulerComponent.h"
+#include <SDL2/SDL_scancode.h>
 #include <sol/object.hpp>
 #include <sol/sol.hpp>
+
+class InputManager
+{
+public:
+  static inline bool isKeyPressed(SDL_Scancode scancode)
+  {
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    return state[scancode] != 0;
+  }
+};
 
 namespace pain
 {

@@ -4,6 +4,21 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * @file Collider.h
+ * @brief Collision components for narrow-phase and sweep-and-prune systems.
+ *
+ * Defines two collider components:
+ *
+ * - ColliderComponent:
+ *     Lightweight ECS collider description used by gameplay and physics
+ * systems.
+ *
+ * - SAPCollider:
+ *     Collider representation used by the Sweep-And-Prune broad-phase system.
+ *     Stores additional indexing data and supports direct registration into
+ *     the broad-phase accelerator.
+ */
 
 #pragma once
 
@@ -11,113 +26,167 @@
 #include "Misc/BasicShape.h"
 #include "Physics/MovementComponent.h"
 #include <variant>
+
 namespace pain
 {
 
+// Forward declaration for system dependency.
+namespace Systems
+{
+struct SweepAndPruneSys;
+}
+
+/**
+ * @brief Basic collider component attached to an entity.
+ *
+ * Represents the collision shape and local offset relative to the entity
+ * transform. This component does not manage any spatial acceleration data.
+ *
+ * The shape is stored as a variant and may be:
+ * - CircleShape
+ * - AABBShape
+ * - CapsuleShape
+ */
 struct ColliderComponent {
   using tag = tag::Collider;
-  // Offset from transform position
-  glm::vec2 m_offset{0.0f, 0.0f};
-  std::variant<CircleShape, AABBShape, CapsuleShape> m_shape{AABBShape{}};
-  bool m_isTrigger{false}; // Is this a trigger or solid collider? By default,
-                           // // all colliders will bounce of each other
 
+  glm::vec2 m_offset{0.0f,
+                     0.0f}; /**< Local offset from the entity transform. */
+  std::variant<CircleShape, AABBShape, CapsuleShape> m_shape{
+      AABBShape{}};        /**< Collision shape. */
+  bool m_isTrigger{false}; /**< If true, collider generates events but does not
+                              resolve physics. */
+
+  /**
+   * @brief Creates an AABB collider component.
+   *
+   * @param size Full size of the box.
+   * @param offset Local offset from the transform.
+   * @param isTrigger Whether the collider acts as a trigger.
+   */
   static ColliderComponent createAABB(const glm::vec2 &size = {0.1f, 0.1f},
                                       const glm::vec2 &offset = {0.0f, 0.0f},
-                                      bool isTrigger = false)
-  {
-    return ColliderComponent{.m_offset = offset,
-                             .m_shape = AABBShape{size * 0.5f},
-                             .m_isTrigger = isTrigger};
-  }
+                                      bool isTrigger = false);
+
+  /**
+   * @brief Creates a circular collider component.
+   *
+   * @param radius Circle radius.
+   * @param offset Local offset from the transform.
+   * @param isTrigger Whether the collider acts as a trigger.
+   */
   static ColliderComponent createCircle(float radius,
                                         const glm::vec2 &offset = {0.0f, 0.0f},
-                                        bool isTrigger = false)
-  {
-    return ColliderComponent{.m_offset = offset,
-                             .m_shape = CircleShape{radius},
-                             .m_isTrigger = isTrigger};
-  }
+                                        bool isTrigger = false);
+
+  /**
+   * @brief Creates a capsule collider component.
+   *
+   * @param capsuleHeight Height of the capsule cylinder section.
+   * @param capsuleSemiCircleRadius Radius of the capsule hemispheres.
+   * @param offset Local offset from the transform.
+   * @param isTrigger Whether the collider acts as a trigger.
+   */
   static ColliderComponent createCapsule(float capsuleHeight,
                                          float capsuleSemiCircleRadius,
                                          const glm::vec2 &offset = {0.0f, 0.0f},
-                                         bool isTrigger = false)
-  {
-    return ColliderComponent{
-        .m_offset = offset,
-        .m_shape = CapsuleShape{capsuleHeight, capsuleSemiCircleRadius},
-        .m_isTrigger = isTrigger};
-  }
+                                         bool isTrigger = false);
 };
 
-// SAP needs an extra id to work with the entity
+/**
+ * @brief Sweep-And-Prune collider representation.
+ *
+ * This component stores additional bookkeeping information required by the
+ * Sweep-And-Prune broad-phase collision system. It mirrors the collider shape
+ * and offset while maintaining an internal index used by the accelerator.
+ *
+ * Static colliders may be registered immediately into the system at creation.
+ */
 struct SAPCollider {
   using tag = tag::SAPCollider;
-  // TODO: capsuple collider case
-  glm::vec2 m_offset{0.0f, 0.0f}; // Offset from transform position
-  std::variant<CircleShape, AABBShape, CapsuleShape> m_shape = AABBShape();
-  bool m_isTrigger = false; // Is this a trigger or solid collider? By default,
-                            // all colliders will bounce of each other
-  int m_index = -1;
 
-  // ====================================================-===========//
-  // Create this component, need to add them to Sweep and Prune later
-  // ==-=============================================================//
+  glm::vec2 m_offset{0.0f,
+                     0.0f}; /**< Local offset from the entity transform. */
+  std::variant<CircleShape, AABBShape, CapsuleShape> m_shape{
+      AABBShape{}};        /**< Collision shape. */
+  bool m_isTrigger{false}; /**< If true, collider generates events but does not
+                              resolve physics. */
+  int m_index{-1}; /**< Internal index used by the Sweep-And-Prune system. */
 
-  // Create AABB Collider, you NEED TO ADD to SweepAndPruneSys later
-  // If you don't want to wait, you can use createAndAddCollider instead
+  // ------------------------------------------------------------
+  // Deferred creation (not inserted into Sweep-And-Prune)
+  // ------------------------------------------------------------
+
+  /**
+   * @brief Creates an AABB SAP collider without registering it in the system.
+   *
+   * If the object is static, the caller is responsible for inserting the
+   * collider into the Sweep-And-Prune system later.
+   *
+   * @param size Full size of the box.
+   * @param isTrigger Whether the collider acts as a trigger.
+   * @param offset Local offset from the transform.
+   */
   static SAPCollider createAABB(const glm::vec2 &size = {0.1f, 0.1f},
                                 bool isTrigger = false,
-                                const glm::vec2 &offset = {0.0f, 0.0f})
-  {
-    return SAPCollider{.m_offset = offset,
-                       .m_shape = AABBShape{size * 0.5f},
-                       .m_isTrigger = isTrigger};
-  }
-  // Create Circle Collider, you NEED TO ADD to SweepAndPruneSys later
-  // If you don't want to wait, you can use createAndAddCollider instead
+                                const glm::vec2 &offset = {0.0f, 0.0f});
+
+  /**
+   * @brief Creates a circular SAP collider without registering it in the
+   * system.
+   *
+   * If the object is static, the caller is responsible for inserting the
+   * collider into the Sweep-And-Prune system later.
+   *
+   * @param radius Circle radius.
+   * @param isTrigger Whether the collider acts as a trigger.
+   * @param offset Local offset from the transform.
+   */
   static SAPCollider createCircle(float radius, bool isTrigger = false,
-                                  const glm::vec2 &offset = {0.0f, 0.0f})
-  {
-    return SAPCollider{.m_offset = offset,
-                       .m_shape = CircleShape{radius},
-                       .m_isTrigger = isTrigger};
-  }
+                                  const glm::vec2 &offset = {0.0f, 0.0f});
 
-  // ====================================================-===========//
-  // Create component and add immediately to Sweep and Prune System
-  // ==-=============================================================//
+  // ------------------------------------------------------------
+  // Immediate insertion into Sweep-And-Prune
+  // ------------------------------------------------------------
 
-  // Create AABB Collider, then immediately add to SweepAndPruneSys
-  static SAPCollider createAndAddAABB(reg::Entity entity,
+  /**
+   * @brief Creates and registers a static AABB collider into the system.
+   *
+   * The collider is immediately inserted into the Sweep-And-Prune system
+   * and associated with the provided entity and transform.
+   *
+   * @param sys Sweep-And-Prune system instance.
+   * @param entity Owning entity.
+   * @param tc Transform component of the entity.
+   * @param size Full size of the box.
+   * @param isTrigger Whether the collider acts as a trigger.
+   * @param offset Local offset from the transform.
+   */
+  static SAPCollider createStaticAABB(Systems::SweepAndPruneSys &sys,
+                                      reg::Entity entity,
                                       Transform2dComponent &tc,
                                       const glm::vec2 &size = {0.1f, 0.1f},
                                       bool isTrigger = false,
-                                      const glm::vec2 &offset = {0.0f, 0.0f})
-  {
-    SAPCollider sc{.m_offset = offset,
-                   .m_shape = AABBShape{size * 0.5f},
-                   .m_isTrigger = isTrigger};
+                                      const glm::vec2 &offset = {0.0f, 0.0f});
 
-    sc.insertStaticEntity(entity, tc);
-    return sc;
-  }
-
-  static SAPCollider createAndAddCircle(reg::Entity entity,
+  /**
+   * @brief Creates and registers a static circular collider into the system.
+   *
+   * The collider is immediately inserted into the Sweep-And-Prune system
+   * and associated with the provided entity and transform.
+   *
+   * @param sys Sweep-And-Prune system instance.
+   * @param entity Owning entity.
+   * @param tc Transform component of the entity.
+   * @param radius Circle radius.
+   * @param isTrigger Whether the collider acts as a trigger.
+   * @param offset Local offset from the transform.
+   */
+  static SAPCollider createStaticCircle(Systems::SweepAndPruneSys &sys,
+                                        reg::Entity entity,
                                         Transform2dComponent &tc, float radius,
                                         bool isTrigger = false,
-                                        const glm::vec2 &offset = {0.0f, 0.0f})
-  {
-    SAPCollider sc{.m_offset = offset,
-                   .m_shape = CircleShape{radius},
-                   .m_isTrigger = isTrigger};
-
-    sc.insertStaticEntity(entity, tc);
-    return sc;
-  }
-
-protected:
-  void insertStaticEntity(reg::Entity entity, Transform2dComponent &tc);
+                                        const glm::vec2 &offset = {0.0f, 0.0f});
 };
 
 } // namespace pain

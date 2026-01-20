@@ -17,7 +17,7 @@
 #include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
-#include "Scripting/Component.h"
+#include "Scripting/LuaScriptComponent.h"
 #include "Scripting/LuaScriptSys.h"
 #include "Scripting/NativeScriptSys.h"
 #include "Scripting/State.h"
@@ -245,7 +245,7 @@ sol::state &AbstractScene<Manager>::enchanceLuaState(sol::state &state)
 template <reg::CompileTimeBitMaskType Manager>
 void AbstractScene<Manager>::emplaceLuaScript(reg::Entity entity,
                                               const char *scriptPath)
-  requires(Manager::template isRegistered<LuaScriptComponent>())
+  requires(Manager::template isRegistered<tag::LuaScript>())
 {
   LuaScriptComponent &lc = getComponent<LuaScriptComponent>(entity);
   lc.bind(m_luaState, scriptPath);

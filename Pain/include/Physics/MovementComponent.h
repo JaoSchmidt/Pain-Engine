@@ -4,6 +4,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * @file Transform2dComponent.h
+ * @brief Basic 2D transform and movement components.
+ *
+ * Defines lightweight ECS components used to represent an entity's
+ * position and movement state in 2D space.
+ */
 
 #pragma once
 
@@ -13,34 +20,47 @@
 
 namespace pain
 {
+
+/**
+ * @brief 2D transform component storing position.
+ *
+ * Represents the world or local position of an entity in 2D space.
+ * This component provides implicit conversion operators to glm::vec2
+ * for convenience when interfacing with math and rendering systems.
+ */
 struct Transform2dComponent {
   using tag = tag::Transform2d;
-  glm::vec2 m_position{0.0f, 0.0f};
-  static Transform2dComponent create() { return {}; }
-  static Transform2dComponent create(const glm::vec2 &position)
-  {
-    return Transform2dComponent{.m_position = position};
-  }
+
+  glm::vec2 m_position{0.0f, 0.0f}; /**< Position in 2D space. */
+
+  /**
+   * @brief Implicit conversion to a mutable glm::vec2 reference.
+   *
+   * Allows the component to be used directly as a vector reference.
+   */
   operator glm::vec2 &() { return m_position; }
+
+  /** @brief Implicit conversion to a constant glm::vec2 reference. */
   operator const glm::vec2 &() const { return m_position; }
+
+  /** @brief Creates a copy of this transform component. */
   Transform2dComponent clone() const { return *this; }
 };
 
+/**
+ * @brief 2D movement component storing velocity and rotation speed.
+ *
+ * Represents linear velocity and angular speed applied to an entity
+ * during movement or physics updates.
+ */
 struct Movement2dComponent {
   using tag = tag::Movement2d;
-  glm::vec2 m_velocity{0.0f, 0.0f};
-  float m_rotationSpeed{0.0f};
-  static Movement2dComponent create() { return {}; }
-  static Movement2dComponent create(const glm::vec2 &velocity)
-  {
-    return Movement2dComponent{.m_velocity = velocity};
-  }
-  static Movement2dComponent create(const glm::vec2 &velocity,
-                                    float rotationSpeed)
-  {
-    return Movement2dComponent{.m_velocity = velocity,
-                               .m_rotationSpeed = rotationSpeed};
-  }
+
+  glm::vec2 m_velocity{0.0f, 0.0f}; /**< Linear velocity in 2D space. */
+  float m_rotationSpeed{0.0f};      /**< Angular rotation speed. */
+
+  /** @brief Creates a copy of this transform component. */
+  Movement2dComponent clone() const { return *this; }
 };
 
 } // namespace pain
