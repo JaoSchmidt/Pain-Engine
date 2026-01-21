@@ -255,10 +255,6 @@ public:
 /** @brief Forward declaration used for validating system tags. */
 template <typename TL> struct TagsAllRegistered;
 
-/** @brief Checks whether a type derives from the base world system. */
-template <typename T>
-concept IsSystemBase = std::is_base_of_v<System<WorldComponents>, T>;
-
 /** @brief Checks whether a system implements at least one lifecycle interface.
  */
 template <typename T>
@@ -283,6 +279,6 @@ concept TagsAreRegistered =
  *  - Implement at least one system interface (update, render, or event).
  */
 template <typename T>
-concept ValidSystem = IsSystemBase<T> && HasAnySystemInterface<T>;
+concept ValidSystem = HasAnySystemInterface<T>;
 
 } // namespace pain

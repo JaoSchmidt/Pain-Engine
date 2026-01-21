@@ -21,6 +21,7 @@
 
 namespace pain
 {
+
 namespace Systems
 {
 struct Render;
@@ -265,22 +266,6 @@ public:
     PLOG_E("Could not recover system {}", typeid(Sys).name());
     return nullptr;
   }
-
-  /**
-   * @brief Creates and registers a new system instance.
-   *
-   * Systems are automatically registered into the appropriate update,
-   * render and event pipelines based on their interfaces.
-   *
-   * @tparam Sys System type.
-   * @param args Constructor arguments forwarded to the system.
-   */
-  template <typename Sys, typename... Args>
-    requires std::is_constructible_v<Sys, reg::ArcheRegistry<Manager> &,
-                                     reg::EventDispatcher &, Args...> &&
-             std::constructible_from<Sys, reg::ArcheRegistry<Manager> &,
-                                     reg::EventDispatcher &, Args...>
-  void addSystem(Args &&...args);
 
   // =============================================================== //
   // MULTI THREAD RELATED

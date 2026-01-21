@@ -52,7 +52,7 @@ SAPCollider SAPCollider::createStaticCircle(Systems::SweepAndPruneSys &sys,
                  .m_shape = CircleShape{radius},
                  .m_isTrigger = isTrigger};
 
-  sc.insertStaticEntity(entity, tc);
+  sys.insertColliderDirectly(entity, tc, sc);
   return sc;
 }
 

@@ -10,11 +10,6 @@
 #include "Scene.h"
 namespace pain
 {
-// Or WorldScene
-template <typename... Ts> struct TagsAllRegistered<TypeList<Ts...>> {
-  static constexpr bool value = WorldComponents::allRegistered<Ts...>();
-};
-
 /**
  * @brief Scene specialization dedicated to gameplay / world simulation.
  *
@@ -29,6 +24,11 @@ template <typename... Ts> struct TagsAllRegistered<TypeList<Ts...>> {
  */
 class Scene : public AbstractScene<WorldComponents>
 {
+  template <typename... Ts> struct AreAllTagsRegistered;
+  template <typename... Ts> struct AreAllTagsRegistered<TypeList<Ts...>> {
+    static constexpr bool value = WorldComponents::allRegistered<Ts...>();
+  };
+
 public:
   using AbstractScene<WorldComponents>::AbstractScene;
 
@@ -119,9 +119,8 @@ public:
   /**
    * @brief Registers a system into the scene with compile-time validation.
    *
-   * This overload enforces that:
-   *  - The system is constructible with the scene registry and event
-   * dispatcher.
+   * System must:
+   *  - be constructible with the scene registry and event dispatcher.
    *  - The system satisfies the ValidSystem concept.
    *  - All component tags declared by the system are registered in
    *    WorldComponents.
@@ -137,7 +136,7 @@ public:
                                      reg::EventDispatcher &, Args...> &&
              std::constructible_from<Sys, reg::ArcheRegistry<WorldComponents> &,
                                      reg::EventDispatcher &, Args...> &&
-             ValidSystem<Sys> && TagsAllRegistered<typename Sys::Tags>::value
+             ValidSystem<Sys> && AreAllTagsRegistered<typename Sys::Tags>::value
   void addSystem(Args &&...args)
   {
     auto [itSystem, isInserted] = m_systems.emplace(

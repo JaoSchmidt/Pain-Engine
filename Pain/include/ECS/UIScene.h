@@ -10,6 +10,7 @@
 #include "Scene.h"
 namespace pain
 {
+
 /**
  * @brief Scene specialization dedicated to user interface logic and ImGui
  *        driven components.
@@ -26,6 +27,11 @@ namespace pain
  */
 class UIScene : public AbstractScene<UIComponents>
 {
+  template <typename... Ts> struct AreAllTagsRegistered;
+  template <typename... Ts> struct AreAllTagsRegistered<TypeList<Ts...>> {
+    static constexpr bool value = UIComponents::allRegistered<Ts...>();
+  };
+
 public:
   using AbstractScene<UIComponents>::AbstractScene;
 
@@ -109,6 +115,41 @@ public:
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
     return static_cast<T &>(*nsc.instance);
+  }
+
+  /**
+   * @brief Creates and registers a new system instance.
+   *
+   * Systems are automatically registered into the appropriate update,
+   * render and event pipelines based on their interfaces.
+   *
+   * @tparam Sys System type.
+   * @param args Constructor arguments forwarded to the system.
+   */
+  template <typename Sys, typename... Args>
+    requires std::is_constructible_v<Sys, reg::ArcheRegistry<UIComponents> &,
+                                     reg::EventDispatcher &, Args...> &&
+             std::constructible_from<Sys, reg::ArcheRegistry<UIComponents> &,
+                                     reg::EventDispatcher &, Args...> &&
+             ValidSystem<Sys> && AreAllTagsRegistered<typename Sys::Tags>::value
+  void addSystem(Args &&...args)
+  {
+    auto [itSystem, isInserted] = m_systems.emplace(
+        std::make_pair(std::type_index(typeid(Sys)), //
+                       std::make_unique<Sys>(m_registry, m_eventDispatcher,
+                                             std::forward<Args>(args)...) //
+                       ));
+    if (!isInserted) {
+      PLOG_W("Could not insert System {}", typeid(Sys).name());
+      return;
+    }
+    Sys *s = static_cast<Sys *>(itSystem->second.get());
+    if constexpr (std::derived_from<Sys, IOnEvent>)
+      m_eventSystems.emplace_back(s);
+    if constexpr (std::derived_from<Sys, IOnRender>)
+      m_renderSystems.emplace_back(s);
+    if constexpr (std::derived_from<Sys, IOnUpdate>)
+      m_updateSystems.emplace_back(s);
   }
 };
 
