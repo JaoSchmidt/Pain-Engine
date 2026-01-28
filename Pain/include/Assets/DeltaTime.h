@@ -27,6 +27,12 @@ public:
    * @param nanoSeconds Duration in nanoseconds.
    */
   DeltaTime(uint64_t nanoSeconds = 0) : m_time(nanoSeconds) {}
+  static DeltaTime createSeconds(float seconds = 0.f)
+  {
+    auto time =
+        static_cast<uint64_t>(seconds * static_cast<float>(oneSecond()));
+    return DeltaTime(time);
+  }
 
   /** @return Duration in seconds (double precision). */
   inline double getSeconds() const

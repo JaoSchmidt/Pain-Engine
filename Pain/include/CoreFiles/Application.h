@@ -63,6 +63,7 @@ struct AppContext {
 class Application
 {
 public:
+  static Application *s_app;
   /**
    * @brief Creates and initializes a new Application instance.
    *
@@ -89,20 +90,56 @@ public:
   /** Returns the number of available hardware threads. */
   static unsigned getProcessorCount();
 
-  /** Disables rendering execution. */
-  void inline disableRendering() { m.isRendering = false; }
+  /** Enable or disable the rendering. For example, if you are doing a
+   * simulation or some other calculation, you might want to ingore the render
+   * completly*/
+  static void setRendereing(bool state = true)
+  {
+    P_ASSERT(s_app != nullptr,
+             "`s_app` is nullptr. Did you remember to link your app to s_app?");
+    s_app->m.isRendering = state;
+  }
+  /** Enable or disable the rendering. For example, if you are doing a
+   * simulation or some other calculation, you might want to ingore the render
+   * completly*/
+  static void toogleRendereing()
+  {
+    P_ASSERT(s_app != nullptr,
+             "`s_app` is nullptr. Did you remember to link your app to s_app?");
+    s_app->m.isRendering = !(s_app->m.isRendering);
+  }
 
-  /** Enables rendering execution. */
-  void inline enableRendering() { m.isRendering = true; }
+  /** set the global simulation multiplier. Id est, _technically_ increase the
+     frequency of non renderer parts. */
+  static void setTimeMultiplier(double time = 1.)
+  {
+    P_ASSERT(s_app != nullptr,
+             "`s_app` is nullptr. Did you remember to link your app to s_app?");
+    s_app->m.timeMultiplier = time;
+  }
+  /** get the game velocity. Id est, the buff to the game update loop time
+   * accumulator */
+  static double getTimeMultiplier()
+  {
+    P_ASSERT(s_app != nullptr,
+             "`s_app` is nullptr. Did you remember to link your app to s_app?");
+    return s_app->m.timeMultiplier;
+  }
 
-  /** Sets the global simulation time multiplier. */
-  void inline setTimeMultiplier(double time) { m.timeMultiplier = time; }
-
-  /** Returns a pointer to the time multiplier value. */
-  double inline *getTimeMultiplier() { return &m.timeMultiplier; }
-
+  /** Toggle simulation */
+  static void inline toggleSimulation()
+  {
+    P_ASSERT(s_app != nullptr,
+             "`s_app` is nullptr. Did you remember to link your app to s_app?");
+    s_app->m.isSimulation = !(s_app->m.isSimulation);
+  }
   /** Returns a pointer to the simulation flag. */
-  bool inline *getIsSimulation() { return &m.isSimulation; }
+  static bool inline isSimulation()
+  {
+    P_ASSERT(s_app != nullptr,
+             "`s_app` is nullptr. Did you remember to link your app to s_app?");
+    return s_app->m.isSimulation;
+  }
 
   /** Returns the Lua state used by the application. */
   sol::state &getLuaState() { return m_luaState; };
@@ -193,7 +230,7 @@ private:
     const double fixedUpdateTime = 1.0 / 60.0;
     const double fixedFPS = 1.0 / 60.0;
     double timeMultiplier = 1.0;
-    DeltaTime maxFrameRate = 16'666'666; /** 1/60 seconds in nanoseconds */
+    DeltaTime fixedFrameRate = 16'666'666; /** 1/60 seconds in nanoseconds */
 
     /** FPS sample buffer size. */
     constexpr static int FPS_SAMPLE_COUNT = 64;

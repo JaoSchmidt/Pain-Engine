@@ -25,6 +25,8 @@
 
 namespace pain
 {
+pain::Application *pain::Application::s_app = nullptr;
+
 unsigned Application::getProcessorCount()
 {
   return std::thread::hardware_concurrency();
@@ -82,12 +84,14 @@ Application *Application::createApplication(AppContext &&context,
   Application *app = new Application(std::move(luaState), std::move(window),
                                      std::move(sdlContext), std::move(fbci),
                                      std::move(context));
-
-  addComponentFunctions(app->m_luaState, app->m_worldScene);
-  addScheduler(app->m_luaState, app->m_worldScene);
-  app->m_worldScene.addEntityFunctions("World", app->m_luaState);
-  createLuaEventMap(app->m_luaState, app->m_eventDispatcher);
-  TextureManager::addRendererForDeletingTextures(&(app->m_renderer));
+  if (app != nullptr) {
+    addComponentFunctions(app->m_luaState, app->m_worldScene);
+    addScheduler(app->m_luaState, app->m_worldScene);
+    app->m_worldScene.addEntityFunctions("World", app->m_luaState);
+    createLuaEventMap(app->m_luaState, app->m_eventDispatcher);
+    TextureManager::addRendererForDeletingTextures(&(app->m_renderer));
+    Application::s_app = app;
+  }
   return app;
 }
 /* Creates window, opengl context and init glew*/
@@ -165,9 +169,9 @@ EndGameFlags Application::run()
       DeltaTime deltaSeconds = deltaTime * m.timeMultiplier;
       accumulator += deltaSeconds;
 
-      while (accumulator >= m.maxFrameRate) {
-        m_worldScene.updateSystems(m.maxFrameRate);
-        accumulator -= m.maxFrameRate;
+      while (accumulator >= m.fixedFrameRate) {
+        m_worldScene.updateSystems(m.fixedFrameRate);
+        accumulator -= m.fixedFrameRate;
       }
     }
 
@@ -235,6 +239,7 @@ Application::~Application()
   SDL_GL_DeleteContext(m_sdlContext);
   SDL_DestroyWindow(m_window);
   SDL_Quit();
+  s_app = nullptr;
 }
 
 } // namespace pain

@@ -5,10 +5,10 @@
  */
 
 #include "Player.h"
-#include "ECS/Components/Particle.h"
 #include "GUI/ImGuiDebugRegistry.h"
 #include "Misc/Events.h"
 #include "Physics/Collision/Collider.h"
+#include "Physics/Particles/SprayCmp.h"
 #include "Scripting/LuaScriptComponent.h"
 #include <pain.h>
 

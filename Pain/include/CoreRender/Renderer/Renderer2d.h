@@ -18,8 +18,8 @@
 #include "CoreRender/Text/Font.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"
-#include "ECS/Components/Particle.h"
 #include "ECS/Registry/Entity.h"
+#include "Physics/Particles/SprayCmp.h"
 
 namespace pain
 {

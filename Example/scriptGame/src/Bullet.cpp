@@ -5,7 +5,7 @@
  */
 
 #include "Bullet.h"
-#include "ECS/Components/Particle.h"
+#include "Physics/Particles/SprayCmp.h"
 #include "Scripting/LuaScriptComponent.h"
 #include <pain.h>
 
