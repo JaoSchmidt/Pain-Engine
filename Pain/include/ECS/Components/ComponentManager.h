@@ -44,6 +44,7 @@ struct LuaScript;
 struct Transform2d;
 struct Movement2d;
 struct ParticleSpray;
+struct GridParticle;
 struct Rotation;
 struct Sprite;
 struct Spriteless;
