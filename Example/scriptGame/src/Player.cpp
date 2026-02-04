@@ -26,7 +26,10 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
       pain::RotationComponent{},                                      //
       pain::Movement2dComponent{},                                    //
       pain::SAPCollider::createAABB(size, true),
-      pain::ParticleSprayComponent{}, //
+      pain::ParticleSprayComponent::create({
+          .randAngleFactor = 20.f,
+          .capacity = 100,
+      }), //
       Component::OrthoCamera::create(resolutionWeigh, resolutionHeight,
                                      zoomLevel), //
       pain::NativeScriptComponent{},             //

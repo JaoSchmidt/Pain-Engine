@@ -112,29 +112,6 @@ void Render::onRender(Renderer2d &renderer, bool isMinimized,
       }
     }
   }
-  // =============================================================== //
-  // Render Particle Systems
-  // =============================================================== //
-  {
-    PROFILE_SCOPE("Scene::renderSystems - Particles");
-
-    auto chunks = query<ParticleSprayComponent>();
-    for (auto &chunk : chunks) {
-      auto *p = std::get<0>(chunk.arrays);
-      for (size_t i = 0; i < chunk.count; ++i) {
-        ParticleSprayComponent &psc = p[i];
-        renderer.beginSprayParticle(currentTime, psc);
-        for (Particle &pa : psc.m_particles) {
-          if (pa.m_alive)
-            renderer.drawSprayParticle(pa);
-          // Remove dead particles
-          if (currentTime - pa.m_startTime >= psc.m_lifeTime) {
-            pa.m_alive = false;
-          }
-        }
-      }
-    }
-  }
 }
 
 } // namespace Systems

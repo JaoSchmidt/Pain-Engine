@@ -61,9 +61,11 @@ struct Color {
   // clang-format on
 };
 
-static constexpr Color White{255, 255, 255, 255};
-static constexpr Color Black{0, 0, 0, 255};
-static constexpr Color Transparent{0, 0, 0, 0};
+static constexpr Color WhiteColor{255, 255, 255, 255};
+static constexpr Color BlackColor{0, 0, 0, 255};
+static constexpr Color DarkGreyColor{51, 51, 51, 255};
+static constexpr Color StrongPinkColor{255, 51, 230, 255};
+static constexpr Color TransparentColor{0, 0, 0, 0};
 
 /**
  * @enum RenderLayer

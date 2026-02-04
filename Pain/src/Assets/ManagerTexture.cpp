@@ -16,7 +16,8 @@
 #include <filesystem>
 #include <optional>
 #define ERROR_TEXTURE_PATH "resources/default/textures/errorTexture.png"
-#define GENERAL_TEXTURE_PATH "resources/default/textures/defaultTexture.png"
+#define GENERAL_TEXTURE_PATH                                                   \
+  "resources/default/textures/defaultTexture_colors.png"
 
 #define GENERAL_KEY "GENERAL"
 #define BLANK_KEY "BLANK"

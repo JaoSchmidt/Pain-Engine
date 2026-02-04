@@ -36,11 +36,8 @@ namespace pain
  * ParticleSprayComponent.
  */
 struct GridParticle {
-  glm::vec2 m_position;  /**< Local particle position. */
-  glm::vec2 m_offset;    /**< Emission offset relative to emitter. */
-  glm::vec2 m_direction; /**< Emission direction vector. */
-  Color color;
-  bool m_alive = false; /**< Whether the particle is currently active. */
+  glm::vec2 m_direction = glm::vec2(1.f); /**< Emission direction vector. */
+  Color color = StrongPink;
 };
 
 /**
@@ -97,17 +94,10 @@ struct GridParticleComponent {
                                       unsigned maxNumberOfParticles,
                                       const glm::vec4 &color = glm::vec4(1.f))
   {
-    GridParticleComponent c{.m_velocity = velocity,
-                            .m_lifeTime = lifeTime,
-                            .m_color = color,
+    GridParticleComponent c{.m_lifeTime = lifeTime,
                             .m_maxNumberOfParticles = maxNumberOfParticles};
 
     c.m_particles.resize(maxNumberOfParticles);
-
-    // Initialize particle pool
-    for (auto &particle : c.m_particles) {
-      particle.m_alive = false;
-    }
 
     return c;
   }
@@ -133,13 +123,6 @@ struct GridParticleComponent {
   {
     GridParticle &particle = m_particles[m_numberOfParticles];
     m_numberOfParticles = (m_numberOfParticles + 1) % m_maxNumberOfParticles;
-
-    particle.m_position = {0.f, 0.f};
-    particle.m_normal = baseNormal;
-    particle.m_offset = basePosition;
-    particle.m_startTime = currentTime;
-    particle.m_rotationSpeed = rotationSpeed;
-    particle.m_alive = true;
   }
 
   // ------------------------------------------------------------
@@ -151,12 +134,7 @@ struct GridParticleComponent {
    *
    * Does not resize or deallocate the particle buffer.
    */
-  void clear()
-  {
-    for (auto &p : m_particles) {
-      p.m_alive = false;
-    }
-  }
+  void clear() {}
 };
 
 } // namespace pain

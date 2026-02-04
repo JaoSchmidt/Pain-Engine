@@ -149,7 +149,7 @@ struct Renderer2d {
                           const ParticleSprayComponent &particleSprayComponent);
 
   /// @brief Submit a single particle to the current spray batch.
-  void drawSprayParticle(const Particle &p);
+  void drawSprayParticle(const SprayParticle &p);
 
   // ================================================================= //
   // Text

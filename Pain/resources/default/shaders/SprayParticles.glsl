@@ -7,17 +7,16 @@ layout (location = 2) in vec2 u_Normal;          // Directional normal of the ro
 layout (location = 3) in float a_Time;     // Particle's birth time (for size growth and fading)
 layout (location = 4) in float a_RotationSpeed;  // Rotation speed of the particle
 
-uniform float u_SizeChangeSpeed;
-uniform float u_randomSizeFactor;
-uniform float u_LifeTime;
-uniform mat4 u_ViewProjection;  // Camera view-projection matrix
-uniform mat4 u_Transform;       // Camera transform
-uniform float u_Time;           // Global time
-uniform float u_ParticleVelocity;// Total velocity of the particles
+uniform float u_SizeChangeSpeed;  // how much smaller it gets over time
+uniform float u_randomSizeFactor; // initial size constant
+uniform mat4 u_ViewProjection;    // Camera view-projection matrix
+uniform mat4 u_Transform;         // Camera transform
+uniform float u_Time;             // Global time
+uniform float u_ParticleVelocity; // Total velocity of the particles
 #define M_PI 3.1415926535897932384626433832795
 
 out float v_Age;           // Pass to fragment shader to calculate alpha (fading)
-out vec2 v_TexCoord;            // Texture coordinates for the particle quad
+out vec2 v_TexCoord;       // Texture coordinates for the particle quad
 
 float random(vec2 st)
 {
@@ -34,12 +33,12 @@ mat2 getRotationMatrix(float angle) {
 void main()
 {
     float age = u_Time - a_Time;
-		float rand = random(a_Offset)*0.07;
+	float rand = random(a_Offset)*0.07;
     float size = 0.02 + rand * u_randomSizeFactor + age * u_SizeChangeSpeed;
 
     // Offset position based on velocity, normal, and time
-		float randNoise = random(u_Normal);
-		mat2 rotate90 = getRotationMatrix(randNoise*0.3 + M_PI/2);
+	float randNoise = random(u_Normal);
+	mat2 rotate90 = getRotationMatrix(randNoise*0.3 + M_PI/2);
     vec2 offSet = a_Offset + ((rotate90 * u_Normal) * age * u_ParticleVelocity*1.5);
 
     float rotationAngle = a_RotationSpeed * age;
@@ -58,7 +57,7 @@ void main()
 in float v_Age;    // Particle lifetime for alpha fading
 in vec2 v_TexCoord;     // Texture coordinates
 
-uniform float u_LifeTime;             // Particle lifetime duration
+uniform float u_LifeTime;             // Particle lifetime duration limit
 uniform sampler2D u_ParticleTexture;  // Texture for the particle (could be a smoke texture)
 
 out vec4 FragColor;

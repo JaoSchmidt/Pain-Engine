@@ -4,8 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
-// SprayBatch.h
+// BatchSpray.h
 #pragma once
 #include "Assets/DeltaTime.h"
 #include "CoreRender/Shader.h"

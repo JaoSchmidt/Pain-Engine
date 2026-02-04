@@ -28,14 +28,11 @@ GridParticleBatch GridParticleBatch::create()
       *VertexBuffer::createVertexBuffer(
           MaxVertices * sizeof(GridParticleVertex),
           {
-              {ShaderDataType::Float2, "a_Position"},
-              {ShaderDataType::Float2, "a_Offset"},
-              {ShaderDataType::Float2, "a_Normal"},
-              {ShaderDataType::Float, "a_Time"},
-              {ShaderDataType::Float, "a_RotationSpeed"},
+              {ShaderDataType::Float2, "a_Direction"},
+              {ShaderDataType::UByte4, "a_Color", true},
           }),
       *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
-      *Shader::createFromFile("resources/default/shaders/SprayParticles.glsl"),
+      *Shader::createFromFile("resources/default/shaders/GridParticles.glsl"),
   };
 }
 GridParticleBatch::GridParticleBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_,
@@ -78,13 +75,9 @@ void GridParticleBatch::flush()
 #endif
 }
 
-void GridParticleBatch::allocateSprayParticles(const glm::vec2 &position,
-                                               const glm::vec2 &direction,
-                                               const glm::vec2 &normal,
-                                               const DeltaTime startTime,
-                                               const float rotationSpeed)
+void GridParticleBatch::allocateGridParticles(Color color,
+                                              const glm::vec2 &direction)
 {
-  UNUSED(position)
   PROFILE_FUNCTION();
   constexpr glm::vec2 SprayVertexPositions[4] = {
       glm::vec2(-0.5f, -0.5f),
@@ -93,11 +86,8 @@ void GridParticleBatch::allocateSprayParticles(const glm::vec2 &position,
       glm::vec2(-0.5f, 0.5f),
   };
   for (unsigned i = 0; i < 4; i++) {
-    ptr->position = SprayVertexPositions[i];
     ptr->direction = direction;
-    ptr->normal = normal;
-    ptr->time = startTime.getSecondsf();
-    ptr->rotationSpeed = rotationSpeed;
+    ptr->color = color.value;
     ptr++;
   }
   indexCount += 6;

@@ -44,9 +44,6 @@ public:
     // MOUSE POINTER
     // ---------------------------------------------------------------
     // scene.emplaceScript<MousePointerScript>(mp, cameraEntity);
-    pain::TextureManager::createTexture("resources/textures/Checkerboard.png");
-    pain::TextureManager::createTexture(
-        "resources/textures/Checkerboard original.png");
     auto factory = [&] {
       // Force NRVO at last point
       return MainMap::create(16.f, 16.f, playerPos, 32, 1, 4.f);
@@ -55,22 +52,22 @@ public:
     return pain::Scene::emplaceScript<MainScript>(scene.getEntity(), scene,
                                                   factory, playerCam);
   }
-  void onCreate() { m_mainMap.onCreate(getScene()); }
+  // void onCreate() { m_mainMap.onCreate(getScene()); }
   MainScript(reg::Entity entity, pain::Scene &scene, auto mainMapFactory,
              reg::Entity player)
       : pain::WorldObject(entity, scene), //
-        m_player(player),                 //
-        m_mainMap(mainMapFactory())       //
+        m_player(player)                  //
+  // m_mainMap(mainMapFactory())       //
   {};
   std::vector<std::vector<int>> m_backgroundMap;
   reg::Entity m_player = reg::Entity{-1};
-  MainMap m_mainMap;
+  // MainMap m_mainMap;
 
-  void onUpdate(pain::DeltaTime dt)
-  {
-    m_mainMap.updateSurroundingChunks(
-        getComponent<pain::Transform2dComponent>(m_player), getScene());
-  }
+  // void onUpdate(pain::DeltaTime dt)
+  // {
+  //   m_mainMap.updateSurroundingChunks(
+  //       getComponent<pain::Transform2dComponent>(m_player), getScene());
+  // }
   void onRender(pain::Renderer2d &renderer, bool isMinimazed,
                 pain::DeltaTime currentTime)
   {
@@ -136,6 +133,7 @@ pain::Application *pain::createApplication()
   scene.addSystem<Systems::LuaScript>();
   scene.addSystem<Systems::Kinematics>();
   scene.addSystem<Systems::LuaSchedulerSys>();
+  scene.addSystem<Systems::ParticleSys>();
 
   // (Optional) Defining a small native script (MainScript) for the world scene
   // that will be executed on. Must have added System::NativeScript

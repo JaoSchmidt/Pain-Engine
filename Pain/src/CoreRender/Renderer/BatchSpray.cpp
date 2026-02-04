@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+// BatchSpray.cpp
 #include "CoreRender/Renderer/BatchSpray.h"
 #include "ContextBackend.h"
 #include "Debugging/Profiling.h"

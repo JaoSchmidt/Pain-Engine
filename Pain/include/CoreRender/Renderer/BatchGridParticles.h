@@ -7,6 +7,7 @@
 // SprayBatch.h
 #pragma once
 #include "Assets/DeltaTime.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/VertexArray.h"
 
@@ -14,7 +15,6 @@ namespace pain
 {
 
 struct GridParticleVertex {
-  glm::vec2 position;
   glm::vec2 direction;
   uint32_t color;
 };
@@ -32,6 +32,8 @@ struct GridParticleBatch {
   VertexArray vao;
   Shader shader;
 
+  glm::vec2 grid_position; // specific to grid particle batch
+
   std::unique_ptr<Vertex[]> cpuBuffer;
   Vertex *ptr = nullptr;
   uint32_t indexCount = 0;
@@ -41,10 +43,7 @@ struct GridParticleBatch {
   void resetPtr();
   void flush();
 
-  void allocateSprayParticles(const glm::vec2 &position,
-                              const glm::vec2 &offset, const glm::vec2 &normal,
-                              const DeltaTime startTime,
-                              const float rotationSpeed);
+  void allocateGridParticles(Color color, const glm::vec2 &direction);
 
 private:
   GridParticleBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader);

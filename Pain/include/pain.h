@@ -52,6 +52,7 @@
 #include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/KinematicsSys.h"
 #include "Physics/MovementComponent.h"
+#include "Physics/Particles/ParticleSys.h"
 #include "Physics/RotationComponent.h"
 
 #include <SDL2/SDL_events.h>
