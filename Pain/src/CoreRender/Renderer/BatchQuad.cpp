@@ -124,48 +124,4 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
 #endif
 }
 
-// TODO: may be a bottleneck in the future. Can still be optimized with some
-// more thought put into it
-// void QuadBatch::sortByDrawOrder()
-// {
-//   auto printstuff = [](auto &v, const char *name) {
-//     std::cout << name << std::endl;
-//     for (unsigned i = 0; i < v.size(); i++) {
-//       std::cout << v[i] << ", ";
-//     }
-//     std::cout << std::endl;
-//   };
-//
-//   const uint32_t quadCount = indexCount;
-//
-//   // Create index indirection
-//   std::vector<uint32_t> indices(quadCount);
-//   for (uint32_t i = 0; i < quadCount; ++i) {
-//     indices[i] = i;
-//   }
-//
-//   printstuff(indices, "draw order 1");
-//   // Sort indices by draw order
-//   std::sort(indices.begin(), indices.end(), [this](uint32_t a, uint32_t b) {
-//     return drawOrder[a] < drawOrder[b];
-//   });
-//
-//   std::vector<uint32_t> newDrawOrder(quadCount);
-//
-//   for (uint32_t i = 0; i < quadCount; ++i) {
-//     newDrawOrder[indices[i]] = i;
-//   }
-//   for (uint32_t i = 0; i < quadCount; ++i) {
-//     const uint32_t correctIndex = newDrawOrder[i];
-//
-//     Vertex *a = sortBuffer.get() + correctIndex * VerticesPerQuad;
-//     Vertex *b = ptrInit.get() + i * VerticesPerQuad;
-//
-//     for (uint32_t i = 0; i < VerticesPerQuad; ++i)
-//       a[i] = b[i];
-//
-//     printstuff(indices, "draw order 2");
-//   }
-// }
-
 } // namespace pain

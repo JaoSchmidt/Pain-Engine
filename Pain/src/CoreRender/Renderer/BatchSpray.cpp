@@ -13,41 +13,47 @@ namespace pain
 
 SprayBatch SprayBatch::create()
 {
-  // Indices (quad-style)
-  std::vector<uint32_t> indices(MaxIndices);
-  for (uint32_t i = 0, offset = 0; i < MaxIndices; i += 6, offset += 4) {
-    indices[i + 0] = offset + 0;
-    indices[i + 1] = offset + 1;
-    indices[i + 2] = offset + 2;
+  float vertices[] = {
+      -0.5f, 0.5f,  //
+      0.5f,  -0.5f, //
+      -0.5f, -0.5f, //
 
-    indices[i + 3] = offset + 2;
-    indices[i + 4] = offset + 3;
-    indices[i + 5] = offset + 0;
-  }
-
-  return SprayBatch{
-      *VertexBuffer::createVertexBuffer(
-          MaxVertices * sizeof(ParticleVertex),
-          {
-              {ShaderDataType::Float2, "a_Position"},
-              {ShaderDataType::Float2, "a_Offset"},
-              {ShaderDataType::Float2, "a_Normal"},
-              {ShaderDataType::Float, "a_Time"},
-              {ShaderDataType::Float, "a_RotationSpeed"},
-          }),
-      *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
-      *Shader::createFromFile("resources/default/shaders/SprayParticles.glsl"),
+      -0.5f, 0.5f,  //
+      0.5f,  -0.5f, //
+      0.5f,  0.5f,  //
   };
+  unsigned int indices[] = {0, 1, 2, 2, 3, 0};
+
+  return SprayBatch //
+      {*VertexBuffer::createStaticVertexBuffer(
+           vertices, sizeof(vertices),
+           {
+               {ShaderDataType::Float2, "a_Position"},
+           }),
+       *VertexBuffer::createVertexBuffer(
+           MaxPolygons * sizeof(InstanceParticleVertex),
+           {
+               {ShaderDataType::Float2, "a_Normal", false, true},
+               {ShaderDataType::Float, "a_Time", false, true},
+               {ShaderDataType::Float2, "a_EmitStart", false, true},
+           }),
+       *IndexBuffer::createIndexBuffer(indices,
+                                       sizeof(indices) / sizeof(indices[0])),
+       *Shader::createFromFile(
+           "resources/default/shaders/SprayParticles.glsl")};
 }
-SprayBatch::SprayBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader)
-    : vbo(std::move(vbo_)), ib(std::move(ib_)),
-      vao(*VertexArray::createVertexArray(vbo, ib)), shader(std::move(shader)),
-      cpuBuffer(std::make_unique<ParticleVertex[]>(MaxVertices)),
+SprayBatch::SprayBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
+                       IndexBuffer &&ib_, Shader &&shader)
+    : vbo(std::move(vbo_)), instanceVBO(std::move(vboInstance_)),
+      ib(std::move(ib_)),
+      vao(*VertexArray::createVertexArray(vbo, instanceVBO, ib)),
+      shader(std::move(shader)),
+      cpuBuffer(std::make_unique<InstanceParticleVertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
 
 void SprayBatch::resetPtr()
 {
-  indexCount = 0;
+  instanceCount = 0;
   ptr = cpuBuffer.get();
 }
 void SprayBatch::resetAll()
@@ -61,46 +67,35 @@ void SprayBatch::resetAll()
 
 void SprayBatch::flush()
 {
-  if (!indexCount)
+  if (!instanceCount)
     return;
 
   vao.bind();
+
   vbo.bind();
 
-  const uint32_t count = static_cast<uint32_t>(ptr - cpuBuffer.get());
-  vbo.setData(cpuBuffer.get(), count * sizeof(Vertex));
+  instanceVBO.bind();
+  instanceVBO.setData(cpuBuffer.get(),
+                      instanceCount * sizeof(InstanceParticleVertex));
 
   shader.bind();
   ib.bind();
-  backend::drawIndexed(vao, indexCount);
+  backend::drawInstanced(6, instanceCount);
 #ifndef NDEBUG
   drawCount++;
 #endif
 }
 
-void SprayBatch::allocateSprayParticles(const glm::vec2 &position,
-                                        const glm::vec2 &offset,
-                                        const glm::vec2 &normal,
+void SprayBatch::allocateSprayParticles(const glm::vec2 &normal,
                                         const DeltaTime startTime,
-                                        const float rotationSpeed)
+                                        const glm::vec2 &emitStart)
 {
-  UNUSED(position)
   PROFILE_FUNCTION();
-  constexpr glm::vec2 SprayVertexPositions[4] = {
-      glm::vec2(-0.5f, -0.5f),
-      glm::vec2(0.5f, -0.5f),
-      glm::vec2(0.5f, 0.5f),
-      glm::vec2(-0.5f, 0.5f),
-  };
-  for (unsigned i = 0; i < 4; i++) {
-    ptr->position = SprayVertexPositions[i];
-    ptr->offset = offset;
-    ptr->normal = normal;
-    ptr->time = startTime.getSecondsf();
-    ptr->rotationSpeed = rotationSpeed;
-    ptr++;
-  }
-  indexCount += 6;
+  ptr->normal = normal;
+  ptr->startTime = startTime.getSecondsf();
+  ptr->emitStart = emitStart;
+  ptr++;
+  instanceCount++;
 #ifndef NDEBUG
   statsCount++;
 #endif

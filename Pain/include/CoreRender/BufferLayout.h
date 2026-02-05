@@ -63,10 +63,11 @@ enum class ShaderDataType {
 struct BufferElement {
 
   ShaderDataType type;
+  std::string name;
+  bool normalized = false;
+  bool instanced = false;
   uint32_t size;
   uint32_t offset;
-  bool normalized;
-  std::string name;
   /** Returns the attribute name used in the shader. */
   std::string const &getName() { return name; }
 
@@ -79,9 +80,9 @@ struct BufferElement {
    * @param normalized  Whether the data should be normalized by the GPU.
    */
   BufferElement(ShaderDataType type, const std::string &name,
-                bool normalized = false)
-      : type(type), size(getComponentSize()), offset(0), normalized(normalized),
-        name(name) {};
+                bool normalized = false, bool instanced = false)
+      : type(type), name(name), normalized(normalized), instanced(instanced),
+        size(getComponentSize()), offset(0) {};
   MOVABLE(BufferElement);
   COPYABLE(BufferElement);
   ~BufferElement() = default;

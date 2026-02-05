@@ -26,6 +26,10 @@ public:
   /** Creates a vertex array from an existing vertex and index buffer. */
   static std::optional<VertexArray>
   createVertexArray(VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer);
+  static std::optional<VertexArray>
+  createVertexArray(VertexBuffer &vertexBuffer,
+                    VertexBuffer &instanceVertexBuffer,
+                    IndexBuffer &indexBuffer);
 
   ~VertexArray();
 
@@ -54,7 +58,7 @@ public:
 
 private:
   static void addVertexBuffer(const VertexBuffer &vertexBuffer,
-                              uint32_t rendererId);
+                              uint32_t rendererId, uint32_t &index);
   static void setIndexBuffer(const IndexBuffer &indexBuffer,
                              uint32_t rendererId);
 

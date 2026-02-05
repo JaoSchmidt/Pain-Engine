@@ -194,12 +194,11 @@ void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
 
 void Renderer2d::drawSprayParticle(const SprayParticle &p)
 {
-  if (m.sprayBatch.indexCount >= SprayBatch::MaxIndices) {
+  if (m.sprayBatch.instanceCount >= SprayBatch::MaxPolygons) {
     m.sprayBatch.flush();
     m.sprayBatch.resetPtr();
   }
-  m.sprayBatch.allocateSprayParticles(p.position, p.offset, p.normal,
-                                      p.startTime, p.rotationSpeed);
+  m.sprayBatch.allocateSprayParticles(p.normal, p.startTime, p.offset);
 }
 
 // ================================================================= //
@@ -454,19 +453,17 @@ void Renderer2d::setCellGridSize(float cellsize)
   }
 }
 
-void Renderer2d::beginSprayParticle(const DeltaTime globalTime,
-                                    const ParticleSprayComponent &psc)
+void Renderer2d::beginSprayParticle(const ParticleSprayComponent &psc)
 {
   PROFILE_FUNCTION();
   m.sprayBatch.shader.bind();
-  m.sprayBatch.shader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
+  m.sprayBatch.shader.uploadUniformFloat("u_SizeChangeSpeed",
+                                         psc.sizeChangeSpeed);
+  m.sprayBatch.shader.uploadUniformFloat("u_RandomSizeFactor",
+                                         psc.randSizeFactor);
   m.sprayBatch.shader.uploadUniformFloat("u_ParticleVelocity", psc.velocity);
   m.sprayBatch.shader.uploadUniformFloat("u_LifeTime",
                                          psc.lifeTime.getSecondsf());
-  m.sprayBatch.shader.uploadUniformFloat("u_SizeChangeSpeed",
-                                         psc.sizeChangeSpeed);
-  m.sprayBatch.shader.uploadUniformFloat("u_randomSizeFactor",
-                                         psc.randSizeFactor);
 }
 
 } // namespace pain

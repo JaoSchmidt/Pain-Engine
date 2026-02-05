@@ -145,8 +145,7 @@ struct Renderer2d {
   // ================================================================= //
 
   /// @brief Begin rendering a particle spray batch.
-  void beginSprayParticle(const DeltaTime globalTime,
-                          const ParticleSprayComponent &particleSprayComponent);
+  void beginSprayParticle(const ParticleSprayComponent &particleSprayComponent);
 
   /// @brief Submit a single particle to the current spray batch.
   void drawSprayParticle(const SprayParticle &p);

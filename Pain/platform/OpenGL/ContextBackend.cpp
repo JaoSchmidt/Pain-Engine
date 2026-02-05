@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // ContextBackend.cpp
 #include "ContextBackend.h"
 
@@ -79,6 +78,12 @@ void clear()
   // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   // Otherwise
   glClear(GL_COLOR_BUFFER_BIT);
+}
+void drawInstanced(uint32_t indiceCount, uint32_t instanceCount)
+{
+  glDrawArraysInstanced(GL_TRIANGLES, 0, static_cast<int32_t>(indiceCount),
+                        static_cast<int32_t>(instanceCount));
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount)
 {

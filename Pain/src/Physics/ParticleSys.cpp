@@ -68,16 +68,14 @@ void Systems::ParticleSys::onRender(pain::Renderer2d &renderer,
                         sin(angleRange), cos(angleRange));
           const glm::vec2 normal = rotation * glm::normalize(rc->m_rotation);
 
-          p = {.position = glm::vec2{0.f},
-               .offset = tc->m_position,
+          p = {.offset = tc->m_position,
                .normal = normal,
                .startTime = currentTime,
-               .rotationSpeed = rando,
                .alive = true};
           psc[i].elapsed = 0;
         }
 
-        renderer.beginSprayParticle(currentTime, psc[i]);
+        renderer.beginSprayParticle(psc[i]);
         for (size_t j = 0; j < psc[i].particles.size(); j++) {
           SprayParticle &pa = psc[i].particles[j];
           if (pa.alive)

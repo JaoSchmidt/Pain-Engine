@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // VertexArrayBackend.h
 #pragma once
 
@@ -18,6 +17,7 @@ uint32_t createVertexArray();
 void destroyVertexArray(uint32_t id);
 void bindVertexArray(uint32_t id);
 void unbindVertexArray();
-void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId);
+void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId,
+                     uint32_t &index);
 void setIndexBuffer(const IndexBuffer &indexBuffer, uint32_t rendererId);
 } // namespace pain::backend

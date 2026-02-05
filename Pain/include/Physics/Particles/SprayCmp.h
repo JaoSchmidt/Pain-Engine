@@ -31,16 +31,14 @@ namespace pain
 /**
  * @brief Runtime state for a single particle instance.
  *
- * Stores position, motion direction, lifetime tracking and basic animation
+ * Stores motion direction, lifetime tracking and basic animation
  * parameters. Particles are recycled inside a fixed-size buffer owned by
  * ParticleSprayComponent.
  */
 struct SprayParticle {
-  glm::vec2 position = {0.f, 0.f}; /**< Local particle position. */
-  glm::vec2 offset = {0.f, 0.f};   /**< Emission offset relative to emitter. */
-  glm::vec2 normal = {0.f, 0.f};   /**< Emission direction vector. */
-  DeltaTime startTime = 0;         /**< Time when the particle was spawned. */
-  float rotationSpeed = 0;         /**< Angular rotation speed. */
+  glm::vec2 offset = {0.f, 0.f};
+  glm::vec2 normal = {0.f, 0.f}; /**< Emission direction vector. */
+  DeltaTime startTime = 0;       /**< Time when the particle was spawned. */
   bool alive = false; /**< Whether the particle is currently active. */
 };
 
@@ -48,14 +46,15 @@ struct SprayParticle {
  * @brief Safer way to initialize particle spray component
  */
 struct ParticleSprayInitArgs {
-  DeltaTime interval = 1.f; /// elapsed limit, 0 means no emisions
+  float rotationSpeed =
+      1.f; /**< Spray Particle Batch: Angular rotation speed. */
+  DeltaTime interval = 1.f; ///< elapsed limit, 0 means no emisions
   float velocity = 1.f;     ///< Base particle velocity.
   DeltaTime lifeTime = DeltaTime::oneSecond();
   float sizeChangeSpeed = 1.f;  ///< Size growth / shrink speed.
   float randSizeFactor = 1.f;   ///< Random size variance factor.
   float randAngleFactor = 30.f; ///< Angle of emittion variance factor
-  float rotationSpeed = 1.f;    ///< Random rotation speed variance factor.
-  bool autoEmit = true;         /// Whether particles automatically spwan or not
+  bool autoEmit = true; ///< Whether particles automatically spwan or not
   Color color = StrongPinkColor; ///< Particle base color.
   unsigned capacity;
 };

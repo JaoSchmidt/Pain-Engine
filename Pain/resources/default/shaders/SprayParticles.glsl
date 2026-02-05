@@ -2,17 +2,22 @@
 #version 330 core
 
 layout (location = 0) in vec2 a_Position;  // Position of the quad (particle) in object space
-layout (location = 1) in vec2 a_Offset;    // Position offset (where the particle starts)
-layout (location = 2) in vec2 u_Normal;          // Directional normal of the rocket base
-layout (location = 3) in float a_Time;     // Particle's birth time (for size growth and fading)
-layout (location = 4) in float a_RotationSpeed;  // Rotation speed of the particle
 
+layout (location = 1) in vec2 a_Normal;          // Directional normal of the rocket base
+layout (location = 2) in float a_Time;     // Particle's birth time (for size growth and fading)
+layout (location = 3) in vec2 a_EmitStart;     // Particle's birth time (for size growth and fading)
+
+// Set by the particle system
 uniform float u_SizeChangeSpeed;  // how much smaller it gets over time
-uniform float u_randomSizeFactor; // initial size constant
+uniform float u_RotationSpeed;  // Rotation speed of the particle
+uniform float u_RandomSizeFactor; // initial size constant
+uniform float u_ParticleVelocity; // Total velocity of the particles
+
+// Set by the renderer
 uniform mat4 u_ViewProjection;    // Camera view-projection matrix
 uniform mat4 u_Transform;         // Camera transform
 uniform float u_Time;             // Global time
-uniform float u_ParticleVelocity; // Total velocity of the particles
+
 #define M_PI 3.1415926535897932384626433832795
 
 out float v_Age;           // Pass to fragment shader to calculate alpha (fading)
@@ -33,19 +38,20 @@ mat2 getRotationMatrix(float angle) {
 void main()
 {
     float age = u_Time - a_Time;
-	float rand = random(a_Offset)*0.07;
-    float size = 0.02 + rand * u_randomSizeFactor + age * u_SizeChangeSpeed;
+	float rand = random(a_EmitStart)*0.07;
+    float size = 0.02 + rand * u_RandomSizeFactor + age * u_SizeChangeSpeed;
 
     // Offset position based on velocity, normal, and time
-	float randNoise = random(u_Normal);
+	float randNoise = random(a_Normal);
 	mat2 rotate90 = getRotationMatrix(randNoise*0.3 + M_PI/2);
-    vec2 offSet = a_Offset + ((rotate90 * u_Normal) * age * u_ParticleVelocity*1.5);
+    vec2 offSet = a_EmitStart + ((rotate90 * a_Normal) * age * u_ParticleVelocity*1.5);
 
-    float rotationAngle = a_RotationSpeed * age;
+    float rotationAngle = u_RotationSpeed * age;
     mat2 rotationMatrix = getRotationMatrix(rotationAngle*3);
     vec2 rotatedScaledPos = rotationMatrix * (a_Position * size);
     vec2 finalPos = rotatedScaledPos + offSet;
     
+    // setting fragment variables
     v_Age = age;
     v_TexCoord = a_Position * 0.5 + 0.5;  // Map [-1, 1] to [0, 1]
     gl_Position = u_ViewProjection * u_Transform * vec4(finalPos, 0.0, 1.0);
@@ -77,6 +83,5 @@ void main()
     vec3 color = mix(colorStart, colorEnd, fadeFactor);
     
     // Final particle color with fading alpha
-    // FragColor = vec4(color, 1 - texColor.a * fadeFactor);
     FragColor = vec4(color, texColor.a * (1.0 - fadeFactor));
 }

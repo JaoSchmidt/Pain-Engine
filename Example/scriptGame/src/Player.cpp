@@ -29,7 +29,7 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
       pain::ParticleSprayComponent::create({
           .randAngleFactor = 20.f,
           .capacity = 100,
-      }), //
+      }),
       Component::OrthoCamera::create(resolutionWeigh, resolutionHeight,
                                      zoomLevel), //
       pain::NativeScriptComponent{},             //
