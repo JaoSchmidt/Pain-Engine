@@ -87,9 +87,6 @@ public:
     m.isSimulation = isSimulation;
   };
 
-  /** Returns the number of available hardware threads. */
-  static unsigned getProcessorCount();
-
   /** Enable or disable the rendering. For example, if you are doing a
    * simulation or some other calculation, you might want to ingore the render
    * completly*/

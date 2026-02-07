@@ -6,93 +6,123 @@
 
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/CubeVertex.h"
 #include "CoreRender/Texture.h"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <memory>
 
+#include "Debugging/Profiling.h"
+#include "Physics/Movement3dComponent.h"
+#include "platform/ContextBackend.h"
+
 namespace pain
 {
 
-CubeVertexBatch *Renderer3d::m_cubeBatch = nullptr;
-std::shared_ptr<PerspectiveCameraController> Renderer3d::m_cameraController =
-    nullptr;
+extern const Texture *m_fontAtlasTexture;
 
 // ================================================================= //
-// Render initialization and destruction
+// Renderer: basic wrapper around opengl
 // ================================================================= //
 
-void Renderer3d::init(
-    std::shared_ptr<PerspectiveCameraController> &cameraController)
+void Renderer3d::setViewport(int x, int y, int width, int height)
 {
-  // m_cubeBatch = new CubeVertexBatch();
-  // NOTE: This can be changed later in case the engine needs a camera mechanic
+  backend::setViewPort(x, y, width, height);
+}
+void Renderer3d::clear() { backend::clear(); }
 
-  glEnable(GL_DEPTH_TEST);
-  m_cameraController = cameraController;
+void Renderer3d::setClearColor(const glm::vec4 &color)
+{
+  backend::setClearColor(color);
+}
+bool Renderer3d::hasCamera() { return m.orthoCameraEntity != reg::Entity{-1}; }
+void Renderer3d::changeCamera(reg::Entity cameraEntity)
+{
+  m.orthoCameraEntity = cameraEntity;
 }
 
-void Renderer3d::shutdown() { delete m_cubeBatch; }
+void Renderer3d::beginScene(DeltaTime globalTime, const Scene &scene,
+                            const glm::mat4 &transform)
+{
+  PROFILE_FUNCTION();
+  const cmp::PerspCamera &cc =
+      std::as_const(scene).getComponent<Component::PerspCamera>(
+          m.orthoCameraEntity);
+  const Transform3dComponent &tc =
+      std::as_const(scene).getComponent<Transform3dComponent>(
+          m.orthoCameraEntity);
+  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime, transform,
+                      cc.getResolution(), tc.m_position);
+  goBackToFirstVertex();
+}
+
+void Renderer3d::flush()
+{
+  PROFILE_FUNCTION();
+  // bindTextures();
+  m.cubeBatch.flush(m.textureSlots, m.textureSlotIndex);
+}
+
+void Renderer3d::endScene()
+{
+  // quadBatch->sendAllDataToOpenGL();
+  // NOTE: sendAllDataToOpenGL probably won't be here in the future,
+  // otherwise flush() wouldn't need to be a function
+  flush();
+}
 
 // ================================================================= //
 // Draws
 // ================================================================= //
 
 void Renderer3d::drawCube(const glm::vec3 &position, const glm::vec3 &size,
-                          const glm::vec4 &color)
+                          const Color &color, Texture &texture,
+                          float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
 {
-  m_cubeBatch->drawBatch(position, size, color);
+  const float texIndex = allocateTextures(texture);
+  const glm::mat4 transform = getTransform(position, size);
+  m.cubeBatch.allocateCube(transform, color, tilingFactor, texIndex,
+                           textureCoordinate);
+}
+void Renderer3d::drawCube(const glm::vec3 &position, const glm::vec3 &size,
+                          const Color &color, const glm::vec3 rotation,
+                          Texture &texture, float tilingFactor,
+                          const std::array<glm::vec2, 4> &textureCoordinate)
+{
+  const float texIndex = allocateTextures(texture);
+  const glm::mat4 transform = getTransform(position, size, rotation);
+  m.cubeBatch.allocateCube(transform, color, tilingFactor, texIndex,
+                           textureCoordinate);
 }
 
 // ================================================================= //
-// Renderer basic wrapper around opengl
+// Transforms
 // ================================================================= //
 
-void Renderer3d::setViewport(int x, int y, int width, int height)
+/// @brief Build a transform matrix without rotation.
+glm::mat4 Renderer3d::getTransform(const glm::vec3 &position,
+                                   const glm::vec3 &size)
 {
-  glViewport(x, y, width, height);
+  PROFILE_FUNCTION();
+  glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
+  return glm::scale(transform, size);
 }
 
-void Renderer3d::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
-
-void Renderer3d::setClearColor(const glm::vec4 color)
+/// @brief Build a transform matrix with rotation.
+glm::mat4 Renderer3d::getTransform(const glm::vec3 &position,
+                                   const glm::vec3 &size,
+                                   const glm::vec3 &rotation)
 {
-  glClearColor(color.r, color.g, color.b, color.a);
-}
+  PROFILE_FUNCTION();
+  glm::mat4 transform = glm::mat4(1.0f);
+  transform = glm::translate(transform, position);
 
-void Renderer3d::beginScene(const glm::mat4 &transform)
-{
-  m_cubeBatch->getShader().bind();
-  m_cubeBatch->getShader().uploadUniformMat4(
-      "u_ViewProjection",
-      m_cameraController->getCamera().getViewProjectionMatrix());
-  m_cubeBatch->getShader().uploadUniformMat4("u_Transform", transform);
+  transform = glm::rotate(transform, rotation.x, {1.0f, 0.0f, 0.0f});
+  transform = glm::rotate(transform, rotation.y, {0.0f, 1.0f, 0.0f});
+  transform = glm::rotate(transform, rotation.z, {0.0f, 0.0f, 1.0f});
 
-  m_cubeBatch->goBackToFirst();
-}
-
-void Renderer3d::endScene()
-{
-  m_cubeBatch->sendAllDataToOpenGL();
-  // NOTE: this probably won't be here in the future,
-  // otherwise flush() wouldn't need to be a function
-  flush();
-}
-
-void Renderer3d::flush()
-{
-  drawIndexed(m_cubeBatch->getVertexArray(), m_cubeBatch->getIndexCount());
-}
-
-void Renderer3d::drawIndexed(VertexArray &vertexArray, uint32_t indexCount)
-{
-  uint32_t count =
-      indexCount ? indexCount : vertexArray.getIndexBuffer().getCount();
-  glDrawElements(GL_TRIANGLES, static_cast<int32_t>(count), GL_UNSIGNED_INT,
-                 nullptr);
-  glBindTexture(GL_TEXTURE_2D, 0);
+  return glm::scale(transform, size);
 }
 
 } // namespace pain

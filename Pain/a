@@ -1,0 +1,1200 @@
+diff --git a/Example/flappybird b/Example/flappybird
+--- a/Example/flappybird
++++ b/Example/flappybird
+@@ -1 +1 @@
+-Subproject commit b30b669ac8ae20b02beeb5522c8a3066fa282db8
++Subproject commit b30b669ac8ae20b02beeb5522c8a3066fa282db8-dirty
+diff --git a/Pain/include/CoreFiles/Application.h b/Pain/include/CoreFiles/Application.h
+index 1f3e1e2..7362da4 100644
+--- a/Pain/include/CoreFiles/Application.h
++++ b/Pain/include/CoreFiles/Application.h
+@@ -87,9 +87,6 @@ public:
+     m.isSimulation = isSimulation;
+   };
+ 
+-  /** Returns the number of available hardware threads. */
+-  static unsigned getProcessorCount();
+-
+   /** Enable or disable the rendering. For example, if you are doing a
+    * simulation or some other calculation, you might want to ingore the render
+    * completly*/
+diff --git a/Pain/include/CoreRender/CameraComponent.h b/Pain/include/CoreRender/CameraComponent.h
+index b8f7fe4..6929bc1 100644
+--- a/Pain/include/CoreRender/CameraComponent.h
++++ b/Pain/include/CoreRender/CameraComponent.h
+@@ -137,6 +137,8 @@ private:
+  * Used for 3D rendering.
+  */
+ struct PerspCamera : CameraResolution {
++  using tag = pain::tag::PerspCamera;
++  float m_fieldOfViewDegrees = 90.0f;
+   pain::PerspectiveMatrices m_matrices;
+ 
+   /** Returns the cached view-projection matrix. */
+@@ -151,6 +153,7 @@ struct PerspCamera : CameraResolution {
+ 
+   /** Updates the projection matrix. */
+   void setProjection(float aspectRatio, float fieldOfViewDegrees);
++  void setProjection(int width, int height);
+ 
+   PerspCamera() = delete;
+ 
+diff --git a/Pain/include/CoreRender/Renderer/BatchQuad.h b/Pain/include/CoreRender/Renderer/BatchQuad.h
+index 45974ce..597576f 100644
+--- a/Pain/include/CoreRender/Renderer/BatchQuad.h
++++ b/Pain/include/CoreRender/Renderer/BatchQuad.h
+@@ -4,7 +4,6 @@
+  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  */
+ 
+-
+ // QuadBatch.h
+ #pragma once
+ 
+@@ -17,16 +16,13 @@ namespace pain
+ {
+ 
+ struct QuadVertex {
+-  glm::vec3 position;
++  glm::vec2 position;
+   uint32_t color;
+   glm::vec2 texCoord;
+   float texIndex;
+   float tilingFactor;
+ };
+ 
+-// TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
+-static constexpr uint32_t MaxTextureSlots = 32;
+-
+ struct QuadBatch {
+   using Vertex = QuadVertex;
+   static constexpr uint32_t IndiceSize = 6;
+@@ -53,12 +49,10 @@ struct QuadBatch {
+ 
+   void allocateQuad(const glm::mat4 &transform, const Color &tintColor,
+                     const float tilingFactor, const float textureIndex,
+-                    const std::array<glm::vec2, 4> &textureCoordinate,
+-                    float order = 0);
++                    const std::array<glm::vec2, 4> &textureCoordinate);
+   void resetAll();
+   void resetPtr();
+-  void flush(const std::array<Texture *, MaxTextureSlots> &textures,
+-             uint32_t textureCount);
++  void flush(Texture **textures, uint32_t textureCount);
+ 
+ private:
+   QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_);
+diff --git a/Pain/include/CoreRender/Renderer/CubeVertex.h b/Pain/include/CoreRender/Renderer/CubeVertex.h
+deleted file mode 100644
+index d689730..0000000
+--- a/Pain/include/CoreRender/Renderer/CubeVertex.h
++++ /dev/null
+@@ -1,61 +0,0 @@
+-/*
+- * This Source Code Form is subject to the terms of the Mozilla Public
+- * License, v. 2.0. If a copy of the MPL was not distributed with this
+- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+- */
+-
+-
+-#pragma once
+-#include "pch.h"
+-
+-#include "Core.h"
+-
+-#include "Assets/ManagerTexture.h"
+-#include "CoreRender/Shader.h"
+-#include "CoreRender/Texture.h"
+-#include "CoreRender/VertexArray.h"
+-
+-namespace pain
+-{
+-
+-struct CubeVertex {
+-  glm::vec3 Position;
+-  glm::vec4 Color;
+-  glm::vec2 TexCoord;
+-};
+-
+-class CubeVertexBatch
+-{
+-public:
+-  static CubeVertexBatch createCubeVertexBatch();
+-  const VertexArray &getVertexArray() const { return m_vertexArray; };
+-  VertexArray &getVertexArray() { return m_vertexArray; };
+-  const uint32_t &getIndexCount() const { return m_indexCount; };
+-  void goBackToFirst();
+-  void sendAllDataToOpenGL();
+-  void drawBatch(const glm::vec3 &position, const glm::vec3 &size,
+-                 const glm::vec4 &color);
+-  inline const Shader &getShader() const { return m_textureShader; };
+-  inline Shader &getShader() { return m_textureShader; };
+-
+-private:
+-  CubeVertexBatch(VertexArray m_vertexArray,
+-                  VertexBuffer m_vertexBuffer, //
+-                  Shader m_textureShader,      //
+-                  CubeVertex *m_vertexBufferBase);
+-  static constexpr uint32_t MaxCubes = 1000;
+-  static constexpr uint32_t MaxVertices = MaxCubes * 8;
+-  static constexpr uint32_t MaxIndices = MaxCubes * 36;
+-
+-  VertexArray m_vertexArray;
+-  VertexBuffer m_vertexBuffer;
+-  Shader m_textureShader;
+-  Texture &m_whiteTexture =
+-      TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
+-
+-  CubeVertex *m_vertexBufferBase = nullptr;
+-  CubeVertex *m_vertexBufferPtr = nullptr;
+-  uint32_t m_indexCount = 0;
+-};
+-
+-} // namespace pain
+diff --git a/Pain/include/CoreRender/Renderer/Renderer2d.h b/Pain/include/CoreRender/Renderer/Renderer2d.h
+index 39f680c..b3a9824 100644
+--- a/Pain/include/CoreRender/Renderer/Renderer2d.h
++++ b/Pain/include/CoreRender/Renderer/Renderer2d.h
+@@ -42,7 +42,14 @@ class UIScene;
+  *  - Call endScene().
+  */
+ struct Renderer2d {
+-  /// @brief Aggregated rendering statistics for a batch type.
++  /** @brief Aggregated rendering statistics for a batch type.*/
++  /* Fields:
++   * - count: number of objects
++   * - indices: total index count
++   * - vertices: total vertex count
++   * - draws: draw calls issued
++   * - name: batch name
++   */
+   struct Stats {
+     uint32_t count;
+     uint32_t indices;
+@@ -184,9 +191,6 @@ struct Renderer2d {
+    */
+   void setCellGridSize(float size);
+ 
+-  /// @brief Maximum number of texture slots supported per batch.
+-  static constexpr uint32_t MaxTextureSlots = 32;
+-
+   /**
+    * @brief Retrieve rendering statistics for a specific batch type.
+    *
+@@ -242,7 +246,7 @@ private:
+     DebugGrid debugGrid;
+     // texture initializer
+     Texture *whiteTexture = nullptr;
+-    std::array<Texture *, MaxTextureSlots> textureSlots;
++    Texture **textureSlots;
+     uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
+ 
+     reg::Entity orthoCameraEntity = reg::Entity{-1};
+diff --git a/Pain/include/CoreRender/Renderer/Renderer3d.h b/Pain/include/CoreRender/Renderer/Renderer3d.h
+index 533d109..f96ce96 100644
+--- a/Pain/include/CoreRender/Renderer/Renderer3d.h
++++ b/Pain/include/CoreRender/Renderer/Renderer3d.h
+@@ -4,13 +4,14 @@
+  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  */
+ 
+-
+ #pragma once
++#include "CoreRender/Renderer/BatchCube.h"
++#include "ECS/WorldScene.h"
++#include "Physics/Particles/SprayCmp.h"
+ #include "pch.h"
+ 
+ #include "Core.h"
+ 
+-#include "CoreRender/Renderer/CubeVertex.h"
+ #include "CoreRender/VertexArray.h"
+ #include "Misc/PerspCameraController.h"
+ 
+@@ -20,26 +21,153 @@ namespace pain
+ class Renderer3d
+ {
+ public:
+-  static void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
+-  static void beginScene(const glm::mat4 &transform = glm::mat4(1.0f));
+-  static void endScene();
+-  static void drawCube(const glm::vec3 &position, const glm::vec3 &size,
+-                       const glm::vec4 &color);
+-  static void drawSimpleCube();
+-
+-  static void
+-  init(std::shared_ptr<PerspectiveCameraController> &cameraController);
+-  static void shutdown();
+-  static void setViewport(int x, int y, int width, int height);
+-  static void setClearColor(const glm::vec4 color);
+-  static void clear();
+-  static void drawIndexed(VertexArray &vertexArray, uint32_t indexCount = 0);
+-
+-  static std::shared_ptr<PerspectiveCameraController> m_cameraController;
++  /** @brief Aggregated rendering statistics for a batch type.*/
++  /* Fields:
++   * - count: number of objects
++   * - indices: total index count
++   * - vertices: total vertex count
++   * - draws: draw calls issued
++   * - name: batch name
++   */
++  struct Stats {
++    uint32_t count;    ///< Number of objects in the batch
++    uint32_t indices;  ///< Total index count submitted
++    uint32_t vertices; ///< Total vertex count submitted
++    uint32_t draws;    ///< Number of draw calls issued
++    const char *name;  ///< Human-readable batch name
++  };
++
++  /// @brief Factory function to create a renderer instance.
++  static Renderer3d createRenderer2d();
++  Renderer3d &operator=(Renderer3d &&o) noexcept;
++  /// @brief Change the active camera entity used for rendering.
++  void changeCamera(reg::Entity camera);
++  /// @brief Returns true if a valid camera is currently bound.
++  bool hasCamera();
++
++  // ================================================================= //
++  // Renderer basic wrapper around OpenGL
++  // ================================================================= //
++
++  /// @brief Immediately draw and end the current scene using a vertex array.
++  void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
++
++  /**
++   * @brief Begin a new rendering scene.
++   *
++   * @param globalTime Global engine time.
++   * @param scene      Scene being rendered.
++   * @param transform  Optional root transform applied to all draws.
++   */
++  void beginScene(DeltaTime globalTime, const Scene &scene,
++                  const glm::mat4 &transform = glm::mat4(1.0f));
++
++  // @brief Flush all batches and finalize the scene.
++  void endScene();
++
++  void setViewport(int x, int y, int width, int height);
++  void setClearColor(const glm::vec4 &color);
++  void clear();
++
++  /// @brief Clears all renderer state and internal caches.
++  void clearEntireRenderer();
++
++  // ================================================================= //
++  // Draw Triangles
++  // ================================================================= //
++
++  /// @brief Draw a colored triangle primitive.
++  void drawCube(const glm::vec3 &position, const glm::vec3 &size,
++                const Color &tintColor, Texture &texture, float tilingFactor,
++                const std::array<glm::vec2, 4> &textureCoordinate);
++
++  /// @brief Draw a rotated triangle primitive.
++  void drawCube(const glm::vec3 &position, const glm::vec3 &size,
++                const Color &tintColor, const glm::vec3 rotation,
++                Texture &texture, float tilingFactor,
++                const std::array<glm::vec2, 4> &textureCoordinate);
++
++  // ================================================================= //
++  // Particles
++  // ================================================================= //
++
++  // /// @brief Begin rendering a particle spray batch.
++  // void beginSprayParticle(const ParticleSprayComponent
++  // &particleSprayComponent);
++  //
++  // /// @brief Submit a single particle to the current spray batch.
++  // void drawSprayParticle(const SprayParticle &p);
++
++  // ================================================================= //
++  // Transforms
++  // ================================================================= //
++
++  /// @brief Build a transform matrix without rotation.
++  glm::mat4 getTransform(const glm::vec3 &position, const glm::vec3 &size);
++
++  /// @brief Build a transform matrix with rotation.
++  glm::mat4 getTransform(const glm::vec3 &position, const glm::vec3 &size,
++                         const glm::vec3 &rotation);
++
++  // ================================================================= //
++  // Resources / Debug
++  // ================================================================= //
++
++  /// @brief Remove a texture from the internal texture slot cache.
++  void removeTexture(const Texture &texture);
++
++  /**
++   * @brief Enable or disable the debug grid.
++   *
++   * @param size Cell size. Pass 0 to disable the grid.
++   */
++  void setCellGridSize(float size);
++
++  /**
++   * @brief Retrieve rendering statistics for a specific batch type.
++   *
++   * Example:
++   * @code
++   * auto stats = renderer.getStatistics<QuadBatch>();
++   * @endcode
++   */
++  template <typename Batch>
++    requires requires(Batch &b) { b.statsCount; }
++  Stats getStatistics()
++  {
++    if constexpr (std::is_same_v<Batch, CubeBatch>) {
++      return {m.cubeBatch.statsCount, m.cubeBatch.statsCount * 8,
++              m.cubeBatch.statsCount * 3, m.cubeBatch.drawCount, "Triangules"};
++    }
++  }
+ 
+ private:
+-  static CubeVertexBatch *m_cubeBatch;
+-  static void flush();
++  float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
++  void flush();
++  void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
++                           DeltaTime globalTime, const glm::mat4 &transform,
++                           const glm::ivec2 &resolution,
++                           const glm::vec2 &cameraPos);
++  void bindTextures();
++  void goBackToFirstVertex();
++  float allocateTextures(Texture &texture);
++
++  struct M {
++    CubeBatch cubeBatch;
++    Texture *whiteTexture = nullptr;
++    Texture **textureSlots;
++    uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
++
++    reg::Entity orthoCameraEntity = reg::Entity{-1};
++    // replaced by m_textBatch.fontAtlas
++    // const Texture *m_fontAtlasTexture = nullptr;
++  };
++
++  M m;
++  template <typename NRVO>
++    requires std::same_as<std::invoke_result_t<NRVO>, M>
++  Renderer3d(NRVO &&factory) : m(factory()){};
++  friend class Application;
+ };
+ 
+ } // namespace pain
+diff --git a/Pain/include/ECS/Components/ComponentManager.h b/Pain/include/ECS/Components/ComponentManager.h
+index 6a8e906..de888d3 100644
+--- a/Pain/include/ECS/Components/ComponentManager.h
++++ b/Pain/include/ECS/Components/ComponentManager.h
+@@ -39,10 +39,13 @@ namespace pain
+ namespace tag
+ {
+ struct OrthoCamera;
++struct PerspCamera;
+ struct LuaScheduleTask;
+ struct LuaScript;
+ struct Transform2d;
++struct Transform3d;
+ struct Movement2d;
++struct Movement3d;
+ struct ParticleSpray;
+ struct GridParticle;
+ struct Rotation;
+@@ -70,15 +73,17 @@ using WorldComponents = reg::CompileTimeBitMask< //
+     tag::OrthoCamera,                            // 1
+     tag::Transform2d,                            // 2
+     tag::Movement2d,                             // 4
+-    tag::NativeScript,                           // 8
+-    tag::ParticleSpray,                          // 16
+-    tag::Rotation,                               // 32
+-    tag::Sprite,                                 // 64
+-    tag::Spriteless,                             // 128
+-    tag::Triangule,                              // 256
+-    tag::LuaScript,                              // 512
+-    tag::SAPCollider,                            // 1024
+-    tag::LuaScheduleTask                         // 2048
++    tag::Transform3d,                            // 8
++    tag::Movement3d,                             // 16
++    tag::NativeScript,                           // 32
++    tag::ParticleSpray,                          // 64
++    tag::Rotation,                               // 128
++    tag::Sprite,                                 // 256
++    tag::Spriteless,                             // 512
++    tag::Triangule,                              // 1024
++    tag::LuaScript,                              // 2048
++    tag::SAPCollider,                            // 4096
++    tag::LuaScheduleTask                         // 8192
+     >;
+ 
+ /**
+diff --git a/Pain/platform/ContextBackend.h b/Pain/platform/ContextBackend.h
+index a7d6ce7..9091a55 100644
+--- a/Pain/platform/ContextBackend.h
++++ b/Pain/platform/ContextBackend.h
+@@ -18,5 +18,7 @@ void setClearColor(const glm::vec4 &color);
+ void clear();
+ void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount = 0);
+ void drawInstanced(uint32_t indiceCount = 0, uint32_t instanceCount = 0);
++unsigned getTMU();
++int getTMUi();
+ 
+ } // namespace pain::backend
+diff --git a/Pain/platform/OpenGL/ContextBackend.cpp b/Pain/platform/OpenGL/ContextBackend.cpp
+index 41ae0f1..287fd8a 100644
+--- a/Pain/platform/OpenGL/ContextBackend.cpp
++++ b/Pain/platform/OpenGL/ContextBackend.cpp
+@@ -15,6 +15,10 @@
+ 
+ namespace pain::backend
+ {
++namespace
++{
++int s_fragmentUnits;
++}
+ 
+ void Init()
+ {
+@@ -36,10 +40,10 @@ void Init()
+            "OpenGL version must be above 4.3, current version is {}.{}",
+            versionMajor, versionMinor);
+ 
+-  int maxTextureUnits;
++  GLint maxTextureUnits;
+   glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+   PLOG_T("GPU Texture Mapping Units: {}", maxTextureUnits);
+-
++  s_fragmentUnits = maxTextureUnits;
+ #ifndef NDEBUG
+   glEnable(GL_DEBUG_OUTPUT);
+   glDebugMessageCallback(Debug::glErrorHandler, 0);
+@@ -94,6 +98,9 @@ void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount)
+   glBindTexture(GL_TEXTURE_2D, 0);
+ }
+ 
++unsigned getTMU() { return static_cast<unsigned>(s_fragmentUnits); }
++int getTMUi() { return s_fragmentUnits; }
++
+ } // namespace pain::backend
+ 
+ #endif
+diff --git a/Pain/resources/default/shaders/Texture.glsl b/Pain/resources/default/shaders/Texture.glsl
+index 457ab51..1926488 100644
+--- a/Pain/resources/default/shaders/Texture.glsl
++++ b/Pain/resources/default/shaders/Texture.glsl
+@@ -1,7 +1,7 @@
+ #shader vertex
+ #version 400 core
+ 			
+-layout(location = 0) in vec3 a_Position;
++layout(location = 0) in vec2 a_Position;
+ layout(location = 1) in vec4 a_Color;
+ layout(location = 2) in vec2 a_TexCoord;
+ layout(location = 3) in float a_TexIndex;
+@@ -21,7 +21,7 @@ void main()
+ 	v_TexCoord = a_TexCoord;
+ 	v_TexIndex = a_TexIndex;
+ 	v_TilingFactor = a_TilingFactor;
+-	gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);	
++	gl_Position = u_ViewProjection * u_Transform * vec4(a_Position,0.0, 1.0);	
+ }
+ 
+ #shader fragment
+diff --git a/Pain/src/CoreFiles/Application.cpp b/Pain/src/CoreFiles/Application.cpp
+index 3909bc5..050d2ce 100644
+--- a/Pain/src/CoreFiles/Application.cpp
++++ b/Pain/src/CoreFiles/Application.cpp
+@@ -27,11 +27,6 @@ namespace pain
+ {
+ pain::Application *pain::Application::s_app = nullptr;
+ 
+-unsigned Application::getProcessorCount()
+-{
+-  return std::thread::hardware_concurrency();
+-}
+-
+ Application *Application::createApplication(AppContext &&context,
+                                             FrameBufferCreationInfo &&fbci)
+ {
+diff --git a/Pain/src/CoreFiles/RenderPipeline.cpp b/Pain/src/CoreFiles/RenderPipeline.cpp
+index f41714a..39a20fe 100644
+--- a/Pain/src/CoreFiles/RenderPipeline.cpp
++++ b/Pain/src/CoreFiles/RenderPipeline.cpp
+@@ -75,14 +75,17 @@ RenderPipeline RenderPipeline::create(const FrameBufferCreationInfo &info,
+   return RenderPipeline{std::move(*fb), eventDispatcher};
+ }
+ 
+-void resizeCamera(const SDL_Event &event, Component::OrthoCamera &cc,
+-                  FrameBuffer &fb, Renderer2d &renderer)
++template <typename Camera>
++  requires std::same_as<Camera, cmp::PerspCamera> ||
++           std::same_as<Camera, cmp::OrthoCamera>
++void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
++                  Renderer2d &renderer)
+ {
+   if (fb.getSpecification().swapChainTarget) {
+     renderer.setViewport(0, 0, event.window.data1, event.window.data2);
+-    cc.setProjection(event.window.data1, event.window.data2);
++    c.setProjection(event.window.data1, event.window.data2);
+   } else {
+-    cc.setProjection(fb.getWidthi(), fb.getHeighti());
++    c.setProjection(fb.getWidthi(), fb.getHeighti());
+     fb.resizeFrameBuffer(fb.getWidthi(), fb.getHeighti());
+   }
+ }
+@@ -90,14 +93,30 @@ void resizeCamera(const SDL_Event &event, Component::OrthoCamera &cc,
+ void RenderPipeline::onWindowResized(const SDL_Event &event,
+                                      Renderer2d &renderer, Scene &scene)
+ {
+-  auto chunks = scene.query<Component::OrthoCamera>();
+-  for (auto &chunk : chunks) {
+-    auto *c = std::get<0>(chunk.arrays);
+-
+-    for (size_t i = 0; i < chunk.count; ++i) {
+-      if (event.type == SDL_WINDOWEVENT) {
+-        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+-          resizeCamera(event, c[i], m_frameBuffer, renderer);
++  {
++    auto chunks = scene.query<Component::OrthoCamera>();
++    for (auto &chunk : chunks) {
++      auto *c = std::get<0>(chunk.arrays);
++
++      for (size_t i = 0; i < chunk.count; ++i) {
++        if (event.type == SDL_WINDOWEVENT) {
++          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
++            resizeCamera(event, c[i], m_frameBuffer, renderer);
++          }
++        }
++      }
++    }
++  }
++  {
++    auto chunks = scene.query<Component::PerspCamera>();
++    for (auto &chunk : chunks) {
++      auto *c = std::get<0>(chunk.arrays);
++
++      for (size_t i = 0; i < chunk.count; ++i) {
++        if (event.type == SDL_WINDOWEVENT) {
++          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
++            resizeCamera(event, c[i], m_frameBuffer, renderer);
++          }
+         }
+       }
+     }
+diff --git a/Pain/src/CoreRender/CameraComponent.cpp b/Pain/src/CoreRender/CameraComponent.cpp
+index 580773f..f2d1694 100644
+--- a/Pain/src/CoreRender/CameraComponent.cpp
++++ b/Pain/src/CoreRender/CameraComponent.cpp
+@@ -97,6 +97,14 @@ void Component::PerspCamera::recalculateViewMatrix(glm::vec3 position,
+       m_matrices.m_projection * m_matrices.m_view;
+ }
+ 
++void Component::PerspCamera::setProjection(int width, int height)
++{
++  setResolution(width, height);
++  float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
++  m_aspectRatio = aspectRatio;
++  setProjection(aspectRatio, m_fieldOfViewDegrees);
++}
++
+ void Component::PerspCamera::setProjection(float aspectRatio,
+                                            float fieldOfViewDegrees)
+ {
+diff --git a/Pain/src/CoreRender/Renderer/BatchQuad.cpp b/Pain/src/CoreRender/Renderer/BatchQuad.cpp
+index dbad5ef..7e0e524 100644
+--- a/Pain/src/CoreRender/Renderer/BatchQuad.cpp
++++ b/Pain/src/CoreRender/Renderer/BatchQuad.cpp
+@@ -6,6 +6,7 @@
+ 
+ // QuadBatch.cpp
+ #include "CoreRender/Renderer/BatchQuad.h"
++#include "ContextBackend.h"
+ #include "CoreFiles/LogWrapper.h"
+ #include "Debugging/Profiling.h"
+ #include <iostream>
+@@ -30,12 +31,13 @@ QuadBatch QuadBatch::create()
+       *Shader::createFromFile("resources/default/shaders/Texture.glsl");
+ 
+   // Set texture samplers once
+-  int samplers[MaxTextureSlots];
+-  for (int i = 0; i < static_cast<int>(MaxTextureSlots); i++)
++  int *samplers = new int[backend::getTMU()];
++  for (int i = 0; i < backend::getTMUi(); i++)
+     samplers[i] = i;
+ 
+   shader.bind();
+-  shader.uploadUniformIntArray("u_Textures", samplers, MaxTextureSlots);
++  shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
++  delete[] samplers;
+   return QuadBatch{
+       std::move(*VertexBuffer::createVertexBuffer(
+           MaxVertices * sizeof(Vertex),
+@@ -73,8 +75,7 @@ void QuadBatch::resetAll()
+ #endif
+ }
+ 
+-void QuadBatch::flush(const std::array<Texture *, MaxTextureSlots> &textures,
+-                      uint32_t textureCount)
++void QuadBatch::flush(Texture **textures, uint32_t textureCount)
+ {
+   if (!indexCount)
+     return;
+@@ -98,8 +99,7 @@ void QuadBatch::flush(const std::array<Texture *, MaxTextureSlots> &textures,
+ 
+ void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
+                              const float tilingFactor, const float textureIndex,
+-                             const std::array<glm::vec2, 4> &textureCoordinate,
+-                             float order)
++                             const std::array<glm::vec2, 4> &textureCoordinate)
+ {
+   PROFILE_FUNCTION();
+   constexpr glm::vec4 QuadVertexPositions[4] = {
+@@ -109,8 +109,7 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
+       glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
+   };
+   for (unsigned i = 0; i < 4; i++) {
+-    ptr->position =
+-        glm::vec3(glm::vec2(transform * QuadVertexPositions[i]), order);
++    ptr->position = glm::vec3(glm::vec2(QuadVertexPositions[i]), 0.f);
+     ptr->color = tintColor.value;
+     ptr->texCoord = textureCoordinate[i];
+     ptr->texIndex = textureIndex;
+diff --git a/Pain/src/CoreRender/Renderer/CubeVertex.cpp b/Pain/src/CoreRender/Renderer/CubeVertex.cpp
+deleted file mode 100644
+index 2d204b1..0000000
+--- a/Pain/src/CoreRender/Renderer/CubeVertex.cpp
++++ /dev/null
+@@ -1,242 +0,0 @@
+-/*
+- * This Source Code Form is subject to the terms of the Mozilla Public
+- * License, v. 2.0. If a copy of the MPL was not distributed with this
+- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+- */
+-
+-#include "CoreRender/Renderer/CubeVertex.h"
+-#include "Core.h"
+-#include "CoreFiles/LogWrapper.h"
+-#include "CoreRender/Renderer/BatchSpray.h"
+-
+-namespace pain
+-{
+-void CubeVertexBatch::goBackToFirst()
+-{
+-  m_indexCount = 0;
+-  m_vertexBufferPtr = m_vertexBufferBase;
+-}
+-void CubeVertexBatch::sendAllDataToOpenGL()
+-{
+-  const uint32_t numElem =
+-      static_cast<uint32_t>(m_vertexBufferPtr - m_vertexBufferBase);
+-  const uint32_t numBytes = numElem * sizeof(ParticleVertex);
+-  // NOTE: previously the numElements was used instead of numBytes. Keep that in
+-  // mind when eventually switch to 3d graphics
+-  m_vertexBuffer.setData((void *)m_vertexBufferBase, numBytes);
+-}
+-
+-/* Batch logic mostly in this function */
+-void CubeVertexBatch::drawBatch(const glm::vec3 &position,
+-                                const glm::vec3 &size, const glm::vec4 &color)
+-{
+-  UNUSED(color)
+-  glm::vec4 Color = glm::vec4(0.9f, 0.3f, 0.2f, 1.0f);
+-  // first quad
+-  m_vertexBufferPtr->Position = {position.x, position.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y + size.y,
+-                                 position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x, position.y + size.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-  m_indexCount += 6;
+-
+-  Color = glm::vec4(0.3f, 0.9f, 0.2f, 1.0f);
+-  // second quad
+-  m_vertexBufferPtr->Position = {position.x, position.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x, position.y, position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x, position.y + size.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x, position.y + size.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-  m_indexCount += 6;
+-
+-  // third quad
+-  Color = glm::vec4(0.3f, 0.2f, 0.9f, 1.0f);
+-  m_vertexBufferPtr->Position = {position.x, position.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x, position.y, position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-  m_indexCount += 6;
+-
+-  // forth quad
+-  Color = glm::vec4(0.8f, 0.1f, 0.8f, 1.0f);
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y + size.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y + size.y,
+-                                 position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-  m_indexCount += 6;
+-
+-  // fifth quad
+-  Color = glm::vec4(0.1f, 0.8f, 0.8f, 1.0f);
+-  m_vertexBufferPtr->Position = {position.x, position.y, position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y + size.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x, position.y + size.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-  m_indexCount += 6;
+-
+-  // sixth quad
+-  Color = glm::vec4(0.8f, 0.8f, 0.1f, 1.0f);
+-  m_vertexBufferPtr->Position = {position.x, position.y + size.y, position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y + size.y,
+-                                 position.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 0.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x + size.x, position.y + size.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {1.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-
+-  m_vertexBufferPtr->Position = {position.x, position.y + size.y,
+-                                 position.z + size.z};
+-  m_vertexBufferPtr->Color = Color;
+-  m_vertexBufferPtr->TexCoord = {0.0f, 1.0f};
+-  m_vertexBufferPtr++;
+-  m_indexCount += 6;
+-}
+-
+-CubeVertexBatch CubeVertexBatch::createCubeVertexBatch()
+-{
+-
+-  auto cubeVertexBuffer = VertexBuffer::createVertexBuffer(
+-      MaxVertices * sizeof(CubeVertex),
+-      {
+-          {ShaderDataType::Float3, "a_Position"}, //
+-          {ShaderDataType::Float4, "a_Color"},    //
+-          {ShaderDataType::Float2, "a_TexCoord"}  //
+-      });
+-  P_ASSERT(cubeVertexBuffer, "Could not create Cube Vertex BUffer");
+-
+-  CubeVertex *vertexBufferBase = new CubeVertex[MaxVertices];
+-
+-  uint32_t *quadIndices = new uint32_t[MaxIndices];
+-
+-  uint32_t offset = 0;
+-  for (uint32_t i = 0; i < MaxIndices; i += 6) {
+-    quadIndices[i + 0] = offset + 0;
+-    quadIndices[i + 1] = offset + 1;
+-    quadIndices[i + 2] = offset + 2;
+-
+-    quadIndices[i + 3] = offset + 2;
+-    quadIndices[i + 4] = offset + 3;
+-    quadIndices[i + 5] = offset + 0;
+-
+-    offset += 4;
+-  }
+-  auto quadIB = IndexBuffer::createIndexBuffer(quadIndices, MaxIndices);
+-  P_ASSERT(quadIB, "Could not create Cube Vertex BUffer");
+-  delete[] quadIndices;
+-  auto cubeVertexArray =
+-      VertexArray::createVertexArray(cubeVertexBuffer.value(), *quadIB);
+-
+-  // m_whiteTexture.reset(new Texture(1, 1));
+-  // uint32_t whiteTextureData = 0xffffffff;
+-  // m_whiteTexture->setData(&whiteTextureData, sizeof(uint32_t));
+-
+-  auto cubeTextureShader =
+-      Shader::createFromFile("resources/default/shaders/Texture.glsl");
+-  // m_textureShader->bind();
+-  // m_textureShader->uploadUniformInt("u_Texture", 0);
+-  return CubeVertexBatch(std::move(*cubeVertexArray),
+-                         std::move(*cubeVertexBuffer),  //
+-                         std::move(*cubeTextureShader), //
+-                         std::move(vertexBufferBase));
+-}
+-
+-CubeVertexBatch::CubeVertexBatch(VertexArray vertexArray,
+-                                 VertexBuffer vertexBuffer, //
+-                                 Shader textureShader,      //
+-                                 CubeVertex *vertexBufferBase)
+-    : m_vertexArray(std::move(vertexArray)),
+-      m_vertexBuffer(std::move(vertexBuffer)),
+-      m_textureShader(std::move(textureShader)),
+-      m_vertexBufferBase(vertexBufferBase) {};
+-
+-} // namespace pain
+diff --git a/Pain/src/CoreRender/Renderer/Renderer2d.cpp b/Pain/src/CoreRender/Renderer/Renderer2d.cpp
+index 7421368..f8b6a24 100644
+--- a/Pain/src/CoreRender/Renderer/Renderer2d.cpp
++++ b/Pain/src/CoreRender/Renderer/Renderer2d.cpp
+@@ -297,28 +297,27 @@ Renderer2d Renderer2d::createRenderer2d()
+   PROFILE_FUNCTION();
+ 
+   backend::InitRenderer();
+-
+-  return Renderer2d([] {
+-    return M{
+-        .quadBatches =
+-            {
+-                QuadBatch::create(),
+-                QuadBatch::create(),
+-                QuadBatch::create(),
+-                QuadBatch::create(),
+-                QuadBatch::create(),
+-                QuadBatch::create(),
+-                QuadBatch::create(),
+-            },
+-        .triBatch = TriBatch::create(),       //
+-        .circleBatch = CircleBatch::create(), //
+-        .sprayBatch = SprayBatch::create(),   //
+-        .textBatch = TextBatch::create(),     //
+-        .debugGrid = DebugGrid::create(),
+-        .textureSlots = // First texture is a  1x1 white texture
+-        {&TextureManager::getDefaultTexture(
+-            TextureManager::DefaultTexture::Blank)} //
+-    };
++  // First texture is a  1x1 white texture
++  Texture **textureSlots = new Texture *[backend::getTMU()];
++  textureSlots[0] =
++      &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
++  return Renderer2d([textureSlots] {
++    return M{.quadBatches =
++                 {
++                     QuadBatch::create(),
++                     QuadBatch::create(),
++                     QuadBatch::create(),
++                     QuadBatch::create(),
++                     QuadBatch::create(),
++                     QuadBatch::create(),
++                     QuadBatch::create(),
++                 },
++             .triBatch = TriBatch::create(),       //
++             .circleBatch = CircleBatch::create(), //
++             .sprayBatch = SprayBatch::create(),   //
++             .textBatch = TextBatch::create(),     //
++             .debugGrid = DebugGrid::create(),
++             .textureSlots = textureSlots};
+   }); //
+ }
+ 
+diff --git a/Pain/src/CoreRender/Renderer/Renderer3d.cpp b/Pain/src/CoreRender/Renderer/Renderer3d.cpp
+index f7239ad..5bb9fa3 100644
+--- a/Pain/src/CoreRender/Renderer/Renderer3d.cpp
++++ b/Pain/src/CoreRender/Renderer/Renderer3d.cpp
+@@ -6,93 +6,123 @@
+ 
+ #include "CoreRender/Renderer/Renderer3d.h"
+ #include "CoreFiles/LogWrapper.h"
+-#include "CoreRender/Renderer/CubeVertex.h"
+ #include "CoreRender/Texture.h"
+ #include <glm/ext/matrix_clip_space.hpp>
+ #include <glm/ext/matrix_transform.hpp>
+ #include <glm/gtx/string_cast.hpp>
+ #include <memory>
+ 
++#include "Debugging/Profiling.h"
++#include "Physics/Movement3dComponent.h"
++#include "platform/ContextBackend.h"
++
+ namespace pain
+ {
+ 
+-CubeVertexBatch *Renderer3d::m_cubeBatch = nullptr;
+-std::shared_ptr<PerspectiveCameraController> Renderer3d::m_cameraController =
+-    nullptr;
++extern const Texture *m_fontAtlasTexture;
+ 
+ // ================================================================= //
+-// Render initialization and destruction
++// Renderer: basic wrapper around opengl
+ // ================================================================= //
+ 
+-void Renderer3d::init(
+-    std::shared_ptr<PerspectiveCameraController> &cameraController)
++void Renderer3d::setViewport(int x, int y, int width, int height)
+ {
+-  // m_cubeBatch = new CubeVertexBatch();
+-  // NOTE: This can be changed later in case the engine needs a camera mechanic
+-
+-  glEnable(GL_DEPTH_TEST);
+-  m_cameraController = cameraController;
++  backend::setViewPort(x, y, width, height);
+ }
++void Renderer3d::clear() { backend::clear(); }
+ 
+-void Renderer3d::shutdown() { delete m_cubeBatch; }
+-
+-// ================================================================= //
+-// Draws
+-// ================================================================= //
+-
+-void Renderer3d::drawCube(const glm::vec3 &position, const glm::vec3 &size,
+-                          const glm::vec4 &color)
++void Renderer3d::setClearColor(const glm::vec4 &color)
+ {
+-  m_cubeBatch->drawBatch(position, size, color);
++  backend::setClearColor(color);
+ }
+-
+-// ================================================================= //
+-// Renderer basic wrapper around opengl
+-// ================================================================= //
+-
+-void Renderer3d::setViewport(int x, int y, int width, int height)
++bool Renderer3d::hasCamera() { return m.orthoCameraEntity != reg::Entity{-1}; }
++void Renderer3d::changeCamera(reg::Entity cameraEntity)
+ {
+-  glViewport(x, y, width, height);
++  m.orthoCameraEntity = cameraEntity;
+ }
+ 
+-void Renderer3d::clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+-
+-void Renderer3d::setClearColor(const glm::vec4 color)
++void Renderer3d::beginScene(DeltaTime globalTime, const Scene &scene,
++                            const glm::mat4 &transform)
+ {
+-  glClearColor(color.r, color.g, color.b, color.a);
++  PROFILE_FUNCTION();
++  const cmp::PerspCamera &cc =
++      std::as_const(scene).getComponent<Component::PerspCamera>(
++          m.orthoCameraEntity);
++  const Transform3dComponent &tc =
++      std::as_const(scene).getComponent<Transform3dComponent>(
++          m.orthoCameraEntity);
++  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime, transform,
++                      cc.getResolution(), tc.m_position);
++  goBackToFirstVertex();
+ }
+ 
+-void Renderer3d::beginScene(const glm::mat4 &transform)
++void Renderer3d::flush()
+ {
+-  m_cubeBatch->getShader().bind();
+-  m_cubeBatch->getShader().uploadUniformMat4(
+-      "u_ViewProjection",
+-      m_cameraController->getCamera().getViewProjectionMatrix());
+-  m_cubeBatch->getShader().uploadUniformMat4("u_Transform", transform);
+-
+-  m_cubeBatch->goBackToFirst();
++  PROFILE_FUNCTION();
++  // bindTextures();
++  m.cubeBatch.flush(m.textureSlots, m.textureSlotIndex);
+ }
+ 
+ void Renderer3d::endScene()
+ {
+-  m_cubeBatch->sendAllDataToOpenGL();
+-  // NOTE: this probably won't be here in the future,
++  // quadBatch->sendAllDataToOpenGL();
++  // NOTE: sendAllDataToOpenGL probably won't be here in the future,
+   // otherwise flush() wouldn't need to be a function
+   flush();
+ }
+ 
+-void Renderer3d::flush()
++// ================================================================= //
++// Draws
++// ================================================================= //
++
++void Renderer3d::drawCube(const glm::vec3 &position, const glm::vec3 &size,
++                          const Color &color, Texture &texture,
++                          float tilingFactor,
++                          const std::array<glm::vec2, 4> &textureCoordinate)
++{
++  const float texIndex = allocateTextures(texture);
++  const glm::mat4 transform = getTransform(position, size);
++  m.cubeBatch.allocateCube(transform, color, tilingFactor, texIndex,
++                           textureCoordinate);
++}
++void Renderer3d::drawCube(const glm::vec3 &position, const glm::vec3 &size,
++                          const Color &color, const glm::vec3 rotation,
++                          Texture &texture, float tilingFactor,
++                          const std::array<glm::vec2, 4> &textureCoordinate)
+ {
+-  drawIndexed(m_cubeBatch->getVertexArray(), m_cubeBatch->getIndexCount());
++  const float texIndex = allocateTextures(texture);
++  const glm::mat4 transform = getTransform(position, size, rotation);
++  m.cubeBatch.allocateCube(transform, color, tilingFactor, texIndex,
++                           textureCoordinate);
+ }
+ 
+-void Renderer3d::drawIndexed(VertexArray &vertexArray, uint32_t indexCount)
++// ================================================================= //
++// Transforms
++// ================================================================= //
++
++/// @brief Build a transform matrix without rotation.
++glm::mat4 Renderer3d::getTransform(const glm::vec3 &position,
++                                   const glm::vec3 &size)
++{
++  PROFILE_FUNCTION();
++  glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
++  return glm::scale(transform, size);
++}
++
++/// @brief Build a transform matrix with rotation.
++glm::mat4 Renderer3d::getTransform(const glm::vec3 &position,
++                                   const glm::vec3 &size,
++                                   const glm::vec3 &rotation)
+ {
+-  uint32_t count =
+-      indexCount ? indexCount : vertexArray.getIndexBuffer().getCount();
+-  glDrawElements(GL_TRIANGLES, static_cast<int32_t>(count), GL_UNSIGNED_INT,
+-                 nullptr);
+-  glBindTexture(GL_TEXTURE_2D, 0);
++  PROFILE_FUNCTION();
++  glm::mat4 transform = glm::mat4(1.0f);
++  transform = glm::translate(transform, position);
++
++  transform = glm::rotate(transform, rotation.x, {1.0f, 0.0f, 0.0f});
++  transform = glm::rotate(transform, rotation.y, {0.0f, 1.0f, 0.0f});
++  transform = glm::rotate(transform, rotation.z, {0.0f, 0.0f, 1.0f});
++
++  return glm::scale(transform, size);
+ }
+ 
+ } // namespace pain
+diff --git a/Pain/src/CoreRender/Text/Font.cpp b/Pain/src/CoreRender/Text/Font.cpp
+index 241d323..c222be0 100644
+--- a/Pain/src/CoreRender/Text/Font.cpp
++++ b/Pain/src/CoreRender/Text/Font.cpp
+@@ -5,8 +5,8 @@
+  */
+ 
+ #include "CoreRender/Text/Font.h"
++#include "CoreFiles/AppConstants.h"
+ 
+-#include "CoreFiles/Application.h"
+ #include "CoreFiles/LogWrapper.h"
+ 
+ namespace pain
+@@ -31,9 +31,7 @@ Font *Font::create(const char *fontFilename, double emSize)
+ }
+ 
+ Font::Font(const char *fontFilename, double emSize)
+-    : m_atlasTexture(generateAtlas(fontFilename, emSize))
+-{
+-}
++    : m_atlasTexture(generateAtlas(fontFilename, emSize)) {};
+ 
+ Texture Font::generateAtlas(const char *fontFilename, double emSize)
+ {
+@@ -114,7 +112,7 @@ Texture createAtlasTexture(
+                                       msdf_atlas::BitmapAtlasStorage<T, N>>
+       generator(width, height);
+   generator.setAttributes(attributes);
+-  generator.setThreadCount(Application::getProcessorCount() / 2);
++  generator.setThreadCount(AppConstants::getProcessorCount() / 2);
+   generator.generate(glyphs.data(), (int)glyphs.size());
+   // TODO: savePng and IMG_SavePNG can correclty save atlas textures with png
+   // format. However, the Texture ojbect for most fonts isn't being generated
+diff --git a/Pain/src/Misc/PerspCameraController.cpp b/Pain/src/Misc/PerspCameraController.cpp
+index f0063df..65a6251 100644
+--- a/Pain/src/Misc/PerspCameraController.cpp
++++ b/Pain/src/Misc/PerspCameraController.cpp
+@@ -27,7 +27,6 @@ PerspectiveCameraController::PerspectiveCameraController(
+   m_zoomSpeed = 10.0f;
+   m_windowWidth = windowWidth;
+   m_windowHeight = windowHeight;
+-  Renderer3d::setViewport(0, 0, (int)windowWidth, (int)windowHeight);
+   setFrontVector({0.0f, 0.0f, 1.0f});
+   setPosition({0.0f, 0.0f, 0.0f});
+   SDL_SetRelativeMouseMode(SDL_TRUE);
+@@ -139,12 +138,4 @@ void PerspectiveCameraController::onMouseScrolled(const SDL_Event &event)
+   m_camera.setProjection(m_aspectRatio, m_fieldOfViewDegrees);
+ }
+ 
+-void PerspectiveCameraController::onWindowResized(const SDL_Event &event)
+-{
+-  Renderer3d::setViewport(0, 0, event.window.data1, event.window.data2);
+-  m_windowWidth = (float)event.window.data1;
+-  m_windowHeight = (float)event.window.data2;
+-  m_aspectRatio = m_windowWidth / m_windowHeight;
+-  m_camera.setProjection(m_aspectRatio, m_fieldOfViewDegrees);
+-}
+ } // namespace pain

@@ -297,28 +297,27 @@ Renderer2d Renderer2d::createRenderer2d()
   PROFILE_FUNCTION();
 
   backend::InitRenderer();
-
-  return Renderer2d([] {
-    return M{
-        .quadBatches =
-            {
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-            },
-        .triBatch = TriBatch::create(),       //
-        .circleBatch = CircleBatch::create(), //
-        .sprayBatch = SprayBatch::create(),   //
-        .textBatch = TextBatch::create(),     //
-        .debugGrid = DebugGrid::create(),
-        .textureSlots = // First texture is a  1x1 white texture
-        {&TextureManager::getDefaultTexture(
-            TextureManager::DefaultTexture::Blank)} //
-    };
+  // First texture is a  1x1 white texture
+  Texture **textureSlots = new Texture *[backend::getTMU()];
+  textureSlots[0] =
+      &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
+  return Renderer2d([textureSlots] {
+    return M{.quadBatches =
+                 {
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                 },
+             .triBatch = TriBatch::create(),       //
+             .circleBatch = CircleBatch::create(), //
+             .sprayBatch = SprayBatch::create(),   //
+             .textBatch = TextBatch::create(),     //
+             .debugGrid = DebugGrid::create(),
+             .textureSlots = textureSlots};
   }); //
 }
 

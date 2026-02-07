@@ -97,6 +97,14 @@ void Component::PerspCamera::recalculateViewMatrix(glm::vec3 position,
       m_matrices.m_projection * m_matrices.m_view;
 }
 
+void Component::PerspCamera::setProjection(int width, int height)
+{
+  setResolution(width, height);
+  float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+  m_aspectRatio = aspectRatio;
+  setProjection(aspectRatio, m_fieldOfViewDegrees);
+}
+
 void Component::PerspCamera::setProjection(float aspectRatio,
                                            float fieldOfViewDegrees)
 {

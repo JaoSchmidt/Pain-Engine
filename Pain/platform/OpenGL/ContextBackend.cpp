@@ -15,6 +15,10 @@
 
 namespace pain::backend
 {
+namespace
+{
+int s_fragmentUnits;
+}
 
 void Init()
 {
@@ -36,10 +40,10 @@ void Init()
            "OpenGL version must be above 4.3, current version is {}.{}",
            versionMajor, versionMinor);
 
-  int maxTextureUnits;
+  GLint maxTextureUnits;
   glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
   PLOG_T("GPU Texture Mapping Units: {}", maxTextureUnits);
-
+  s_fragmentUnits = maxTextureUnits;
 #ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(Debug::glErrorHandler, 0);
@@ -93,6 +97,9 @@ void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount)
                  nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+unsigned getTMU() { return static_cast<unsigned>(s_fragmentUnits); }
+int getTMUi() { return s_fragmentUnits; }
 
 } // namespace pain::backend
 

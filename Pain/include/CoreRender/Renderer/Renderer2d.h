@@ -42,7 +42,14 @@ class UIScene;
  *  - Call endScene().
  */
 struct Renderer2d {
-  /// @brief Aggregated rendering statistics for a batch type.
+  /** @brief Aggregated rendering statistics for a batch type.*/
+  /* Fields:
+   * - count: number of objects
+   * - indices: total index count
+   * - vertices: total vertex count
+   * - draws: draw calls issued
+   * - name: batch name
+   */
   struct Stats {
     uint32_t count;
     uint32_t indices;
@@ -184,9 +191,6 @@ struct Renderer2d {
    */
   void setCellGridSize(float size);
 
-  /// @brief Maximum number of texture slots supported per batch.
-  static constexpr uint32_t MaxTextureSlots = 32;
-
   /**
    * @brief Retrieve rendering statistics for a specific batch type.
    *
@@ -242,7 +246,7 @@ private:
     DebugGrid debugGrid;
     // texture initializer
     Texture *whiteTexture = nullptr;
-    std::array<Texture *, MaxTextureSlots> textureSlots;
+    Texture **textureSlots;
     uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
 
     reg::Entity orthoCameraEntity = reg::Entity{-1};

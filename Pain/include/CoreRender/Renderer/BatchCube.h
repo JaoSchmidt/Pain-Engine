@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// QuadBatch.h
+// BatchCube.h
 #pragma once
 
 #include "ContextBackend.h"
@@ -15,7 +15,7 @@
 namespace pain
 {
 
-struct QuadVertex {
+struct CubeVertex {
   glm::vec3 position;
   uint32_t color;
   glm::vec2 texCoord;
@@ -23,13 +23,21 @@ struct QuadVertex {
   float tilingFactor;
 };
 
-struct QuadBatch {
-  using Vertex = QuadVertex;
-  static constexpr uint32_t IndiceSize = 6;
+struct CubeBatch {
+  using Vertex = CubeVertex;
+  // quads
+  static constexpr uint32_t IndicesPerQuad = 6;
   static constexpr uint32_t VerticesPerQuad = 4;
-  static constexpr uint32_t MaxPolygons = 5000;
-  static constexpr uint32_t MaxVertices = MaxPolygons * 4;
-  static constexpr uint32_t MaxIndices = MaxPolygons * IndiceSize;
+
+  // cube
+  static constexpr uint32_t QuadsPerCube = 6;
+  static constexpr uint32_t VerticesPerCube =
+      VerticesPerQuad * QuadsPerCube; // 24
+  static constexpr uint32_t IndicesPerCube =
+      IndicesPerQuad * QuadsPerCube; // 36
+  static constexpr uint32_t MaxPolyhedrons = 5000;
+  static constexpr uint32_t MaxVertices = MaxPolyhedrons * VerticesPerCube;
+  static constexpr uint32_t MaxIndices = MaxPolyhedrons * IndicesPerCube;
   uint32_t statsCount = 0;
   uint32_t drawCount = 0;
 
@@ -45,9 +53,9 @@ struct QuadBatch {
 
   // std::unique_ptr<Vertex[]> sortBuffer;
 
-  static QuadBatch create();
+  static CubeBatch create();
 
-  void allocateQuad(const glm::mat4 &transform, const Color &tintColor,
+  void allocateCube(const glm::mat4 &transform, const Color &tintColor,
                     const float tilingFactor, const float textureIndex,
                     const std::array<glm::vec2, 4> &textureCoordinate);
   void resetAll();
@@ -55,7 +63,7 @@ struct QuadBatch {
   void flush(Texture **textures, uint32_t textureCount);
 
 private:
-  QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_);
+  CubeBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_);
   // void swapQuadVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
   // void sortByDrawOrder();
 };

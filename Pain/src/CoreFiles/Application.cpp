@@ -27,11 +27,6 @@ namespace pain
 {
 pain::Application *pain::Application::s_app = nullptr;
 
-unsigned Application::getProcessorCount()
-{
-  return std::thread::hardware_concurrency();
-}
-
 Application *Application::createApplication(AppContext &&context,
                                             FrameBufferCreationInfo &&fbci)
 {

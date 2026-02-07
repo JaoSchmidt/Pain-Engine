@@ -137,6 +137,8 @@ private:
  * Used for 3D rendering.
  */
 struct PerspCamera : CameraResolution {
+  using tag = pain::tag::PerspCamera;
+  float m_fieldOfViewDegrees = 90.0f;
   pain::PerspectiveMatrices m_matrices;
 
   /** Returns the cached view-projection matrix. */
@@ -151,6 +153,7 @@ struct PerspCamera : CameraResolution {
 
   /** Updates the projection matrix. */
   void setProjection(float aspectRatio, float fieldOfViewDegrees);
+  void setProjection(int width, int height);
 
   PerspCamera() = delete;
 

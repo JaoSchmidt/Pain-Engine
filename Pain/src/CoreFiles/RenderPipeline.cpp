@@ -75,14 +75,17 @@ RenderPipeline RenderPipeline::create(const FrameBufferCreationInfo &info,
   return RenderPipeline{std::move(*fb), eventDispatcher};
 }
 
-void resizeCamera(const SDL_Event &event, Component::OrthoCamera &cc,
-                  FrameBuffer &fb, Renderer2d &renderer)
+template <typename Camera>
+  requires std::same_as<Camera, cmp::PerspCamera> ||
+           std::same_as<Camera, cmp::OrthoCamera>
+void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
+                  Renderer2d &renderer)
 {
   if (fb.getSpecification().swapChainTarget) {
     renderer.setViewport(0, 0, event.window.data1, event.window.data2);
-    cc.setProjection(event.window.data1, event.window.data2);
+    c.setProjection(event.window.data1, event.window.data2);
   } else {
-    cc.setProjection(fb.getWidthi(), fb.getHeighti());
+    c.setProjection(fb.getWidthi(), fb.getHeighti());
     fb.resizeFrameBuffer(fb.getWidthi(), fb.getHeighti());
   }
 }
@@ -90,14 +93,30 @@ void resizeCamera(const SDL_Event &event, Component::OrthoCamera &cc,
 void RenderPipeline::onWindowResized(const SDL_Event &event,
                                      Renderer2d &renderer, Scene &scene)
 {
-  auto chunks = scene.query<Component::OrthoCamera>();
-  for (auto &chunk : chunks) {
-    auto *c = std::get<0>(chunk.arrays);
+  {
+    auto chunks = scene.query<Component::OrthoCamera>();
+    for (auto &chunk : chunks) {
+      auto *c = std::get<0>(chunk.arrays);
 
-    for (size_t i = 0; i < chunk.count; ++i) {
-      if (event.type == SDL_WINDOWEVENT) {
-        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-          resizeCamera(event, c[i], m_frameBuffer, renderer);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        if (event.type == SDL_WINDOWEVENT) {
+          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+            resizeCamera(event, c[i], m_frameBuffer, renderer);
+          }
+        }
+      }
+    }
+  }
+  {
+    auto chunks = scene.query<Component::PerspCamera>();
+    for (auto &chunk : chunks) {
+      auto *c = std::get<0>(chunk.arrays);
+
+      for (size_t i = 0; i < chunk.count; ++i) {
+        if (event.type == SDL_WINDOWEVENT) {
+          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+            resizeCamera(event, c[i], m_frameBuffer, renderer);
+          }
         }
       }
     }

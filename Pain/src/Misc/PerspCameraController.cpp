@@ -27,7 +27,6 @@ PerspectiveCameraController::PerspectiveCameraController(
   m_zoomSpeed = 10.0f;
   m_windowWidth = windowWidth;
   m_windowHeight = windowHeight;
-  Renderer3d::setViewport(0, 0, (int)windowWidth, (int)windowHeight);
   setFrontVector({0.0f, 0.0f, 1.0f});
   setPosition({0.0f, 0.0f, 0.0f});
   SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -139,12 +138,4 @@ void PerspectiveCameraController::onMouseScrolled(const SDL_Event &event)
   m_camera.setProjection(m_aspectRatio, m_fieldOfViewDegrees);
 }
 
-void PerspectiveCameraController::onWindowResized(const SDL_Event &event)
-{
-  Renderer3d::setViewport(0, 0, event.window.data1, event.window.data2);
-  m_windowWidth = (float)event.window.data1;
-  m_windowHeight = (float)event.window.data2;
-  m_aspectRatio = m_windowWidth / m_windowHeight;
-  m_camera.setProjection(m_aspectRatio, m_fieldOfViewDegrees);
-}
 } // namespace pain

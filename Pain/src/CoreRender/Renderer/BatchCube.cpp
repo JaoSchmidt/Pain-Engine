@@ -4,9 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// QuadBatch.cpp
-#include "CoreRender/Renderer/BatchQuad.h"
-#include "ContextBackend.h"
+// BatchCube.cpp
+#include "CoreRender/Renderer/BatchCube.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include <iostream>
@@ -14,7 +13,7 @@
 namespace pain
 {
 
-QuadBatch QuadBatch::create()
+CubeBatch CubeBatch::create()
 {
   std::vector<uint32_t> indices(MaxIndices);
   for (uint32_t i = 0, offset = 0; i < MaxIndices; i += 6, offset += 4) {
@@ -38,7 +37,7 @@ QuadBatch QuadBatch::create()
   shader.bind();
   shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
   delete[] samplers;
-  return QuadBatch{
+  return CubeBatch{
       std::move(*VertexBuffer::createVertexBuffer(
           MaxVertices * sizeof(Vertex),
           {
@@ -51,7 +50,7 @@ QuadBatch QuadBatch::create()
       std::move(*IndexBuffer::createIndexBuffer(indices.data(), MaxIndices)),
       std::move(shader)};
 }
-QuadBatch::QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
+CubeBatch::CubeBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
     : vbo(std::move(vbo_)), ib(std::move(ib_)),         //
       vao(*VertexArray::createVertexArray(vbo, ib)),    //
       shader(std::move(shader_)),                       //
@@ -61,12 +60,12 @@ QuadBatch::QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
 // sortBuffer(std::make_unique<Vertex[]>(MaxVertices)) //
 {};
 
-void QuadBatch::resetPtr()
+void CubeBatch::resetPtr()
 {
   indexCount = 0;
   ptr = ptrInit.get();
 }
-void QuadBatch::resetAll()
+void CubeBatch::resetAll()
 {
   resetPtr();
 #ifndef NDEBUG
@@ -75,7 +74,7 @@ void QuadBatch::resetAll()
 #endif
 }
 
-void QuadBatch::flush(Texture **textures, uint32_t textureCount)
+void CubeBatch::flush(Texture **textures, uint32_t textureCount)
 {
   if (!indexCount)
     return;
@@ -91,33 +90,57 @@ void QuadBatch::flush(Texture **textures, uint32_t textureCount)
 
   shader.bind();
   ib.bind();
-  backend::drawIndexed(vao, indexCount * IndiceSize);
+  backend::drawIndexed(vao, indexCount * IndicesPerCube);
 #ifndef NDEBUG
   drawCount++;
 #endif
 }
 
-void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
+void CubeBatch::allocateCube(const glm::mat4 &transform, const Color &tintColor,
                              const float tilingFactor, const float textureIndex,
                              const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
-  constexpr glm::vec4 QuadVertexPositions[4] = {
-      glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, 0.5f, 0.f, 1.f),
-      glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
+  constexpr uint8_t CubeFaces[6][4] = {
+      {0, 1, 2, 3}, // front
+      {4, 5, 6, 7}, // back
+      {0, 4, 7, 3}, // left
+      {1, 5, 6, 2}, // right
+      {3, 2, 6, 7}, // top
+      {0, 1, 5, 4}, // bottom
   };
-  for (unsigned i = 0; i < 4; i++) {
-    ptr->position =
-        glm::vec3(glm::vec2(transform * QuadVertexPositions[i]), 0.f);
-    ptr->color = tintColor.value;
-    ptr->texCoord = textureCoordinate[i];
-    ptr->texIndex = textureIndex;
-    ptr->tilingFactor = tilingFactor;
-    ptr++;
+  constexpr glm::vec2 QuadUVs[4] = {
+      {0.0f, 0.0f},
+      {1.0f, 0.0f},
+      {1.0f, 1.0f},
+      {0.0f, 1.0f},
+  };
+  constexpr glm::vec4 CubeVertexPositions[8] = {
+      {-0.5f, -0.5f, -0.5f, 1.0f}, // 0
+      {0.5f, -0.5f, -0.5f, 1.0f},  // 1
+      {0.5f, 0.5f, -0.5f, 1.0f},   // 2
+      {-0.5f, 0.5f, -0.5f, 1.0f},  // 3
+      {-0.5f, -0.5f, 0.5f, 1.0f},  // 4
+      {0.5f, -0.5f, 0.5f, 1.0f},   // 5
+      {0.5f, 0.5f, 0.5f, 1.0f},    // 6
+      {-0.5f, 0.5f, 0.5f, 1.0f},   // 7
+  };
+
+  // Correct Cube Allocation
+  // first quad
+  for (uint32_t face = 0; face < 6; face++) {
+    const uint32_t color = tintColor.value;
+
+    for (uint32_t i = 0; i < 4; i++) {
+      uint8_t vertexIndex = CubeFaces[face][i];
+      ptr->position = glm::vec3(transform * CubeVertexPositions[vertexIndex]);
+      ptr->color = color;
+      ptr->texCoord = QuadUVs[i];
+      ptr->texIndex = textureIndex;
+      ptr->tilingFactor = tilingFactor;
+      ptr++;
+    }
   }
-  // drawOrder[indexCount] = order;
   indexCount++;
 #ifndef NDEBUG
   statsCount++;

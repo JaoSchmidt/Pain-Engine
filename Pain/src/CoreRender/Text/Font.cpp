@@ -5,8 +5,8 @@
  */
 
 #include "CoreRender/Text/Font.h"
+#include "CoreFiles/AppConstants.h"
 
-#include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
 
 namespace pain
@@ -31,9 +31,7 @@ Font *Font::create(const char *fontFilename, double emSize)
 }
 
 Font::Font(const char *fontFilename, double emSize)
-    : m_atlasTexture(generateAtlas(fontFilename, emSize))
-{
-}
+    : m_atlasTexture(generateAtlas(fontFilename, emSize)) {};
 
 Texture Font::generateAtlas(const char *fontFilename, double emSize)
 {
@@ -114,7 +112,7 @@ Texture createAtlasTexture(
                                       msdf_atlas::BitmapAtlasStorage<T, N>>
       generator(width, height);
   generator.setAttributes(attributes);
-  generator.setThreadCount(Application::getProcessorCount() / 2);
+  generator.setThreadCount(AppConstants::getProcessorCount() / 2);
   generator.generate(glyphs.data(), (int)glyphs.size());
   // TODO: savePng and IMG_SavePNG can correclty save atlas textures with png
   // format. However, the Texture ojbect for most fonts isn't being generated
