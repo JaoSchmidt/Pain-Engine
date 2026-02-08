@@ -6,6 +6,7 @@
 
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/CameraComponent.h"
+#include "CoreRender/Renderer/RenderContext.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "Misc/Events.h"
@@ -79,10 +80,13 @@ template <typename Camera>
   requires std::same_as<Camera, cmp::PerspCamera> ||
            std::same_as<Camera, cmp::OrthoCamera>
 void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
-                  Renderer2d &renderer)
+                  Renderers &renderers)
 {
   if (fb.getSpecification().swapChainTarget) {
-    renderer.setViewport(0, 0, event.window.data1, event.window.data2);
+    renderers.renderer2d.setViewport(0, 0, event.window.data1,
+                                     event.window.data2);
+    renderers.renderer3d.setViewport(0, 0, event.window.data1,
+                                     event.window.data2);
     c.setProjection(event.window.data1, event.window.data2);
   } else {
     c.setProjection(fb.getWidthi(), fb.getHeighti());
@@ -91,7 +95,7 @@ void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
 }
 
 void RenderPipeline::onWindowResized(const SDL_Event &event,
-                                     Renderer2d &renderer, Scene &scene)
+                                     Renderers &renderer, Scene &scene)
 {
   {
     auto chunks = scene.query<Component::OrthoCamera>();
@@ -123,18 +127,18 @@ void RenderPipeline::onWindowResized(const SDL_Event &event,
   }
 }
 
-void RenderPipeline::pipeline(Renderer2d &renderer, bool isMinimized,
+void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene &uiScene)
 {
   m_frameBuffer.bind();
-  renderer.setClearColor(s_clearColor);
-  renderer.clear();
-  renderer.beginScene(currentTime, worldScene);
-  worldScene.renderSystems(renderer, isMinimized, currentTime);
-  renderer.endScene();
+  renderers.renderer2d.setClearColor(s_clearColor);
+  renderers.renderer2d.clear();
+  renderers.renderer2d.beginScene(currentTime, worldScene);
+  worldScene.renderSystems(renderers, isMinimized, currentTime);
+  renderers.renderer2d.endScene();
   m_frameBuffer.unbind();
-  uiScene.renderSystems(renderer, isMinimized, currentTime);
+  uiScene.renderSystems(renderers, isMinimized, currentTime);
 }
 
 } // namespace pain

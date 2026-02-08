@@ -95,7 +95,7 @@ struct ParticleSys : public System<WorldComponents>, IOnUpdate, IOnRender {
    * IOnUpdate.
    */
   void onUpdate(DeltaTime deltaTime) override;
-  void onRender(pain::Renderer2d &renderer, bool isMinimized,
+  void onRender(pain::Renderers &renderer, bool isMinimized,
                 DeltaTime deltaTime) override;
 };
 

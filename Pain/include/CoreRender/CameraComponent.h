@@ -84,6 +84,7 @@ namespace cmp
 struct CameraResolution {
   glm::ivec2 m_resolution;
   float m_aspectRatio;
+  reg::Entity m_entity;
 
   /** Returns the current resolution. */
   const glm::ivec2 &getResolution() const;
@@ -100,7 +101,6 @@ struct CameraResolution {
  */
 struct OrthoCamera : CameraResolution {
   using tag = pain::tag::OrthoCamera;
-
   float m_zoomLevel = 1.0f;
   pain::OrthographicMatrices m_matrices;
 
@@ -108,7 +108,8 @@ struct OrthoCamera : CameraResolution {
   const glm::mat4 &getViewProjectionMatrix() const;
 
   /** Creates a new orthographic camera component. */
-  static OrthoCamera create(int resWidth, int resHeight, float zoomLevel);
+  static OrthoCamera create(int resWidth, int resHeight, float zoomLevel,
+                            reg::Entity entity);
 
   /** Recomputes the view matrix from position and rotation. */
   void recalculateViewMatrix(const glm::vec2 &m_position,
@@ -127,7 +128,7 @@ struct OrthoCamera : CameraResolution {
 
 private:
   OrthoCamera(float zoomLevel, pain::OrthographicMatrices oc, float aspectRatio,
-              int resWidth, int resHeight);
+              int resWidth, int resHeight, reg::Entity entity);
 };
 
 /**
@@ -146,7 +147,7 @@ struct PerspCamera : CameraResolution {
 
   /** Creates a new perspective camera component. */
   static PerspCamera create(int resWidth, int resHeight,
-                            float fieldOfViewDegrees);
+                            float fieldOfViewDegrees, reg::Entity entity);
 
   /** Recomputes the view matrix from camera transform. */
   void recalculateViewMatrix(glm::vec3 m_position, glm::vec3 m_rotation);
@@ -159,7 +160,7 @@ struct PerspCamera : CameraResolution {
 
 private:
   PerspCamera(pain::PerspectiveMatrices pe, float aspectRatio, int resWidth,
-              int resHeight);
+              int resHeight, reg::Entity entity);
 };
 
 } // namespace cmp

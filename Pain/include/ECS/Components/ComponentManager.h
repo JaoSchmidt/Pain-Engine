@@ -71,19 +71,20 @@ struct SAPCollider;
  */
 using WorldComponents = reg::CompileTimeBitMask< //
     tag::OrthoCamera,                            // 1
-    tag::Transform2d,                            // 2
-    tag::Movement2d,                             // 4
-    tag::Transform3d,                            // 8
-    tag::Movement3d,                             // 16
-    tag::NativeScript,                           // 32
-    tag::ParticleSpray,                          // 64
-    tag::Rotation,                               // 128
-    tag::Sprite,                                 // 256
-    tag::Spriteless,                             // 512
-    tag::Triangule,                              // 1024
-    tag::LuaScript,                              // 2048
-    tag::SAPCollider,                            // 4096
-    tag::LuaScheduleTask                         // 8192
+    tag::PerspCamera,                            // 2
+    tag::Transform2d,                            // 4
+    tag::Movement2d,                             // 8
+    tag::Transform3d,                            // 16
+    tag::Movement3d,                             // 32
+    tag::NativeScript,                           // 64
+    tag::ParticleSpray,                          // 128
+    tag::Rotation,                               // 256
+    tag::Sprite,                                 // 512
+    tag::Spriteless,                             // 1024
+    tag::Triangule,                              // 2048
+    tag::LuaScript,                              // 4096
+    tag::SAPCollider,                            // 8192
+    tag::LuaScheduleTask                         // 16384
     >;
 
 /**

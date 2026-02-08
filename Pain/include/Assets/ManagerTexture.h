@@ -13,8 +13,7 @@
 
 namespace pain
 {
-struct Renderer2d;
-class Renderer3d;
+struct Renderers;
 
 /**
  * @namespace TextureManager
@@ -46,24 +45,14 @@ enum DefaultTexture {
 };
 
 /**
- * @brief Registers a 2D renderer for texture deletion callbacks.
+ * @brief Registers the 2D and 3D renderers for texture deletion callbacks.
  *
  * When a texture is deleted from the manager, the renderer will be notified
  * so that GPU-side references can be released.
  *
  * @param renderer Pointer to the Renderer2d instance.
  */
-void addRendererForDeletingTextures(Renderer2d *renderer);
-
-/**
- * @brief Registers a 3D renderer for texture deletion callbacks.
- *
- * When a texture is deleted from the manager, the renderer will be notified
- * so that GPU-side references can be released.
- *
- * @param renderer Pointer to the Renderer3d instance.
- */
-void addRendererForDeletingTextures(Renderer3d *renderer);
+void addRendererForDeletingTextures(Renderers &renderers);
 
 // ---------------------------------------------------------- //
 // TextureSheet

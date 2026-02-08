@@ -20,7 +20,7 @@ void ScriptAssetManager::DefaultNativeScript::onEvent(const SDL_Event &e)
   UNUSED(e)
   PLOG_W("You are updating a script that hasn't been initialized!");
 }
-void ScriptAssetManager::DefaultNativeScript::onRender(Renderer2d &renderer,
+void ScriptAssetManager::DefaultNativeScript::onRender(Renderers &renderer,
                                                        bool isMinimized,
                                                        DeltaTime currentTime)
 {

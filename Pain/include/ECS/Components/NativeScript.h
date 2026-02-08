@@ -16,7 +16,7 @@
  * Script types may optionally implement the following callbacks:
  *  - onCreate()
  *  - onDestroy()
- *  - onRender(Renderer2d&, bool, DeltaTime)
+ *  - onRender(Renderers&, bool, DeltaTime)
  *  - onUpdate(DeltaTime)
  *  - onEvent(const SDL_Event&)
  *
@@ -35,7 +35,7 @@
 namespace pain
 {
 // forward declare
-struct Renderer2d;
+struct Renderers;
 template <typename SceneT> class GameObject;
 class Scene;
 
@@ -84,7 +84,7 @@ public:
   void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
-  void (*onRenderFunction)(Scriptable *, Renderer2d &, bool,
+  void (*onRenderFunction)(Scriptable *, Renderers &, bool,
                            DeltaTime) = nullptr;
   void (*onUpdateFunction)(Scriptable *, DeltaTime) = nullptr;
   void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
@@ -131,7 +131,7 @@ public:
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](Scriptable *instance, Renderer2d &renderer,
+      onRenderFunction = [](Scriptable *instance, Renderers &renderer,
                             bool isMinimized, DeltaTime realTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
       };
@@ -200,7 +200,7 @@ public:
     }
 
     if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](Scriptable *instance, Renderer2d &renderer,
+      onRenderFunction = [](Scriptable *instance, Renderers &renderer,
                             bool isMinimized, DeltaTime realTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
       };

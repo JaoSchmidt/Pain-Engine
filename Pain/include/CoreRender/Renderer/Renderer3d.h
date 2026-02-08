@@ -6,17 +6,19 @@
 
 #pragma once
 #include "CoreRender/Renderer/BatchCube.h"
-#include "ECS/WorldScene.h"
 #include "Physics/Particles/SprayCmp.h"
 #include "pch.h"
 
 #include "Core.h"
 
 #include "CoreRender/VertexArray.h"
-#include "Misc/PerspCameraController.h"
+#include "Misc/BasicPerspCamera.h"
 
 namespace pain
 {
+
+class Scene;
+class UIScene;
 
 class Renderer3d
 {
@@ -38,7 +40,7 @@ public:
   };
 
   /// @brief Factory function to create a renderer instance.
-  static Renderer3d createRenderer2d();
+  static Renderer3d createRenderer3d();
   Renderer3d &operator=(Renderer3d &&o) noexcept;
   /// @brief Change the active camera entity used for rendering.
   void changeCamera(reg::Entity camera);
@@ -48,9 +50,6 @@ public:
   // ================================================================= //
   // Renderer basic wrapper around OpenGL
   // ================================================================= //
-
-  /// @brief Immediately draw and end the current scene using a vertex array.
-  void drawAndEndScene(const std::shared_ptr<VertexArray> &vertexArray);
 
   /**
    * @brief Begin a new rendering scene.
@@ -68,9 +67,6 @@ public:
   void setViewport(int x, int y, int width, int height);
   void setClearColor(const glm::vec4 &color);
   void clear();
-
-  /// @brief Clears all renderer state and internal caches.
-  void clearEntireRenderer();
 
   // ================================================================= //
   // Draw Triangles
@@ -112,16 +108,12 @@ public:
   // ================================================================= //
   // Resources / Debug
   // ================================================================= //
+  // TODO: Check if 2d and 3d texture interfere with each other when using
+  // different TextureSlots members. Might need to use renderer context class
+  // for handling textures
 
   /// @brief Remove a texture from the internal texture slot cache.
   void removeTexture(const Texture &texture);
-
-  /**
-   * @brief Enable or disable the debug grid.
-   *
-   * @param size Cell size. Pass 0 to disable the grid.
-   */
-  void setCellGridSize(float size);
 
   /**
    * @brief Retrieve rendering statistics for a specific batch type.

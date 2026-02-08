@@ -21,6 +21,7 @@
 
 namespace pain
 {
+struct Renderers;
 
 namespace Systems
 {
@@ -247,7 +248,7 @@ public:
   void updateSystems(const SDL_Event &event);
 
   /** @brief Executes render callbacks on systems implementing IOnRender. */
-  void renderSystems(Renderer2d &renderer, bool isMinimized,
+  void renderSystems(Renderers &renderers, bool isMinimized,
                      DeltaTime currentTime);
 
   /**

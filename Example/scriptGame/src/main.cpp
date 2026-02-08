@@ -32,7 +32,6 @@ public:
     reg::Entity playerCam =
         Player::create(scene, shipTex, playerPos, {0.25f, 0.25f}, cameraWidth,
                        cameraHeight, zoom);
-    app->setRendererCamera(playerCam, cameraWidth, cameraHeight);
     scene.getComponent<Component::OrthoCamera>(playerCam).setProjection(
         cameraWidth, cameraHeight);
 
@@ -68,7 +67,7 @@ public:
   //   m_mainMap.updateSurroundingChunks(
   //       getComponent<pain::Transform2dComponent>(m_player), getScene());
   // }
-  void onRender(pain::Renderer2d &renderer, bool isMinimazed,
+  void onRender(pain::Renderers &renderer, bool isMinimazed,
                 pain::DeltaTime currentTime)
   {
     // renderer.drawQuad({-0.2f, -0.2f}, {0.25f, 0.25f}, {204, 51, 25, 255},

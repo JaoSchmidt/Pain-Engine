@@ -25,7 +25,7 @@
 namespace pain
 {
 class DeltaTime;
-struct Renderer2d;
+struct Renderers;
 
 /**
  * @brief Compile-time typelist used for tagging systems.
@@ -77,7 +77,7 @@ struct IOnRender {
    * @param debug Whether debug rendering is enabled.
    * @param dt Frame delta time.
    */
-  virtual void onRender(Renderer2d &renderer, bool debug, DeltaTime dt) = 0;
+  virtual void onRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
 };
 
 /**

@@ -49,7 +49,7 @@ void NativeScript::onEvent(const SDL_Event &e)
   }
 }
 
-void NativeScript::onRender(Renderer2d &renderer, bool isMinimized,
+void NativeScript::onRender(Renderers &renderer, bool isMinimized,
                             DeltaTime currentTime)
 {
   PROFILE_SCOPE("Scene::renderSystems - NativeScripts");

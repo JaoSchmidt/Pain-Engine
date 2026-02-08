@@ -5,7 +5,7 @@
  */
 
 #include "Physics/Particles/ParticleSys.h"
-#include "CoreRender/Renderer/Renderer2d.h"
+#include "CoreRender/Renderer/RenderContext.h"
 #include "Debugging/Profiling.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
@@ -29,8 +29,7 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
   }
 }
 
-void Systems::ParticleSys::onRender(pain::Renderer2d &renderer,
-                                    bool isMinimized,
+void Systems::ParticleSys::onRender(pain::Renderers &renderer, bool isMinimized,
                                     pain::DeltaTime currentTime)
 {
   UNUSED(isMinimized)
@@ -75,11 +74,11 @@ void Systems::ParticleSys::onRender(pain::Renderer2d &renderer,
           psc[i].elapsed = 0;
         }
 
-        renderer.beginSprayParticle(psc[i]);
+        renderer.renderer2d.beginSprayParticle(psc[i]);
         for (size_t j = 0; j < psc[i].particles.size(); j++) {
           SprayParticle &pa = psc[i].particles[j];
           if (pa.alive)
-            renderer.drawSprayParticle(pa);
+            renderer.renderer2d.drawSprayParticle(pa);
           // Remove dead particles
           if (currentTime - pa.startTime >= psc[i].lifeTime) {
             pa.alive = false;

@@ -107,7 +107,7 @@ struct Render : public System<WorldComponents>, IOnRender {
    * @note This method is invoked only because the system inherits from
    * IOnRender.
    */
-  void onRender(Renderer2d &renderer, bool isMinimized,
+  void onRender(Renderers &renderer, bool isMinimized,
                 DeltaTime currentTime) override;
 };
 

@@ -5,6 +5,7 @@
  */
 
 #include "CoreRender/Renderer/Renderer3d.h"
+#include "Assets/ManagerTexture.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Texture.h"
 #include <glm/ext/matrix_clip_space.hpp>
@@ -13,6 +14,7 @@
 #include <memory>
 
 #include "Debugging/Profiling.h"
+#include "ECS/WorldScene.h"
 #include "Physics/Movement3dComponent.h"
 #include "platform/ContextBackend.h"
 
@@ -123,6 +125,81 @@ glm::mat4 Renderer3d::getTransform(const glm::vec3 &position,
   transform = glm::rotate(transform, rotation.z, {0.0f, 0.0f, 1.0f});
 
   return glm::scale(transform, size);
+}
+
+void Renderer3d::removeTexture(const Texture &texture)
+{
+  PROFILE_FUNCTION();
+  if (texture.m_slot == 0) // m_textureSlots doesn't have the texture
+    return;
+  P_ASSERT_W(*m.textureSlots[texture.m_slot] == texture,
+             "Attempted to remove a texture that wasn't allocated.");
+  for (uint32_t i = texture.m_slot; i < m.textureSlotIndex - 1; i++) {
+    m.textureSlots[i] = m.textureSlots[i + 1];
+    m.textureSlots[i]->m_slot = i; // Update the slot value in the Texture
+  }
+
+  m.textureSlots[m.textureSlotIndex] = nullptr; // Clear last slot
+  m.textureSlotIndex--;
+  return;
+}
+
+void Renderer3d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
+                                     DeltaTime globalTime,
+                                     const glm::mat4 &transform,
+                                     const glm::ivec2 &resolution,
+                                     const glm::vec2 &cameraPos)
+{
+  UNUSED(globalTime)
+  UNUSED(resolution)
+  UNUSED(cameraPos)
+  PROFILE_FUNCTION();
+  m.cubeBatch.shader.uploadUniformMat4("u_ViewProjection",
+                                       viewProjectionMatrix);
+  m.cubeBatch.shader.uploadUniformMat4("u_Transform", transform);
+}
+void Renderer3d::bindTextures()
+{
+  PROFILE_FUNCTION();
+  for (uint32_t i = 0; i < m.textureSlotIndex; i++)
+    m.textureSlots[i]->bindToSlot(i);
+}
+void Renderer3d::goBackToFirstVertex()
+{
+  PROFILE_FUNCTION();
+  m.cubeBatch.resetAll();
+}
+float Renderer3d::allocateTextures(Texture &texture)
+{
+  PROFILE_FUNCTION();
+  float textureIndex = 0.0f;
+  // use it to allocate new texture
+  if (texture.m_slot == 0) {
+    textureIndex = (float)m.textureSlotIndex;
+    m.textureSlots[m.textureSlotIndex] = &texture;
+    texture.m_slot = m.textureSlotIndex;
+    m.textureSlotIndex++;
+  } else {
+    textureIndex = (float)texture.m_slot;
+  }
+  // TODO: check if m_textureSlotIndex is bigger than 32, then flush
+
+  P_ASSERT_W(textureIndex != 0.0f,
+             "Missing texture inside a drawQuad that requires textures");
+  return textureIndex;
+}
+Renderer3d Renderer3d::createRenderer3d()
+{
+  PROFILE_FUNCTION();
+
+  backend::InitRenderer();
+  // First texture is a  1x1 white texture
+  Texture **textureSlots = new Texture *[backend::getTMU()];
+  textureSlots[0] =
+      &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
+  return Renderer3d([textureSlots] {
+    return M{.cubeBatch = CubeBatch::create(), .textureSlots = textureSlots};
+  }); //
 }
 
 } // namespace pain

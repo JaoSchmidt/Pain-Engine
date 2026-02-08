@@ -141,8 +141,10 @@ const glm::mat4 &Component::OrthoCamera::getViewProjectionMatrix() const
 
 // ----- Orthographic ------
 
-Component::OrthoCamera
-Component::OrthoCamera::create(int resWidth, int resHeight, float zoomLevel)
+Component::OrthoCamera Component::OrthoCamera::create(int resWidth,
+                                                      int resHeight,
+                                                      float zoomLevel,
+                                                      reg::Entity entity)
 {
   const float aspectRatio =
       static_cast<float>(resWidth) / static_cast<float>(resHeight);
@@ -153,20 +155,24 @@ Component::OrthoCamera::create(int resWidth, int resHeight, float zoomLevel)
           glm::ortho(-aspectRatio * zoomLevel, aspectRatio * zoomLevel,
                      -zoomLevel, zoomLevel, -1.0f, 1.0f),
           glm::mat4(1.f)),
-      aspectRatio, resWidth, resHeight};
+      aspectRatio,
+      resWidth,
+      resHeight,
+      entity};
 }
 Component::OrthoCamera::OrthoCamera(float zoomLevel,
                                     pain::OrthographicMatrices oc,
                                     float aspectRatio, int resWidth,
-                                    int resHeight)
-    : CameraResolution{glm::vec2(resWidth, resHeight), aspectRatio},
+                                    int resHeight, reg::Entity entity)
+    : CameraResolution{glm::vec2(resWidth, resHeight), aspectRatio, entity},
       m_zoomLevel(zoomLevel), m_matrices(oc) {};
 
 // ----- Perspective ------
 
 Component::PerspCamera Component::PerspCamera::create(int resWidth,
                                                       int resHeight,
-                                                      float fieldOfViewDegrees)
+                                                      float fieldOfViewDegrees,
+                                                      reg::Entity entity)
 {
   const float aspectRatio =
       static_cast<float>(resWidth) / static_cast<float>(resHeight);
@@ -175,11 +181,11 @@ Component::PerspCamera Component::PerspCamera::create(int resWidth,
   glm::mat4 viewMatrix = glm::mat4(1.f);
   return Component::PerspCamera{
       pain::PerspectiveMatrices(perspectiveMatrix, viewMatrix), aspectRatio,
-      resWidth, resHeight};
+      resWidth, resHeight, entity};
 }
 
 Component::PerspCamera::PerspCamera(pain::PerspectiveMatrices pe,
                                     float aspectRatio, int resWidth,
-                                    int resHeight)
-    : CameraResolution{glm::vec2(resWidth, resHeight), aspectRatio},
+                                    int resHeight, reg::Entity entity)
+    : CameraResolution{glm::vec2(resWidth, resHeight), aspectRatio, entity},
       m_matrices(pe) {};

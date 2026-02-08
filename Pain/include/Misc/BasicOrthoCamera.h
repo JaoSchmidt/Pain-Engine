@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // BasicOrthoCamera.h
 #pragma once
 
@@ -19,10 +18,10 @@ namespace pain
 namespace Dummy2dCamera
 {
 reg::Entity create(pain::Scene &scene, int resolutionHeight,
-                   int resolutionWeigh, float zoomLevel);
+                   int resolutionWidth, float zoomLevel);
 
 reg::Entity createBasicCamera(pain::Scene &scene, int resolutionHeight,
-                              int resolutionWeigh, float zoomLevel);
+                              int resolutionWidth, float zoomLevel);
 } // namespace Dummy2dCamera
 
 class OrthoCameraScript : public WorldObject

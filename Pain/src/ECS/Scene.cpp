@@ -317,12 +317,13 @@ void AbstractScene<Manager>::updateSystems(const SDL_Event &event)
 }
 
 template <reg::CompileTimeBitMaskType Manager>
-void AbstractScene<Manager>::renderSystems(Renderer2d &renderer,
+void AbstractScene<Manager>::renderSystems(Renderers &renderers,
                                            bool isMinimized,
                                            DeltaTime currentTime)
 {
   for (auto *sys : m_renderSystems)
-    static_cast<IOnRender *>(sys)->onRender(renderer, isMinimized, currentTime);
+    static_cast<IOnRender *>(sys)->onRender(renderers, isMinimized,
+                                            currentTime);
 }
 
 template class AbstractScene<WorldComponents>;

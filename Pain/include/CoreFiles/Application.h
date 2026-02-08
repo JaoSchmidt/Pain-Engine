@@ -7,6 +7,7 @@
 // Application.h
 #pragma once
 #include "CoreFiles/RenderPipeline.h"
+#include "CoreRender/Renderer/RenderContext.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "pch.h"
@@ -142,7 +143,7 @@ public:
   sol::state &getLuaState() { return m_luaState; };
 
   /** Returns the 2D renderer instance. */
-  Renderer2d &getRenderer() { return m_renderer; }
+  Renderers &getRenderers() { return m_renderers; }
 
   /** Returns the framebuffer specification used by the render pipeline. */
   const FrameBufferCreationInfo &getFrameInfo() const
@@ -161,17 +162,21 @@ public:
    */
   void stopLoop(bool restartFlag = false);
 
-  /**
-   * @brief Assigns the renderer camera and viewport dimensions.
-   *
-   * @param camera Camera entity to use.
-   * @param width Viewport width in pixels.
-   * @param height Viewport height in pixels.
-   */
-  void setRendererCamera(const reg::Entity camera, int width, int height)
+  /// @brief Assigns the renderer camera and viewport dimensions.
+  void set2dRendererCamera(const reg::Entity cameraEntity, int width = 0,
+                           int height = 0)
   {
-    m_renderer.changeCamera(camera);
-    m_renderer.setViewport(0, 0, width, height);
+    m_renderers.renderer2d.changeCamera(cameraEntity);
+    if (!(width == 0 && height == 0))
+      m_renderers.renderer2d.setViewport(0, 0, width, height);
+  }
+  /// @brief Assigns the renderer camera and viewport dimensions.
+  void set3dRendererCamera(const reg::Entity cameraEntity, int width = 0,
+                           int height = 0)
+  {
+    m_renderers.renderer3d.changeCamera(cameraEntity);
+    if (!(width == 0 && height == 0))
+      m_renderers.renderer3d.setViewport(0, 0, width, height);
   }
 
   /**
@@ -189,7 +194,7 @@ public:
   {
     m_worldScene.createComponents(m_worldScene.getEntity(),
                                   std::forward<Components>(args)...);
-    m_renderer.setCellGridSize(collisionGridSize);
+    m_renderers.renderer2d.setCellGridSize(collisionGridSize);
     return m_worldScene;
   }
 
@@ -215,6 +220,8 @@ public:
 private:
   Application(sol::state &&luaState, SDL_Window *window, void *sdlContext,
               FrameBufferCreationInfo &&fbci, AppContext &&context);
+
+  void ensureCamera();
 
   // =============================================================== //
   // VARIABLES / CONSTANTS
@@ -242,7 +249,7 @@ private:
   // OWNED OBJECTS
   // =============================================================== //
   std::unique_ptr<UIScene> m_uiScene = nullptr;
-  Renderer2d m_renderer;
+  Renderers m_renderers;
   ThreadPool m_threadPool;
   sol::state m_luaState;
   reg::EventDispatcher m_eventDispatcher;
