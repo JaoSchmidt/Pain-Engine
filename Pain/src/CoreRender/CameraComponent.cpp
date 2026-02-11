@@ -91,7 +91,6 @@ void Component::PerspCamera::recalculateViewMatrix(glm::vec3 position,
 {
   glm::vec3 frontUnit = glm::normalize(frontCamera);
   glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-  // m_viewMatrix = glm::inverse(transform);
   m_matrices.m_view = glm::lookAt(position, position + frontUnit, up);
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
@@ -177,15 +176,20 @@ Component::PerspCamera Component::PerspCamera::create(int resWidth,
   const float aspectRatio =
       static_cast<float>(resWidth) / static_cast<float>(resHeight);
   glm::mat4 perspectiveMatrix = glm::perspective(
-      glm::radians(fieldOfViewDegrees), aspectRatio, 0.1f, 10.0f);
+      glm::radians(fieldOfViewDegrees), aspectRatio, 0.1f, 100.0f);
   glm::mat4 viewMatrix = glm::mat4(1.f);
   return Component::PerspCamera{
-      pain::PerspectiveMatrices(perspectiveMatrix, viewMatrix), aspectRatio,
-      resWidth, resHeight, entity};
+      pain::PerspectiveMatrices(perspectiveMatrix, viewMatrix),
+      aspectRatio,
+      resWidth,
+      resHeight,
+      fieldOfViewDegrees,
+      entity};
 }
 
 Component::PerspCamera::PerspCamera(pain::PerspectiveMatrices pe,
                                     float aspectRatio, int resWidth,
-                                    int resHeight, reg::Entity entity)
+                                    int resHeight, float fieldOfViewDegrees,
+                                    reg::Entity entity)
     : CameraResolution{glm::vec2(resWidth, resHeight), aspectRatio, entity},
-      m_matrices(pe) {};
+      m_fieldOfViewDegrees(fieldOfViewDegrees), m_matrices(pe) {};

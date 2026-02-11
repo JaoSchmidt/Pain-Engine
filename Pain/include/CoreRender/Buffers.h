@@ -116,6 +116,13 @@ public:
    */
   static std::optional<IndexBuffer> createIndexBuffer(uint32_t *indexes,
                                                       uint32_t count);
+  /**
+   * @brief Creates a dynamic index buffer
+   *
+   * @param maxIndexCount Max number of indices
+   * @return Optional index buffer on success.
+   */
+  static std::optional<IndexBuffer> createIndexBuffer(uint32_t maxIndexCount);
 
   IndexBuffer(IndexBuffer &&o);
   IndexBuffer &operator=(IndexBuffer &&o);
@@ -130,6 +137,8 @@ public:
 
   /** Returns the number of indices stored in the buffer. */
   uint32_t getCount() const { return m_count; };
+
+  void updateIndexBuffer(const uint32_t *indices, uint64_t count);
 
 private:
   IndexBuffer(uint32_t bufferId, uint32_t count);

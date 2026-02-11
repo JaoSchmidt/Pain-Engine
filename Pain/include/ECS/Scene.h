@@ -203,7 +203,7 @@ public:
 
   /** @brief Checks if an entity contains all specified components. */
   template <reg::ECSComponent... TargetComponents>
-  constexpr bool containsAllComponents(reg::Entity entity) const
+  constexpr bool hasAllComponents(reg::Entity entity) const
   {
     return m_registry.template containsAll<TargetComponents...>(entity);
   }

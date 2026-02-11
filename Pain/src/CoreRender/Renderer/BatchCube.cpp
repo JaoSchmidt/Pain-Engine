@@ -37,6 +37,8 @@ CubeBatch CubeBatch::create()
   shader.bind();
   shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
   delete[] samplers;
+
+  // PLOG_T("Being created");
   return CubeBatch{
       std::move(*VertexBuffer::createVertexBuffer(
           MaxVertices * sizeof(Vertex),
@@ -68,6 +70,7 @@ void CubeBatch::resetPtr()
 void CubeBatch::resetAll()
 {
   resetPtr();
+  // PLOG_T("Being reset");
 #ifndef NDEBUG
   statsCount = 0;
   drawCount = 0;
@@ -78,7 +81,6 @@ void CubeBatch::flush(Texture **textures, uint32_t textureCount)
 {
   if (!indexCount)
     return;
-  // sortByDrawOrder();
   vao.bind();
   vbo.bind();
 
@@ -91,11 +93,11 @@ void CubeBatch::flush(Texture **textures, uint32_t textureCount)
   shader.bind();
   ib.bind();
   backend::drawIndexed(vao, indexCount * IndicesPerCube);
+  // PLOG_T("Being flushed");
 #ifndef NDEBUG
   drawCount++;
 #endif
 }
-
 void CubeBatch::allocateCube(const glm::mat4 &transform, const Color &tintColor,
                              const float tilingFactor, const float textureIndex,
                              const std::array<glm::vec2, 4> &textureCoordinate)
@@ -108,12 +110,6 @@ void CubeBatch::allocateCube(const glm::mat4 &transform, const Color &tintColor,
       {1, 5, 6, 2}, // right
       {3, 2, 6, 7}, // top
       {0, 1, 5, 4}, // bottom
-  };
-  constexpr glm::vec2 QuadUVs[4] = {
-      {0.0f, 0.0f},
-      {1.0f, 0.0f},
-      {1.0f, 1.0f},
-      {0.0f, 1.0f},
   };
   constexpr glm::vec4 CubeVertexPositions[8] = {
       {-0.5f, -0.5f, -0.5f, 1.0f}, // 0
@@ -133,9 +129,9 @@ void CubeBatch::allocateCube(const glm::mat4 &transform, const Color &tintColor,
 
     for (uint32_t i = 0; i < 4; i++) {
       uint8_t vertexIndex = CubeFaces[face][i];
-      ptr->position = glm::vec3(transform * CubeVertexPositions[vertexIndex]);
+      ptr->position = transform * CubeVertexPositions[vertexIndex];
       ptr->color = color;
-      ptr->texCoord = QuadUVs[i];
+      ptr->texCoord = textureCoordinate[i];
       ptr->texIndex = textureIndex;
       ptr->tilingFactor = tilingFactor;
       ptr++;

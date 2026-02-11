@@ -29,7 +29,6 @@ class OrthoCameraScript : public WorldObject
 public:
   using WorldObject::WorldObject;
   void onUpdate(DeltaTime deltaTimeSec);
-  void onCreate();
   void onEvent(const SDL_Event &e);
 
 protected:

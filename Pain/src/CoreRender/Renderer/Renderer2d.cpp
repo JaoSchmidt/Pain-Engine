@@ -73,7 +73,15 @@ void Renderer2d::beginScene(DeltaTime globalTime, const Scene &scene,
           m.orthoCameraEntity);
   uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime, transform,
                       cc.getResolution(), tc.m_position, cc.m_zoomLevel);
-  goBackToFirstVertex();
+
+  // Going back to frist vertex
+  for (uint8_t i = 0; i < NumLayers; i++) {
+    m.quadBatches[i].resetAll();
+  }
+  m.textBatch.resetAll();
+  m.sprayBatch.resetAll();
+  m.circleBatch.resetAll();
+  m.triBatch.resetAll();
 }
 
 void Renderer2d::flush()
@@ -296,7 +304,6 @@ Renderer2d Renderer2d::createRenderer2d()
 {
   PROFILE_FUNCTION();
 
-  backend::InitRenderer();
   // First texture is a  1x1 white texture
   Texture **textureSlots = new Texture *[backend::getTMU()];
   textureSlots[0] =
@@ -326,18 +333,6 @@ void Renderer2d::bindTextures()
   PROFILE_FUNCTION();
   for (uint32_t i = 0; i < m.textureSlotIndex; i++)
     m.textureSlots[i]->bindToSlot(i);
-}
-
-void Renderer2d::goBackToFirstVertex()
-{
-  PROFILE_FUNCTION();
-  for (uint8_t i = 0; i < NumLayers; i++) {
-    m.quadBatches[i].resetAll();
-  }
-  m.textBatch.resetAll();
-  m.sprayBatch.resetAll();
-  m.circleBatch.resetAll();
-  m.triBatch.resetAll();
 }
 
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,

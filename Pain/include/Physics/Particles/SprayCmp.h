@@ -55,7 +55,7 @@ struct ParticleSprayInitArgs {
   float randSizeFactor = 1.f;   ///< Random size variance factor.
   float randAngleFactor = 30.f; ///< Angle of emittion variance factor
   bool autoEmit = true; ///< Whether particles automatically spwan or not
-  Color color = StrongPinkColor; ///< Particle base color.
+  Color color = Colors::Orange; ///< Particle base color.
   unsigned capacity;
 };
 
@@ -81,9 +81,9 @@ struct ParticleSprayComponent {
   float randSizeFactor = 1.f;  ///< Random size variance factor.
   float randAngleFactor =
       30.f; ///< Random initial angle variance factor, from 0 to 360 degrees
-  float rotationSpeed = 1.f;     ///< Random rotation speed factor.
-  Color color = StrongPinkColor; ///< Particle base color.
-  bool autoEmit = false; /// Whether particles automatically spwan or not
+  float rotationSpeed = 1.f;    ///< Random rotation speed factor.
+  Color color = Colors::Orange; ///< Particle base color.
+  bool autoEmit = false;        /// Whether particles automatically spwan or not
 
   std::vector<SprayParticle> particles =
       {}; /**< Circular buffer of particles. */

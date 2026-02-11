@@ -57,13 +57,15 @@ void InitRenderer()
 
   // NOTE: This enable 3d and can be changed later in case we need some camera
   // mechanic
-  // Also, must be enable iff you clear
+  // Also, to enable GL_DEPTH, you must also enable those:
   // GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
-  // glEnable(GL_DEPTH_TEST);
+  glEnable(GL_DEPTH_TEST);
+  // glDepthFunc(GL_LEQUAL);
+  // glDepthMask(GL_TRUE);
 
   // allow transparency
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  // glEnable(GL_BLEND);
+  // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   // HACK: allow textures with 3 channels to align properly, e.g. font textures.
   // No idea why it works tho, perhaps I will find a proper doc later
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -78,10 +80,10 @@ void setClearColor(const glm::vec4 &color)
 }
 void clear()
 {
-  // Enable iff DEPTH_TEST is enabled
-  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  // Otherwise
-  glClear(GL_COLOR_BUFFER_BIT);
+  if (glIsEnabled(GL_DEPTH_TEST))
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  else
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 void drawInstanced(uint32_t indiceCount, uint32_t instanceCount)
 {

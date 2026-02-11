@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #include "OpenGLDebugger.h"
 #include "CoreFiles/LogWrapper.h"
 
@@ -68,10 +67,12 @@ void glErrorHandler(unsigned int source, unsigned int type, unsigned int id,
 }
 
 // This is usefull to be put after every openGL operation to detect errors
-GLenum glCheckError_(const char *file, int line, const char *func)
+bool glCheckError_(const char *file, int line, const char *func)
 {
   GLenum errorCode;
+  bool hadError = false;
   while ((errorCode = glGetError()) != GL_NO_ERROR) {
+    hadError = true;
     std::string error;
     switch (errorCode) {
     case GL_INVALID_ENUM:
@@ -99,7 +100,7 @@ GLenum glCheckError_(const char *file, int line, const char *func)
     PLOG_E("OpenGL error code {}: {}", errorCode, error);
     PLOG_E("{} | {} ({})", func, file, line);
   }
-  return errorCode;
+  return hadError;
 }
 } // namespace Debug
 } // namespace pain

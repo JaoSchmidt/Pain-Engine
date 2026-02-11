@@ -53,7 +53,7 @@ protected:
   // derivates
   float m_sensitivitySpeed = 0.01f;
   float m_zoomSpeed = 10.0f;
-  float m_moveSpeed = 2.f;
+  float m_moveSpeed = 100.f;
 };
 
 } // namespace pain

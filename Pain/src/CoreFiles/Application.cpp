@@ -118,6 +118,7 @@ void Application::ensureCamera()
   // set some camera
   if (!m_renderers.renderer2d.hasCamera() &&
       !m_renderers.renderer3d.hasCamera()) {
+    PLOG_I("Camera is missing, searching for 2d camera component");
     bool hasCameraComponent = false;
     for (auto &chunk : m_worldScene.query<cmp::OrthoCamera>()) {
       auto *c = std::get<0>(chunk.arrays);
@@ -149,7 +150,7 @@ void Application::ensureCamera()
 
 EndGameFlags Application::run()
 {
-
+  backend::InitRenderer();
   ensureCamera();
   // creates a dummy ui scene
   if (m_uiScene.get() == nullptr)

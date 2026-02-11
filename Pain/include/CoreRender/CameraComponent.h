@@ -160,7 +160,7 @@ struct PerspCamera : CameraResolution {
 
 private:
   PerspCamera(pain::PerspectiveMatrices pe, float aspectRatio, int resWidth,
-              int resHeight, reg::Entity entity);
+              int resHeight, float fieldOfViewDegrees, reg::Entity entity);
 };
 
 } // namespace cmp

@@ -13,6 +13,14 @@
 namespace pain
 {
 
+namespace
+{
+// Shaders classes don't consume that much memory, they are just a name and a
+// number
+std::map<std::string, Shader> s_shaders;
+uint32_t s_binded = 0;
+} // namespace
+
 Shader::~Shader()
 {
   if (m_programId)
@@ -35,9 +43,21 @@ Shader &Shader::operator=(Shader &&o)
   return *this;
 }
 
-void Shader::bind() const { backend::bindShader(m_programId); }
+void Shader::bind() const
+{
+  backend::bindShader(m_programId);
+#ifndef NDEBUG
+  s_binded = m_programId;
+#endif
+}
 
-void Shader::unbind() const { backend::unbindShader(); }
+void Shader::unbind() const
+{
+  backend::unbindShader();
+#ifndef NDEBUG
+  s_binded = 0;
+#endif
+}
 
 // ----------------------------------------------------------
 // Uniform uploads
@@ -45,6 +65,7 @@ void Shader::unbind() const { backend::unbindShader(); }
 
 int Shader::getUniformLocation(const std::string &name) const
 {
+  P_ASSERT(m_programId == s_binded, "Shader isn't properly binded");
   return backend::getUniformLocation(m_programId, name);
 }
 
@@ -152,6 +173,9 @@ std::optional<Shader> Shader::createFromFile(const char *filepath)
     PLOG_W("Shader file {} does not exist.", filepath);
     return std::nullopt;
   }
+  auto it = s_shaders.find(filepath);
+  if (it != s_shaders.end())
+    return Shader{it->second.getName(), it->second.getId()};
 
   auto [vertexShader, fragmentShader] = parseShader(filepath);
   auto shaderOpt =
@@ -159,6 +183,10 @@ std::optional<Shader> Shader::createFromFile(const char *filepath)
                         vertexShader, fragmentShader);
   if (!shaderOpt)
     PLOG_W("Failed to create shader from file {}", filepath);
+  else
+    s_shaders.insert(
+        std::make_pair(std::string(filepath),
+                       Shader{shaderOpt->getName(), shaderOpt->getId()}));
   return shaderOpt;
 }
 
@@ -181,5 +209,8 @@ Shader::createFromFn(const std::string &name,
   auto [vertex, fragment] = fn();
   return createFromStrings(name, vertex, fragment);
 }
+
+Shader::Shader(std::string name, uint32_t programId)
+    : m_name(name), m_programId(programId) {};
 
 } // namespace pain

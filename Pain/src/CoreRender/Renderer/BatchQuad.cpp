@@ -57,8 +57,6 @@ QuadBatch::QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
       shader(std::move(shader_)),                       //
       ptrInit(std::make_unique<Vertex[]>(MaxVertices)), //
       ptr(ptrInit.get())                                //
-// drawOrder(std::vector<int>(MaxPolygons)),           //
-// sortBuffer(std::make_unique<Vertex[]>(MaxVertices)) //
 {};
 
 void QuadBatch::resetPtr()
@@ -109,8 +107,33 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
       glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
   };
   for (unsigned i = 0; i < 4; i++) {
-    ptr->position =
-        glm::vec3(glm::vec2(transform * QuadVertexPositions[i]), 0.f);
+    ptr->position = transform * QuadVertexPositions[i];
+    ptr->color = tintColor.value;
+    ptr->texCoord = textureCoordinate[i];
+    ptr->texIndex = textureIndex;
+    ptr->tilingFactor = tilingFactor;
+    ptr++;
+  }
+  // drawOrder[indexCount] = order;
+  indexCount++;
+#ifndef NDEBUG
+  statsCount++;
+#endif
+}
+void QuadBatch::oldAllocate(const glm::mat4 &transform, const Color &tintColor,
+                            float z, const float tilingFactor,
+                            const float textureIndex,
+                            const std::array<glm::vec2, 4> &textureCoordinate)
+{
+  PROFILE_FUNCTION();
+  constexpr glm::vec4 QuadVertexPositions[4] = {
+      glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
+      glm::vec4(0.5f, -0.5f, 0.f, 1.f),
+      glm::vec4(0.5f, 0.5f, 0.f, 1.f),
+      glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
+  };
+  for (unsigned i = 0; i < 4; i++) {
+    ptr->position = glm::vec3(glm::vec2(transform * QuadVertexPositions[i]), z);
     ptr->color = tintColor.value;
     ptr->texCoord = textureCoordinate[i];
     ptr->texIndex = textureIndex;

@@ -50,7 +50,7 @@ void PerspCameraScript::onCreate()
   m_sensitivitySpeed = 0.5f;
   m_zoomSpeed = 10.0f;
   m_cameraFront = {0.0f, 0.0f, 1.0f};
-  SDL_SetRelativeMouseMode(SDL_TRUE);
+  // SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void PerspCameraScript::onUpdate(DeltaTime deltaTimeSec)
@@ -75,9 +75,9 @@ void PerspCameraScript::onUpdate(DeltaTime deltaTimeSec)
     moveDir += glm::cross(m_cameraFront, m_cameraUp) * moveAmount;
 
   if (state[SDL_SCANCODE_C])
-    moveDir.y += moveAmount;
-  if (state[SDL_SCANCODE_SPACE])
     moveDir.y -= moveAmount;
+  if (state[SDL_SCANCODE_SPACE])
+    moveDir.y += moveAmount;
 
   mc.m_velocity = moveDir * m_moveSpeed;
   pc.recalculateViewMatrix(tc.m_position, m_cameraFront);
@@ -92,9 +92,15 @@ template <bool IsMoving> void PerspCameraScript::setMovementState()
 
 void PerspCameraScript::onMouseButtonUp(const SDL_Event &event)
 {
+  auto [tc, mc, pc] = getComponents<Transform3dComponent, Movement3dComponent,
+                                    cmp::PerspCamera>();
   if (event.button.button == SDL_BUTTON_LEFT) {
-    PLOG_I("rotation = ({},{},{})", m_cameraFront.x, m_cameraFront.y,
-           m_cameraFront.z);
+    PLOG_I("rotation = ({},{},{})", TP_VEC3(m_cameraFront));
+    PLOG_I("position = ({},{},{})", TP_VEC3(tc.m_position));
+    PLOG_I("velocity = ({},{},{})", TP_VEC3(mc.m_velocity));
+    PLOG_I("rotationSpeed = {}", mc.m_rotationSpeed);
+    PLOG_I("cameraEntity = {}", pc.m_entity);
+    PLOG_I("playerEntity = {}", getEntity());
   }
 }
 

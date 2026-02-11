@@ -6,6 +6,7 @@
 
 #pragma once
 #include <cstdint>
+#include <glm/glm.hpp>
 
 namespace pain
 {
@@ -61,11 +62,53 @@ struct Color {
   // clang-format on
 };
 
-static constexpr Color WhiteColor{255, 255, 255, 255};
-static constexpr Color BlackColor{0, 0, 0, 255};
-static constexpr Color DarkGreyColor{51, 51, 51, 255};
-static constexpr Color StrongPinkColor{255, 51, 230, 255};
-static constexpr Color TransparentColor{0, 0, 0, 0};
+namespace Colors
+{
+// Neutrals
+static constexpr Color LightGrey{204, 204, 204, 255};
+static constexpr Color Grey{128, 128, 128, 255};
+static constexpr Color DarkerGrey{32, 32, 32, 255};
+static constexpr Color OffWhite{245, 245, 245, 255};
+
+// Reds / Pinks
+static constexpr Color Red{255, 0, 0, 255};
+static constexpr Color DarkRed{139, 0, 0, 255};
+static constexpr Color SoftPink{255, 182, 193, 255};
+static constexpr Color Magenta{255, 0, 255, 255};
+
+// Oranges / Yellows
+static constexpr Color Orange{255, 165, 0, 255};
+static constexpr Color DarkOrange{255, 140, 0, 255};
+static constexpr Color Gold{255, 215, 0, 255};
+static constexpr Color Yellow{255, 255, 0, 255};
+
+// Greens
+static constexpr Color Green{0, 255, 0, 255};
+static constexpr Color DarkGreen{0, 100, 0, 255};
+static constexpr Color Lime{50, 205, 50, 255};
+static constexpr Color Olive{128, 128, 0, 255};
+
+// Blues
+static constexpr Color Blue{0, 0, 255, 255};
+static constexpr Color SkyBlue{135, 206, 235, 255};
+static constexpr Color DodgerBlue{30, 144, 255, 255};
+static constexpr Color Navy{0, 0, 128, 255};
+
+// Purples
+static constexpr Color Purple{128, 0, 128, 255};
+static constexpr Color Violet{238, 130, 238, 255};
+static constexpr Color Indigo{75, 0, 130, 255};
+
+// Browns
+static constexpr Color Brown{139, 69, 19, 255};
+static constexpr Color SaddleBrown{160, 82, 45, 255};
+
+// Special / Utility
+static constexpr Color Cyan{0, 255, 255, 255};
+static constexpr Color Teal{0, 128, 128, 255};
+static constexpr Color TransparentWhite{255, 255, 255, 128};
+static constexpr Color TransparentBlack{0, 0, 0, 128};
+} // namespace Colors
 
 /**
  * @enum RenderLayer
@@ -88,6 +131,19 @@ enum class RenderLayer : uint8_t {
   MuchCloser = 5,
   TouchingCamera = 6,
 };
+
+/**
+ * @enum SphereDivision
+ * @brief Pre defined divisions on the sphere polygon
+ */
+enum class SphereDivision : uint8_t { D_8x8, D_16x16, D_32x32, Count };
+
+constexpr glm::ivec2 resolutions[] = {{8, 8}, {16, 16}, {32, 32}};
+
+constexpr glm::ivec2 getResolution(SphereDivision r)
+{
+  return resolutions[static_cast<int>(r)];
+}
 
 /** Total number of supported render layers. */
 static constexpr uint8_t NumLayers = 7;

@@ -234,7 +234,6 @@ private:
                            const glm::ivec2 &resolution,
                            const glm::vec2 &cameraPos, const float zoomLevel);
   void bindTextures();
-  void goBackToFirstVertex();
   float allocateTextures(Texture &texture);
 
   struct M {

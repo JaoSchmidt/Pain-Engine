@@ -6,6 +6,8 @@
 
 #pragma once
 #include "CoreRender/Renderer/BatchCube.h"
+#include "CoreRender/Renderer/BatchQuad.h"
+#include "CoreRender/Renderer/BatchSphere.h"
 #include "Physics/Particles/SprayCmp.h"
 #include "pch.h"
 
@@ -69,19 +71,32 @@ public:
   void clear();
 
   // ================================================================= //
-  // Draw Triangles
+  // Draw Polygons
   // ================================================================= //
 
   /// @brief Draw a colored triangle primitive.
   void drawCube(const glm::vec3 &position, const glm::vec3 &size,
-                const Color &tintColor, Texture &texture, float tilingFactor,
-                const std::array<glm::vec2, 4> &textureCoordinate);
+                const Color &tintColor, Texture &texture,
+                float tilingFactor = 1.f,
+                const std::array<glm::vec2, 4> &textureCoordinate = {
+                    glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
+                    glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
 
   /// @brief Draw a rotated triangle primitive.
   void drawCube(const glm::vec3 &position, const glm::vec3 &size,
                 const Color &tintColor, const glm::vec3 rotation,
-                Texture &texture, float tilingFactor,
-                const std::array<glm::vec2, 4> &textureCoordinate);
+                Texture &texture, float tilingFactor = 1.f,
+                const std::array<glm::vec2, 4> &textureCoordinate = {
+                    glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
+                    glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
+
+  void drawUVSphere(const glm::vec3 &position, const glm::vec3 &size,
+                    const Color &tintColor, Texture &texture,
+                    SphereDivision div, float tilingFactor = 1.f);
+  void drawUVSphere(const glm::vec3 &position, const glm::vec3 &size,
+                    const Color &tintColor, Texture &texture,
+                    const glm::vec3 rotation, SphereDivision div,
+                    float tilingFactor = 1.f);
 
   // ================================================================= //
   // Particles
@@ -141,16 +156,17 @@ private:
                            const glm::ivec2 &resolution,
                            const glm::vec2 &cameraPos);
   void bindTextures();
-  void goBackToFirstVertex();
   float allocateTextures(Texture &texture);
 
   struct M {
+    std::array<SphereBatch, static_cast<uint8_t>(SphereDivision::Count)>
+        sphereBatches;
     CubeBatch cubeBatch;
     Texture *whiteTexture = nullptr;
     Texture **textureSlots;
     uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
 
-    reg::Entity orthoCameraEntity = reg::Entity{-1};
+    reg::Entity cameraEntity = reg::Entity{-1};
     // replaced by m_textBatch.fontAtlas
     // const Texture *m_fontAtlasTexture = nullptr;
   };

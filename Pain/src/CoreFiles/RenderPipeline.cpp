@@ -5,6 +5,7 @@
  */
 
 #include "CoreFiles/RenderPipeline.h"
+#include "ContextBackend.h"
 #include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/RenderContext.h"
 #include "ECS/UIScene.h"
@@ -131,12 +132,19 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene &uiScene)
 {
+  backend::clear();
+  backend::setClearColor(s_clearColor);
   m_frameBuffer.bind();
-  renderers.renderer2d.setClearColor(s_clearColor);
-  renderers.renderer2d.clear();
-  renderers.renderer2d.beginScene(currentTime, worldScene);
-  worldScene.renderSystems(renderers, isMinimized, currentTime);
-  renderers.renderer2d.endScene();
+  if (renderers.renderer2d.hasCamera()) {
+    renderers.renderer2d.beginScene(currentTime, worldScene);
+    worldScene.renderSystems(renderers, isMinimized, currentTime);
+    renderers.renderer2d.endScene();
+  }
+  if (renderers.renderer3d.hasCamera()) {
+    renderers.renderer3d.beginScene(currentTime, worldScene);
+    worldScene.renderSystems(renderers, isMinimized, currentTime);
+    renderers.renderer3d.endScene();
+  }
   m_frameBuffer.unbind();
   uiScene.renderSystems(renderers, isMinimized, currentTime);
 }
