@@ -51,6 +51,7 @@
 #include "Physics/Collision/Collider.h"
 #include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/KinematicsSys.h"
+#include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/Particles/ParticleSys.h"
 #include "Physics/RotationComponent.h"

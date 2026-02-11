@@ -42,6 +42,10 @@ void Renderer3d::changeCamera(reg::Entity cameraEntity)
 {
   m.cameraEntity = cameraEntity;
 }
+void Renderer3d::changeLight(reg::Entity lightEntity)
+{
+  m.lightEntity = lightEntity;
+}
 
 void Renderer3d::beginScene(DeltaTime globalTime, const Scene &scene,
                             const glm::mat4 &transform)
@@ -54,14 +58,14 @@ void Renderer3d::beginScene(DeltaTime globalTime, const Scene &scene,
     const cmp::PerspCamera &c =
         std::as_const(scene).getComponent<Component::PerspCamera>(
             m.cameraEntity);
-    uploadBasicUniforms(c.getViewProjectionMatrix(), globalTime, transform,
-                        c.getResolution(), tc.m_position);
+    uploadBasicUniforms(scene, c.getViewProjectionMatrix(), globalTime,
+                        transform, c.getResolution(), tc.m_position);
   } else if (scene.hasAnyComponents<cmp::OrthoCamera>(m.cameraEntity)) {
     const cmp::OrthoCamera &c =
         std::as_const(scene).getComponent<Component::OrthoCamera>(
             m.cameraEntity);
-    uploadBasicUniforms(c.getViewProjectionMatrix(), globalTime, transform,
-                        c.getResolution(), tc.m_position);
+    uploadBasicUniforms(scene, c.getViewProjectionMatrix(), globalTime,
+                        transform, c.getResolution(), tc.m_position);
   } else {
     PLOG_E("The Renderer3d could't decide which camera you are using");
   }
@@ -203,15 +207,15 @@ void Renderer3d::removeTexture(const Texture &texture)
   return;
 }
 
-void Renderer3d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
+void Renderer3d::uploadBasicUniforms(const Scene &scene,
+                                     const glm::mat4 &viewProjectionMatrix,
                                      DeltaTime globalTime,
                                      const glm::mat4 &transform,
                                      const glm::ivec2 &resolution,
-                                     const glm::vec2 &cameraPos)
+                                     const glm::vec3 &cameraPos)
 {
   UNUSED(globalTime)
   UNUSED(resolution)
-  UNUSED(cameraPos)
   PROFILE_FUNCTION();
   m.cubeBatch.shader.bind();
   m.cubeBatch.shader.uploadUniformMat4("u_ViewProjection",
@@ -222,7 +226,12 @@ void Renderer3d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
     m.sphereBatches[i].shader.bind();
     m.sphereBatches[i].shader.uploadUniformMat4("u_ViewProjection",
                                                 viewProjectionMatrix);
-    m.sphereBatches[i].shader.uploadUniformMat4("u_Transform", transform);
+    m.sphereBatches[i].shader.uploadUniformFloat3("u_ViewPos", cameraPos);
+    auto pos = scene.getComponent<Transform3dComponent>(m.lightEntity);
+
+    m.sphereBatches[i].shader.uploadUniformFloat3("u_LightPos", pos);
+    m.sphereBatches[i].shader.uploadUniformFloat3("u_LightColor",
+                                                  glm::vec3(1.f));
   }
 }
 void Renderer3d::bindTextures()

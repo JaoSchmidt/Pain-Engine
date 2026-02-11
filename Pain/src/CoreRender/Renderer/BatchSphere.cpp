@@ -72,10 +72,10 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks)
   }
   // -------- SHADER --------
   Shader shader =
-      *Shader::createFromFile("resources/default/shaders/Texture.glsl");
+      *Shader::createFromFile("resources/default/shaders/TextureLight.glsl");
 
   int *samplers = new int[backend::getTMU()];
-  for (int i = 0; i < backend::getTMU(); ++i)
+  for (int i = 0; i < backend::getTMUi(); ++i)
     samplers[i] = i;
 
   shader.bind();
@@ -91,6 +91,7 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks)
           {ShaderDataType::Float2, "a_TexCoord"},
           {ShaderDataType::Float, "a_TexIndex"},
           {ShaderDataType::Float, "a_TilingFactor"},
+          {ShaderDataType::Float3, "a_Normal"},
       });
 
   auto ibo = IndexBuffer::createIndexBuffer(
@@ -105,15 +106,16 @@ SphereBatch::SphereBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_,
                          Shader &&shader_, uint32_t maxVertices,
                          uint32_t maxIndices, uint32_t slices, uint32_t stack,
                          uint32_t indicesPerSphere, uint32_t verticesPerShpere)
-    : m_indicesPerSphere(indicesPerSphere),                                //
-      m_verticesPerSphere(verticesPerShpere),                              //
-      m_maxIndices(maxIndices),                                            //
-      m_slices(slices), m_stacks(stack),                                   //
-      vbo(std::move(vbo_)),                                                //
-      ib(std::move(ib_)),                                                  //
-      vao(*VertexArray::createVertexArray(vbo, ib)),                       //
-      shader(std::move(shader_)),                                          //
-      ptrInit(std::make_unique<Vertex[]>(maxVertices)), ptr(ptrInit.get()) //
+    : vbo(std::move(vbo_)),                          //
+      ib(std::move(ib_)),                            //
+      vao(*VertexArray::createVertexArray(vbo, ib)), //
+      shader(std::move(shader_)),
+      ptrInit(std::make_unique<Vertex[]>(maxVertices)), //
+      ptr(ptrInit.get()),                               //
+      m_maxIndices(maxIndices),                         //
+      m_indicesPerSphere(indicesPerSphere),             //
+      m_verticesPerSphere(verticesPerShpere),           //
+      m_slices(slices), m_stacks(stack)                 //
 // drawOrder(std::vector<int>(MaxPolygons)),           //
 // sortBuffer(std::make_unique<Vertex[]>(MaxVertices)) //
 {};
@@ -154,65 +156,6 @@ void SphereBatch::flush(Texture **textures, uint32_t textureCount)
   drawCount++;
 #endif
 }
-// void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
-//                                    const Color &tintColor, float
-//                                    tilingFactor, float textureIndex)
-// {
-//   PROFILE_FUNCTION();
-//
-//   const uint32_t color = tintColor.value;
-//   constexpr float radius = 0.5f;
-//
-//   for (uint32_t stack = 0; stack < m_stacks; ++stack) {
-//     float v0 = fdiv(stack, m_stacks);
-//     float v1 = fdiv(stack + 1, m_stacks);
-//
-//     float phi0 = glm::pi<float>() * v0;
-//     float phi1 = glm::pi<float>() * v1;
-//
-//     for (uint32_t slice = 0; slice < m_slices; ++slice) {
-//       float u0 = fdiv(slice, m_slices);
-//       float u1 = fdiv(slice + 1, m_slices);
-//
-//       float theta0 = glm::two_pi<float>() * u0;
-//       float theta1 = glm::two_pi<float>() * u1;
-//
-//       // Quad corners (counter-clockwise)
-//       glm::vec3 p0{radius * sin(phi0) * cos(theta0), radius * cos(phi0),
-//                    radius * sin(phi0) * sin(theta0)};
-//
-//       glm::vec3 p1{radius * sin(phi1) * cos(theta0), radius * cos(phi1),
-//                    radius * sin(phi1) * sin(theta0)};
-//
-//       glm::vec3 p2{radius * sin(phi1) * cos(theta1), radius * cos(phi1),
-//                    radius * sin(phi1) * sin(theta1)};
-//
-//       glm::vec3 p3{radius * sin(phi0) * cos(theta1), radius * cos(phi0),
-//                    radius * sin(phi0) * sin(theta1)};
-//
-//       glm::vec2 uv0{u0, v0};
-//       glm::vec2 uv1{u0, v1};
-//       glm::vec2 uv2{u1, v1};
-//       glm::vec2 uv3{u1, v0};
-//
-//       const glm::vec3 positions[4] = {p0, p1, p2, p3};
-//       const glm::vec2 uvs[4] = {uv0, uv1, uv2, uv3};
-//
-//       for (int i = 0; i < 4; i++) {
-//         ptr->position = glm::vec3(transform * glm::vec4(positions[i], 1.0f));
-//         ptr->color = color;
-//         ptr->texCoord = uvs[i];
-//         ptr->texIndex = textureIndex;
-//         ptr->tilingFactor = tilingFactor;
-//         ptr++;
-//       }
-//     }
-//   }
-//   indexCount++;
-// #ifndef NDEBUG
-//   statsCount++;
-// #endif
-// }
 float inline fdiv(uint32_t divided, uint32_t divisor)
 {
   return static_cast<float>(divided) / static_cast<float>(divisor);
@@ -223,6 +166,7 @@ void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
 {
   PROFILE_FUNCTION();
 
+  glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(transform)));
   const uint32_t color = tintColor.value;
   constexpr float radius = 0.5f;
 
@@ -238,6 +182,7 @@ void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
     ptr->texCoord = uv;
     ptr->texIndex = textureIndex;
     ptr->tilingFactor = tilingFactor;
+    ptr->normal = glm::normalize(normalMatrix * glm::normalize(pos));
     ++ptr;
   }
 
@@ -266,6 +211,7 @@ void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
       ptr->texCoord = uv;
       ptr->texIndex = textureIndex;
       ptr->tilingFactor = tilingFactor;
+      ptr->normal = glm::normalize(normalMatrix * glm::normalize(pos));
       ++ptr;
     }
   }
@@ -281,6 +227,7 @@ void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
     ptr->texCoord = uv;
     ptr->texIndex = textureIndex;
     ptr->tilingFactor = tilingFactor;
+    ptr->normal = glm::normalize(normalMatrix * glm::normalize(pos));
     ++ptr;
   }
 

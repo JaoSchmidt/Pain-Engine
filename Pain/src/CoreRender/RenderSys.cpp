@@ -24,6 +24,7 @@ void Render::onRender(Renderers &renderer, bool isMinimized,
                       DeltaTime currentTime)
 {
   UNUSED(isMinimized)
+  UNUSED(currentTime)
   PROFILE_FUNCTION();
   {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");

@@ -21,17 +21,13 @@ struct SphereVertex {
   glm::vec2 texCoord;
   float texIndex;
   float tilingFactor;
+  glm::vec3 normal;
 };
 
 struct SphereBatch {
   using Vertex = SphereVertex;
   // Sphere
   static constexpr uint32_t MaxPolyhedrons = 200;
-  uint32_t m_indicesPerSphere = 0;
-  uint32_t m_verticesPerSphere = 0;
-  uint32_t m_maxIndices = 0;
-  uint32_t m_slices = 0;
-  uint32_t m_stacks = 0;
 
   uint32_t statsCount = 0;
   uint32_t drawCount = 0;
@@ -55,11 +51,18 @@ struct SphereBatch {
   void resetPtr();
   void flush(Texture **textures, uint32_t textureCount);
 
+  uint32_t m_maxIndices = 0;
+
 private:
   SphereBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_,
               uint32_t maxVertices, uint32_t maxIndices, uint32_t slices,
               uint32_t stack, uint32_t indicesPerSphere,
               uint32_t verticesPerShpere);
+
+  uint32_t m_indicesPerSphere = 0;
+  uint32_t m_verticesPerSphere = 0;
+  uint32_t m_slices = 0;
+  uint32_t m_stacks = 0;
   // void swapQuadVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
   // void sortByDrawOrder();
 };

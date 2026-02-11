@@ -8,6 +8,7 @@
 
 #include "Assets/ManagerTexture.h"
 #include "Asteroid.h"
+#include "Dumb.h"
 #include "Editor.h"
 #include "MapGen/MainGen.h"
 #include "MousePointer.h"
@@ -33,8 +34,10 @@ public:
     reg::Entity playerCam =
         Player3d::create(scene, playerTex, playerPos, playerSize, cameraWidth,
                          cameraHeight, 80.f);
+    reg::Entity lightSource = DumbObject::create(scene);
     // app->set2dRendererCamera(playerCam, cameraWidth, cameraHeight);
     app->set3dRendererCamera(playerCam, cameraWidth, cameraHeight);
+    app->getRenderers().renderer3d.changeLight(lightSource);
     // add objects to collision System
     // scene.getSys<pain::Systems::SweepAndPruneSys>().insertColliders(walls);
     // ASETROID SPAWNER
@@ -45,16 +48,19 @@ public:
     // scene.emplaceScript<MousePointerScript>(mp, cameraEntity);
     //
     return pain::Scene::emplaceScript<MainScript>(scene.getEntity(), scene,
-                                                  playerCam);
+                                                  playerCam, lightSource);
   }
   // void onCreate() { m_mainMap.onCreate(getScene()); }
-  MainScript(reg::Entity entity, pain::Scene &scene, reg::Entity player)
+  MainScript(reg::Entity entity, pain::Scene &scene, reg::Entity player,
+             reg::Entity lightsource)
       : pain::WorldObject(entity, scene), //
-        m_player(player)                  //
+        m_player(player),                 //
+        m_light(lightsource)              //
   // m_mainMap(mainMapFactory())       //
   {};
   std::vector<std::vector<int>> m_backgroundMap;
   reg::Entity m_player = reg::Entity{-1};
+  reg::Entity m_light = reg::Entity{-1};
   // MainMap m_mainMap;
 
   // void onUpdate(pain::DeltaTime dt)
@@ -93,24 +99,27 @@ public:
     renderer.renderer3d.drawUVSphere({0.5f, 0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
                                      pain::Colors::Blue, simple,
                                      pain::SphereDivision::D_32x32);
-    // renderer.renderer3d.drawUVSphere({0.5f, 0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
-    //                                  pain::Colors::Green, simple);
-    // renderer.renderer3d.drawUVSphere({0.5f, -0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
-    //                                  pain::Colors::Yellow, simple);
-    // renderer.renderer3d.drawUVSphere({-0.5f, 0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
-    //                                  pain::Colors::Cyan, simple);
-    // renderer.renderer3d.drawUVSphere({0.5f, -0.5f, -0.5f}, {0.3f, 0.3f,
-    // 0.3f},
-    //                                  pain::Colors::Purple, simple);
-    // renderer.renderer3d.drawUVSphere({-0.5f, 0.5f, -0.5f}, {0.3f, 0.3f,
-    // 0.3f},
-    //                                  pain::Colors::OffWhite, simple);
-    // renderer.renderer3d.drawUVSphere({-0.5f, -0.5f, 0.5f}, {0.3f, 0.3f,
-    // 0.3f},
-    //                                  pain::Colors::DarkerGrey, simple);
-    // renderer.renderer3d.drawUVSphere({-0.5f, -0.5f, -0.5f}, {0.3f, 0.3f,
-    // 0.3f},
-    //                                  pain::Colors::Brown, simple);
+    renderer.renderer3d.drawUVSphere({0.5f, 0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
+                                     pain::Colors::Green, simple,
+                                     pain::SphereDivision::D_32x32);
+    renderer.renderer3d.drawUVSphere({0.5f, -0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
+                                     pain::Colors::Yellow, simple,
+                                     pain::SphereDivision::D_32x32);
+    renderer.renderer3d.drawUVSphere({-0.5f, 0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
+                                     pain::Colors::Cyan, simple,
+                                     pain::SphereDivision::D_32x32);
+    renderer.renderer3d.drawUVSphere({0.5f, -0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
+                                     pain::Colors::Purple, simple,
+                                     pain::SphereDivision::D_32x32);
+    renderer.renderer3d.drawUVSphere({-0.5f, 0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
+                                     pain::Colors::OffWhite, simple,
+                                     pain::SphereDivision::D_32x32);
+    renderer.renderer3d.drawUVSphere({-0.5f, -0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
+                                     pain::Colors::DarkerGrey, simple,
+                                     pain::SphereDivision::D_32x32);
+    renderer.renderer3d.drawUVSphere({-0.5f, -0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
+                                     pain::Colors::Brown, simple,
+                                     pain::SphereDivision::D_32x32);
 
     // renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
     //                              {230, 230, 51, 255},

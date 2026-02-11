@@ -120,31 +120,5 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
   statsCount++;
 #endif
 }
-void QuadBatch::oldAllocate(const glm::mat4 &transform, const Color &tintColor,
-                            float z, const float tilingFactor,
-                            const float textureIndex,
-                            const std::array<glm::vec2, 4> &textureCoordinate)
-{
-  PROFILE_FUNCTION();
-  constexpr glm::vec4 QuadVertexPositions[4] = {
-      glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, 0.5f, 0.f, 1.f),
-      glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
-  };
-  for (unsigned i = 0; i < 4; i++) {
-    ptr->position = glm::vec3(glm::vec2(transform * QuadVertexPositions[i]), z);
-    ptr->color = tintColor.value;
-    ptr->texCoord = textureCoordinate[i];
-    ptr->texIndex = textureIndex;
-    ptr->tilingFactor = tilingFactor;
-    ptr++;
-  }
-  // drawOrder[indexCount] = order;
-  indexCount++;
-#ifndef NDEBUG
-  statsCount++;
-#endif
-}
 
 } // namespace pain

@@ -46,6 +46,9 @@ public:
   Renderer3d &operator=(Renderer3d &&o) noexcept;
   /// @brief Change the active camera entity used for rendering.
   void changeCamera(reg::Entity camera);
+
+  /// @brief Change light
+  void changeLight(reg::Entity lightEntity);
   /// @brief Returns true if a valid camera is currently bound.
   bool hasCamera();
 
@@ -151,10 +154,11 @@ public:
 private:
   float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
   void flush();
-  void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
+  void uploadBasicUniforms(const Scene &scene,
+                           const glm::mat4 &viewProjectionMatrix,
                            DeltaTime globalTime, const glm::mat4 &transform,
                            const glm::ivec2 &resolution,
-                           const glm::vec2 &cameraPos);
+                           const glm::vec3 &cameraPos);
   void bindTextures();
   float allocateTextures(Texture &texture);
 
@@ -166,6 +170,7 @@ private:
     Texture **textureSlots;
     uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
 
+    reg::Entity lightEntity = reg::Entity{-1};
     reg::Entity cameraEntity = reg::Entity{-1};
     // replaced by m_textBatch.fontAtlas
     // const Texture *m_fontAtlasTexture = nullptr;
