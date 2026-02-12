@@ -95,8 +95,8 @@ Application *Application::createApplication(AppContext &&context,
 Application::Application(sol::state &&luaState, SDL_Window *window,
                          void *sdlContext, FrameBufferCreationInfo &&fbci,
                          AppContext &&context)
-    : m(), m_context(context), m_renderers{Renderer2d::createRenderer2d(),
-                                           Renderer3d::createRenderer3d()},
+    : m{.context = context}, m_renderers{Renderer2d::createRenderer2d(),
+                                         Renderer3d::createRenderer3d()},
       m_threadPool(ThreadPool{}), m_luaState(std::move(luaState)),
       m_eventDispatcher(m_luaState),
       m_worldScene(Scene::create(m_eventDispatcher, m_luaState, m_threadPool)),
@@ -124,16 +124,16 @@ void Application::ensureCamera()
       auto *c = std::get<0>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; i++) {
         hasCameraComponent = true;
-        set2dRendererCamera(c[i].m_entity, m_context.defaultWidth,
-                            m_context.defaultHeight);
+        set2dRendererCamera(c[i].m_entity, m.context.defaultWidth,
+                            m.context.defaultHeight);
       }
     }
     for (auto &chunk : m_worldScene.query<cmp::PerspCamera>()) {
       auto *c = std::get<0>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; i++) {
         hasCameraComponent = true;
-        set3dRendererCamera(c[i].m_entity, m_context.defaultWidth,
-                            m_context.defaultHeight);
+        set3dRendererCamera(c[i].m_entity, m.context.defaultWidth,
+                            m.context.defaultHeight);
       }
     }
 
@@ -141,16 +141,16 @@ void Application::ensureCamera()
     if (!hasCameraComponent) {
       PLOG_W("You didn't set a camera, using a default camera");
       reg::Entity camera = Dummy2dCamera::create(
-          m_worldScene, m_context.defaultWidth, m_context.defaultHeight, 1.f);
-      set2dRendererCamera(camera, m_context.defaultWidth,
-                          m_context.defaultHeight);
+          m_worldScene, m.context.defaultWidth, m.context.defaultHeight, 1.f);
+      set2dRendererCamera(camera, m.context.defaultWidth,
+                          m.context.defaultHeight);
     }
   }
 }
 
 EndGameFlags Application::run()
 {
-  backend::InitRenderer();
+  backend::InitRenderer(m.context.is3d);
   ensureCamera();
   // creates a dummy ui scene
   if (m_uiScene.get() == nullptr)

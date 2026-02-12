@@ -12,7 +12,7 @@ namespace pain::backend
 {
 
 void Init();
-void InitRenderer();
+void InitRenderer(bool is3d);
 void setViewPort(int x, int y, int width, int height);
 void setClearColor(const glm::vec4 &color);
 void clear();

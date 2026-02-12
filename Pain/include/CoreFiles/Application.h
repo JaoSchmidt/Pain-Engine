@@ -32,18 +32,16 @@ namespace pain
 struct AppContext {
   /** Default external configuration file name. */
   static constexpr const char *configIniFile = "config.ini";
-
   /** Default internal configuration file name. */
   static constexpr const char *internalConfigFile = "internalConfig.ini";
-
   /** Window title displayed in the OS window. */
   const char *title = "Unnamed Game";
-
   /** Initial window width in pixels. */
   int defaultWidth = 800;
-
   /** Initial window height in pixels. */
   int defaultHeight = 600;
+  /** Small check to enable 3d parameters in the API*/
+  bool is3d;
 };
 
 /**
@@ -240,10 +238,10 @@ private:
     constexpr static int FPS_SAMPLE_COUNT = 64;
     double fpsSamples[FPS_SAMPLE_COUNT] = {0};
     int currentSample = 1;
+    AppContext context;
   };
 
   DefaultApplicationValues m;
-  const AppContext m_context;
 
   // =============================================================== //
   // OWNED OBJECTS

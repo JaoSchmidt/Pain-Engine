@@ -25,19 +25,19 @@ public:
   static MainScript &createScriptScene(pain::Scene &scene, int cameraWidth,
                                        int cameraHeight, pain::Application *app)
   {
-    glm::vec3 playerPos{0};
-    glm::vec3 playerSize{0.25f};
+    glm::vec2 playerPos{0};
+    glm::vec2 playerSize{0.25f};
     pain::TextureManager::createTexture(
         "resources/default/textures/Checkerboard arrow.png");
     pain::Texture &playerTex = pain::TextureManager::getDefaultTexture(
         pain::TextureManager::DefaultTexture::General, false);
     reg::Entity playerCam =
-        Player3d::create(scene, playerTex, playerPos, playerSize, cameraWidth,
-                         cameraHeight, 80.f);
+        Player::create(scene, playerTex, playerPos, playerSize, cameraWidth,
+                       cameraHeight, 5.f);
     reg::Entity lightSource = DumbObject::create(scene);
     // app->set2dRendererCamera(playerCam, cameraWidth, cameraHeight);
-    app->set3dRendererCamera(playerCam, cameraWidth, cameraHeight);
-    app->getRenderers().renderer3d.changeLight(lightSource);
+    app->set2dRendererCamera(playerCam, cameraWidth, cameraHeight);
+    // app->getRenderers().renderer3d.changeLight(lightSource);
     // add objects to collision System
     // scene.getSys<pain::Systems::SweepAndPruneSys>().insertColliders(walls);
     // ASETROID SPAWNER
@@ -96,55 +96,58 @@ public:
 
     // renderer.renderer3d.drawUVSphere({0.f, 0.f, 0.f}, {0.3f, 0.3f, 0.3f},
     //                                  pain::Colors::Red, simple);
-    renderer.renderer3d.drawUVSphere({0.5f, 0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
-                                     pain::Colors::Blue, simple,
-                                     pain::SphereDivision::D_32x32);
-    renderer.renderer3d.drawUVSphere({0.5f, 0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
-                                     pain::Colors::Green, simple,
-                                     pain::SphereDivision::D_32x32);
-    renderer.renderer3d.drawUVSphere({0.5f, -0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
-                                     pain::Colors::Yellow, simple,
-                                     pain::SphereDivision::D_32x32);
-    renderer.renderer3d.drawUVSphere({-0.5f, 0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
-                                     pain::Colors::Cyan, simple,
-                                     pain::SphereDivision::D_32x32);
-    renderer.renderer3d.drawUVSphere({0.5f, -0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
-                                     pain::Colors::Purple, simple,
-                                     pain::SphereDivision::D_32x32);
-    renderer.renderer3d.drawUVSphere({-0.5f, 0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
-                                     pain::Colors::OffWhite, simple,
-                                     pain::SphereDivision::D_32x32);
-    renderer.renderer3d.drawUVSphere({-0.5f, -0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
-                                     pain::Colors::DarkerGrey, simple,
-                                     pain::SphereDivision::D_32x32);
-    renderer.renderer3d.drawUVSphere({-0.5f, -0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
-                                     pain::Colors::Brown, simple,
-                                     pain::SphereDivision::D_32x32);
+    // renderer.renderer3d.drawUVSphere({0.5f, 0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
+    //                                  pain::Colors::Blue, simple,
+    //                                  pain::SphereDivision::D_32x32);
+    // renderer.renderer3d.drawUVSphere({0.5f, 0.5f, -0.5f}, {0.3f, 0.3f, 0.3f},
+    //                                  pain::Colors::Green, simple,
+    //                                  pain::SphereDivision::D_32x32);
+    // renderer.renderer3d.drawUVSphere({0.5f, -0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
+    //                                  pain::Colors::Yellow, simple,
+    //                                  pain::SphereDivision::D_32x32);
+    // renderer.renderer3d.drawUVSphere({-0.5f, 0.5f, 0.5f}, {0.3f, 0.3f, 0.3f},
+    //                                  pain::Colors::Cyan, simple,
+    //                                  pain::SphereDivision::D_32x32);
+    // renderer.renderer3d.drawUVSphere({0.5f, -0.5f, -0.5f}, {0.3f, 0.3f,
+    // 0.3f},
+    //                                  pain::Colors::Purple, simple,
+    //                                  pain::SphereDivision::D_32x32);
+    // renderer.renderer3d.drawUVSphere({-0.5f, 0.5f, -0.5f}, {0.3f, 0.3f,
+    // 0.3f},
+    //                                  pain::Colors::OffWhite, simple,
+    //                                  pain::SphereDivision::D_32x32);
+    // renderer.renderer3d.drawUVSphere({-0.5f, -0.5f, 0.5f}, {0.3f, 0.3f,
+    // 0.3f},
+    //                                  pain::Colors::DarkerGrey, simple,
+    //                                  pain::SphereDivision::D_32x32);
+    // renderer.renderer3d.drawUVSphere({-0.5f, -0.5f, -0.5f}, {0.3f, 0.3f,
+    // 0.3f},
+    //                                  pain::Colors::Brown, simple,
+    //                                  pain::SphereDivision::D_32x32);
 
-    // renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
-    //                              {230, 230, 51, 255},
-    //                              std::numbers::pi *
-    //                              -currentTime.getSeconds(),
-    //                              pain::RenderLayer::Default, simple);
-    // renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
-    //                              {230, 230, 51, 255},
-    //                              pain::RenderLayer::Default, simple);
-    // renderer.renderer2d.drawQuad({-0.5f, 0.5f}, {0.25f, 0.25f},
-    //                              {255, 255, 255, 255},
-    //                              pain::RenderLayer::Default, simple);
-    // renderer.renderer2d.drawQuad({0.2f, -0.2f}, {0.25f, 0.25f},
-    //                              {204, 51, 26, 255},
-    //                              std::numbers::pi * currentTime.getSeconds(),
-    //                              pain::RenderLayer::MuchCloser, simple);
-    // renderer.renderer2d.drawQuad({0.2f, 0.2f}, {0.25f, 0.25f},
-    //                              {230, 230, 51, 255},
-    //                              pain::RenderLayer::MuchCloser, simple);
-    // renderer.renderer2d.drawQuad({-0.2f, 0.2f}, {0.25f, 0.25f},
-    //                              {255, 255, 255, 255},
-    //                              pain::RenderLayer::MuchCloser, simple);
-    // renderer.renderer2d.drawCircle({0.5f, 0.5f}, 0.25f, {51, 75, 230, 255});
-    // renderer.renderer2d.drawTri({-0.5f, -0.5f}, {0.25f, 0.25f},
-    //                             {0.2f, 0.3f, 0.9f, 1.f});
+    renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
+                                 {230, 230, 51, 255},
+                                 std::numbers::pi * -currentTime.getSeconds(),
+                                 pain::RenderLayer::Default, simple);
+    renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
+                                 {230, 230, 51, 255},
+                                 pain::RenderLayer::Default, simple);
+    renderer.renderer2d.drawQuad({-0.5f, 0.5f}, {0.25f, 0.25f},
+                                 {255, 255, 255, 255},
+                                 pain::RenderLayer::Default, simple);
+    renderer.renderer2d.drawQuad({0.2f, -0.2f}, {0.25f, 0.25f},
+                                 {204, 51, 26, 128},
+                                 std::numbers::pi * currentTime.getSeconds(),
+                                 pain::RenderLayer::MuchCloser, simple);
+    renderer.renderer2d.drawQuad({0.2f, 0.2f}, {0.25f, 0.25f},
+                                 {230, 230, 51, 255},
+                                 pain::RenderLayer::MuchCloser, simple);
+    renderer.renderer2d.drawQuad({-0.2f, 0.2f}, {0.25f, 0.25f},
+                                 {255, 255, 255, 255},
+                                 pain::RenderLayer::MuchCloser, simple);
+    renderer.renderer2d.drawCircle({0.5f, 0.5f}, 0.25f, {51, 75, 230, 255});
+    renderer.renderer2d.drawTri({-0.5f, -0.5f}, {0.25f, 0.25f},
+                                {0.2f, 0.3f, 0.9f, 1.f});
   }
 };
 
@@ -162,7 +165,8 @@ pain::Application *pain::createApplication()
   Application *app = Application::createApplication(         //
       {.title = internalIni.title.get().c_str(),             //
        .defaultWidth = ini.defaultWidth.get(),               //
-       .defaultHeight = ini.defaultHeight.get()},            //
+       .defaultHeight = ini.defaultHeight.get(),             //
+       .is3d = internalIni.is3d.get()},                      //
       {.swapChainTarget = internalIni.swapChainTarget.get()} //
   );
 
@@ -192,7 +196,6 @@ pain::Application *pain::createApplication()
   // (Optional) A small native script that works as our game engine editor
   UIScene::emplaceImGuiScript<PainlessEditor>(uiScene.getEntity(), uiScene,
                                               *app);
-
   return app;
 }
 

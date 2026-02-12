@@ -49,7 +49,7 @@ void Init()
   glDebugMessageCallback(Debug::glErrorHandler, 0);
 #endif
 }
-void InitRenderer()
+void InitRenderer(bool is3d)
 {
   // =============================================================== //
   // Create Renderer
@@ -59,13 +59,15 @@ void InitRenderer()
   // mechanic
   // Also, to enable GL_DEPTH, you must also enable those:
   // GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
-  glEnable(GL_DEPTH_TEST);
-  // glDepthFunc(GL_LEQUAL);
-  // glDepthMask(GL_TRUE);
-
-  // allow transparency
-  // glEnable(GL_BLEND);
-  // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if (is3d) {
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_TRUE);
+  } else {
+    // allow transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  }
   // HACK: allow textures with 3 channels to align properly, e.g. font textures.
   // No idea why it works tho, perhaps I will find a proper doc later
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
