@@ -276,7 +276,7 @@ if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/Lua/CMakeLists.txt")
   FetchContent_Declare(
     lua
     GIT_REPOSITORY https://github.com/walterschell/Lua.git
-    GIT_TAG v5.4.5)
+    GIT_TAG v5.4.7)
   FetchContent_MakeAvailable(lua)
 else()
   message("Using submodule for Lua")
