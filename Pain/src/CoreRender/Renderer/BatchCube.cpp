@@ -5,6 +5,7 @@
  */
 
 // BatchCube.cpp
+#include "platform/ContextBackend.h"
 #include "CoreRender/Renderer/BatchCube.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"

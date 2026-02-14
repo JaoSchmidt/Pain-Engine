@@ -121,7 +121,7 @@ concept has_any_callable_onDestroy = requires(T t) { &T::onDestroy; };
 
 /** Performs compile-time validation of script callback signatures and
  * visibility. */
-template <typename T> void check_script_methods()
+template <typename T> void checkScriptMethods()
 {
   // Check for wrong signatures
   if constexpr (has_any_callable_onRender<T> && !has_onRender_method<T>) {
@@ -152,6 +152,47 @@ template <typename T> void check_script_methods()
   }
   if constexpr (has_private_onUpdate<T>) {
     static_assert(false, "Error: onUpdate() exists but is not public! Make "
+                         "sure it's in the public section.");
+  }
+  if constexpr (has_private_onRender<T>) {
+    static_assert(false, "Error: onRender() exists but is not public! Make "
+                         "sure it's in the public section.");
+  }
+  if constexpr (has_private_onEvent<T>) {
+    static_assert(false, "Error: onEvent() exists but is not public! Make sure "
+                         "it's in the public section.");
+  }
+  if constexpr (has_private_onDestroy<T>) {
+    static_assert(false, "Error: onDestroy() exists but is not public! Make "
+                         "sure it's in the public section.");
+  }
+}
+
+/** Performs compile-time validation of script callback signatures and
+ * visibility. */
+template <typename T> void checkImGuiScriptMethods()
+{
+  // Check for wrong signatures
+  if constexpr (has_any_callable_onRender<T> && !has_onRender_method<T>) {
+    static_assert(false, "Error: onRender() has wrong signature! Should be "
+                         "onRender(Renderers&, bool, DeltaTime).");
+  }
+  if constexpr (has_any_callable_onEvent<T> && !has_onEvent_method<T>) {
+    static_assert(false, "Error: onEvent() has wrong signature! Should be "
+                         "onEvent(const SDL_Event&).");
+  }
+  if constexpr (has_any_callable_onCreate<T> && !has_onCreate_method<T>) {
+    static_assert(false, "Error: onCreate() has wrong signature! Should be "
+                         "onCreate() with no parameters.");
+  }
+  if constexpr (has_any_callable_onDestroy<T> && !has_onDestroy_method<T>) {
+    static_assert(false, "Error: onDestroy() has wrong signature! Should be "
+                         "onDestroy() with no parameters.");
+  }
+
+  // Check for private methods
+  if constexpr (has_private_onCreate<T>) {
+    static_assert(false, "Error: onCreate() exists but is not public! Make "
                          "sure it's in the public section.");
   }
   if constexpr (has_private_onRender<T>) {

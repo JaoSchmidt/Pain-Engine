@@ -6,6 +6,7 @@
 
 #include "CoreRender/Renderer/BatchTri.h"
 #include "Debugging/Profiling.h"
+#include "platform/ContextBackend.h"
 namespace pain
 {
 

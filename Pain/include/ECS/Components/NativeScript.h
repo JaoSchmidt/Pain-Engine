@@ -106,7 +106,7 @@ public:
    */
   template <typename T> void bindAndInitiate(T &&t)
   {
-    check_script_methods<T>();
+    checkScriptMethods<T>();
 
     instance = new T(std::move(t));
     destroyInstanceFunction = [](Scriptable *&instance) {
@@ -171,7 +171,7 @@ public:
    */
   template <typename T, typename... Args> void bindAndEmplace(Args &&...args)
   {
-    check_script_methods<T>();
+    checkScriptMethods<T>();
     static_assert(std::is_constructible_v<T, Args...>,
                   "Error: You are binding a function whose constructor doesn't "
                   "implement constructor: (Scene&, Entity, "

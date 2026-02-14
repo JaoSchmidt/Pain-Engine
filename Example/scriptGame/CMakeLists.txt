@@ -34,18 +34,18 @@ target_link_libraries(${TARGET_NAME} PUBLIC Pain)
 # resources
 if(UNIX OR APPLE)
   add_custom_target(
-    sync_resources_game
-    COMMAND rsync -av "${PROJECT_SOURCE_DIR}/resources/"
-            "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
+    sync_resources_example
+    COMMAND rsync -av "${CMAKE_CURRENT_SOURCE_DIR}/resources/"
+            "${CMAKE_CURRENT_BINARY_DIR}/resources/"
     COMMENT "Syncing resources folder")
   # Add dependency to sync_resources target on make
-  add_dependencies(${LIBRARY_NAME} sync_resources_game)
+  add_dependencies(${LIBRARY_NAME} sync_resources_example)
 else()
   add_custom_target(
-    sync_resources_game
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/resources"
-            "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources"
+    sync_resources_example
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+            "${CMAKE_CURRENT_BINARY_DIR}/resources"
     COMMENT "Syncing resources folder")
 
-  add_dependencies(${LIBRARY_NAME} sync_resources_game)
+  add_dependencies(${LIBRARY_NAME} sync_resources_example)
 endif()

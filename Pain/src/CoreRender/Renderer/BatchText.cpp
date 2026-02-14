@@ -6,7 +6,7 @@
 
 // QuadBatch.cpp
 #include "CoreRender/Renderer/BatchText.h"
-#include "ContextBackend.h"
+#include "platform/ContextBackend.h"
 #include "Debugging/Profiling.h"
 
 namespace pain

@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "BuffersBackend.h"
+#include "platform/BuffersBackend.h"
 
 #ifdef PAIN_RENDERER_OPENGL
 

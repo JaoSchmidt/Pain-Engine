@@ -5,13 +5,13 @@
  */
 
 // ContextBackend.cpp
-#include "VertexArrayBackend.h"
+#include "platform/VertexArrayBackend.h"
 #include "CoreRender/BufferLayout.h"
 
 #ifdef PAIN_RENDERER_OPENGL
 
 #include "CoreFiles/LogWrapper.h"
-#include "OpenGLDebugger.h"
+#include "platform/OpenGL/OpenGLDebugger.h"
 #include <glad/gl.h>
 
 namespace pain::backend

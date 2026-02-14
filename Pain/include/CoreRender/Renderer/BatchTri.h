@@ -8,7 +8,6 @@
 // TriBatch.h
 #pragma once
 
-#include "ContextBackend.h"
 #include "CoreRender/Shader.h"
 #include "CoreRender/Texture.h"
 #include "CoreRender/VertexArray.h"

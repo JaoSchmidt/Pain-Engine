@@ -7,6 +7,7 @@
 // PointLightBatch.cpp
 
 #include "CoreRender/Renderer/BatchLight.h"
+#include "platform/ContextBackend.h"
 
 namespace pain
 {

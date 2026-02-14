@@ -7,6 +7,7 @@
 
 // BatchSphere.cpp
 #include "CoreRender/Renderer/BatchSphere.h"
+#include "platform/ContextBackend.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "glm/gtc/constants.hpp"

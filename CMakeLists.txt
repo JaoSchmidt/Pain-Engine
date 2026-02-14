@@ -12,7 +12,6 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
      "${PROJECT_SOURCE_DIR}/Pain/src/*.cpp",
      "${PROJECT_SOURCE_DIR}/Pain/platform/*.cpp")
 add_library(${LIBRARY_NAME} STATIC ${SOURCES})
-
 # file(GLOB_RECURSE MODULES "Pain/include/*.cppm") message("Finding the
 # modules:")
 
@@ -23,8 +22,8 @@ set(BUILD_SHARED_LIBS OFF)
 
 target_include_directories(
   ${LIBRARY_NAME}
-  PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
-         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/platform>
+  PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain>
+         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
 )
 set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20
@@ -247,6 +246,9 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui/.git")
       ${imgui_SOURCE_DIR}/backends
   )
   target_link_libraries(imgui PRIVATE SDL2::SDL2)
+  target_sources(
+    imgui
+    PRIVATE ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp)
 else()
   message("Using submodule for imgui")
   set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui)
@@ -264,9 +266,9 @@ else()
       ${IMGUI_DIR}/backends
   )
   target_link_libraries(imgui PRIVATE SDL2::SDL2)
-  # target_sources(
-  #   imgui
-  #   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui/misc/cpp/imgui_stdlib.cpp)
+  target_sources(
+    imgui
+    PRIVATE ${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp)
 
 endif()
 
@@ -346,21 +348,21 @@ target_precompile_headers(${LIBRARY_NAME} PRIVATE
 set(GAME_FOLDER "Example/scriptGame")
 add_compile_definitions(${MACRO_DEFINITIONS})
 
-# TODO: BUILD THIS FOR WINDOWS AND TEST IT Define custom target to rsync
-# resources
+# Sync Resources
+# - Engine resources are small and can be sync anywhere
 if(UNIX OR APPLE)
   add_custom_target(
     sync_resources
-    COMMAND rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/"
-            "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
+    # Syncing with Example projects
+    COMMAND rsync -av "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
+            "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
+    # Syncing with project folder (for debug purposes)
     COMMAND
-      rsync -av "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources/"
-      "${PROJECT_SOURCE_DIR}/resources/"
-      # NOTE: not sure if this is necessasry but I'm just going to assume for
-      # now that every developer will need to sync the lua types inside the
-      # project source directory. Why? beacuse lua lsp works with these files
-    COMMAND rsync -av "${PROJECT_SOURCE_DIR}/Pain/resources/scripts/"
-            "${PROJECT_SOURCE_DIR}/"
+      rsync -av "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
+      "${CMAKE_SOURCE_DIR}/resources/"
+    # Syncing with game
+    COMMAND rsync -av "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
+            "${CMAKE_BINARY_DIR}/resources/"
     COMMENT "Syncing resources folder")
   # Add dependency to sync_resources target on make
   add_dependencies(${LIBRARY_NAME} sync_resources)
@@ -368,8 +370,8 @@ else()
   add_custom_target(
     sync_resources
     COMMAND
-      ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Pain/resources"
-      "${CMAKE_BINARY_DIR}/${GAME_FOLDER}/resources"
+      ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources"
+      "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources"
     COMMENT "Syncing resources folder")
 
   add_dependencies(${LIBRARY_NAME} sync_resources)
@@ -396,7 +398,7 @@ if(UNIX)
       printf
       "  COMPILER: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\\n"
     COMMAND printf "  SOURCE:    ${CMAKE_CURRENT_SOURCE_DIR}\\n"
-    COMMAND printf "  BINARY:    ${CMAKE_BINARY_DIR}\\n"
+    COMMAND printf "  BINARY:    ${CMAKE_CURRENT_BINARY_DIR}\\n"
     COMMAND printf "  DATE:    ${NOW}\\n"
     COMMAND
       printf

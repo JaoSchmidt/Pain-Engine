@@ -6,7 +6,7 @@
 
 #include "CoreRender/VertexArray.h"
 #include "CoreRender/Buffers.h"
-#include "VertexArrayBackend.h"
+#include "platform/VertexArrayBackend.h"
 
 namespace pain
 {

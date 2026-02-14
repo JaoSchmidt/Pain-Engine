@@ -47,7 +47,7 @@ public:
     PLOG_I("Creating Launcher");
     m_init.readAndUpdate(true);
   }
-  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime deltaTime)
+  void onRender(Renderers &renderer, bool isMinimized, DeltaTime deltaTime)
   {
     UNUSED(renderer)
     UNUSED(deltaTime)
@@ -147,9 +147,12 @@ Application *createLauncher()
   const int width = 500;
   const int height = 200;
 
-  Application *settingsApp = Application::createApplication(
-      {.title = title, .defaultWidth = width, .defaultHeight = height},
-      {.swapChainTarget = true});
+  Application *settingsApp =
+      Application::createApplication({.title = title,
+                                      .defaultWidth = width,
+                                      .defaultHeight = height,
+                                      .is3d = false},
+                                     {.swapChainTarget = true});
   pain::UIScene &uiscene = settingsApp->createUIScene(pain::ImGuiComponent{});
   UIScene::emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), uiscene,
                                              settingsApp);
