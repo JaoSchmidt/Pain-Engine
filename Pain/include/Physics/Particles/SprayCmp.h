@@ -48,8 +48,9 @@ struct SprayParticle {
 struct ParticleSprayInitArgs {
   float rotationSpeed =
       1.f; /**< Spray Particle Batch: Angular rotation speed. */
-  DeltaTime interval = 1.f; ///< elapsed limit, 0 means no emisions
-  float velocity = 1.f;     ///< Base particle velocity.
+  DeltaTime interval =
+      DeltaTime::oneSecond() / 2; ///< elapsed limit, 0 means no emisions
+  float velocity = 1.f;           ///< Base particle velocity.
   DeltaTime lifeTime = DeltaTime::oneSecond();
   float sizeChangeSpeed = 1.f;  ///< Size growth / shrink speed.
   float randSizeFactor = 1.f;   ///< Random size variance factor.
@@ -72,9 +73,10 @@ struct ParticleSprayInitArgs {
 struct ParticleSprayComponent {
   using tag = tag::ParticleSpray;
 
-  DeltaTime elapsed = 0;  /// current time between emitions
-  DeltaTime interval = 0; /// elapsed limit, 0 means no emisions
-  float velocity = 1.f;   ///< Base particle velocity.
+  DeltaTime elapsed = 0; /// current time between emitions
+  DeltaTime interval =
+      DeltaTime::oneSecond() / 2; /// elapsed limit, 0 means no emisions
+  float velocity = 1.f;           ///< Base particle velocity.
   DeltaTime lifeTime =
       DeltaTime::oneSecond();  ///< Particle lifetime in time units.
   float sizeChangeSpeed = 1.f; ///< Size growth / shrink speed.
