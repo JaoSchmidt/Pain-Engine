@@ -115,11 +115,10 @@ endif()
 # =========== Adding Libraries ==================================
 # deactivate tests, examples, doc
 set(SPDLOG_BUILD_SHARED OFF)
-
 include(FetchContent)
 
 # mINI
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/mINI/CMakeLists.txt")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/mINI/CMakeLists.txt")
   message("Fetching mINI")
   FetchContent_Declare(mINI GIT_REPOSITORY https://github.com/metayeti/mINI.git)
   FetchContent_MakeAvailable(mINI)
@@ -139,7 +138,7 @@ else()
 endif()
 
 # GLM
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/glm/CMakeLists.txt")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/glm/CMakeLists.txt")
   message("Fetching glm")
   FetchContent_Declare(
     glm
@@ -155,7 +154,7 @@ message("Bulding glad")
 add_subdirectory(Pain/external/glad)
 
 # SPDLOG
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/spdlog/CMakeLists.txt")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/spdlog/CMakeLists.txt")
   FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
@@ -166,7 +165,7 @@ else()
   add_subdirectory(Pain/external/spdlog)
 endif()
 
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/SDL/CMakeLists.txt")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/SDL/CMakeLists.txt")
   message("Fetching SDL")
   FetchContent_Declare(
     SDL
@@ -180,7 +179,7 @@ else()
 endif()
 
 # perlin noise
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/PerlinNoise/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/PerlinNoise/.git")
   message("Fetching PerlinNoise")
   FetchContent_Declare(
     perlin
@@ -202,7 +201,7 @@ else()
 endif()
 
 # stb
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/stb/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/stb/.git")
   message("Fetching stb")
   FetchContent_Declare(
     stb
@@ -224,7 +223,7 @@ else()
 endif()
 
 # IMGUI
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui/.git")
   message("Fetching Imgui")
   FetchContent_Declare(
     imgui
@@ -250,7 +249,7 @@ if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/imgui/.git")
   target_link_libraries(imgui PRIVATE SDL2::SDL2)
 else()
   message("Using submodule for imgui")
-  set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/Pain/external/imgui)
+  set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui)
   add_library(imgui STATIC
       ${IMGUI_DIR}/imgui.cpp
       ${IMGUI_DIR}/imgui_draw.cpp
@@ -267,14 +266,14 @@ else()
   target_link_libraries(imgui PRIVATE SDL2::SDL2)
   # target_sources(
   #   imgui
-  #   PRIVATE ${CMAKE_SOURCE_DIR}/Pain/external/imgui/misc/cpp/imgui_stdlib.cpp)
+  #   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui/misc/cpp/imgui_stdlib.cpp)
 
 endif()
 
 # msdf-atlas-gen
 set(MSDF_ATLAS_USE_VCPKG OFF CACHE BOOL "" FORCE)
 set(MSDF_ATLAS_USE_SKIA OFF CACHE BOOL "" FORCE)
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/msdf-atlas-gen/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/msdf-atlas-gen/.git")
   message("Fetching msdf-atlas-gen")
   FetchContent_Declare(
     msdf-atlas-gen
@@ -289,7 +288,7 @@ else()
 endif()
 
 # Lua
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/Lua/CMakeLists.txt")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/Lua/CMakeLists.txt")
   message("Fetching Lua")
   FetchContent_Declare(
     lua
@@ -302,7 +301,7 @@ else()
 endif()
 
 # Sol2
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/sol2/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/sol2/.git")
   message("Fetching Sol2")
   FetchContent_Declare(
     sol2
@@ -396,7 +395,7 @@ if(UNIX)
     COMMAND
       printf
       "  COMPILER: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\\n"
-    COMMAND printf "  SOURCE:    ${CMAKE_SOURCE_DIR}\\n"
+    COMMAND printf "  SOURCE:    ${CMAKE_CURRENT_SOURCE_DIR}\\n"
     COMMAND printf "  BINARY:    ${CMAKE_BINARY_DIR}\\n"
     COMMAND printf "  DATE:    ${NOW}\\n"
     COMMAND
