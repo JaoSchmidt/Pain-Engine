@@ -127,7 +127,7 @@ public:
 
     renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
                                  {230, 230, 51, 255},
-                                 std::numbers::pi * -currentTime.getSeconds(),
+                                 glm::pi<float>() * -currentTime.getSeconds(),
                                  pain::RenderLayer::Default, simple);
     renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
                                  {230, 230, 51, 255},
@@ -137,7 +137,7 @@ public:
                                  pain::RenderLayer::Default, simple);
     renderer.renderer2d.drawQuad({0.2f, -0.2f}, {0.25f, 0.25f},
                                  {204, 51, 26, 128},
-                                 std::numbers::pi * currentTime.getSeconds(),
+                                 glm::pi<float>() * currentTime.getSeconds(),
                                  pain::RenderLayer::MuchCloser, simple);
     renderer.renderer2d.drawQuad({0.2f, 0.2f}, {0.25f, 0.25f},
                                  {230, 230, 51, 255},

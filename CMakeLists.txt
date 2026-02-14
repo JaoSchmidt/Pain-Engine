@@ -26,9 +26,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/platform>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
-         # vendor libraries
-         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
-         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/mINI/src>)
+)
 set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20
                                                  CXX_STANDARD_REQUIRED ON)
 target_compile_features(${LIBRARY_NAME} PUBLIC cxx_std_20)
@@ -119,41 +117,25 @@ endif()
 set(SPDLOG_BUILD_SHARED OFF)
 
 include(FetchContent)
-# the function purpose is on its name
-function(apply_git_patch patch_file work_dir)
-  # First check if patch can be ENTIRELY applied
-  execute_process(
-    COMMAND git apply --check "${patch_file}"
-    WORKING_DIRECTORY "${work_dir}"
-    RESULT_VARIABLE PATCH_CHECK_RESULT
-    OUTPUT_QUIET ERROR_QUIET)
-
-  if(PATCH_CHECK_RESULT EQUAL 0)
-    execute_process(
-      COMMAND git apply "${patch_file}"
-      WORKING_DIRECTORY "${work_dir}"
-      RESULT_VARIABLE PATCH_RESULT)
-
-    if(PATCH_RESULT EQUAL 0)
-      message("Successfully applied patch: ${patch_file}")
-    else()
-      message(
-        WARNING
-          "Failed to apply patch: ${patch_file}. Error code: ${PATCH_RESULT}")
-    endif()
-  else()
-    message("Skipping patch ${patch_file}: already applied or not applicable.")
-  endif()
-endfunction()
 
 # mINI
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/mINI/CMakeLists.txt")
   message("Fetching mINI")
   FetchContent_Declare(mINI GIT_REPOSITORY https://github.com/metayeti/mINI.git)
   FetchContent_MakeAvailable(mINI)
+  target_include_directories(
+        ${LIBRARY_NAME}
+        SYSTEM PUBLIC
+        ${mINI_SOURCE_DIR}
+  )
 else()
   message("Using submodule for mINI")
   add_subdirectory(Pain/external/mINI)
+  target_include_directories(
+      ${LIBRARY_NAME}
+      SYSTEM PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/mINI>
+  )
 endif()
 
 # GLM
@@ -197,17 +179,48 @@ else()
   add_subdirectory(Pain/external/SDL)
 endif()
 
+# perlin noise
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/PerlinNoise/.git")
+  message("Fetching PerlinNoise")
+  FetchContent_Declare(
+    perlin
+    GIT_REPOSITORY https://github.com/Reputeless/PerlinNoise.git
+    GIT_TAG master
+  )
+  FetchContent_MakeAvailable(perlin)
+  target_include_directories(
+      ${LIBRARY_NAME}
+      SYSTEM PUBLIC
+      ${perlin_SOURCE_DIR}
+  )
+else()
+  message("Using submodule for PerlinNoise")
+  target_include_directories(
+    ${LIBRARY_NAME} SYSTEM PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
+  )
+endif()
+
 # stb
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/stb/.git")
   message("Fetching stb")
-  FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git)
+  FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG master
+  )
   FetchContent_MakeAvailable(stb)
-  target_include_directories(${LIBRARY_NAME} PUBLIC SYSTEM ${stb_INCLUDE_DIR})
+  target_include_directories(
+      ${LIBRARY_NAME}
+      SYSTEM PUBLIC
+      ${stb_SOURCE_DIR}
+  )
 else()
   message("Using submodule for stb")
   target_include_directories(
     ${LIBRARY_NAME} SYSTEM
-    PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/stb>)
+    PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/stb>
+  )
 endif()
 
 # IMGUI
@@ -259,11 +272,16 @@ else()
 endif()
 
 # msdf-atlas-gen
+set(MSDF_ATLAS_USE_VCPKG OFF CACHE BOOL "" FORCE)
+set(MSDF_ATLAS_USE_SKIA OFF CACHE BOOL "" FORCE)
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/msdf-atlas-gen/.git")
   message("Fetching msdf-atlas-gen")
   FetchContent_Declare(
     msdf-atlas-gen
-    GIT_REPOSITORY https://github.com/jaoschmidt/msdf-atlas-gen.git)
+    GIT_REPOSITORY https://github.com/Chlumsky/msdf-atlas-gen.git
+    GIT_TAG c76a32319934c39e51a8c4838240d7b2362b0882
+    GIT_SUBMODULES_RECURSE TRUE   
+  )
   FetchContent_MakeAvailable(msdf-atlas-gen)
 else()
   message("Using submodule for msdf-atlas-gen")
@@ -283,6 +301,7 @@ else()
   add_subdirectory("Pain/external/Lua")
 endif()
 
+# Sol2
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/Pain/external/sol2/.git")
   message("Fetching Sol2")
   FetchContent_Declare(
@@ -366,7 +385,7 @@ string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
 
 if(UNIX)
   add_custom_target(
-    BuildBanner ALL
+    BuildInitialBanner ALL
     COMMAND
       printf
       "\\n\\033[1;32m==========================================================================================\\n"
