@@ -17,6 +17,7 @@
 
 #include "Assets/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "ECS/Components/ComponentManager.h"
 #include "pch.h"
 
@@ -30,24 +31,40 @@ namespace pain
 /**
  * @brief Runtime state for a single particle instance.
  *
- * Stores position, motion direction, lifetime tracking and basic animation
+ * Stores motion direction, lifetime tracking and basic animation
  * parameters. Particles are recycled inside a fixed-size buffer owned by
  * ParticleSprayComponent.
  */
-struct Particle {
-  glm::vec2 m_position;  /**< Local particle position. */
-  glm::vec2 m_offset;    /**< Emission offset relative to emitter. */
-  glm::vec2 m_normal;    /**< Emission direction vector. */
-  DeltaTime m_startTime; /**< Time when the particle was spawned. */
-  float m_rotationSpeed; /**< Angular rotation speed. */
-  bool m_alive = false;  /**< Whether the particle is currently active. */
+struct SprayParticle {
+  glm::vec2 offset = {0.f, 0.f};
+  glm::vec2 normal = {0.f, 0.f}; /**< Emission direction vector. */
+  DeltaTime startTime = 0;       /**< Time when the particle was spawned. */
+  bool alive = false; /**< Whether the particle is currently active. */
+};
+
+/**
+ * @brief Safer way to initialize particle spray component
+ */
+struct ParticleSprayInitArgs {
+  float rotationSpeed =
+      1.f; /**< Spray Particle Batch: Angular rotation speed. */
+  DeltaTime interval =
+      DeltaTime::oneSecond() / 2; ///< elapsed limit, 0 means no emisions
+  float velocity = 1.f;           ///< Base particle velocity.
+  DeltaTime lifeTime = DeltaTime::oneSecond();
+  float sizeChangeSpeed = 1.f;  ///< Size growth / shrink speed.
+  float randSizeFactor = 1.f;   ///< Random size variance factor.
+  float randAngleFactor = 30.f; ///< Angle of emittion variance factor
+  bool autoEmit = true; ///< Whether particles automatically spwan or not
+  Color color = Colors::Orange; ///< Particle base color.
+  unsigned capacity;
 };
 
 /**
  * @brief ECS component representing a particle emitter and particle buffer.
  *
  * Stores configuration parameters controlling particle behavior and maintains
- * a fixed-size circular buffer of Particle instances.
+ * a fixed-size circular buffer `particles` of instances.
  *
  * Emission overwrites older particles once the buffer capacity is reached.
  * The component itself does not update particle motion or lifetime — this is
@@ -56,93 +73,64 @@ struct Particle {
 struct ParticleSprayComponent {
   using tag = tag::ParticleSpray;
 
-  float m_velocity = 1.f; /**< Base particle velocity. */
-  uint64_t m_lifeTime =
-      DeltaTime::oneSecond();         /**< Particle lifetime in time units. */
-  float m_sizeChangeSpeed = 0.f;      /**< Size growth / shrink speed. */
-  float m_randSizeFactor = 0.f;       /**< Random size variance factor. */
-  glm::vec4 m_color = glm::vec4(1.f); /**< Particle base color. */
-  glm::vec2 m_emiterPosition =
-      glm::vec2(0.f); /**< World-space emitter position. */
+  DeltaTime elapsed = 0; /// current time between emitions
+  DeltaTime interval =
+      DeltaTime::oneSecond() / 2; /// elapsed limit, 0 means no emisions
+  float velocity = 1.f;           ///< Base particle velocity.
+  DeltaTime lifeTime =
+      DeltaTime::oneSecond();  ///< Particle lifetime in time units.
+  float sizeChangeSpeed = 1.f; ///< Size growth / shrink speed.
+  float randSizeFactor = 1.f;  ///< Random size variance factor.
+  float randAngleFactor =
+      30.f; ///< Random initial angle variance factor, from 0 to 360 degrees
+  float rotationSpeed = 1.f;    ///< Random rotation speed factor.
+  Color color = Colors::Orange; ///< Particle base color.
+  bool autoEmit = false;        /// Whether particles automatically spwan or not
 
-  std::vector<Particle> m_particles = {}; /**< Circular buffer of particles. */
+  std::vector<SprayParticle> particles =
+      {}; /**< Circular buffer of particles. */
 
-  unsigned m_maxNumberOfParticles = 100; /**< Maximum particle capacity. */
-  unsigned m_numberOfParticles = 0;      /**< Current emission index. */
+  unsigned maxNumberOfParticles = 0; /**< Maximum particle capacity. */
+  unsigned currentParticle = 0;      /**< Current emission index. */
 
+  /// Set auto emit particles.
+  void setAutoEmit(bool emitAutomatically)
+  {
+    autoEmit = emitAutomatically;
+    if (maxNumberOfParticles == 0) {
+      maxNumberOfParticles = 1;
+    }
+    if (particles.size() == 0) {
+      particles.push_back(SprayParticle{});
+    }
+  }
   // ------------------------------------------------------------
   // Factory functions
   // ------------------------------------------------------------
 
   /**
-   * @brief Creates a particle spray with default configuration.
+   * @brief Creates a particle spray using ParticleSprayInitArgs
    *
-   * Allocates the particle buffer using the default maximum capacity.
+   * PreAllocates the particle buffer using the default maximum capacity.
    */
-  static ParticleSprayComponent create()
+  static ParticleSprayComponent create(ParticleSprayInitArgs args)
   {
-    ParticleSprayComponent c{};
-    c.m_particles.resize(c.m_maxNumberOfParticles);
-    return c;
-  }
-
-  /**
-   * @brief Creates a particle spray with custom configuration.
-   *
-   * @param velocity Base particle velocity.
-   * @param lifeTime Lifetime of each particle.
-   * @param maxNumberOfParticles Maximum buffer capacity.
-   * @param color Base particle color.
-   */
-  static ParticleSprayComponent create(float velocity, uint64_t lifeTime,
-                                       unsigned maxNumberOfParticles,
-                                       const glm::vec4 &color = glm::vec4(1.f))
-  {
-    ParticleSprayComponent c{.m_velocity = velocity,
-                             .m_lifeTime = lifeTime,
-                             .m_color = color,
-                             .m_maxNumberOfParticles = maxNumberOfParticles};
-
-    c.m_particles.resize(maxNumberOfParticles);
-
-    // Initialize particle pool
-    for (auto &particle : c.m_particles) {
-      particle.m_rotationSpeed =
-          static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-      particle.m_alive = false;
+    ParticleSprayComponent c;
+    c.interval = args.interval;
+    c.velocity = args.velocity;
+    c.lifeTime = args.lifeTime;
+    c.sizeChangeSpeed = args.sizeChangeSpeed;
+    c.randSizeFactor = args.sizeChangeSpeed;
+    c.autoEmit = args.autoEmit;
+    c.maxNumberOfParticles = args.capacity;
+    c.particles.resize(c.maxNumberOfParticles);
+    c.randAngleFactor = args.randAngleFactor;
+    if (args.capacity == 0) {
+      c.autoEmit = false;
+    } else {
+      c.particles.push_back(SprayParticle{.alive = false});
     }
-
     return c;
-  }
-
-  // ------------------------------------------------------------
-  // Emission
-  // ------------------------------------------------------------
-
-  /**
-   * @brief Emits a single particle into the buffer.
-   *
-   * The particle is written into the current buffer index and overwrites
-   * older particles once the buffer capacity is exceeded (ring-buffer
-   * behavior).
-   *
-   * @param currentTime Current simulation time.
-   * @param basePosition Emission position offset.
-   * @param baseNormal Emission direction vector.
-   * @param rotationSpeed Optional angular rotation speed.
-   */
-  void emitParticle(const uint64_t currentTime, const glm::vec2 &basePosition,
-                    const glm::vec2 &baseNormal, float rotationSpeed = 0.f)
-  {
-    Particle &particle = m_particles[m_numberOfParticles];
-    m_numberOfParticles = (m_numberOfParticles + 1) % m_maxNumberOfParticles;
-
-    particle.m_position = {0.f, 0.f};
-    particle.m_normal = baseNormal;
-    particle.m_offset = basePosition;
-    particle.m_startTime = currentTime;
-    particle.m_rotationSpeed = rotationSpeed;
-    particle.m_alive = true;
   }
 
   // ------------------------------------------------------------
@@ -156,8 +144,8 @@ struct ParticleSprayComponent {
    */
   void clear()
   {
-    for (auto &p : m_particles) {
-      p.m_alive = false;
+    for (auto &p : particles) {
+      p.alive = false;
     }
   }
 };

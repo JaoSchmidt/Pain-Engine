@@ -10,15 +10,28 @@
 
 namespace pain
 {
-
 std::optional<VertexArray>
 VertexArray::createVertexArray(VertexBuffer &vertexBuffer,
                                IndexBuffer &indexBuffer)
 {
   uint32_t rendererId = backend::createVertexArray();
-
-  addVertexBuffer(vertexBuffer, rendererId);
+  uint32_t index = 0;
+  addVertexBuffer(vertexBuffer, rendererId, index);
   setIndexBuffer(indexBuffer, rendererId);
+  return VertexArray(vertexBuffer, indexBuffer, rendererId);
+}
+
+std::optional<VertexArray>
+VertexArray::createVertexArray(VertexBuffer &vertexBuffer,
+                               VertexBuffer &vertexBufferInstance,
+                               IndexBuffer &indexBuffer)
+{
+  uint32_t index = 0;
+  uint32_t rendererId = backend::createVertexArray();
+
+  addVertexBuffer(vertexBuffer, rendererId, index);
+  setIndexBuffer(indexBuffer, rendererId);
+  addVertexBuffer(vertexBufferInstance, rendererId, index);
   return VertexArray(vertexBuffer, indexBuffer, rendererId);
 }
 VertexArray::VertexArray(VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer,
@@ -41,9 +54,9 @@ VertexArray::~VertexArray()
 void VertexArray::bind() const { backend::bindVertexArray(m_rendererId); }
 void VertexArray::unbind() const { backend::unbindVertexArray(); }
 void VertexArray::addVertexBuffer(const VertexBuffer &vertexBuffer,
-                                  uint32_t rendererId)
+                                  uint32_t rendererId, uint32_t &index)
 {
-  backend::addVertexBuffer(vertexBuffer, rendererId);
+  backend::addVertexBuffer(vertexBuffer, rendererId, index);
 }
 void VertexArray::setIndexBuffer(const IndexBuffer &indexBuffer,
                                  uint32_t rendererId)

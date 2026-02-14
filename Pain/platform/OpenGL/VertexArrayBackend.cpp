@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // ContextBackend.cpp
 #include "VertexArrayBackend.h"
 #include "CoreRender/BufferLayout.h"
@@ -91,7 +90,8 @@ void destroyVertexArray(uint32_t id)
 void bindVertexArray(uint32_t id) { glBindVertexArray(id); }
 void unbindVertexArray() { glBindVertexArray(0); }
 
-void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId)
+void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId,
+                     uint32_t &index)
 {
   P_ASSERT(
       vertexBuffer.getLayout().getElements().size() > 0,
@@ -99,9 +99,8 @@ void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId)
   bindVertexArray(rendererId);
   vertexBuffer.bind();
 
-  uint32_t index = 0;
   const auto &layout = vertexBuffer.getLayout();
-  for (const auto &element : layout) {
+  for (const BufferElement &element : layout) {
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(                        //
         index,                                    //
@@ -111,6 +110,8 @@ void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId)
         static_cast<GLsizei>(layout.getStride()), //
         // same as `(const void *)element.offset`, but won't generate warning
         reinterpret_cast<const void *>(static_cast<uintptr_t>(element.offset)));
+    if (element.instanced)
+      glVertexAttribDivisor(index, 1);
     index++;
   }
 }

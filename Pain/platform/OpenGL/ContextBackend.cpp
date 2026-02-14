@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // ContextBackend.cpp
 #include "ContextBackend.h"
 
@@ -16,6 +15,10 @@
 
 namespace pain::backend
 {
+namespace
+{
+int s_fragmentUnits;
+}
 
 void Init()
 {
@@ -37,16 +40,16 @@ void Init()
            "OpenGL version must be above 4.3, current version is {}.{}",
            versionMajor, versionMinor);
 
-  int maxTextureUnits;
+  GLint maxTextureUnits;
   glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
   PLOG_T("GPU Texture Mapping Units: {}", maxTextureUnits);
-
+  s_fragmentUnits = maxTextureUnits;
 #ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(Debug::glErrorHandler, 0);
 #endif
 }
-void InitRenderer()
+void InitRenderer(bool is3d)
 {
   // =============================================================== //
   // Create Renderer
@@ -54,13 +57,17 @@ void InitRenderer()
 
   // NOTE: This enable 3d and can be changed later in case we need some camera
   // mechanic
-  // Also, must be enable iff you clear
+  // Also, to enable GL_DEPTH, you must also enable those:
   // GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
-  // glEnable(GL_DEPTH_TEST);
-
-  // allow transparency
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if (is3d) {
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_TRUE);
+  } else {
+    // allow transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  }
   // HACK: allow textures with 3 channels to align properly, e.g. font textures.
   // No idea why it works tho, perhaps I will find a proper doc later
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -75,10 +82,16 @@ void setClearColor(const glm::vec4 &color)
 }
 void clear()
 {
-  // Enable iff DEPTH_TEST is enabled
-  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  // Otherwise
-  glClear(GL_COLOR_BUFFER_BIT);
+  if (glIsEnabled(GL_DEPTH_TEST))
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  else
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+void drawInstanced(uint32_t indiceCount, uint32_t instanceCount)
+{
+  glDrawArraysInstanced(GL_TRIANGLES, 0, static_cast<int32_t>(indiceCount),
+                        static_cast<int32_t>(instanceCount));
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount)
 {
@@ -88,6 +101,9 @@ void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount)
                  nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+unsigned getTMU() { return static_cast<unsigned>(s_fragmentUnits); }
+int getTMUi() { return s_fragmentUnits; }
 
 } // namespace pain::backend
 

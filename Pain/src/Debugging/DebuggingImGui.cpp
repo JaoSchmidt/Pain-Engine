@@ -29,10 +29,10 @@ ImGuiDebugMenu::Script::Script()
   m_resultFileName = generateTimestampedFilename("profile-", ".json");
 }
 
-void ImGuiDebugMenu::Script::onRender(Renderer2d &renderer, bool isMinimized,
+void ImGuiDebugMenu::Script::onRender(Renderers &renderers, bool isMinimized,
                                       DeltaTime currentTime)
 {
-  UNUSED(renderer)
+  UNUSED(renderers)
   UNUSED(isMinimized)
   UNUSED(currentTime)
 

@@ -21,6 +21,7 @@
 
 namespace pain
 {
+struct Renderers;
 
 namespace Systems
 {
@@ -202,7 +203,7 @@ public:
 
   /** @brief Checks if an entity contains all specified components. */
   template <reg::ECSComponent... TargetComponents>
-  constexpr bool containsAllComponents(reg::Entity entity) const
+  constexpr bool hasAllComponents(reg::Entity entity) const
   {
     return m_registry.template containsAll<TargetComponents...>(entity);
   }
@@ -247,7 +248,7 @@ public:
   void updateSystems(const SDL_Event &event);
 
   /** @brief Executes render callbacks on systems implementing IOnRender. */
-  void renderSystems(Renderer2d &renderer, bool isMinimized,
+  void renderSystems(Renderers &renderers, bool isMinimized,
                      DeltaTime currentTime);
 
   /**

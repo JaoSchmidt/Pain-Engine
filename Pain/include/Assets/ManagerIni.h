@@ -7,7 +7,8 @@
 #pragma once
 
 /// @file ManagerIni.h
-/// @brief INI-based configuration management for engine and application settings.
+/// @brief INI-based configuration management for engine and application
+/// settings.
 
 #include "Assets/ManagerFile.h"
 #include "Core.h"
@@ -27,34 +28,29 @@ namespace pain
  *
  * @tparam T Value type.
  */
-template <typename T>
-struct Config
-{
+template <typename T> struct Config {
 private:
-    T m_def;
+  T m_def;
 
 public:
-    /// @brief Returns the current value.
-    T get() const;
-    /// @brief Returns the default value.
-    const T getDefault() const;
-    /// @brief Current value loaded from the INI file.
-    T value;
-    /// @brief INI key name.
-    const char* name;
-    /// @brief Constructs a configuration entry with a default value and key name.
-    Config(T t, const char* name);
-    Config& operator=(Config&& o);
-    Config(Config&& o);
-    NONCOPYABLE(Config);
-    /// @brief Initializes the value from an INI structure.
-    void initValue(mINI::INIStructure& ini,
-                   const std::string& settingsName);
-    /// @brief Writes the current value into an INI structure.
-    void writeBuffer(mINI::INIStructure& ini,
-                     const std::string& settingsName);
-
- };
+  /// @brief Returns the current value.
+  T get() const;
+  /// @brief Returns the default value.
+  const T getDefault() const;
+  /// @brief Current value loaded from the INI file.
+  T value;
+  /// @brief INI key name.
+  const char *name;
+  /// @brief Constructs a configuration entry with a default value and key name.
+  Config(T t, const char *name);
+  Config &operator=(Config &&o);
+  Config(Config &&o);
+  NONCOPYABLE(Config);
+  /// @brief Initializes the value from an INI structure.
+  void initValue(mINI::INIStructure &ini, const std::string &settingsName);
+  /// @brief Writes the current value into an INI structure.
+  void writeBuffer(mINI::INIStructure &ini, const std::string &settingsName);
+};
 
 extern template struct Config<int>;
 extern template struct Config<float>;
@@ -75,6 +71,7 @@ struct InternalConfig {
   X(float, zoomLevel, 2.f, "initial_zoom");                                    \
   X(float, gridSize, 0.5f, "debug_grid_size");                                 \
   X(bool, swapChainTarget, true, "swap_chain_target");                         \
+  X(bool, is3d, false, "is3d");                                                \
   X(std::string, title, "Unnamed Game", "game_title");
 
 #define X(type, variable, default, name)                                       \
@@ -82,7 +79,8 @@ struct InternalConfig {
   INTERNAL_INI_CONFIGS
 #undef X
 
-  /// @brief Reads or creates the internal configuration file and updates values.
+  /// @brief Reads or creates the internal configuration file and updates
+  /// values.
   void readAndUpdate(const std::string &resourceFolder);
 
   /// @brief Writes the current configuration to disk.

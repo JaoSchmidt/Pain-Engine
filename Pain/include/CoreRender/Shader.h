@@ -45,7 +45,6 @@ public:
                std::function<std::pair<std::string, std::string>()> fn);
 
   ~Shader();
-  NONCOPYABLE(Shader);
   Shader(Shader &&o);
   Shader &operator=(Shader &&o);
 
@@ -88,6 +87,7 @@ public:
 
 private:
   Shader() = default;
+  Shader(std::string name, uint32_t programId);
   int getUniformLocation(const std::string &name) const;
   std::string m_name = "undefined";
   uint32_t m_programId = 0;

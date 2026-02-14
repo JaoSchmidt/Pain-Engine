@@ -11,7 +11,7 @@
 
 namespace pain
 {
-struct Renderer2d;
+struct Renderers;
 }
 
 /** Concepts used during NativeScriptComponent::bind() to validate script
@@ -31,11 +31,11 @@ concept has_onCreate_method = requires(T &&t) {
   { t.onCreate() };
 };
 
-/** Detects whether a type exposes a public onRender(Renderer2d&, bool,
+/** Detects whether a type exposes a public onRender(Renderers&, bool,
  * DeltaTime) method. */
 template <typename T>
 concept has_onRender_method =
-    requires(T &&t, pain::Renderer2d &r, bool m, pain::DeltaTime d) {
+    requires(T &&t, pain::Renderers &r, bool m, pain::DeltaTime d) {
       { t.onRender(r, m, d) };
     };
 
@@ -126,7 +126,7 @@ template <typename T> void check_script_methods()
   // Check for wrong signatures
   if constexpr (has_any_callable_onRender<T> && !has_onRender_method<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
-                         "onRender(Renderer2d&, bool, DeltaTime).");
+                         "onRender(Renderers&, bool, DeltaTime).");
   }
   if constexpr (has_any_callable_onUpdate<T> && !has_onUpdate_method<T>) {
     static_assert(false, "Error: onUpdate() has wrong signature! Should be "

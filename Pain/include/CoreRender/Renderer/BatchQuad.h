@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // QuadBatch.h
 #pragma once
 
@@ -23,9 +22,6 @@ struct QuadVertex {
   float texIndex;
   float tilingFactor;
 };
-
-// TODO:(jao) search MaxTextureSlots dinamically (i.e TMU value on gpu)
-static constexpr uint32_t MaxTextureSlots = 32;
 
 struct QuadBatch {
   using Vertex = QuadVertex;
@@ -53,12 +49,10 @@ struct QuadBatch {
 
   void allocateQuad(const glm::mat4 &transform, const Color &tintColor,
                     const float tilingFactor, const float textureIndex,
-                    const std::array<glm::vec2, 4> &textureCoordinate,
-                    float order = 0);
+                    const std::array<glm::vec2, 4> &textureCoordinate);
   void resetAll();
   void resetPtr();
-  void flush(const std::array<Texture *, MaxTextureSlots> &textures,
-             uint32_t textureCount);
+  void flush(Texture **textures, uint32_t textureCount);
 
 private:
   QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_);

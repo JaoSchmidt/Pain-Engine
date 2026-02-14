@@ -13,10 +13,10 @@ namespace pain
 DebugGrid DebugGrid::create(float gridSize)
 {
   float vertices[] = {
-      -1.0f, -1.0f, 0.0f, //
-      1.0f,  -1.0f, 0.0f, //
-      1.0f,  1.0f,  0.0f, //
-      -1.0f, 1.0f,  0.0f,
+      -1.0f, -1.0f, //
+      1.0f,  -1.0f, //
+      1.0f,  1.0f,  //
+      -1.0f, 1.0f,  //
   }; //
 
   unsigned int indices[] = {0, 1, 2, 2, 3, 0};
@@ -29,7 +29,7 @@ DebugGrid DebugGrid::create(float gridSize)
   shader.uploadUniformFloat("u_Thickness", 0.005f);
   return DebugGrid(
       *VertexBuffer::createStaticVertexBuffer(
-          vertices, sizeof(vertices), {{ShaderDataType::Float3, "a_Position"}}),
+          vertices, sizeof(vertices), {{ShaderDataType::Float2, "a_Position"}}),
       *IndexBuffer::createIndexBuffer(indices,
                                       sizeof(indices) / sizeof(indices[0])),
       std::move(shader));

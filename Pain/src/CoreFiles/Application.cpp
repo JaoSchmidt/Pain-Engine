@@ -27,11 +27,6 @@ namespace pain
 {
 pain::Application *pain::Application::s_app = nullptr;
 
-unsigned Application::getProcessorCount()
-{
-  return std::thread::hardware_concurrency();
-}
-
 Application *Application::createApplication(AppContext &&context,
                                             FrameBufferCreationInfo &&fbci)
 {
@@ -89,7 +84,7 @@ Application *Application::createApplication(AppContext &&context,
     addScheduler(app->m_luaState, app->m_worldScene);
     app->m_worldScene.addEntityFunctions("World", app->m_luaState);
     createLuaEventMap(app->m_luaState, app->m_eventDispatcher);
-    TextureManager::addRendererForDeletingTextures(&(app->m_renderer));
+    TextureManager::addRendererForDeletingTextures(app->m_renderers);
     Application::s_app = app;
   }
   return app;
@@ -100,7 +95,8 @@ Application *Application::createApplication(AppContext &&context,
 Application::Application(sol::state &&luaState, SDL_Window *window,
                          void *sdlContext, FrameBufferCreationInfo &&fbci,
                          AppContext &&context)
-    : m(), m_context(context), m_renderer(Renderer2d::createRenderer2d()),
+    : m{.context = context}, m_renderers{Renderer2d::createRenderer2d(),
+                                         Renderer3d::createRenderer3d()},
       m_threadPool(ThreadPool{}), m_luaState(std::move(luaState)),
       m_eventDispatcher(m_luaState),
       m_worldScene(Scene::create(m_eventDispatcher, m_luaState, m_threadPool)),
@@ -116,16 +112,46 @@ void Application::stopLoop(bool restartFlag)
   PLOG_I("Game has been stopped on {}", fmt::ptr(this));
   m_endGameFlags.restartGame = restartFlag;
 }
+
+void Application::ensureCamera()
+{
+  // set some camera
+  if (!m_renderers.renderer2d.hasCamera() &&
+      !m_renderers.renderer3d.hasCamera()) {
+    PLOG_I("Camera is missing, searching for 2d camera component");
+    bool hasCameraComponent = false;
+    for (auto &chunk : m_worldScene.query<cmp::OrthoCamera>()) {
+      auto *c = std::get<0>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; i++) {
+        hasCameraComponent = true;
+        set2dRendererCamera(c[i].m_entity, m.context.defaultWidth,
+                            m.context.defaultHeight);
+      }
+    }
+    for (auto &chunk : m_worldScene.query<cmp::PerspCamera>()) {
+      auto *c = std::get<0>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; i++) {
+        hasCameraComponent = true;
+        set3dRendererCamera(c[i].m_entity, m.context.defaultWidth,
+                            m.context.defaultHeight);
+      }
+    }
+
+    // creates a dummy camera in case it doesn't exist
+    if (!hasCameraComponent) {
+      PLOG_W("You didn't set a camera, using a default camera");
+      reg::Entity camera = Dummy2dCamera::create(
+          m_worldScene, m.context.defaultWidth, m.context.defaultHeight, 1.f);
+      set2dRendererCamera(camera, m.context.defaultWidth,
+                          m.context.defaultHeight);
+    }
+  }
+}
+
 EndGameFlags Application::run()
 {
-  // creates a dummy camera in case it doesn't exist
-  if (!m_renderer.hasCamera()) {
-    PLOG_W("You didn't set a camera, using the default camera");
-    reg::Entity camera = Dummy2dCamera::create(
-        m_worldScene, m_context.defaultWidth, m_context.defaultHeight, 1.f);
-    setRendererCamera(camera, m_context.defaultWidth, m_context.defaultHeight);
-  }
-
+  backend::InitRenderer(m.context.is3d);
+  ensureCamera();
   // creates a dummy ui scene
   if (m_uiScene.get() == nullptr)
     createUIScene();
@@ -195,7 +221,7 @@ EndGameFlags Application::run()
           else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
             m.isMinimized = false;
           else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-            m_renderPipeline.onWindowResized(event, m_renderer, m_worldScene);
+            m_renderPipeline.onWindowResized(event, m_renderers, m_worldScene);
           break;
         default:
           break;
@@ -211,7 +237,7 @@ EndGameFlags Application::run()
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Rendering");
-      m_renderPipeline.pipeline(m_renderer, m.isMinimized, elapsedTime,
+      m_renderPipeline.pipeline(m_renderers, m.isMinimized, elapsedTime,
                                 m_worldScene, *m_uiScene);
       P_ASSERT(m_window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_window);

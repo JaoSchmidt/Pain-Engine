@@ -8,6 +8,7 @@
 #include "CoreRender/CameraComponent.h"
 #include "ECS/Components/NativeScript.h"
 #include "GUI/ImGuiDebugRegistry.h"
+#include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
 #include "glm/fwd.hpp"
@@ -20,62 +21,65 @@ reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionHeight,
   scene.createComponents(entity, pain::Transform2dComponent{}, //
                          pain::RotationComponent{},            //
                          pain::Movement2dComponent{},          //
-                         Component::OrthoCamera::create(
-                             resolutionWidth, resolutionHeight, zoomLevel), //
+                         Component::OrthoCamera::create(resolutionWidth,
+                                                        resolutionHeight,
+                                                        zoomLevel, entity), //
                          pain::NativeScriptComponent{});
   pain::Scene::emplaceScript<OrthoCameraScript>(entity, scene);
   return entity;
 }
 reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
                                              int resolutionHeight,
-                                             int resolutionWeigh,
+                                             int resolutionWidth,
                                              float zoomLevel)
 {
   reg::Entity entity = scene.createEntity();
-  scene.createComponents(entity, pain::Transform2dComponent{},
-                         Component::OrthoCamera::create(
-                             resolutionWeigh, resolutionHeight, zoomLevel) //
+  scene.createComponents(
+      entity, pain::Transform2dComponent{},
+      Component::OrthoCamera::create(resolutionWidth, resolutionHeight,
+                                     zoomLevel, entity) //
   );
   return entity;
 }
 
-void OrthoCameraScript::onCreate()
-{
-  getComponent<Movement2dComponent>().m_rotationSpeed = 1.f;
-}
-
 void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
 {
-  const Uint8 *state = SDL_GetKeyboardState(NULL);
-  auto [mc, tc, cc, rc] =
-      getComponents<Movement2dComponent, Transform2dComponent,
-                    Component::OrthoCamera, RotationComponent>();
+  if (hasAnyComponents<Movement2dComponent, Transform2dComponent>()) {
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    auto [mc, tc, cc, rc] =
+        getComponents<Movement2dComponent, Transform2dComponent,
+                      Component::OrthoCamera, RotationComponent>();
 
-  glm::vec3 moveDir{0.0f};
+    glm::vec3 moveDir{0.0f};
 
-  if (state[SDL_SCANCODE_W])
-    moveDir -= glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
-  if (state[SDL_SCANCODE_S])
-    moveDir += glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
-  if (state[SDL_SCANCODE_A])
-    moveDir -= rc.m_rotation;
-  if (state[SDL_SCANCODE_D])
-    moveDir += rc.m_rotation;
+    if (state[SDL_SCANCODE_W])
+      moveDir -= glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+    if (state[SDL_SCANCODE_S])
+      moveDir += glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+    if (state[SDL_SCANCODE_A])
+      moveDir -= rc.m_rotation;
+    if (state[SDL_SCANCODE_D])
+      moveDir += rc.m_rotation;
 
-  // Normalize movement direction (avoid diagonal speed boost)
-  if (glm::length(moveDir) > 0.0001f)
-    moveDir = glm::normalize(moveDir);
+    // Normalize movement direction (avoid diagonal speed boost)
+    if (glm::length(moveDir) > 0.0001f)
+      moveDir = glm::normalize(moveDir);
 
-  float moveSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
-  mc.m_velocity = moveDir * moveSpeed;
+    float moveSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
+    mc.m_velocity = moveDir * moveSpeed;
 
-  if (state[SDL_SCANCODE_Q])
-    rc.m_rotationAngle += mc.m_rotationSpeed * deltaTime.getSecondsf();
-  if (state[SDL_SCANCODE_E])
-    rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTime.getSecondsf();
+    if (state[SDL_SCANCODE_Q])
+      rc.m_rotationAngle += mc.m_rotationSpeed * deltaTime.getSecondsf();
+    if (state[SDL_SCANCODE_E])
+      rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTime.getSecondsf();
 
-  tc.m_position += mc.m_velocity * deltaTime.getSecondsf();
-  cc.recalculateViewMatrix(tc.m_position, rc.m_rotationAngle);
+    tc.m_position += mc.m_velocity * deltaTime.getSecondsf();
+    cc.recalculateViewMatrix(tc.m_position, rc.m_rotationAngle);
+  } else { // TODO: finish 3d ortho version
+    auto [mc, tc, cc] = getComponents<Movement3dComponent, Transform3dComponent,
+                                      Component::OrthoCamera>();
+    cc.recalculateViewMatrix(glm::vec2(tc.m_position), 0);
+  }
 }
 
 void OrthoCameraScript::onEvent(const SDL_Event &event)

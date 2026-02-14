@@ -39,7 +39,7 @@ public:
   Script &operator=(Script &&) = delete;
 
   /** Renders the debug menu and executes registered debug callbacks. */
-  void onRender(Renderer2d &renderer, bool isMinimized, DeltaTime currentTime);
+  void onRender(Renderers &renderers, bool isMinimized, DeltaTime currentTime);
 
   /** Cleans up debug registry state when destroyed. */
   void onDestroy();

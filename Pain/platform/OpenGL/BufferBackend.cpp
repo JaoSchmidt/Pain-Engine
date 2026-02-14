@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #include "BuffersBackend.h"
 
 #ifdef PAIN_RENDERER_OPENGL
@@ -26,7 +25,7 @@ uint32_t createVertexBuffer(const VertexBufferCreateInfo &info)
 
   glBindBuffer(GL_ARRAY_BUFFER, id);
   glBufferData(GL_ARRAY_BUFFER, info.size, info.data,
-               info.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+               info.isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
@@ -63,6 +62,28 @@ uint32_t createIndexBuffer(const uint32_t *indices, uint32_t count)
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices,
                GL_STATIC_DRAW);
   return id;
+}
+uint32_t createIndexBuffer(uint32_t maxIndexCount)
+{
+  uint32_t id = 0;
+  glGenBuffers(1, &id);
+  if (!id) {
+    PLOG_W("Failed to generate index buffer");
+    return 0;
+  }
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxIndexCount * sizeof(uint32_t),
+               nullptr, GL_DYNAMIC_DRAW);
+
+  return id;
+}
+
+void updateIndexBuffer(uint32_t id, const uint32_t *indices, uint32_t count)
+{
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
+  glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, count * sizeof(uint32_t),
+                  indices);
 }
 
 void destroyIndexBuffer(uint32_t id) { glDeleteBuffers(1, &id); }

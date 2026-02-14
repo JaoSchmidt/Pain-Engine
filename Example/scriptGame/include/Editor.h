@@ -23,7 +23,7 @@ public:
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::Renderer2d &renderer, bool isMinimized,
+  void onRender(pain::Renderers &renderers, bool isMinimized,
                 pain::DeltaTime dt)
   {
     UNUSED(isMinimized)
@@ -99,36 +99,18 @@ public:
       ImGui::Begin("Stats");
 
       // -------------------------------------------------- //
-      auto showStats = [](const pain::Renderer2d::Stats &s) {
-        ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "%s instances: %d",
-                           s.name, s.count);
 
-        // Small indented box for extra stats
-        if (ImGui::TreeNodeEx((void *)(&s), // unique ID
-                              ImGuiTreeNodeFlags_Framed |
-                                  ImGuiTreeNodeFlags_SpanAvailWidth,
-                              "Details")) {
-          ImGui::BeginChild(
-              "DetailsBox",
-              ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4), true);
-
-          ImGui::Text("Draw Calls: %d", s.draws);
-          ImGui::Text("Vertices:  %d", s.vertices);
-          ImGui::Text("Indices:   %d", s.indices);
-
-          ImGui::EndChild();
-          ImGui::TreePop();
-        }
-      };
       ImGui::Text("Renderer2D Stats:");
-      showStats(renderer.getStatistics<pain::QuadBatch>());
-      showStats(renderer.getStatistics<pain::CircleBatch>());
-      showStats(renderer.getStatistics<pain::TextBatch>());
-      showStats(renderer.getStatistics<pain::SprayBatch>());
-      showStats(renderer.getStatistics<pain::TriBatch>());
+      showStats(renderers.renderer2d.getStatistics<pain::QuadBatch>());
+      showStats(renderers.renderer2d.getStatistics<pain::CircleBatch>());
+      showStats(renderers.renderer2d.getStatistics<pain::TextBatch>());
+      showStats(renderers.renderer2d.getStatistics<pain::SprayBatch>());
+      showStats(renderers.renderer2d.getStatistics<pain::TriBatch>());
+      m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
 
-      m_imGuiDebugMenu.onRender(renderer, isMinimized, dt);
-
+      ImGui::Text("Renderer3D Stats:");
+      showStats(renderers.renderer3d.getStatistics<pain::CubeBatch>());
+      m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
       ImGui::End();
 
       ImGui::Begin("Viewport");
@@ -137,7 +119,7 @@ public:
         ImVec2 avail = ImGui::GetContentRegionAvail();
         if (avail.x != m_avail.x || avail.y != m_avail.y) {
           m_avail = avail;
-          renderer.setViewport(0, 0, avail.x, avail.y);
+          renderers.renderer2d.setViewport(0, 0, avail.x, avail.y);
           getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
               {glm::vec2(avail.x, avail.y)});
         }
@@ -157,6 +139,31 @@ public:
   std::vector<std::string> m_availableResolutions;
 
 private:
+  template <typename Stats>
+    requires std::same_as<Stats, pain::Renderer2d::Stats> ||
+             std::same_as<Stats, pain::Renderer3d::Stats>
+  void showStats(const Stats &s)
+  {
+    ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "%s instances: %d",
+                       s.name, s.count);
+
+    // Small indented box for extra stats
+    if (ImGui::TreeNodeEx((void *)(&s), // unique ID
+                          ImGuiTreeNodeFlags_Framed |
+                              ImGuiTreeNodeFlags_SpanAvailWidth,
+                          "Details")) {
+      ImGui::BeginChild("DetailsBox",
+                        ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4),
+                        true);
+
+      ImGui::Text("Draw Calls: %d", s.draws);
+      ImGui::Text("Vertices:  %d", s.vertices);
+      ImGui::Text("Indices:   %d", s.indices);
+
+      ImGui::EndChild();
+      ImGui::TreePop();
+    }
+  };
   ImGuiWindowFlags m_windowFlags =
       ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |

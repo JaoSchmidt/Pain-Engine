@@ -7,6 +7,7 @@
 // Application.h
 #pragma once
 #include "CoreFiles/RenderPipeline.h"
+#include "CoreRender/Renderer/RenderContext.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "pch.h"
@@ -31,18 +32,16 @@ namespace pain
 struct AppContext {
   /** Default external configuration file name. */
   static constexpr const char *configIniFile = "config.ini";
-
   /** Default internal configuration file name. */
   static constexpr const char *internalConfigFile = "internalConfig.ini";
-
   /** Window title displayed in the OS window. */
   const char *title = "Unnamed Game";
-
   /** Initial window width in pixels. */
   int defaultWidth = 800;
-
   /** Initial window height in pixels. */
   int defaultHeight = 600;
+  /** Small check to enable 3d parameters in the API*/
+  bool is3d;
 };
 
 /**
@@ -86,9 +85,6 @@ public:
   {
     m.isSimulation = isSimulation;
   };
-
-  /** Returns the number of available hardware threads. */
-  static unsigned getProcessorCount();
 
   /** Enable or disable the rendering. For example, if you are doing a
    * simulation or some other calculation, you might want to ingore the render
@@ -145,7 +141,7 @@ public:
   sol::state &getLuaState() { return m_luaState; };
 
   /** Returns the 2D renderer instance. */
-  Renderer2d &getRenderer() { return m_renderer; }
+  Renderers &getRenderers() { return m_renderers; }
 
   /** Returns the framebuffer specification used by the render pipeline. */
   const FrameBufferCreationInfo &getFrameInfo() const
@@ -164,17 +160,21 @@ public:
    */
   void stopLoop(bool restartFlag = false);
 
-  /**
-   * @brief Assigns the renderer camera and viewport dimensions.
-   *
-   * @param camera Camera entity to use.
-   * @param width Viewport width in pixels.
-   * @param height Viewport height in pixels.
-   */
-  void setRendererCamera(const reg::Entity camera, int width, int height)
+  /// @brief Assigns the renderer camera and viewport dimensions.
+  void set2dRendererCamera(const reg::Entity cameraEntity, int width = 0,
+                           int height = 0)
   {
-    m_renderer.changeCamera(camera);
-    m_renderer.setViewport(0, 0, width, height);
+    m_renderers.renderer2d.changeCamera(cameraEntity);
+    if (!(width == 0 && height == 0))
+      m_renderers.renderer2d.setViewport(0, 0, width, height);
+  }
+  /// @brief Assigns the renderer camera and viewport dimensions.
+  void set3dRendererCamera(const reg::Entity cameraEntity, int width = 0,
+                           int height = 0)
+  {
+    m_renderers.renderer3d.changeCamera(cameraEntity);
+    if (!(width == 0 && height == 0))
+      m_renderers.renderer3d.setViewport(0, 0, width, height);
   }
 
   /**
@@ -192,7 +192,7 @@ public:
   {
     m_worldScene.createComponents(m_worldScene.getEntity(),
                                   std::forward<Components>(args)...);
-    m_renderer.setCellGridSize(collisionGridSize);
+    m_renderers.renderer2d.setCellGridSize(collisionGridSize);
     return m_worldScene;
   }
 
@@ -219,6 +219,8 @@ private:
   Application(sol::state &&luaState, SDL_Window *window, void *sdlContext,
               FrameBufferCreationInfo &&fbci, AppContext &&context);
 
+  void ensureCamera();
+
   // =============================================================== //
   // VARIABLES / CONSTANTS
   // =============================================================== //
@@ -236,16 +238,16 @@ private:
     constexpr static int FPS_SAMPLE_COUNT = 64;
     double fpsSamples[FPS_SAMPLE_COUNT] = {0};
     int currentSample = 1;
+    AppContext context;
   };
 
   DefaultApplicationValues m;
-  const AppContext m_context;
 
   // =============================================================== //
   // OWNED OBJECTS
   // =============================================================== //
   std::unique_ptr<UIScene> m_uiScene = nullptr;
-  Renderer2d m_renderer;
+  Renderers m_renderers;
   ThreadPool m_threadPool;
   sol::state m_luaState;
   reg::EventDispatcher m_eventDispatcher;

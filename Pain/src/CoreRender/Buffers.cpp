@@ -14,7 +14,17 @@ namespace pain
 // ======================================================================== //
 // IndexBuffer
 // ======================================================================== //
+std::optional<IndexBuffer>
+IndexBuffer::createIndexBuffer(uint32_t maxIndexCount)
+{
+  uint32_t bufferId = backend::createIndexBuffer(maxIndexCount);
+  if (bufferId == 0) {
+    PLOG_W("Failed to create IndexBuffer backend resource");
+    return std::nullopt;
+  }
 
+  return IndexBuffer(bufferId, maxIndexCount);
+}
 std::optional<IndexBuffer> IndexBuffer::createIndexBuffer(uint32_t *indexes,
                                                           uint32_t count)
 {
@@ -35,6 +45,12 @@ std::optional<IndexBuffer> IndexBuffer::createIndexBuffer(uint32_t *indexes,
 void IndexBuffer::bind() const { backend::bindIndexBuffer(m_bufferId); }
 
 void IndexBuffer::unbind() const { backend::unbindIndexBuffer(); }
+
+void IndexBuffer::updateIndexBuffer(const uint32_t *indices, uint64_t count)
+{
+  bind();
+  backend::updateIndexBuffer(m_bufferId, indices, static_cast<uint32_t>(count));
+}
 
 IndexBuffer::~IndexBuffer()
 {
@@ -89,7 +105,7 @@ VertexBuffer::createStaticVertexBuffer(float *vertices, uint32_t size,
                                        BufferLayout &&layout)
 {
   backend::VertexBufferCreateInfo info{
-      .size = size, .data = vertices, .dynamic = false};
+      .size = size, .data = vertices, .isDynamic = false};
 
   uint32_t id = backend::createVertexBuffer(info);
   if (!id) {
@@ -104,7 +120,7 @@ std::optional<VertexBuffer>
 VertexBuffer::createVertexBuffer(uint32_t size, BufferLayout &&layout)
 {
   backend::VertexBufferCreateInfo info{
-      .size = size, .data = nullptr, .dynamic = true};
+      .size = size, .data = nullptr, .isDynamic = true};
 
   uint32_t id = backend::createVertexBuffer(info);
   if (!id) {

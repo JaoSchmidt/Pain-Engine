@@ -6,6 +6,7 @@
 
 // QuadBatch.cpp
 #include "CoreRender/Renderer/BatchQuad.h"
+#include "ContextBackend.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include <iostream>
@@ -30,12 +31,13 @@ QuadBatch QuadBatch::create()
       *Shader::createFromFile("resources/default/shaders/Texture.glsl");
 
   // Set texture samplers once
-  int samplers[MaxTextureSlots];
-  for (int i = 0; i < static_cast<int>(MaxTextureSlots); i++)
+  int *samplers = new int[backend::getTMU()];
+  for (int i = 0; i < backend::getTMUi(); i++)
     samplers[i] = i;
 
   shader.bind();
-  shader.uploadUniformIntArray("u_Textures", samplers, MaxTextureSlots);
+  shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
+  delete[] samplers;
   return QuadBatch{
       std::move(*VertexBuffer::createVertexBuffer(
           MaxVertices * sizeof(Vertex),
@@ -55,8 +57,6 @@ QuadBatch::QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
       shader(std::move(shader_)),                       //
       ptrInit(std::make_unique<Vertex[]>(MaxVertices)), //
       ptr(ptrInit.get())                                //
-// drawOrder(std::vector<int>(MaxPolygons)),           //
-// sortBuffer(std::make_unique<Vertex[]>(MaxVertices)) //
 {};
 
 void QuadBatch::resetPtr()
@@ -73,8 +73,7 @@ void QuadBatch::resetAll()
 #endif
 }
 
-void QuadBatch::flush(const std::array<Texture *, MaxTextureSlots> &textures,
-                      uint32_t textureCount)
+void QuadBatch::flush(Texture **textures, uint32_t textureCount)
 {
   if (!indexCount)
     return;
@@ -98,8 +97,7 @@ void QuadBatch::flush(const std::array<Texture *, MaxTextureSlots> &textures,
 
 void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
                              const float tilingFactor, const float textureIndex,
-                             const std::array<glm::vec2, 4> &textureCoordinate,
-                             float order)
+                             const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
   constexpr glm::vec4 QuadVertexPositions[4] = {
@@ -109,8 +107,7 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
       glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
   };
   for (unsigned i = 0; i < 4; i++) {
-    ptr->position =
-        glm::vec3(glm::vec2(transform * QuadVertexPositions[i]), order);
+    ptr->position = transform * QuadVertexPositions[i];
     ptr->color = tintColor.value;
     ptr->texCoord = textureCoordinate[i];
     ptr->texIndex = textureIndex;
@@ -123,49 +120,5 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
   statsCount++;
 #endif
 }
-
-// TODO: may be a bottleneck in the future. Can still be optimized with some
-// more thought put into it
-// void QuadBatch::sortByDrawOrder()
-// {
-//   auto printstuff = [](auto &v, const char *name) {
-//     std::cout << name << std::endl;
-//     for (unsigned i = 0; i < v.size(); i++) {
-//       std::cout << v[i] << ", ";
-//     }
-//     std::cout << std::endl;
-//   };
-//
-//   const uint32_t quadCount = indexCount;
-//
-//   // Create index indirection
-//   std::vector<uint32_t> indices(quadCount);
-//   for (uint32_t i = 0; i < quadCount; ++i) {
-//     indices[i] = i;
-//   }
-//
-//   printstuff(indices, "draw order 1");
-//   // Sort indices by draw order
-//   std::sort(indices.begin(), indices.end(), [this](uint32_t a, uint32_t b) {
-//     return drawOrder[a] < drawOrder[b];
-//   });
-//
-//   std::vector<uint32_t> newDrawOrder(quadCount);
-//
-//   for (uint32_t i = 0; i < quadCount; ++i) {
-//     newDrawOrder[indices[i]] = i;
-//   }
-//   for (uint32_t i = 0; i < quadCount; ++i) {
-//     const uint32_t correctIndex = newDrawOrder[i];
-//
-//     Vertex *a = sortBuffer.get() + correctIndex * VerticesPerQuad;
-//     Vertex *b = ptrInit.get() + i * VerticesPerQuad;
-//
-//     for (uint32_t i = 0; i < VerticesPerQuad; ++i)
-//       a[i] = b[i];
-//
-//     printstuff(indices, "draw order 2");
-//   }
-// }
 
 } // namespace pain

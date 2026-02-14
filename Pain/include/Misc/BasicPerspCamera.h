@@ -4,73 +4,56 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
+// BasicPerspCamera.h
 #pragma once
-#include "Assets/DeltaTime.h"
-#include "pch.h"
-
 #include "Core.h"
-#include "CoreFiles/LogWrapper.h"
 #include "CoreRender/CameraComponent.h"
+#include "ECS/Scriptable.h"
 
 namespace pain
 {
+namespace Dummy3dCamera
+{
+reg::Entity create(pain::Scene &scene, int resolutionHeight,
+                   int resolutionWeigh, float zoomLevel);
 
-class PerspectiveCameraController
+reg::Entity createBasicCamera(pain::Scene &scene, int resolutionHeight,
+                              int resolutionWeigh, float zoomLevel);
+} // namespace Dummy3dCamera
+
+class PerspCameraScript : public WorldObject
 {
 public:
-  PerspectiveCameraController(float windowWidth, float windowHeight,
-                              float fieldOfViewDegrees);
-
+  using WorldObject::WorldObject;
   void onUpdate(DeltaTime deltaTimeSec);
+  void onCreate();
   void onEvent(const SDL_Event &e);
 
-  const Component::PerspCamera &getCamera() const { return m_camera; }
-
-  inline void setPosition(const glm::vec3 &position)
-  {
-    m_position = position;
-    m_camera.recalculateViewMatrix(m_position, m_cameraFront);
-  }
-  inline const glm::vec3 &getPosition() const { return m_position; }
-
-  inline void setFrontVector(glm::vec3 rotation)
-  {
-    m_cameraFront = rotation;
-    m_camera.recalculateViewMatrix(m_position, m_cameraFront);
-  }
   inline glm::vec3 getFrontVector() const { return m_cameraFront; }
 
-private:
+protected:
   // events
   void onMouseMoved(const SDL_Event &e);
   void onMouseButtonUp(const SDL_Event &e);
   void onMouseScrolled(const SDL_Event &e);
-  void onWindowResized(const SDL_Event &e);
   // void setMovementState(bool isMoving);
   template <bool IsMoving> void setMovementState();
 
   // window
-  float m_aspectRatio = 800.f / 600.f;
-  float m_windowWidth = 800.f;
-  float m_windowHeight = 600.f;
-  Component::PerspCamera m_camera;
   bool m_isMovementEnable = true;
 
   // vectors
-  glm::vec3 m_position = {0.0f, 0.0f, 0.0f};
   glm::vec3 m_cameraFront = {0.0f, 0.0f, 0.0f};
   glm::vec3 m_cameraUp = {0.0f, 1.0f, 0.0f};
 
   // degrees
-  float m_fieldOfViewDegrees = 60.0f;
   float m_yaw = 90.0f;
   float m_pitch = 0.0f;
 
   // derivates
-  float m_translationSpeed = 1.0f;
   float m_sensitivitySpeed = 0.01f;
   float m_zoomSpeed = 10.0f;
+  float m_moveSpeed = 100.f;
 };
 
 } // namespace pain

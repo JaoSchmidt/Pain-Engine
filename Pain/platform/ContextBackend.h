@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // ContextBackend.h
 #pragma once
 
@@ -13,10 +12,13 @@ namespace pain::backend
 {
 
 void Init();
-void InitRenderer();
+void InitRenderer(bool is3d);
 void setViewPort(int x, int y, int width, int height);
 void setClearColor(const glm::vec4 &color);
 void clear();
 void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount = 0);
+void drawInstanced(uint32_t indiceCount = 0, uint32_t instanceCount = 0);
+unsigned getTMU();
+int getTMUi();
 
 } // namespace pain::backend

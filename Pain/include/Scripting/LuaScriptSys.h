@@ -114,7 +114,7 @@ struct LuaScript : public System<WorldComponents>,
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void onRender(Renderer2d &renderer, bool isMinimized,
+  void onRender(Renderers &renderer, bool isMinimized,
                 DeltaTime currentTime) override;
 };
 

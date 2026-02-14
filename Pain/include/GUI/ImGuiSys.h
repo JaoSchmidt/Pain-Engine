@@ -94,7 +94,7 @@ struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
    * @param isMinimized Indicates whether the application window is minimized.
    * @param currentTime Current frame time.
    */
-  void onRender(Renderer2d &renderer, bool isMinimized,
+  void onRender(Renderers &renderer, bool isMinimized,
                 DeltaTime currentTime) override;
 
   /**

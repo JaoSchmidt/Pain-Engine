@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // ShaderBackend.cpp
 #include "ShaderBackend.h"
 
@@ -114,43 +113,59 @@ int getUniformLocation(uint32_t programId, const std::string &name)
   return loc;
 }
 
-void uploadUniformInt(int loc, int v) { glUniform1i(loc, v); }
+void uploadUniformInt(int loc, int v) { GL_CALL(glUniform1i(loc, v)); }
 void uploadUniformInt2(int loc, const glm::ivec2 &v)
 {
-  glUniform2i(loc, TP_VEC2(v));
+  GL_CALL(glUniform2i(loc, TP_VEC2(v)));
 }
 void uploadUniformInt3(int loc, const glm::ivec3 &v)
 {
-  glUniform3i(loc, TP_VEC3(v));
+  GL_CALL(glUniform3i(loc, TP_VEC3(v)));
 }
 void uploadUniformInt4(int loc, const glm::ivec4 &v)
 {
-  glUniform4i(loc, TP_VEC4(v));
+  GL_CALL(glUniform4i(loc, TP_VEC4(v)));
 }
-void uploadUniformFloat(int loc, float v) { glUniform1f(loc, v); }
+void uploadUniformFloat(int loc, float v) { GL_CALL(glUniform1f(loc, v)); }
 void uploadUniformFloat2(int loc, const glm::vec2 &v)
 {
-  glUniform2f(loc, TP_VEC2(v));
+  GL_CALL(glUniform2f(loc, TP_VEC2(v)));
 }
 void uploadUniformFloat3(int loc, const glm::vec3 &v)
 {
-  glUniform3f(loc, TP_VEC3(v));
+  GL_CALL(glUniform3f(loc, TP_VEC3(v)));
 }
 void uploadUniformFloat4(int loc, const glm::vec4 &v)
 {
-  glUniform4f(loc, TP_VEC4(v));
+  GL_CALL(glUniform4f(loc, TP_VEC4(v)));
 }
 void uploadUniformMat3(int loc, const glm::mat3 &m)
 {
-  glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(m));
+  GL_CALL(glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(m)));
 }
 void uploadUniformMat4(int loc, const glm::mat4 &m)
 {
-  glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m));
+#ifndef NDEBUG
+  GLint currentProgram = 0;
+  glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+
+  if (currentProgram == 0) {
+    PLOG_E("glUniformMatrix4fv called with no program bound");
+    DEBUG_BREAK();
+    return;
+  }
+
+  if (loc == -1) {
+    PLOG_E("glUniformMatrix4fv called with loc = -1");
+    DEBUG_BREAK();
+    return;
+  }
+#endif
+  GL_CALL(glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m)));
 }
 void uploadUniformIntArray(int loc, int *values, uint32_t count)
 {
-  glUniform1iv(loc, static_cast<int32_t>(count), values);
+  GL_CALL(glUniform1iv(loc, static_cast<int32_t>(count), values));
 }
 
 } // namespace pain::backend

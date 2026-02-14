@@ -19,9 +19,9 @@
 // Misc
 #include "GUI/Launcher.h"
 #include "Misc/BasicOrthoCamera.h"
+#include "Misc/BasicPerspCamera.h"
 #include "Misc/BasicShape.h"
 #include "Misc/Events.h"
-#include "Misc/PerspCameraController.h"
 // Renderer
 #include "CoreRender/BufferLayout.h"
 #include "CoreRender/Buffers.h"
@@ -51,7 +51,9 @@
 #include "Physics/Collision/Collider.h"
 #include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/KinematicsSys.h"
+#include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
+#include "Physics/Particles/ParticleSys.h"
 #include "Physics/RotationComponent.h"
 
 #include <SDL2/SDL_events.h>

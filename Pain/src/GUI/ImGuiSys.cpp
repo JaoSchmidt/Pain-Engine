@@ -56,7 +56,7 @@ void ImGuiSys::onEvent(const SDL_Event &event)
     }
   }
 }
-void ImGuiSys::onRender(Renderer2d &renderer, bool isMinimized,
+void ImGuiSys::onRender(Renderers &renderer, bool isMinimized,
                         DeltaTime currentTime)
 {
   UNUSED(currentTime);

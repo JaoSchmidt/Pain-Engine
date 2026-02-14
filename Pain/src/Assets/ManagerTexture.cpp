@@ -8,15 +8,15 @@
 #include "Assets/ManagerTexture.h"
 #include "Assets/ManagerFile.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/Renderer2d.h"
-#include "CoreRender/Renderer/Renderer3d.h"
+#include "CoreRender/Renderer/RenderContext.h"
 #include "Misc/TextureSheet.h"
 
 #include <exception>
 #include <filesystem>
 #include <optional>
 #define ERROR_TEXTURE_PATH "resources/default/textures/errorTexture.png"
-#define GENERAL_TEXTURE_PATH "resources/default/textures/defaultTexture.png"
+#define GENERAL_TEXTURE_PATH                                                   \
+  "resources/default/textures/defaultTexture_colors.png"
 
 #define GENERAL_KEY "GENERAL"
 #define BLANK_KEY "BLANK"
@@ -32,13 +32,10 @@ Renderer2d *s_renderer2d;
 Renderer3d *s_renderer3d;
 } // namespace
 
-void TextureManager::addRendererForDeletingTextures(Renderer2d *renderer)
+void TextureManager::addRendererForDeletingTextures(Renderers &renderers)
 {
-  s_renderer2d = renderer;
-}
-void TextureManager::addRendererForDeletingTextures(Renderer3d *renderer)
-{
-  s_renderer3d = renderer;
+  s_renderer2d = &renderers.renderer2d;
+  s_renderer3d = &renderers.renderer3d;
 }
 
 // ---------------------------------------------------------- //

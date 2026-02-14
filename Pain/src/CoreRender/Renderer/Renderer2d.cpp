@@ -73,7 +73,15 @@ void Renderer2d::beginScene(DeltaTime globalTime, const Scene &scene,
           m.orthoCameraEntity);
   uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime, transform,
                       cc.getResolution(), tc.m_position, cc.m_zoomLevel);
-  goBackToFirstVertex();
+
+  // Going back to frist vertex
+  for (uint8_t i = 0; i < NumLayers; i++) {
+    m.quadBatches[i].resetAll();
+  }
+  m.textBatch.resetAll();
+  m.sprayBatch.resetAll();
+  m.circleBatch.resetAll();
+  m.triBatch.resetAll();
 }
 
 void Renderer2d::flush()
@@ -192,14 +200,13 @@ void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
 // Draw Spray Particles
 // ================================================================= //
 
-void Renderer2d::drawSprayParticle(const Particle &p)
+void Renderer2d::drawSprayParticle(const SprayParticle &p)
 {
-  if (m.sprayBatch.indexCount >= SprayBatch::MaxIndices) {
+  if (m.sprayBatch.instanceCount >= SprayBatch::MaxPolygons) {
     m.sprayBatch.flush();
     m.sprayBatch.resetPtr();
   }
-  m.sprayBatch.allocateSprayParticles(p.m_position, p.m_offset, p.m_normal,
-                                      p.m_startTime, p.m_rotationSpeed);
+  m.sprayBatch.allocateSprayParticles(p.normal, p.startTime, p.offset);
 }
 
 // ================================================================= //
@@ -297,29 +304,27 @@ Renderer2d Renderer2d::createRenderer2d()
 {
   PROFILE_FUNCTION();
 
-  backend::InitRenderer();
-
-  return Renderer2d([] {
-    return M{
-        .quadBatches =
-            {
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-                QuadBatch::create(),
-            },
-        .triBatch = TriBatch::create(),       //
-        .circleBatch = CircleBatch::create(), //
-        .sprayBatch = SprayBatch::create(),   //
-        .textBatch = TextBatch::create(),     //
-        .debugGrid = DebugGrid::create(),
-        .textureSlots = // First texture is a  1x1 white texture
-        {&TextureManager::getDefaultTexture(
-            TextureManager::DefaultTexture::Blank)} //
-    };
+  // First texture is a  1x1 white texture
+  Texture **textureSlots = new Texture *[backend::getTMU()];
+  textureSlots[0] =
+      &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
+  return Renderer2d([textureSlots] {
+    return M{.quadBatches =
+                 {
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                     QuadBatch::create(),
+                 },
+             .triBatch = TriBatch::create(),       //
+             .circleBatch = CircleBatch::create(), //
+             .sprayBatch = SprayBatch::create(),   //
+             .textBatch = TextBatch::create(),     //
+             .debugGrid = DebugGrid::create(),
+             .textureSlots = textureSlots};
   }); //
 }
 
@@ -328,18 +333,6 @@ void Renderer2d::bindTextures()
   PROFILE_FUNCTION();
   for (uint32_t i = 0; i < m.textureSlotIndex; i++)
     m.textureSlots[i]->bindToSlot(i);
-}
-
-void Renderer2d::goBackToFirstVertex()
-{
-  PROFILE_FUNCTION();
-  for (uint8_t i = 0; i < NumLayers; i++) {
-    m.quadBatches[i].resetAll();
-  }
-  m.textBatch.resetAll();
-  m.sprayBatch.resetAll();
-  m.circleBatch.resetAll();
-  m.triBatch.resetAll();
 }
 
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
@@ -454,18 +447,17 @@ void Renderer2d::setCellGridSize(float cellsize)
   }
 }
 
-void Renderer2d::beginSprayParticle(const DeltaTime globalTime,
-                                    const ParticleSprayComponent &psc)
+void Renderer2d::beginSprayParticle(const ParticleSprayComponent &psc)
 {
   PROFILE_FUNCTION();
   m.sprayBatch.shader.bind();
-  m.sprayBatch.shader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
-  m.sprayBatch.shader.uploadUniformFloat("u_ParticleVelocity", psc.m_velocity);
-  m.sprayBatch.shader.uploadUniformFloat("u_LifeTime", (float)psc.m_lifeTime);
   m.sprayBatch.shader.uploadUniformFloat("u_SizeChangeSpeed",
-                                         psc.m_sizeChangeSpeed);
-  m.sprayBatch.shader.uploadUniformFloat("u_randomSizeFactor",
-                                         psc.m_randSizeFactor);
+                                         psc.sizeChangeSpeed);
+  m.sprayBatch.shader.uploadUniformFloat("u_RandomSizeFactor",
+                                         psc.randSizeFactor);
+  m.sprayBatch.shader.uploadUniformFloat("u_ParticleVelocity", psc.velocity);
+  m.sprayBatch.shader.uploadUniformFloat("u_LifeTime",
+                                         psc.lifeTime.getSecondsf());
 }
 
 } // namespace pain

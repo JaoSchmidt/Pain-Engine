@@ -26,17 +26,20 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
       pain::RotationComponent{},                                      //
       pain::Movement2dComponent{},                                    //
       pain::SAPCollider::createAABB(size, true),
-      pain::ParticleSprayComponent{}, //
+      pain::ParticleSprayComponent::create({
+          .randAngleFactor = 20.f,
+          .capacity = 100,
+      }),
       Component::OrthoCamera::create(resolutionWeigh, resolutionHeight,
-                                     zoomLevel), //
-      pain::NativeScriptComponent{},             //
-      pain::LuaScriptComponent::create(entity)   //
+                                     zoomLevel, entity), //
+      pain::NativeScriptComponent{},                     //
+      pain::LuaScriptComponent::create(entity)           //
   );
   pain::Scene::emplaceScript<pain::OrthoCameraScript>(entity, scene);
   return entity;
 }
 
-void Player::Script::onRender(pain::Renderer2d &renderer, bool isMinimized,
+void Player::Script::onRender(pain::Renderers &renderer, bool isMinimized,
                               pain::DeltaTime currentTime)
 {
   auto &camCC = getComponent<Component::OrthoCamera>();

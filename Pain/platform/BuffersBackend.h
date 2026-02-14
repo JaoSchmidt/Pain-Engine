@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // BuffersBackend.h
 #pragma once
 
@@ -16,7 +15,7 @@ namespace pain::backend
 struct VertexBufferCreateInfo {
   uint32_t size;
   const void *data;
-  bool dynamic;
+  bool isDynamic;
 };
 
 uint32_t createVertexBuffer(const VertexBufferCreateInfo &info);
@@ -26,6 +25,8 @@ void unbindVertexBuffer();
 void setVertexBufferData(uint32_t id, const void *data, uint32_t size);
 
 uint32_t createIndexBuffer(const uint32_t *indices, uint32_t count);
+uint32_t createIndexBuffer(uint32_t count);
+void updateIndexBuffer(uint32_t id, const uint32_t *indices, uint32_t count);
 void destroyIndexBuffer(uint32_t id);
 void bindIndexBuffer(uint32_t id);
 void unbindIndexBuffer();

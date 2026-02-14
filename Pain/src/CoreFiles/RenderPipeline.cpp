@@ -5,7 +5,9 @@
  */
 
 #include "CoreFiles/RenderPipeline.h"
+#include "ContextBackend.h"
 #include "CoreRender/CameraComponent.h"
+#include "CoreRender/Renderer/RenderContext.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "Misc/Events.h"
@@ -75,47 +77,76 @@ RenderPipeline RenderPipeline::create(const FrameBufferCreationInfo &info,
   return RenderPipeline{std::move(*fb), eventDispatcher};
 }
 
-void resizeCamera(const SDL_Event &event, Component::OrthoCamera &cc,
-                  FrameBuffer &fb, Renderer2d &renderer)
+template <typename Camera>
+  requires std::same_as<Camera, cmp::PerspCamera> ||
+           std::same_as<Camera, cmp::OrthoCamera>
+void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
+                  Renderers &renderers)
 {
   if (fb.getSpecification().swapChainTarget) {
-    renderer.setViewport(0, 0, event.window.data1, event.window.data2);
-    cc.setProjection(event.window.data1, event.window.data2);
+    renderers.renderer2d.setViewport(0, 0, event.window.data1,
+                                     event.window.data2);
+    renderers.renderer3d.setViewport(0, 0, event.window.data1,
+                                     event.window.data2);
+    c.setProjection(event.window.data1, event.window.data2);
   } else {
-    cc.setProjection(fb.getWidthi(), fb.getHeighti());
+    c.setProjection(fb.getWidthi(), fb.getHeighti());
     fb.resizeFrameBuffer(fb.getWidthi(), fb.getHeighti());
   }
 }
 
 void RenderPipeline::onWindowResized(const SDL_Event &event,
-                                     Renderer2d &renderer, Scene &scene)
+                                     Renderers &renderer, Scene &scene)
 {
-  auto chunks = scene.query<Component::OrthoCamera>();
-  for (auto &chunk : chunks) {
-    auto *c = std::get<0>(chunk.arrays);
+  {
+    auto chunks = scene.query<Component::OrthoCamera>();
+    for (auto &chunk : chunks) {
+      auto *c = std::get<0>(chunk.arrays);
 
-    for (size_t i = 0; i < chunk.count; ++i) {
-      if (event.type == SDL_WINDOWEVENT) {
-        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-          resizeCamera(event, c[i], m_frameBuffer, renderer);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        if (event.type == SDL_WINDOWEVENT) {
+          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+            resizeCamera(event, c[i], m_frameBuffer, renderer);
+          }
+        }
+      }
+    }
+  }
+  {
+    auto chunks = scene.query<Component::PerspCamera>();
+    for (auto &chunk : chunks) {
+      auto *c = std::get<0>(chunk.arrays);
+
+      for (size_t i = 0; i < chunk.count; ++i) {
+        if (event.type == SDL_WINDOWEVENT) {
+          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+            resizeCamera(event, c[i], m_frameBuffer, renderer);
+          }
         }
       }
     }
   }
 }
 
-void RenderPipeline::pipeline(Renderer2d &renderer, bool isMinimized,
+void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene &uiScene)
 {
+  backend::clear();
+  backend::setClearColor(s_clearColor);
   m_frameBuffer.bind();
-  renderer.setClearColor(s_clearColor);
-  renderer.clear();
-  renderer.beginScene(currentTime, worldScene);
-  worldScene.renderSystems(renderer, isMinimized, currentTime);
-  renderer.endScene();
+  if (renderers.renderer2d.hasCamera()) {
+    renderers.renderer2d.beginScene(currentTime, worldScene);
+    worldScene.renderSystems(renderers, isMinimized, currentTime);
+    renderers.renderer2d.endScene();
+  }
+  if (renderers.renderer3d.hasCamera()) {
+    renderers.renderer3d.beginScene(currentTime, worldScene);
+    worldScene.renderSystems(renderers, isMinimized, currentTime);
+    renderers.renderer3d.endScene();
+  }
   m_frameBuffer.unbind();
-  uiScene.renderSystems(renderer, isMinimized, currentTime);
+  uiScene.renderSystems(renderers, isMinimized, currentTime);
 }
 
 } // namespace pain

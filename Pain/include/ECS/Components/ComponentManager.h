@@ -39,11 +39,15 @@ namespace pain
 namespace tag
 {
 struct OrthoCamera;
+struct PerspCamera;
 struct LuaScheduleTask;
 struct LuaScript;
 struct Transform2d;
+struct Transform3d;
 struct Movement2d;
+struct Movement3d;
 struct ParticleSpray;
+struct GridParticle;
 struct Rotation;
 struct Sprite;
 struct Spriteless;
@@ -67,17 +71,20 @@ struct SAPCollider;
  */
 using WorldComponents = reg::CompileTimeBitMask< //
     tag::OrthoCamera,                            // 1
-    tag::Transform2d,                            // 2
-    tag::Movement2d,                             // 4
-    tag::NativeScript,                           // 8
-    tag::ParticleSpray,                          // 16
-    tag::Rotation,                               // 32
-    tag::Sprite,                                 // 64
-    tag::Spriteless,                             // 128
-    tag::Triangule,                              // 256
-    tag::LuaScript,                              // 512
-    tag::SAPCollider,                            // 1024
-    tag::LuaScheduleTask                         // 2048
+    tag::PerspCamera,                            // 2
+    tag::Transform2d,                            // 4
+    tag::Movement2d,                             // 8
+    tag::Transform3d,                            // 16
+    tag::Movement3d,                             // 32
+    tag::NativeScript,                           // 64
+    tag::ParticleSpray,                          // 128
+    tag::Rotation,                               // 256
+    tag::Sprite,                                 // 512
+    tag::Spriteless,                             // 1024
+    tag::Triangule,                              // 2048
+    tag::LuaScript,                              // 4096
+    tag::SAPCollider,                            // 8192
+    tag::LuaScheduleTask                         // 16384
     >;
 
 /**
