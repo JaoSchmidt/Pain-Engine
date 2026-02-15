@@ -50,6 +50,8 @@ struct ParticleSpray;
 struct GridParticle;
 struct Rotation;
 struct Sprite;
+struct Mesh;
+struct Material;
 struct Spriteless;
 struct Triangule;
 struct NativeScript;

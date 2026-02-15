@@ -11,6 +11,8 @@
 /// For use specifically for games built with Pain.
 #include "Assets/ManagerIni.h"
 #include "Assets/ManagerTexture.h"
+#include "Assets/MaterialComponent.h"
+#include "Assets/MeshComponent.h"
 #include "Assets/RandNumberGenerator.h"
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
