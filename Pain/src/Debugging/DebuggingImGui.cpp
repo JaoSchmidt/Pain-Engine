@@ -36,7 +36,7 @@ void ImGuiDebugMenu::Script::onRender(Renderers &renderers, bool isMinimized,
   UNUSED(isMinimized)
   UNUSED(currentTime)
 
-  ImGui::Begin("Debug Info");
+  ImGui::SeparatorText("Debug Info");
   const std::string fps = "FPS: " + std::to_string(m_currentTPS);
   ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
   ImGui::InputText("Profile Base Name", &m_baseProfileName[0],
@@ -71,8 +71,6 @@ void ImGuiDebugMenu::Script::onRender(Renderers &renderers, bool isMinimized,
 
   ImGui::Separator();
   ImGuiDebugRegistry::renderAll();
-
-  ImGui::End();
 }
 
 std::string ImGuiDebugMenu::Script::generateTimestampedFilename(

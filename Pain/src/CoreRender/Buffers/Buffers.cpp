@@ -5,7 +5,7 @@
  */
 
 // Buffers.cpp
-#include "CoreRender/Buffers.h"
+#include "CoreRender/Buffers/Buffers.h"
 #include "CoreFiles/LogWrapper.h"
 #include "platform/BuffersBackend.h"
 namespace pain
@@ -25,8 +25,8 @@ IndexBuffer::createIndexBuffer(uint32_t maxIndexCount)
 
   return IndexBuffer(bufferId, maxIndexCount);
 }
-std::optional<IndexBuffer> IndexBuffer::createIndexBuffer(uint32_t *indexes,
-                                                          uint32_t count)
+std::optional<IndexBuffer>
+IndexBuffer::createIndexBuffer(const uint32_t *indexes, uint32_t count)
 {
   if (!indexes || count == 0) {
     PLOG_W("IndexBuffer creation failed: invalid data");
@@ -101,7 +101,7 @@ VertexBuffer::VertexBuffer(uint32_t bufferId, BufferLayout &&layout)
     : m_bufferId(bufferId), m_layout(std::move(layout)) {};
 
 std::optional<VertexBuffer>
-VertexBuffer::createStaticVertexBuffer(float *vertices, uint32_t size,
+VertexBuffer::createStaticVertexBuffer(const void *vertices, uint32_t size,
                                        BufferLayout &&layout)
 {
   backend::VertexBufferCreateInfo info{

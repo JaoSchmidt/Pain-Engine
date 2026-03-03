@@ -8,9 +8,9 @@
 // TriBatch.h
 #pragma once
 
-#include "CoreRender/Shader.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
 namespace pain
 {
 

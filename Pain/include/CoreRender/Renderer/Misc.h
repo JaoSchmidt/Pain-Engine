@@ -60,6 +60,14 @@ struct Color {
   {}
 
   // clang-format on
+  constexpr glm::vec4 getVector() const
+  {
+    return glm::vec4((value & 0xFF) / 255.0f,         // r
+                     ((value >> 8) & 0xFF) / 255.0f,  // g
+                     ((value >> 16) & 0xFF) / 255.0f, // b
+                     ((value >> 24) & 0xFF) / 255.0f  // a
+    );
+  }
 };
 
 namespace Colors
@@ -69,6 +77,7 @@ static constexpr Color LightGrey{204, 204, 204, 255};
 static constexpr Color Grey{128, 128, 128, 255};
 static constexpr Color DarkerGrey{32, 32, 32, 255};
 static constexpr Color OffWhite{245, 245, 245, 255};
+static constexpr Color FullWhite{255, 255, 255, 255};
 
 // Reds / Pinks
 static constexpr Color Red{255, 0, 0, 255};
@@ -140,9 +149,9 @@ enum class SphereDivision : uint8_t { D_8x8, D_16x16, D_32x32, Count };
 
 constexpr glm::ivec2 resolutions[] = {{8, 8}, {16, 16}, {32, 32}};
 
-constexpr glm::ivec2 getResolution(SphereDivision r)
+constexpr glm::uvec2 getResolution(SphereDivision r)
 {
-  return resolutions[static_cast<int>(r)];
+  return resolutions[static_cast<uint32_t>(r)];
 }
 
 /** Total number of supported render layers. */

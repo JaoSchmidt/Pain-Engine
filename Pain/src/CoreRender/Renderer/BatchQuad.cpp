@@ -6,9 +6,9 @@
 
 // QuadBatch.cpp
 #include "CoreRender/Renderer/BatchQuad.h"
-#include "platform/ContextBackend.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
+#include "platform/ContextBackend.h"
 #include <iostream>
 
 namespace pain
@@ -43,8 +43,8 @@ QuadBatch QuadBatch::create()
           MaxVertices * sizeof(Vertex),
           {
               {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::UByte4, "a_Color", true},
               {ShaderDataType::Float2, "a_TexCoord"},
+              {ShaderDataType::UByte4, "a_Color", true},
               {ShaderDataType::Float, "a_TexIndex"},
               {ShaderDataType::Float, "a_TilingFactor"},
           })),

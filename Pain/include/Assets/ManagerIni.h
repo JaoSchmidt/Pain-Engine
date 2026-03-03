@@ -71,7 +71,6 @@ struct InternalConfig {
   X(float, zoomLevel, 2.f, "initial_zoom");                                    \
   X(float, gridSize, 0.5f, "debug_grid_size");                                 \
   X(bool, swapChainTarget, true, "swap_chain_target");                         \
-  X(bool, is3d, false, "is3d");                                                \
   X(std::string, title, "Unnamed Game", "game_title");
 
 #define X(type, variable, default, name)                                       \

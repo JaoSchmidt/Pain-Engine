@@ -4,8 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "CoreRender/VertexArray.h"
-#include "CoreRender/Buffers.h"
+#include "CoreRender/Buffers/VertexArray.h"
+#include "CoreRender/Buffers/Buffers.h"
 #include "platform/VertexArrayBackend.h"
 
 namespace pain

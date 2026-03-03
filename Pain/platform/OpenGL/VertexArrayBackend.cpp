@@ -6,7 +6,7 @@
 
 // ContextBackend.cpp
 #include "platform/VertexArrayBackend.h"
-#include "CoreRender/BufferLayout.h"
+#include "CoreRender/Buffers/BufferLayout.h"
 
 #ifdef PAIN_RENDERER_OPENGL
 
@@ -93,6 +93,12 @@ void unbindVertexArray() { glBindVertexArray(0); }
 void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId,
                      uint32_t &index)
 {
+
+  // TODO: I eventually need to make glGetError to work smh
+  // glBindBuffer(GL_ARRAY_BUFFER, 999999);
+  // GLenum err = glGetError();
+  // PLOG_E("Error");
+  // PLOG_E(err);
   P_ASSERT(
       vertexBuffer.getLayout().getElements().size() > 0,
       "VertexArray.h: Can't add a vertexBuffer that doesn't have a layout");
@@ -100,19 +106,56 @@ void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId,
   vertexBuffer.bind();
 
   const auto &layout = vertexBuffer.getLayout();
+  // big atributes only
   for (const BufferElement &element : layout) {
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(                        //
-        index,                                    //
-        getComponentCount(element.type),          //
-        getComponentGLType(element.type),         //
-        element.normalized ? GL_TRUE : GL_FALSE,  //
-        static_cast<GLsizei>(layout.getStride()), //
-        // same as `(const void *)element.offset`, but won't generate warning
-        reinterpret_cast<const void *>(static_cast<uintptr_t>(element.offset)));
-    if (element.instanced)
-      glVertexAttribDivisor(index, 1);
-    index++;
+    // ---------------------------
+    // Handle matrices separately
+    // ---------------------------
+    if (element.type == ShaderDataType::Mat3 ||
+        element.type == ShaderDataType::Mat4) {
+      uint32_t columnCount = (element.type == ShaderDataType::Mat4) ? 4 : 3;
+      uint32_t size = (element.type == ShaderDataType::Mat4)
+                          ? sizeof(glm::vec4)
+                          : sizeof(glm::vec3);
+
+      for (uint32_t i = 0; i < columnCount; i++) {
+        glEnableVertexAttribArray(index);
+        glVertexAttribPointer(
+            index,                                    //
+            static_cast<GLint>(columnCount),          //
+            GL_FLOAT,                                 //
+            element.normalized ? GL_TRUE : GL_FALSE,  //
+            static_cast<GLsizei>(layout.getStride()), //
+            // same as (const void *)element.offset, but won't generate warning
+            reinterpret_cast<const void *>(
+                static_cast<uintptr_t>(element.offset) + size * i));
+
+        if (element.instanced)
+          glVertexAttribDivisor(index, 1);
+
+        index++;
+      }
+    } else {
+      // ---------------------------
+      // Normal attributes
+      // ---------------------------
+      GLint componentCount = getComponentCount(element.type);
+      glEnableVertexAttribArray(index);
+      glVertexAttribPointer(
+          index,                                    //
+          componentCount,                           //
+          getComponentGLType(element.type),         //
+          element.normalized ? GL_TRUE : GL_FALSE,  //
+          static_cast<GLsizei>(layout.getStride()), //
+          // same as (const void *)element.offset, but won't generate warning
+          reinterpret_cast<const void *>(
+              static_cast<uintptr_t>(element.offset)));
+
+      if (element.instanced)
+        glVertexAttribDivisor(index, 1);
+
+      index++;
+    }
   }
 }
 void setIndexBuffer(const IndexBuffer &indexBuffer, uint32_t rendererId)

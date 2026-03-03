@@ -5,11 +5,11 @@
  */
 
 #include "CoreRender/Renderer/BatchGridParticles.h"
-#include "platform/ContextBackend.h"
 #include "Debugging/Profiling.h"
+#include "platform/ContextBackend.h"
 namespace pain
 {
-
+// TODO, what is this?
 GridParticleBatch GridParticleBatch::create()
 {
   // Indices (quad-style)
@@ -79,12 +79,12 @@ void GridParticleBatch::allocateGridParticles(Color color,
                                               const glm::vec2 &direction)
 {
   PROFILE_FUNCTION();
-  constexpr glm::vec2 SprayVertexPositions[4] = {
-      glm::vec2(-0.5f, -0.5f),
-      glm::vec2(0.5f, -0.5f),
-      glm::vec2(0.5f, 0.5f),
-      glm::vec2(-0.5f, 0.5f),
-  };
+  // constexpr glm::vec2 SprayVertexPositions[4] = {
+  //     glm::vec2(-0.5f, -0.5f),
+  //     glm::vec2(0.5f, -0.5f),
+  //     glm::vec2(0.5f, 0.5f),
+  //     glm::vec2(-0.5f, 0.5f),
+  // };
   for (unsigned i = 0; i < 4; i++) {
     ptr->direction = direction;
     ptr->color = color.value;

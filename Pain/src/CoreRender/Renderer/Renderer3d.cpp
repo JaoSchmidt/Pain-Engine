@@ -7,11 +7,10 @@
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "Assets/ManagerTexture.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
-#include <memory>
 
 #include "Debugging/Profiling.h"
 #include "ECS/WorldScene.h"
@@ -21,30 +20,27 @@
 namespace pain
 {
 
+// std::map<MaterialKey, CubeBatch> m_cubeBatchCache;
+std::map<MaterialKey, SphereBatch> m_sphereBatchCache;
 extern const Texture *m_fontAtlasTexture;
 
 // ================================================================= //
 // Renderer: basic wrapper around opengl
 // ================================================================= //
 
-void Renderer3d::setViewport(int x, int y, int width, int height)
-{
-  backend::setViewPort(x, y, width, height);
-}
-void Renderer3d::clear() { backend::clear(); }
-
-void Renderer3d::setClearColor(const glm::vec4 &color)
-{
-  backend::setClearColor(color);
-}
 bool Renderer3d::hasCamera() { return m.cameraEntity != reg::Entity{-1}; }
 void Renderer3d::changeCamera(reg::Entity cameraEntity)
 {
   m.cameraEntity = cameraEntity;
 }
-void Renderer3d::changeLight(reg::Entity lightEntity)
+
+Renderer3d::Stats Renderer3d::getCubeStatistics()
 {
-  m.lightEntity = lightEntity;
+  Stats cubeStats = {"Cubes"};
+  for (auto it = m_cubeBatchCache.begin(); it != m_cubeBatchCache.end(); it++) {
+    cubeStats += getStatistics(it->second);
+  }
+  return cubeStats;
 }
 
 void Renderer3d::beginScene(DeltaTime globalTime, const Scene &scene,
@@ -70,95 +66,252 @@ void Renderer3d::beginScene(DeltaTime globalTime, const Scene &scene,
     PLOG_E("The Renderer3d could't decide which camera you are using");
   }
   // Going back to frist vertex
-  m.cubeBatch.resetAll();
-  for (uint8_t i = 0; i < static_cast<uint8_t>(SphereDivision::Count); i++) {
-    m.sphereBatches[i].resetAll();
+  // m.cubeBatch.resetAll();
+  for (auto it = m_cubeBatchCache.begin(); it != m_cubeBatchCache.end(); it++) {
+    it->second.resetAll();
+  }
+  for (auto it = m_sphereBatchCache.begin(); it != m_sphereBatchCache.end();
+       it++) {
+    it->second.resetAll();
   }
 }
 
-void Renderer3d::flush()
+void Renderer3d::submitLight(const glm::vec3 &pos, const Color &color)
 {
+  for (auto it = m_sphereBatchCache.begin(); it != m_sphereBatchCache.end();
+       it++) {
+    it->first.shader->bind();
+    it->first.shader->uploadUniformFloat3("u_LightPos", pos);
+    it->first.shader->uploadUniformFloat4("u_LightColor", color.getVector());
+  }
+}
+
+void Renderer3d::uploadBasicUniforms(const Scene &scene,
+                                     const glm::mat4 &viewProjectionMatrix,
+                                     DeltaTime globalTime,
+                                     const glm::mat4 &transform,
+                                     const glm::ivec2 &resolution,
+                                     const glm::vec3 &cameraPos)
+{
+  UNUSED(scene);
+  UNUSED(globalTime);
+  UNUSED(resolution);
+  UNUSED(transform);
   PROFILE_FUNCTION();
-  // bindTextures();
-  m.cubeBatch.flush(m.textureSlots, m.textureSlotIndex);
-  for (uint8_t i = 0; i < static_cast<uint8_t>(SphereDivision::Count); i++) {
-    m.sphereBatches[i].flush(m.textureSlots, m.textureSlotIndex);
+
+  for (auto it = m_cubeBatchCache.begin(); it != m_cubeBatchCache.end(); it++) {
+    it->first.shader->bind();
+    it->first.shader->uploadUniformMat4("u_ViewProjection",
+                                        viewProjectionMatrix);
+    // it->first.shader->uploadUniformMat4("u_Transform", transform);
   }
+  for (auto it = m_sphereBatchCache.begin(); it != m_sphereBatchCache.end();
+       it++) {
+    it->first.shader->bind();
+    it->first.shader->uploadUniformMat4("u_ViewProjection",
+                                        viewProjectionMatrix);
+    it->first.shader->uploadUniformFloat3("u_ViewPos", cameraPos);
+  }
+  // m.cubeBatch.shader.bind();
+  // m.cubeBatch.shader.uploadUniformMat4("u_ViewProjection",
+  //                                      viewProjectionMatrix);
+  // m.cubeBatch.shader.uploadUniformMat4("u_Transform", transform);
 }
 
-void Renderer3d::endScene()
+void Renderer3d::endScene(const Scene &scene)
 {
+  UNUSED(scene);
   // quadBatch->sendAllDataToOpenGL();
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
   // otherwise flush() wouldn't need to be a function
   flush();
 }
 
-// ================================================================= //
-// Draws
-// ================================================================= //
-
-void Renderer3d::drawCube(const glm::vec3 &position, const glm::vec3 &size,
-                          const Color &color, Texture &texture,
-                          float tilingFactor,
-                          const std::array<glm::vec2, 4> &textureCoordinate)
+void beforeFlush(const MaterialKey &mat)
 {
-  if (m.cubeBatch.indexCount >= CubeBatch::MaxIndices) {
-    m.cubeBatch.flush(m.textureSlots, m.textureSlotIndex);
-    m.cubeBatch.resetPtr();
+  mat.shader->bind();
+  // Upload instancing??
+  // mat.shader->uploadUniformFloat4("u_Color", mat.color.getVector());
+  // mat.shader->uploadUniformFloat("u_Tiling", mat.tiling);
+
+  if (std::holds_alternative<ParamPBR>(mat.params)) {
+    const ParamPBR &p = std::get<ParamPBR>(mat.params);
+    mat.shader->uploadUniformFloat("u_Roughness", p.roughness);
+    mat.shader->uploadUniformFloat("u_Metallic", p.metallic);
+    mat.shader->uploadUniformFloat("u_Emission", p.emission);
+  } else if (std::holds_alternative<ParamPhong>(mat.params)) {
+    const ParamPhong &p = std::get<ParamPhong>(mat.params);
+    mat.shader->uploadUniformFloat("u_Ambient", p.ambient);
+    mat.shader->uploadUniformFloat("u_Diffuse", p.diffuse);
+    mat.shader->uploadUniformFloat("u_Highlight", p.highlight);
   }
-  const float texIndex = allocateTextures(texture);
-  const glm::mat4 transform = getTransform(position, size);
-  m.cubeBatch.allocateCube(transform, color, tilingFactor, texIndex,
-                           textureCoordinate);
 }
 
-void Renderer3d::drawCube(const glm::vec3 &position, const glm::vec3 &size,
-                          const Color &color, const glm::vec3 rotation,
-                          Texture &texture, float tilingFactor,
-                          const std::array<glm::vec2, 4> &textureCoordinate)
-{
-  if (m.cubeBatch.indexCount >= CubeBatch::MaxIndices) {
-    m.cubeBatch.flush(m.textureSlots, m.textureSlotIndex);
-    m.cubeBatch.resetPtr();
-  }
-  const float texIndex = allocateTextures(texture);
-  const glm::mat4 transform = getTransform(position, size, rotation);
-  m.cubeBatch.allocateCube(transform, color, tilingFactor, texIndex,
-                           textureCoordinate);
-}
-
-void Renderer3d::drawUVSphere(const glm::vec3 &position, const glm::vec3 &size,
-                              const Color &tintColor, Texture &texture,
-                              SphereDivision div, float tilingFactor)
+void Renderer3d::flush()
 {
   PROFILE_FUNCTION();
-  SphereBatch &batch = m.sphereBatches[static_cast<uint8_t>(div)];
-  if (batch.indexCount >= batch.m_maxIndices) {
+
+  // bindTextures();
+  for (auto it = m_cubeBatchCache.begin(); it != m_cubeBatchCache.end(); it++) {
+    beforeFlush(it->first);
+    it->second.flush(m.textureSlots, m.textureSlotIndex);
+  }
+  for (auto it = m_sphereBatchCache.begin(); it != m_sphereBatchCache.end();
+       it++) {
+    beforeFlush(it->first);
+    it->second.flush(m.textureSlots, m.textureSlotIndex);
+  }
+  // m.cubeBatch.flush(m.textureSlots, m.textureSlotIndex,
+  //                   m.materialManager.getDefaultShader(DefaultShader::Texture));
+}
+
+// ================================================================= //
+// submits
+// ================================================================= //
+
+// void Renderer3d::submitCube(const glm::vec3 &position, float size,
+//                             const Material &material)
+// {
+//   MaterialKey key{.shader = material.m_shader,
+//                   .params = material.m_params,
+//                   .flags = material.m_flags};
+//   auto it = m_cubeBatchCache.find(key);
+//   if (it == m_cubeBatchCache.end()) {
+//     auto [newIt, _] =
+//         m_cubeBatchCache.emplace(std::move(key), CubeBatch::create());
+//     it = newIt;
+//   }
+//   CubeBatch &batch = it->second;
+//
+//   if (batch.indexCount >= CubeBatch::MaxPolyhedrons) {
+//     beforeFlush(it->first);
+//     batch.flush(m.textureSlots, m.textureSlotIndex, material.m_shader);
+//     batch.resetPtr();
+//   }
+//
+//   const float texIndex = allocateTextures(*material.m_texture);
+//   const glm::mat4 transform = getUniformScaleTransform(position, size);
+//   batch.allocateCube(transform, material.m_color, material.m_tilingFactor,
+//                      texIndex);
+// }
+
+// void Renderer3d::submitCube(const glm::vec3 &position, float size,
+//                             const Color &color, Texture &texture,
+//                             float tilingFactor)
+// {
+//   const float texIndex = allocateTextures(texture);
+//   const glm::mat4 transform = getUniformScaleTransform(position, size);
+//   m.cubeBatch.allocateCube(transform, color, tilingFactor, texIndex);
+// }
+
+void Renderer3d::submitCube(const glm::vec3 &position, float size,
+                            const Material &material)
+{
+  MaterialKey key{.shader = material.m_shader,
+                  .params = material.m_params,
+                  .flags = material.m_flags};
+  auto it = m_cubeBatchCache.find(key);
+  if (it == m_cubeBatchCache.end()) {
+    auto [newIt, _] =
+        m_cubeBatchCache.emplace(std::move(key), CubeBatch::create("batch"));
+    it = newIt;
+  }
+  CubeBatch &batch = it->second;
+  if (batch.m_count >= CubeBatch::MaxPolyhedrons) {
+    beforeFlush(it->first);
     batch.flush(m.textureSlots, m.textureSlotIndex);
     batch.resetPtr();
   }
 
-  const float texIndex = allocateTextures(texture);
-  const glm::mat4 transform = getTransform(position, size);
-  batch.allocateSphereUV(transform, tintColor, tilingFactor, texIndex);
+  const float texIndex = allocateTextures(*material.m_texture);
+  glm::mat4 transform = getUniformScaleTransform(position, size);
+  batch.allocateCube(transform, material.m_color, material.m_tilingFactor,
+                     texIndex);
 }
 
-void Renderer3d::drawUVSphere(const glm::vec3 &position, const glm::vec3 &size,
-                              const Color &tintColor, Texture &texture,
-                              const glm::vec3 rotation, SphereDivision div,
-                              float tilingFactor)
+void Renderer3d::submitCube(const glm::vec3 &position, float size,
+                            const Material &material, const glm::vec3 &rotation)
 {
-  PROFILE_FUNCTION();
-  SphereBatch &batch = m.sphereBatches[static_cast<uint8_t>(div)];
-  if (batch.indexCount >= batch.m_maxIndices) {
+  MaterialKey key{.shader = material.m_shader,
+                  .params = material.m_params,
+                  .flags = material.m_flags};
+  auto it = m_cubeBatchCache.find(key);
+  if (it == m_cubeBatchCache.end()) {
+    auto [newIt, _] =
+        m_cubeBatchCache.emplace(std::move(key), CubeBatch::create("batch"));
+    it = newIt;
+  }
+  CubeBatch &batch = it->second;
+
+  if (batch.m_count >= CubeBatch::MaxPolyhedrons) {
+    beforeFlush(it->first);
     batch.flush(m.textureSlots, m.textureSlotIndex);
     batch.resetPtr();
   }
 
-  const float texIndex = allocateTextures(texture);
-  const glm::mat4 transform = getTransform(position, size, rotation);
-  batch.allocateSphereUV(transform, tintColor, tilingFactor, texIndex);
+  const float texIndex = allocateTextures(*material.m_texture);
+  const glm::mat4 transform =
+      getUniformScaleTransform(position, size, rotation);
+  batch.allocateCube(transform, material.m_color, material.m_tilingFactor,
+                     texIndex);
+}
+
+void Renderer3d::submitUVSphere(const glm::vec3 &position, float size,
+                                SphereDivision div, const Material &material)
+{
+  PROFILE_FUNCTION();
+  MaterialKey key{.shader = material.m_shader,
+                  .params = material.m_params,
+                  .flags = material.m_flags};
+  auto it = m_sphereBatchCache.find(key);
+  if (it == m_sphereBatchCache.end()) {
+    auto [newIt, _] = m_sphereBatchCache.emplace(
+        std::move(key),
+        SphereBatch::create(TP_VEC2(getResolution(div)), *material.m_shader));
+    it = newIt;
+  }
+  SphereBatch &batch = it->second;
+
+  if (batch.indexCount >= CubeBatch::MaxPolyhedrons) {
+    beforeFlush(it->first);
+    batch.flush(m.textureSlots, m.textureSlotIndex);
+    batch.resetPtr();
+  }
+
+  const float texIndex = allocateTextures(*material.m_texture);
+  const glm::mat4 transform = getUniformScaleTransform(position, size);
+  batch.allocateSphereUV(transform, material.m_color, material.m_tilingFactor,
+                         texIndex);
+}
+
+void Renderer3d::submitUVSphere(const glm::vec3 &position, float size,
+                                const glm::vec3 &rotation, SphereDivision div,
+                                const Material &material)
+{
+  PROFILE_FUNCTION();
+  MaterialKey key{.shader = material.m_shader,
+                  .params = material.m_params,
+                  .flags = material.m_flags};
+  auto it = m_sphereBatchCache.find(key);
+  if (it == m_sphereBatchCache.end()) {
+    auto [newIt, _] = m_sphereBatchCache.emplace(
+        std::move(key),
+        SphereBatch::create(TP_VEC2(getResolution(div)), *material.m_shader));
+    it = newIt;
+  }
+  SphereBatch &batch = it->second;
+
+  if (batch.indexCount >= CubeBatch::MaxPolyhedrons) {
+    beforeFlush(it->first);
+    batch.flush(m.textureSlots, m.textureSlotIndex);
+    batch.resetPtr();
+  }
+
+  const float texIndex = allocateTextures(*material.m_texture);
+  const glm::mat4 transform =
+      getUniformScaleTransform(position, size, rotation);
+  batch.allocateSphereUV(transform, material.m_color, material.m_tilingFactor,
+                         texIndex);
 }
 
 // ================================================================= //
@@ -166,18 +319,18 @@ void Renderer3d::drawUVSphere(const glm::vec3 &position, const glm::vec3 &size,
 // ================================================================= //
 
 /// @brief Build a transform matrix without rotation.
-glm::mat4 Renderer3d::getTransform(const glm::vec3 &position,
-                                   const glm::vec3 &size)
+glm::mat4 Renderer3d::getUniformScaleTransform(const glm::vec3 &position,
+                                               float size)
 {
   PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0f), position) *
-         glm::scale(glm::mat4(1.0f), size);
+         glm::scale(glm::mat4(1.0f), glm::vec3(size));
 }
 
 /// @brief Build a transform matrix with rotation.
-glm::mat4 Renderer3d::getTransform(const glm::vec3 &position,
-                                   const glm::vec3 &size,
-                                   const glm::vec3 &rotation)
+glm::mat4 Renderer3d::getUniformScaleTransform(const glm::vec3 &position,
+                                               float size,
+                                               const glm::vec3 &rotation)
 {
   PROFILE_FUNCTION();
   glm::mat4 transform = glm::mat4(1.0f);
@@ -187,7 +340,7 @@ glm::mat4 Renderer3d::getTransform(const glm::vec3 &position,
   transform = glm::rotate(transform, rotation.y, {0.0f, 1.0f, 0.0f});
   transform = glm::rotate(transform, rotation.z, {0.0f, 0.0f, 1.0f});
 
-  return glm::scale(transform, size);
+  return glm::scale(transform, glm::vec3(size));
 }
 
 void Renderer3d::removeTexture(const Texture &texture)
@@ -207,33 +360,6 @@ void Renderer3d::removeTexture(const Texture &texture)
   return;
 }
 
-void Renderer3d::uploadBasicUniforms(const Scene &scene,
-                                     const glm::mat4 &viewProjectionMatrix,
-                                     DeltaTime globalTime,
-                                     const glm::mat4 &transform,
-                                     const glm::ivec2 &resolution,
-                                     const glm::vec3 &cameraPos)
-{
-  UNUSED(globalTime)
-  UNUSED(resolution)
-  PROFILE_FUNCTION();
-  m.cubeBatch.shader.bind();
-  m.cubeBatch.shader.uploadUniformMat4("u_ViewProjection",
-                                       viewProjectionMatrix);
-  m.cubeBatch.shader.uploadUniformMat4("u_Transform", transform);
-
-  for (uint8_t i = 0; i < static_cast<uint8_t>(SphereDivision::Count); i++) {
-    m.sphereBatches[i].shader.bind();
-    m.sphereBatches[i].shader.uploadUniformMat4("u_ViewProjection",
-                                                viewProjectionMatrix);
-    m.sphereBatches[i].shader.uploadUniformFloat3("u_ViewPos", cameraPos);
-    auto pos = scene.getComponent<Transform3dComponent>(m.lightEntity);
-
-    m.sphereBatches[i].shader.uploadUniformFloat3("u_LightPos", pos);
-    m.sphereBatches[i].shader.uploadUniformFloat3("u_LightColor",
-                                                  glm::vec3(1.f));
-  }
-}
 void Renderer3d::bindTextures()
 {
   PROFILE_FUNCTION();
@@ -256,10 +382,10 @@ float Renderer3d::allocateTextures(Texture &texture)
   // TODO: check if m_textureSlotIndex is bigger than 32, then flush
 
   P_ASSERT_W(textureIndex != 0.0f,
-             "Missing texture inside a drawQuad that requires textures");
+             "Missing texture inside a submitQuad that requires textures");
   return textureIndex;
 }
-Renderer3d Renderer3d::createRenderer3d()
+Renderer3d Renderer3d::createRenderer3d(MaterialManager &materialManager)
 {
   PROFILE_FUNCTION();
 
@@ -267,15 +393,12 @@ Renderer3d Renderer3d::createRenderer3d()
   Texture **textureSlots = new Texture *[backend::getTMU()];
   textureSlots[0] =
       &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
-  return Renderer3d([textureSlots] {
-    return M{.sphereBatches = {SphereBatch::create(TP_VEC2(
-                                   getResolution(SphereDivision::D_8x8))),
-                               SphereBatch::create(TP_VEC2(
-                                   getResolution(SphereDivision::D_16x16))),
-                               SphereBatch::create(TP_VEC2(
-                                   getResolution(SphereDivision::D_32x32)))},
-             .cubeBatch = CubeBatch::create(),
-             .textureSlots = textureSlots};
+  return Renderer3d([textureSlots, &materialManager] {
+    return M{
+        .materialManager = materialManager,           //
+        .textureSlots = textureSlots,                 //
+        .cubeBatch = CubeBatch::create("m.cubeBatch") //
+    };
   }); //
 }
 

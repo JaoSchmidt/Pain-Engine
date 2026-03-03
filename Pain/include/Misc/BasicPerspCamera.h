@@ -15,16 +15,20 @@ namespace pain
 namespace Dummy3dCamera
 {
 reg::Entity create(pain::Scene &scene, int resolutionHeight,
-                   int resolutionWeigh, float zoomLevel);
+                   int resolutionWeigh, float zoomLevel, float yaw,
+                   float pitch);
 
 reg::Entity createBasicCamera(pain::Scene &scene, int resolutionHeight,
-                              int resolutionWeigh, float zoomLevel);
+                              int resolutionWeigh, float zoomLevel, float yaw,
+                              float pitch);
 } // namespace Dummy3dCamera
 
 class PerspCameraScript : public WorldObject
 {
 public:
+  PerspCameraScript(reg::Entity entity, Scene &scene, float yaw, float pitch);
   using WorldObject::WorldObject;
+  // PerspCameraScript(reg::Entity entity, Scene &scene);
   void onUpdate(DeltaTime deltaTimeSec);
   void onCreate();
   void onEvent(const SDL_Event &e);
@@ -44,11 +48,11 @@ protected:
 
   // vectors
   glm::vec3 m_cameraFront = {0.0f, 0.0f, 0.0f};
-  glm::vec3 m_cameraUp = {0.0f, 1.0f, 0.0f};
+  glm::vec3 m_cameraUp = {0.0f, -1.0f, 0.0f};
 
   // degrees
-  float m_yaw = 90.0f;
-  float m_pitch = 0.0f;
+  float m_yaw = -1.0f;
+  float m_pitch = -1.0f;
 
   // derivates
   float m_sensitivitySpeed = 0.01f;

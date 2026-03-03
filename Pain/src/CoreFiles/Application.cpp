@@ -8,7 +8,6 @@
 #include "Assets/HighResolutionTimer.h"
 #include "Assets/ManagerFile.h"
 #include "Assets/ManagerTexture.h"
-#include "platform/ContextBackend.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreFiles/RenderPipeline.h"
@@ -19,6 +18,7 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/Events.h"
 #include "Scripting/State.h"
+#include "platform/ContextBackend.h"
 #include <SDL2/SDL_version.h>
 #include <memory>
 #include <thread>
@@ -41,7 +41,7 @@ Application *Application::createApplication(AppContext &&context,
 #ifdef SDL_HINT_IME_SHOW_UI
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 #endif
-
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -52,13 +52,13 @@ Application *Application::createApplication(AppContext &&context,
       SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
   if (window == nullptr)
     PLOG_E("Application window not initialized");
-  void *sdlContext = SDL_GL_CreateContext(window);
 
   SDL_version sdl_version;
   SDL_GetVersion(&sdl_version);
   PLOG_T("SDL version: {}.{}.{}", sdl_version.major, sdl_version.minor,
          sdl_version.patch);
 
+  void *sdlContext = SDL_GL_CreateContext(window);
   backend::Init();
   // =========================================================================//
   // Application Initial setup before
@@ -95,8 +95,7 @@ Application *Application::createApplication(AppContext &&context,
 Application::Application(sol::state &&luaState, SDL_Window *window,
                          void *sdlContext, FrameBufferCreationInfo &&fbci,
                          AppContext &&context)
-    : m{.context = context}, m_renderers{Renderer2d::createRenderer2d(),
-                                         Renderer3d::createRenderer3d()},
+    : m{.context = context}, m_renderers(Renderers::create()),
       m_threadPool(ThreadPool{}), m_luaState(std::move(luaState)),
       m_eventDispatcher(m_luaState),
       m_worldScene(Scene::create(m_eventDispatcher, m_luaState, m_threadPool)),
@@ -150,7 +149,7 @@ void Application::ensureCamera()
 
 EndGameFlags Application::run()
 {
-  backend::InitRenderer(m.context.is3d);
+  backend::InitRenderer();
   ensureCamera();
   // creates a dummy ui scene
   if (m_uiScene.get() == nullptr)

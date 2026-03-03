@@ -52,6 +52,7 @@ struct Rotation;
 struct Sprite;
 struct Mesh;
 struct Material;
+struct Light;
 struct Spriteless;
 struct Triangule;
 struct NativeScript;
@@ -86,7 +87,10 @@ using WorldComponents = reg::CompileTimeBitMask< //
     tag::Triangule,                              // 2048
     tag::LuaScript,                              // 4096
     tag::SAPCollider,                            // 8192
-    tag::LuaScheduleTask                         // 16384
+    tag::LuaScheduleTask,                        // 16384
+    tag::Mesh,                                   // 32768
+    tag::Material,                               // 65536
+    tag::Light                                   // 131072
     >;
 
 /**

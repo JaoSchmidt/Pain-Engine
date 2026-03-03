@@ -7,17 +7,17 @@
 // QuadBatch.h
 #pragma once
 
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
 #include "CoreRender/Renderer/Misc.h"
-#include "CoreRender/Shader.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
 namespace pain
 {
 
 struct QuadVertex {
   glm::vec3 position;
-  uint32_t color;
   glm::vec2 texCoord;
+  uint32_t color;
   float texIndex;
   float tilingFactor;
 };

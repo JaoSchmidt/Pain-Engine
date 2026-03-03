@@ -7,8 +7,8 @@
 // BatchSpray.h
 #pragma once
 #include "Assets/DeltaTime.h"
-#include "CoreRender/Shader.h"
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/VertexArray.h"
 
 namespace pain
 {
@@ -20,12 +20,13 @@ struct InstanceParticleVertex {
   glm::vec2 normal;
   float startTime = 0;
   glm::vec2 emitStart;
+  glm::mat4 transform;
 };
 
 struct SprayBatch {
   using Vertex = InstanceParticleVertex;
   static constexpr uint32_t MaxPolygons = 1000;
-  static constexpr uint32_t MaxVertices = MaxPolygons * 4;
+  static constexpr uint32_t VerticesPerParticle = 4;
   static constexpr uint32_t MaxIndices = MaxPolygons * 6;
   uint32_t statsCount = 0;
   uint32_t drawCount = 0;

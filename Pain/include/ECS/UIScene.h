@@ -118,13 +118,20 @@ public:
   }
 
   /**
-   * @brief Creates and registers a new system instance.
+   * @brief Registers a system into the scene with compile-time validation.
+   * System will be executed during game loop IN ORDER they are added
    *
-   * Systems are automatically registered into the appropriate update,
-   * render and event pipelines based on their interfaces.
+   * System must:
+   *  - be constructible
+   *  - inherit the class Systems<UIComponents>
+   *  - have at least one system interface: IOnUpdate, IOnEvent, IOnRender
+   *  - use components registered inside UIComponents
+   *
+   * If the system already exists, insertion is ignored and a warning is logged.
    *
    * @tparam Sys System type.
-   * @param args Constructor arguments forwarded to the system.
+   * @tparam Args Constructor argument types.
+   * @param args Arguments forwarded to the system constructor.
    */
   template <typename Sys, typename... Args>
     requires std::is_constructible_v<Sys, reg::ArcheRegistry<UIComponents> &,

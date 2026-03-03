@@ -5,12 +5,12 @@
  */
 
 #include "CoreFiles/RenderPipeline.h"
-#include "platform/ContextBackend.h"
 #include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/RenderContext.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "Misc/Events.h"
+#include "platform/ContextBackend.h"
 
 #include <cstdlib>
 
@@ -29,8 +29,11 @@ constexpr std::array<glm::vec4, 3> s_colorOptions = {
 constexpr glm::vec4 s_clearColor = s_colorOptions[1];
 } // namespace
 
-void resizeFBViewport(const ImGuiViewportChangeEvent &event,
-                      Component::OrthoCamera &cc, FrameBuffer &frameBuffer)
+template <typename Camera>
+  requires std::same_as<Camera, cmp::PerspCamera> ||
+           std::same_as<Camera, cmp::OrthoCamera>
+void resizeFBViewport(const ImGuiViewportChangeEvent &event, Camera &cc,
+                      FrameBuffer &frameBuffer)
 {
   int newx = static_cast<int>(event.newSize.x);
   int newy = static_cast<int>(event.newSize.y);
@@ -49,6 +52,14 @@ void RenderPipeline::subscribeToViewportChange(Scene &scene)
       [&](const ImGuiViewportChangeEvent &e) {
         auto chunks = scene.query<Component::OrthoCamera>();
         for (auto &chunk : chunks) {
+          auto *c = std::get<0>(chunk.arrays);
+
+          for (size_t i = 0; i < chunk.count; ++i) {
+            resizeFBViewport(e, c[i], m_frameBuffer);
+          }
+        }
+        auto chunks2 = scene.query<Component::PerspCamera>();
+        for (auto &chunk : chunks2) {
           auto *c = std::get<0>(chunk.arrays);
 
           for (size_t i = 0; i < chunk.count; ++i) {
@@ -74,6 +85,7 @@ RenderPipeline RenderPipeline::create(const FrameBufferCreationInfo &info,
     std::exit(1);
   }
 
+  backend::setClearColor(s_clearColor);
   return RenderPipeline{std::move(*fb), eventDispatcher};
 }
 
@@ -84,10 +96,7 @@ void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
                   Renderers &renderers)
 {
   if (fb.getSpecification().swapChainTarget) {
-    renderers.renderer2d.setViewport(0, 0, event.window.data1,
-                                     event.window.data2);
-    renderers.renderer3d.setViewport(0, 0, event.window.data1,
-                                     event.window.data2);
+    renderers.setViewPort(0, 0, event.window.data1, event.window.data2);
     c.setProjection(event.window.data1, event.window.data2);
   } else {
     c.setProjection(fb.getWidthi(), fb.getHeighti());
@@ -132,19 +141,24 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene &uiScene)
 {
-  backend::clear();
-  backend::setClearColor(s_clearColor);
+  // TODO: This needs to be redone because there is no way to tell
+  // worldScene.renderSystems to render 3d or 2d
   m_frameBuffer.bind();
-  if (renderers.renderer2d.hasCamera()) {
-    renderers.renderer2d.beginScene(currentTime, worldScene);
-    worldScene.renderSystems(renderers, isMinimized, currentTime);
-    renderers.renderer2d.endScene();
-  }
-  if (renderers.renderer3d.hasCamera()) {
-    renderers.renderer3d.beginScene(currentTime, worldScene);
-    worldScene.renderSystems(renderers, isMinimized, currentTime);
-    renderers.renderer3d.endScene();
-  }
+  backend::clear();
+  // if (renderers.renderer3d.hasCamera()) {
+  renderers.renderer3d.beginScene(currentTime, worldScene);
+  worldScene.renderSystems(renderers, isMinimized, currentTime);
+  renderers.renderer3d.endScene(worldScene);
+  // }
+  // else {
+  //   backend::clear();
+  // }
+  // if (renderers.renderer2d.hasCamera()) {
+  //   backend::disable3d();
+  //   renderers.renderer2d.beginScene(currentTime, worldScene);
+  //   worldScene.renderSystems(renderers, isMinimized, currentTime);
+  //   renderers.renderer2d.endScene();
+  // }
   m_frameBuffer.unbind();
   uiScene.renderSystems(renderers, isMinimized, currentTime);
 }

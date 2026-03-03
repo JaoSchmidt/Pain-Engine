@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Core.h"
-#include "CoreRender/BufferLayout.h"
+#include "CoreRender/Buffers/BufferLayout.h"
 #include "pch.h"
 
 namespace pain
@@ -56,7 +56,7 @@ public:
    * @return Optional vertex buffer on success.
    */
   static std::optional<VertexBuffer>
-  createStaticVertexBuffer(float *vertices, uint32_t size,
+  createStaticVertexBuffer(const void *vertices, uint32_t size,
                            BufferLayout &&layout);
 
   VertexBuffer(VertexBuffer &&o);
@@ -114,7 +114,7 @@ public:
    * @param count   Number of indices.
    * @return Optional index buffer on success.
    */
-  static std::optional<IndexBuffer> createIndexBuffer(uint32_t *indexes,
+  static std::optional<IndexBuffer> createIndexBuffer(const uint32_t *indexes,
                                                       uint32_t count);
   /**
    * @brief Creates a dynamic index buffer

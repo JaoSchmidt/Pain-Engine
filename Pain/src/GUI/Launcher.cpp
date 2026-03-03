@@ -147,12 +147,9 @@ Application *createLauncher()
   const int width = 500;
   const int height = 200;
 
-  Application *settingsApp =
-      Application::createApplication({.title = title,
-                                      .defaultWidth = width,
-                                      .defaultHeight = height,
-                                      .is3d = false},
-                                     {.swapChainTarget = true});
+  Application *settingsApp = Application::createApplication(
+      {.title = title, .defaultWidth = width, .defaultHeight = height},
+      {.swapChainTarget = true});
   pain::UIScene &uiscene = settingsApp->createUIScene(pain::ImGuiComponent{});
   UIScene::emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), uiscene,
                                              settingsApp);

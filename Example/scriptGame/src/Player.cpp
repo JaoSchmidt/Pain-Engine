@@ -6,11 +6,6 @@
 
 #include "Player.h"
 #include "GUI/ImGuiDebugRegistry.h"
-#include "Misc/Events.h"
-#include "Physics/Collision/Collider.h"
-#include "Physics/Particles/SprayCmp.h"
-#include "Scripting/LuaScriptComponent.h"
-#include <pain.h>
 
 reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
                            glm::vec2 initialPos, glm::vec2 size,

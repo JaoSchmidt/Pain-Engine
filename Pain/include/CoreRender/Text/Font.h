@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <vector>
 

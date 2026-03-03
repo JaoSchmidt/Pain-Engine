@@ -4,14 +4,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // TextureBackend.h
 #pragma once
 #include <cstdint>
 #include <optional>
 #include <string>
 
-#include "CoreRender/ImageFormat.h"
+#include "CoreRender/Buffers/ImageFormat.h"
 
 namespace pain::backend
 {

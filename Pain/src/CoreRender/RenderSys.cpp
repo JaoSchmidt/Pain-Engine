@@ -6,9 +6,12 @@
 
 // RenderSys.cpp
 #include "CoreRender/RenderSys.h"
+#include "CoreRender/MaterialComponent.h"
+#include "CoreRender/MeshComponent.h"
 #include "CoreRender/Renderer/RenderContext.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Sprite.h"
+#include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
 
@@ -16,6 +19,9 @@ namespace pain
 {
 namespace Systems
 {
+
+constexpr std::array<SphereDivision, 3> sphereDivisions = {
+    SphereDivision::D_8x8, SphereDivision::D_16x16, SphereDivision::D_32x32};
 
 // =============================================================== //
 // Render Components
@@ -115,6 +121,26 @@ void Render::onRender(Renderers &renderer, bool isMinimized,
       for (size_t i = 0; i < chunk.count; ++i) {
         renderer.renderer2d.drawTri(t[i].m_position, tri[i].m_height,
                                     tri[i].m_color);
+      }
+    }
+  }
+  {
+    PROFILE_SCOPE("Scene::renderSystems - spheres");
+    auto chunks =
+        query<Transform3dComponent, MeshComponent, MaterialComponent>();
+    for (auto &chunk : chunks) {
+      const auto *t = std::get<0>(chunk.arrays);
+      const auto *mesh = std::get<1>(chunk.arrays);
+      const auto *mat = std::get<2>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        if (mesh->shape == MeshShape::Cube) {
+          // renderer.renderer3d.submitCube(t->m_position, mesh->size,
+          //                                *mat->m_material);
+        } else {
+          renderer.renderer3d.submitUVSphere(t->m_position, mesh->size,
+                                             sphereDivisions[mesh->shape],
+                                             *mat->m_material);
+        }
       }
     }
   }

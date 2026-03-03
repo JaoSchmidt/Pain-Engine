@@ -118,12 +118,13 @@ public:
 
   /**
    * @brief Registers a system into the scene with compile-time validation.
+   * System will be executed during game loop IN ORDER they are added
    *
    * System must:
-   *  - be constructible with the scene registry and event dispatcher.
-   *  - The system satisfies the ValidSystem concept.
-   *  - All component tags declared by the system are registered in
-   *    WorldComponents.
+   *  - be constructible
+   *  - inherit the class Systems<WorldComponents>
+   *  - have at least one system interface: IOnUpdate, IOnEvent, IOnRender
+   *  - use components registered inside WorldComponents
    *
    * If the system already exists, insertion is ignored and a warning is logged.
    *

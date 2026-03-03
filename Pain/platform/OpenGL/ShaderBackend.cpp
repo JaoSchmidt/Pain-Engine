@@ -106,10 +106,12 @@ void unbindShader() { glUseProgram(0); }
 // Uniforms
 // ------------------------------------------------------------
 
-int getUniformLocation(uint32_t programId, const std::string &name)
+int getUniformLocation(uint32_t programId, const std::string &name,
+                       bool isError)
 {
   int loc = glGetUniformLocation(programId, name.c_str());
-  P_ASSERT_W(loc != -1, "Uniform {} not found on program {}", name, programId);
+  P_ASSERT_W(loc != -1 || !isError, "Uniform {} not found on program {}", name,
+             programId);
   return loc;
 }
 

@@ -14,8 +14,8 @@
 #include "glm/fwd.hpp"
 namespace pain
 {
-reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionHeight,
-                                  int resolutionWidth, float zoomLevel)
+reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionWidth,
+                                  int resolutionHeight, float zoomLevel)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(entity, pain::Transform2dComponent{}, //
@@ -29,8 +29,8 @@ reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionHeight,
   return entity;
 }
 reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
-                                             int resolutionHeight,
                                              int resolutionWidth,
+                                             int resolutionHeight,
                                              float zoomLevel)
 {
   reg::Entity entity = scene.createEntity();
@@ -41,7 +41,21 @@ reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
   );
   return entity;
 }
-
+void OrthoCameraScript::onMouseButtonUp(const SDL_Event &event)
+{
+  auto [tc, mc, cc] = getComponents<Transform2dComponent, Movement2dComponent,
+                                    cmp::OrthoCamera>();
+  if (event.button.button == SDL_BUTTON_LEFT) {
+    PLOG_I("position = ({},{})", TP_VEC2(tc.m_position));
+    PLOG_I("velocity = ({},{})", TP_VEC2(mc.m_velocity));
+    PLOG_I("rotationSpeed = {}", mc.m_rotationSpeed);
+    PLOG_I("playerEntity = {}", getEntity());
+    PLOG_I("zoomLevel = {}", cc.m_zoomLevel);
+    PLOG_I("cameraEntity = {}", cc.m_entity);
+    PLOG_I("aspectRatio = {}", cc.m_aspectRatio);
+    PLOG_I("resolution = ({},{})", TP_VEC2(cc.m_resolution));
+  }
+}
 void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
 {
   if (hasAnyComponents<Movement2dComponent, Transform2dComponent>()) {
@@ -84,14 +98,21 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
 
 void OrthoCameraScript::onEvent(const SDL_Event &event)
 {
-  Component::OrthoCamera &cc = getComponent<Component::OrthoCamera>();
-  if (event.type == SDL_MOUSEWHEEL)
-    onMouseScrolled(event, cc);
+  switch (event.type) {
+  case SDL_MOUSEBUTTONUP:
+    onMouseButtonUp(event);
+    break;
+  case SDL_MOUSEWHEEL:
+    onMouseScrolled(event);
+    break;
+  default:
+    break;
+  }
 }
 
-void OrthoCameraScript::onMouseScrolled(const SDL_Event &event,
-                                        Component::OrthoCamera &cc)
+void OrthoCameraScript::onMouseScrolled(const SDL_Event &event)
 {
+  Component::OrthoCamera &cc = getComponent<Component::OrthoCamera>();
   cc.m_zoomLevel -= (float)event.wheel.y * m_zoomSpeed;
   cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
   cc.setProjection(-cc.m_aspectRatio * cc.m_zoomLevel,

@@ -358,11 +358,13 @@ if(UNIX OR APPLE)
             "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
     # Syncing with project folder (for debug purposes)
     COMMAND
-      rsync -av "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
+      rsync -av --chmod=F444,D555 
+      "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
       "${CMAKE_SOURCE_DIR}/resources/"
     # Syncing with game
-    COMMAND rsync -av "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
-            "${CMAKE_BINARY_DIR}/resources/"
+    COMMAND rsync -av --chmod=F444,D555
+      "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
+      "${CMAKE_BINARY_DIR}/resources/"
     COMMENT "Syncing resources folder")
   # Add dependency to sync_resources target on make
   add_dependencies(${LIBRARY_NAME} sync_resources)
@@ -406,5 +408,3 @@ if(UNIX)
     VERBATIM)
 endif()
 
-# =========================================================================
-add_subdirectory(${GAME_FOLDER})

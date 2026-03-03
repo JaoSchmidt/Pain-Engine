@@ -44,17 +44,6 @@ extern const Texture *m_fontAtlasTexture;
 // ================================================================= //
 // void Renderer2d::shutdown() {}
 
-void Renderer2d::setViewport(int x, int y, int width, int height)
-{
-  backend::setViewPort(x, y, width, height);
-}
-
-void Renderer2d::clear() { backend::clear(); }
-
-void Renderer2d::setClearColor(const glm::vec4 &color)
-{
-  backend::setClearColor(color);
-}
 bool Renderer2d::hasCamera() { return m.orthoCameraEntity != reg::Entity{-1}; }
 void Renderer2d::changeCamera(reg::Entity cameraEntity)
 {
@@ -300,7 +289,7 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
 // ================================================================= //
 // Old draw2d.cpp functions
 // ================================================================= //
-Renderer2d Renderer2d::createRenderer2d()
+Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
 {
   PROFILE_FUNCTION();
 
@@ -308,8 +297,9 @@ Renderer2d Renderer2d::createRenderer2d()
   Texture **textureSlots = new Texture *[backend::getTMU()];
   textureSlots[0] =
       &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
-  return Renderer2d([textureSlots] {
-    return M{.quadBatches =
+  return Renderer2d([textureSlots, &materialManager] {
+    return M{.materialManager = materialManager,
+             .quadBatches =
                  {
                      QuadBatch::create(),
                      QuadBatch::create(),

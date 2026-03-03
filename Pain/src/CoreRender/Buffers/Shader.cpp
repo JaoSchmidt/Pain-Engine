@@ -5,7 +5,7 @@
  */
 
 // Shader.cpp
-#include "CoreRender/Shader.h"
+#include "CoreRender/Buffers/Shader.h"
 #include "platform/ShaderBackend.h"
 
 #include "CoreFiles/LogWrapper.h"
@@ -17,7 +17,6 @@ namespace
 {
 // Shaders classes don't consume that much memory, they are just a name and a
 // number
-std::map<std::string, Shader> s_shaders;
 uint32_t s_binded = 0;
 } // namespace
 
@@ -63,59 +62,68 @@ void Shader::unbind() const
 // Uniform uploads
 // ----------------------------------------------------------
 
-int Shader::getUniformLocation(const std::string &name) const
+int Shader::getUniformLocation(const std::string &name, bool isError) const
 {
   P_ASSERT(m_programId == s_binded, "Shader isn't properly binded");
-  return backend::getUniformLocation(m_programId, name);
+  return backend::getUniformLocation(m_programId, name, isError);
 }
 
-void Shader::uploadUniformInt(const std::string &name, int v)
+void Shader::uploadUniformInt(const std::string &name, int v, bool isError)
 {
-  backend::uploadUniformInt(getUniformLocation(name), v);
+  backend::uploadUniformInt(getUniformLocation(name, isError), v);
 }
-void Shader::uploadUniformInt2(const std::string &name, const glm::ivec2 &v)
+void Shader::uploadUniformInt2(const std::string &name, const glm::ivec2 &v,
+                               bool isError)
 {
-  backend::uploadUniformInt2(getUniformLocation(name), v);
+  backend::uploadUniformInt2(getUniformLocation(name, isError), v);
 }
-void Shader::uploadUniformInt3(const std::string &name, const glm::ivec3 &v)
+void Shader::uploadUniformInt3(const std::string &name, const glm::ivec3 &v,
+                               bool isError)
 {
-  backend::uploadUniformInt3(getUniformLocation(name), v);
+  backend::uploadUniformInt3(getUniformLocation(name, isError), v);
 }
-void Shader::uploadUniformInt4(const std::string &name, const glm::ivec4 &v)
+void Shader::uploadUniformInt4(const std::string &name, const glm::ivec4 &v,
+                               bool isError)
 {
-  backend::uploadUniformInt4(getUniformLocation(name), v);
-}
-
-void Shader::uploadUniformFloat(const std::string &name, float v)
-{
-  backend::uploadUniformFloat(getUniformLocation(name), v);
-}
-void Shader::uploadUniformFloat2(const std::string &name, const glm::vec2 &v)
-{
-  backend::uploadUniformFloat2(getUniformLocation(name), v);
-}
-void Shader::uploadUniformFloat3(const std::string &name, const glm::vec3 &v)
-{
-  backend::uploadUniformFloat3(getUniformLocation(name), v);
-}
-void Shader::uploadUniformFloat4(const std::string &name, const glm::vec4 &v)
-{
-  backend::uploadUniformFloat4(getUniformLocation(name), v);
+  backend::uploadUniformInt4(getUniformLocation(name, isError), v);
 }
 
-void Shader::uploadUniformMat3(const std::string &name, const glm::mat3 &m)
+void Shader::uploadUniformFloat(const std::string &name, float v, bool isError)
 {
-  backend::uploadUniformMat3(getUniformLocation(name), m);
+  backend::uploadUniformFloat(getUniformLocation(name, isError), v);
 }
-void Shader::uploadUniformMat4(const std::string &name, const glm::mat4 &m)
+void Shader::uploadUniformFloat2(const std::string &name, const glm::vec2 &v,
+                                 bool isError)
 {
-  backend::uploadUniformMat4(getUniformLocation(name), m);
+  backend::uploadUniformFloat2(getUniformLocation(name, isError), v);
+}
+void Shader::uploadUniformFloat3(const std::string &name, const glm::vec3 &v,
+                                 bool isError)
+{
+  backend::uploadUniformFloat3(getUniformLocation(name, isError), v);
+}
+void Shader::uploadUniformFloat4(const std::string &name, const glm::vec4 &v,
+                                 bool isError)
+{
+  backend::uploadUniformFloat4(getUniformLocation(name, isError), v);
+}
+
+void Shader::uploadUniformMat3(const std::string &name, const glm::mat3 &m,
+                               bool isError)
+{
+  backend::uploadUniformMat3(getUniformLocation(name, isError), m);
+}
+void Shader::uploadUniformMat4(const std::string &name, const glm::mat4 &m,
+                               bool isError)
+{
+  backend::uploadUniformMat4(getUniformLocation(name, isError), m);
 }
 
 void Shader::uploadUniformIntArray(const std::string &name, int *values,
-                                   uint32_t count)
+                                   uint32_t size, bool isError)
 {
-  backend::uploadUniformIntArray(getUniformLocation(name), values, count);
+  backend::uploadUniformIntArray(getUniformLocation(name, isError), values,
+                                 size);
 }
 
 // ----------------------------------------------------------
@@ -169,24 +177,12 @@ std::pair<std::string, std::string> Shader::parseShader(const char *filepath)
 
 std::optional<Shader> Shader::createFromFile(const char *filepath)
 {
-  if (!std::filesystem::exists(filepath)) {
-    PLOG_W("Shader file {} does not exist.", filepath);
-    return std::nullopt;
-  }
-  auto it = s_shaders.find(filepath);
-  if (it != s_shaders.end())
-    return Shader{it->second.getName(), it->second.getId()};
-
   auto [vertexShader, fragmentShader] = parseShader(filepath);
   auto shaderOpt =
       createFromStrings(std::filesystem::path(filepath).stem().string(),
                         vertexShader, fragmentShader);
   if (!shaderOpt)
     PLOG_W("Failed to create shader from file {}", filepath);
-  else
-    s_shaders.insert(
-        std::make_pair(std::string(filepath),
-                       Shader{shaderOpt->getName(), shaderOpt->getId()}));
   return shaderOpt;
 }
 

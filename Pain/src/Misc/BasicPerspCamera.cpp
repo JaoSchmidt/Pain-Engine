@@ -11,14 +11,17 @@
 #include "Physics/Movement3dComponent.h"
 #include "Physics/RotationComponent.h"
 #include "glm/geometric.hpp"
+#include "platform/ContextBackend.h"
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 
 namespace pain
 {
 
+/** Yaw and Pitch are in degrees*/
 reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionHeight,
-                                  int resolutionWidth, float fieldOfViewDegrees)
+                                  int resolutionWidth, float fieldOfViewDegrees,
+                                  float yaw, float pitch)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
@@ -26,32 +29,54 @@ reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionHeight,
       pain::RotationComponent{},            //
       pain::Movement3dComponent{},          //
       cmp::PerspCamera::create(resolutionWidth, resolutionHeight,
-                               fieldOfViewDegrees, entity), //
+                               fieldOfViewDegrees, entity, yaw, pitch), //
       pain::NativeScriptComponent{});
-  pain::Scene::emplaceScript<PerspCameraScript>(entity, scene);
+  pain::Scene::emplaceScript<PerspCameraScript>(entity, scene, yaw, pitch);
   return entity;
 }
 reg::Entity Dummy3dCamera::createBasicCamera(pain::Scene &scene,
                                              int resolutionHeight,
                                              int resolutionWeigh,
-                                             float fieldOfViewDegrees)
+                                             float fieldOfViewDegrees,
+                                             float yaw, float pitch)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
       entity, pain::Transform3dComponent{},
       Component::PerspCamera::create(resolutionWeigh, resolutionHeight,
-                                     fieldOfViewDegrees, entity) //
+                                     fieldOfViewDegrees, entity, yaw, pitch) //
   );
   return entity;
 }
-
 void PerspCameraScript::onCreate()
 {
   m_sensitivitySpeed = 0.5f;
   m_zoomSpeed = 10.0f;
   m_cameraFront = {0.0f, 0.0f, 1.0f};
-  // SDL_SetRelativeMouseMode(SDL_TRUE);
+
+  auto [tc, mc, pc] = getComponents<Transform3dComponent, Movement3dComponent,
+                                    cmp::PerspCamera>();
+  m_cameraFront = glm::vec3(                                 //
+      cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch)), //
+      sin(glm::radians(m_pitch)),                            //
+      sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch))  //
+  );
+  pc.recalculateViewMatrix(tc.m_position, m_cameraFront);
+
+  PLOG_I("cameraFront = ({},{},{})", TP_VEC3(m_cameraFront));
+  PLOG_I("yaw, pitch, roll = ({},{},{})", m_yaw, m_pitch, 0);
+  PLOG_I("position = ({},{},{})", TP_VEC3(tc.m_position));
+  PLOG_I("velocity = ({},{},{})", TP_VEC3(mc.m_velocity));
+  PLOG_I("rotationSpeed = {}", mc.m_rotationSpeed);
+  PLOG_I("playerEntity = {}", getEntity());
+  setMovementState<false>();
 }
+
+// PerspCameraScript::PerspCameraScript(reg::Entity entity, Scene &scene)
+//     : WorldObject(entity, scene) {};
+PerspCameraScript::PerspCameraScript(reg::Entity entity, Scene &scene,
+                                     float yaw, float pitch)
+    : WorldObject(entity, scene), m_yaw(yaw), m_pitch(pitch) {};
 
 void PerspCameraScript::onUpdate(DeltaTime deltaTimeSec)
 {
@@ -70,9 +95,9 @@ void PerspCameraScript::onUpdate(DeltaTime deltaTimeSec)
     moveDir -= m_cameraFront * moveAmount;
 
   if (state[SDL_SCANCODE_A])
-    moveDir -= glm::cross(m_cameraFront, m_cameraUp) * moveAmount;
-  if (state[SDL_SCANCODE_D])
     moveDir += glm::cross(m_cameraFront, m_cameraUp) * moveAmount;
+  if (state[SDL_SCANCODE_D])
+    moveDir -= glm::cross(m_cameraFront, m_cameraUp) * moveAmount;
 
   if (state[SDL_SCANCODE_C])
     moveDir.y -= moveAmount;
@@ -95,12 +120,14 @@ void PerspCameraScript::onMouseButtonUp(const SDL_Event &event)
   auto [tc, mc, pc] = getComponents<Transform3dComponent, Movement3dComponent,
                                     cmp::PerspCamera>();
   if (event.button.button == SDL_BUTTON_LEFT) {
-    PLOG_I("rotation = ({},{},{})", TP_VEC3(m_cameraFront));
+    PLOG_I("cameraFront = ({},{},{})", TP_VEC3(m_cameraFront));
+    PLOG_I("yaw, pitch, roll = ({},{},{})", m_yaw, m_pitch, 0);
     PLOG_I("position = ({},{},{})", TP_VEC3(tc.m_position));
     PLOG_I("velocity = ({},{},{})", TP_VEC3(mc.m_velocity));
     PLOG_I("rotationSpeed = {}", mc.m_rotationSpeed);
-    PLOG_I("cameraEntity = {}", pc.m_entity);
-    PLOG_I("playerEntity = {}", getEntity());
+    PLOG_I("resolution = ({},{})", TP_VEC2(pc.m_resolution));
+    PLOG_I("aspectRatio = {}", pc.m_aspectRatio);
+    PLOG_I("fov = {}", pc.m_fieldOfViewDegrees);
   }
 }
 

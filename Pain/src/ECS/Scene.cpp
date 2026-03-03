@@ -8,7 +8,7 @@
 #include "ECS/Scene.h"
 
 #include "CoreRender/RenderSys.h"
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Sprite.h"
 #include "GUI/ImGuiSys.h"

@@ -35,7 +35,7 @@ public:
         Player::create(scene, playerTex, playerPos, playerSize, cameraWidth,
                        cameraHeight, 5.f);
     reg::Entity lightSource = DumbObject::create(scene);
-    // app->set2dRendererCamera(playerCam, cameraWidth, cameraHeight);
+    // app->set3dRendererCamera(playerCam, cameraWidth, cameraHeight);
     app->set2dRendererCamera(playerCam, cameraWidth, cameraHeight);
     // app->getRenderers().renderer3d.changeLight(lightSource);
     // add objects to collision System
@@ -165,8 +165,7 @@ pain::Application *pain::createApplication()
   Application *app = Application::createApplication(         //
       {.title = internalIni.title.get().c_str(),             //
        .defaultWidth = ini.defaultWidth.get(),               //
-       .defaultHeight = ini.defaultHeight.get(),             //
-       .is3d = internalIni.is3d.get()},                      //
+       .defaultHeight = ini.defaultHeight.get()},            //
       {.swapChainTarget = internalIni.swapChainTarget.get()} //
   );
 
@@ -174,8 +173,9 @@ pain::Application *pain::createApplication()
   pain::Scene &scene = app->createWorldSceneComponents(
       internalIni.gridSize.get(), pain::NativeScriptComponent{});
 
-  // Individually add each system
+  // Individually add each system, those are executed IN ORDER
   scene.addSystem<Systems::SweepAndPruneSys>();
+  scene.addSystem<Systems::LightSys>();
   scene.addSystem<Systems::Render>();
   scene.addSystem<Systems::NativeScript>();
   scene.addSystem<Systems::LuaScript>();

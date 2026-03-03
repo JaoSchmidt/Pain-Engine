@@ -3,7 +3,7 @@
 #include "pch.h"
 
 #include "Core.h"
-#include "CoreRender/Buffers.h"
+#include "CoreRender/Buffers/Buffers.h"
 
 namespace pain
 {

@@ -6,27 +6,43 @@
 
 // BatchSpray.cpp
 #include "CoreRender/Renderer/BatchSpray.h"
-#include "platform/ContextBackend.h"
 #include "Debugging/Profiling.h"
+#include "platform/ContextBackend.h"
+#
 namespace pain
 {
 
 SprayBatch SprayBatch::create()
 {
-  float vertices[] = {
-      -0.5f, 0.5f,  //
-      0.5f,  -0.5f, //
-      -0.5f, -0.5f, //
-
-      -0.5f, 0.5f,  //
-      0.5f,  -0.5f, //
-      0.5f,  0.5f,  //
+  constexpr unsigned int indices[] = {0, 1, 2, 2, 3, 0};
+  // constexpr float vertices[] = {
+  //     -0.5f, 0.5f,  // 0 top left
+  //     -0.5f, -0.5f, // 1 bottom left
+  //     0.5f,  -0.5f, // 2 bottom right
+  //
+  //     0.5f,  -0.5f, // 2 bottom right
+  //     0.5f,  0.5f,  // 3 top right
+  //     -0.5f, 0.5f,  // 0 top left
+  // };
+  constexpr glm::vec2 SprayVertexPositions[4] = {
+      glm::vec2(-0.5f, -0.5f),
+      glm::vec2(0.5f, -0.5f),
+      glm::vec2(0.5f, 0.5f),
+      glm::vec2(-0.5f, 0.5f),
   };
-  unsigned int indices[] = {0, 1, 2, 2, 3, 0};
+
+  std::unique_ptr<ParticleVertex[]> vertices =
+      std::make_unique<ParticleVertex[]>(VerticesPerParticle);
+  ParticleVertex *pVertex = vertices.get();
+
+  for (uint32_t i = 0; i < VerticesPerParticle; i++) {
+    pVertex->position = SprayVertexPositions[i];
+    pVertex++;
+  }
 
   return SprayBatch //
       {*VertexBuffer::createStaticVertexBuffer(
-           vertices, sizeof(vertices),
+           vertices.get(), sizeof(ParticleVertex) * VerticesPerParticle,
            {
                {ShaderDataType::Float2, "a_Position"},
            }),
@@ -36,6 +52,7 @@ SprayBatch SprayBatch::create()
                {ShaderDataType::Float2, "a_Normal", false, true},
                {ShaderDataType::Float, "a_Time", false, true},
                {ShaderDataType::Float2, "a_EmitStart", false, true},
+               {ShaderDataType::Mat4, "a_Transform", false, true},
            }),
        *IndexBuffer::createIndexBuffer(indices,
                                        sizeof(indices) / sizeof(indices[0])),
@@ -48,7 +65,7 @@ SprayBatch::SprayBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
       ib(std::move(ib_)),
       vao(*VertexArray::createVertexArray(vbo, instanceVBO, ib)),
       shader(std::move(shader)),
-      cpuBuffer(std::make_unique<InstanceParticleVertex[]>(MaxVertices)),
+      cpuBuffer(std::make_unique<InstanceParticleVertex[]>(MaxPolygons)),
       ptr(cpuBuffer.get()) {};
 
 void SprayBatch::resetPtr()
@@ -80,7 +97,7 @@ void SprayBatch::flush()
 
   shader.bind();
   ib.bind();
-  backend::drawInstanced(6, instanceCount);
+  backend::drawIndexedInstanced(vao, 6, instanceCount);
 #ifndef NDEBUG
   drawCount++;
 #endif

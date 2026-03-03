@@ -7,7 +7,7 @@
 // RenderPipeline.h
 #pragma once
 
-#include "CoreRender/FrameBuffer.h"
+#include "CoreRender/Buffers/FrameBuffer.h"
 #include "CoreRender/Renderer/RenderContext.h"
 #include "ECS/Scene.h"
 

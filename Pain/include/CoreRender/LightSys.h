@@ -1,3 +1,4 @@
+
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,17 +37,13 @@
 
 #include "Assets/DeltaTime.h"
 #include "Core.h"
+#include "CoreRender/LightComponent.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
+#include "Physics/Movement3dComponent.h"
 
 namespace pain
 {
-// Forward declarations to avoid heavy renderer and component includes.
-struct Renderer2d;
-struct Transform2dComponent;
-struct RotationComponent;
-struct SpriteComponent;
-
 namespace Systems
 {
 
@@ -67,14 +64,12 @@ namespace Systems
  * @note As with any system, the render callback is only active because this
  * system inherits from IOnRender.
  *
- * @see Renderer2d
- * @see Transform2dComponent
- * @see SpriteComponent
- * @see RotationComponent
+ * @see Transform3dComponent
+ * @see LightComponent
  * @see System
  * @see IOnRender
  */
-struct Render : public System<WorldComponents>, IOnRender {
+struct LightSys : public System<WorldComponents>, IOnRender {
   /**
    * @brief Component signature required by this system.
    *
@@ -86,9 +81,9 @@ struct Render : public System<WorldComponents>, IOnRender {
    * Additional queries may selectively include or exclude components at
    * runtime.
    */
-  using Tags = TypeList<Transform2dComponent, //
-                        SpriteComponent,      //
-                        RotationComponent>;
+  using Tags = TypeList<Transform3dComponent, //
+                        LightComponent        //
+                        >;
 
   /** @brief Inherit base System constructors. */
   using System::System;

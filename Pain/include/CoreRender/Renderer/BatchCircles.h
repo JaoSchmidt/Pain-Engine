@@ -7,8 +7,8 @@
 // CircleBatch.h
 #pragma once
 #include "CoreRender/Renderer/Misc.h"
-#include "CoreRender/Shader.h"
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/VertexArray.h"
 
 namespace pain
 {

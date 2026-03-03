@@ -9,10 +9,9 @@
 #include "Debugging/Profiling.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
-#include "glm/ext/matrix_transform.hpp"
 
-static constexpr glm::mat3 rotate90{glm::vec3(0, -1, 0), glm::vec3(1, 0, 0),
-                                    glm::vec3(0, 0, 1)};
+// static constexpr glm::mat3 rotate90{glm::vec3(0, -1, 0), glm::vec3(1, 0, 0),
+//                                     glm::vec3(0, 0, 1)};
 namespace pain
 {
 

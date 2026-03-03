@@ -6,7 +6,7 @@
 
 // FrameBuffer.cpp
 
-#include "CoreRender/FrameBuffer.h"
+#include "CoreRender/Buffers/FrameBuffer.h"
 
 #include "platform/FrameBufferBackend.h"
 

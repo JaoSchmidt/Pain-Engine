@@ -40,8 +40,6 @@ struct AppContext {
   int defaultWidth = 800;
   /** Initial window height in pixels. */
   int defaultHeight = 600;
-  /** Small check to enable 3d parameters in the API*/
-  bool is3d;
 };
 
 /**
@@ -165,8 +163,11 @@ public:
                            int height = 0)
   {
     m_renderers.renderer2d.changeCamera(cameraEntity);
-    if (!(width == 0 && height == 0))
-      m_renderers.renderer2d.setViewport(0, 0, width, height);
+    PLOG_I("w = {}, h = {}", width, height);
+    if (!(width == 0 && height == 0)) {
+      PLOG_I("w = {}, h = {}", width, height);
+      m_renderers.setViewPort(0, 0, width, height);
+    }
   }
   /// @brief Assigns the renderer camera and viewport dimensions.
   void set3dRendererCamera(const reg::Entity cameraEntity, int width = 0,
@@ -174,7 +175,7 @@ public:
   {
     m_renderers.renderer3d.changeCamera(cameraEntity);
     if (!(width == 0 && height == 0))
-      m_renderers.renderer3d.setViewport(0, 0, width, height);
+      m_renderers.setViewPort(0, 0, width, height);
   }
 
   /**

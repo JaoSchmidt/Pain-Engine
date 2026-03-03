@@ -6,7 +6,7 @@
 
 #pragma once
 #include "CoreFiles/Application.h"
-#include "CoreRender/FrameBuffer.h"
+#include "CoreRender/Buffers/FrameBuffer.h"
 #include "Misc/Events.h"
 #include "imgui_internal.h"
 #include <imgui.h>
@@ -109,7 +109,7 @@ public:
       m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
 
       ImGui::Text("Renderer3D Stats:");
-      showStats(renderers.renderer3d.getStatistics<pain::CubeBatch>());
+      showStats(renderers.renderer3d.getCubeStatistics());
       m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
       ImGui::End();
 
@@ -119,7 +119,7 @@ public:
         ImVec2 avail = ImGui::GetContentRegionAvail();
         if (avail.x != m_avail.x || avail.y != m_avail.y) {
           m_avail = avail;
-          renderers.renderer2d.setViewport(0, 0, avail.x, avail.y);
+          renderers.setViewPort(0, 0, avail.x, avail.y);
           getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
               {glm::vec2(avail.x, avail.y)});
         }

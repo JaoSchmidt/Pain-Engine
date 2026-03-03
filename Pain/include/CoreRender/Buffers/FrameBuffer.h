@@ -8,7 +8,8 @@
 #pragma once
 
 #include "Core.h"
-#include "CoreRender/Texture.h"
+#include <cstdint>
+#include <optional>
 
 namespace pain
 {

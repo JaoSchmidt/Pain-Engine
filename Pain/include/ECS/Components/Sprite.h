@@ -20,7 +20,7 @@
 #include "Assets/ManagerTexture.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Misc.h"
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include "ECS/Components/ComponentManager.h"
 #include "Misc/BasicShape.h"
 #include "Misc/TextureSheet.h"

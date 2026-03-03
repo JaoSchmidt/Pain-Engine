@@ -147,7 +147,8 @@ struct PerspCamera : CameraResolution {
 
   /** Creates a new perspective camera component. */
   static PerspCamera create(int resWidth, int resHeight,
-                            float fieldOfViewDegrees, reg::Entity entity);
+                            float fieldOfViewDegrees, reg::Entity entity,
+                            float yaw, float pitch);
 
   /** Recomputes the view matrix from camera transform. */
   void recalculateViewMatrix(glm::vec3 m_position, glm::vec3 m_rotation);

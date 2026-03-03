@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
@@ -402,7 +401,8 @@ private:
       "only when the system is instantiated.\n\n How to statically check "
       "yourself? just use something like:\n"
       "requires(reg::CompileTimeBitMask::allRegistered<YourComponentsHere."
-      "..>())";
+      "..>()).\nIf you think this is an error, please check you have the "
+      "correct tags inside WorldComponents, UIComponents, etc";
   // Bitmask related
   template <ECSComponent... Components>
   static constexpr Bitmask getMultipleBitmask()

@@ -7,9 +7,7 @@
 #pragma once
 
 #include "Core.h"
-#include "CoreRender/Texture.h"
-#include "ECS/Scriptable.h"
-#include "Misc/BasicOrthoCamera.h"
+#include <pain.h>
 
 namespace Player
 {

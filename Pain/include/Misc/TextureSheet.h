@@ -6,7 +6,7 @@
 
 #pragma once
 #include "Core.h"
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include "pch.h"
 
 namespace pain

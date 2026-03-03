@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // ShaderBackend.h
 #pragma once
 #include <cstdint>
@@ -23,7 +22,8 @@ void destroyShaderProgram(uint32_t programId);
 void bindShader(uint32_t programId);
 void unbindShader();
 
-int getUniformLocation(uint32_t programId, const std::string &name);
+int getUniformLocation(uint32_t programId, const std::string &name,
+                       bool isError = true);
 
 void uploadUniformInt(int location, int value);
 void uploadUniformInt2(int location, const glm::ivec2 &v);

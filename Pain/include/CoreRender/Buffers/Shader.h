@@ -21,6 +21,7 @@ namespace pain
 class Shader
 {
 public:
+  NONCOPYABLE(Shader);
   // ============================================================= //
   // **Creation**
   // ============================================================= //
@@ -64,19 +65,29 @@ public:
   // **Uniform uploads**
   // ============================================================= //
 
-  void uploadUniformInt(const std::string &name, int value);
-  void uploadUniformInt2(const std::string &name, const glm::ivec2 &value);
-  void uploadUniformInt3(const std::string &name, const glm::ivec3 &value);
-  void uploadUniformInt4(const std::string &name, const glm::ivec4 &value);
-  void uploadUniformFloat(const std::string &name, float value);
-  void uploadUniformFloat2(const std::string &name, const glm::vec2 &value);
-  void uploadUniformFloat3(const std::string &name, const glm::vec3 &value);
-  void uploadUniformFloat4(const std::string &name, const glm::vec4 &value);
-  void uploadUniformMat3(const std::string &name, const glm::mat3 &matrix);
-  void uploadUniformMat4(const std::string &name, const glm::mat4 &matrix);
+  void uploadUniformInt(const std::string &name, int value,
+                        bool isError = true);
+  void uploadUniformInt2(const std::string &name, const glm::ivec2 &value,
+                         bool isError = true);
+  void uploadUniformInt3(const std::string &name, const glm::ivec3 &value,
+                         bool isError = true);
+  void uploadUniformInt4(const std::string &name, const glm::ivec4 &value,
+                         bool isError = true);
+  void uploadUniformFloat(const std::string &name, float value,
+                          bool isError = true);
+  void uploadUniformFloat2(const std::string &name, const glm::vec2 &value,
+                           bool isError = true);
+  void uploadUniformFloat3(const std::string &name, const glm::vec3 &value,
+                           bool isError = true);
+  void uploadUniformFloat4(const std::string &name, const glm::vec4 &value,
+                           bool isError = true);
+  void uploadUniformMat3(const std::string &name, const glm::mat3 &matrix,
+                         bool isError = true);
+  void uploadUniformMat4(const std::string &name, const glm::mat4 &matrix,
+                         bool isError = true);
   /** Uploads an array of int uniforms. */
   void uploadUniformIntArray(const std::string &name, int *values,
-                             uint32_t count);
+                             uint32_t size, bool isError = true);
 
   // ============================================================= //
   // **Utilities**
@@ -88,7 +99,7 @@ public:
 private:
   Shader() = default;
   Shader(std::string name, uint32_t programId);
-  int getUniformLocation(const std::string &name) const;
+  int getUniformLocation(const std::string &name, bool isError = true) const;
   std::string m_name = "undefined";
   uint32_t m_programId = 0;
 };

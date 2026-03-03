@@ -90,7 +90,7 @@ void Component::PerspCamera::recalculateViewMatrix(glm::vec3 position,
                                                    glm::vec3 frontCamera)
 {
   glm::vec3 frontUnit = glm::normalize(frontCamera);
-  glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+  const glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
   m_matrices.m_view = glm::lookAt(position, position + frontUnit, up);
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
@@ -167,17 +167,28 @@ Component::OrthoCamera::OrthoCamera(float zoomLevel,
       m_zoomLevel(zoomLevel), m_matrices(oc) {};
 
 // ----- Perspective ------
-
 Component::PerspCamera Component::PerspCamera::create(int resWidth,
                                                       int resHeight,
                                                       float fieldOfViewDegrees,
-                                                      reg::Entity entity)
+                                                      reg::Entity entity,
+                                                      float yaw, float pitch)
 {
+  if (fieldOfViewDegrees > 200 || fieldOfViewDegrees < 40)
+    PLOG_W("Warning. Perspective cameara FOV = {} is very {}, make sure you "
+           "are not confusing values",
+           fieldOfViewDegrees, fieldOfViewDegrees > 200 ? "big" : "small");
   const float aspectRatio =
       static_cast<float>(resWidth) / static_cast<float>(resHeight);
   glm::mat4 perspectiveMatrix = glm::perspective(
       glm::radians(fieldOfViewDegrees), aspectRatio, 0.1f, 100.0f);
-  glm::mat4 viewMatrix = glm::mat4(1.f);
+  // calculate camera direction
+  const glm::vec3 cameraFront = glm::normalize(glm::vec3( //
+      cos(glm::radians(yaw)) * cos(glm::radians(pitch)),  //
+      sin(glm::radians(pitch)),                           //
+      sin(glm::radians(yaw)) * cos(glm::radians(pitch))   //
+      ));
+  const glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+  glm::mat4 viewMatrix = glm::lookAt(glm::vec3{0}, cameraFront, up);
   return Component::PerspCamera{
       pain::PerspectiveMatrices(perspectiveMatrix, viewMatrix),
       aspectRatio,

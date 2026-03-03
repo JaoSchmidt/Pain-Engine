@@ -6,8 +6,11 @@
 
 #pragma once
 
+#include "Assets/ManagerMaterial.h"
 #include "Core.h"
 
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
 #include "CoreRender/Renderer/BatchCircles.h"
 #include "CoreRender/Renderer/BatchQuad.h"
 #include "CoreRender/Renderer/BatchSpray.h"
@@ -16,8 +19,6 @@
 #include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/MiscDebugGrid.h"
 #include "CoreRender/Text/Font.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
 #include "ECS/Registry/Entity.h"
 #include "Physics/Particles/SprayCmp.h"
 
@@ -58,7 +59,8 @@ struct Renderer2d {
     const char *name;
   };
   /// @brief Factory function to create a renderer instance.
-  static Renderer2d createRenderer2d();
+  static Renderer2d createRenderer2d(MaterialManager &materialManager);
+
   Renderer2d &operator=(Renderer2d &&o) noexcept;
   /// @brief Change the active camera entity used for rendering.
   void changeCamera(reg::Entity camera);
@@ -84,10 +86,6 @@ struct Renderer2d {
 
   // @brief Flush all batches and finalize the scene.
   void endScene();
-
-  void setViewport(int x, int y, int width, int height);
-  void setClearColor(const glm::vec4 &color);
-  void clear();
 
   /// @brief Clears all renderer state and internal caches.
   void clearEntireRenderer();
@@ -237,6 +235,7 @@ private:
   float allocateTextures(Texture &texture);
 
   struct M {
+    MaterialManager &materialManager;
     std::array<QuadBatch, NumLayers> quadBatches;
     TriBatch triBatch;
     CircleBatch circleBatch;

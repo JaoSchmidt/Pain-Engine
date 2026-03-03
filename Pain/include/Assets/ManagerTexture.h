@@ -8,7 +8,7 @@
 #pragma once
 
 #include "CoreRender/Renderer/Misc.h"
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include "Misc/TextureSheet.h"
 
 namespace pain

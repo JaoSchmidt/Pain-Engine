@@ -5,7 +5,7 @@
  */
 
 // Texture.cpp
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include "Core.h"
 
 #include "CoreFiles/LogWrapper.h"
