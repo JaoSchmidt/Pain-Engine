@@ -108,7 +108,7 @@ void Component::PerspCamera::setProjection(float aspectRatio,
                                            float fieldOfViewDegrees)
 {
   m_matrices.m_projection = glm::perspective(glm::radians(fieldOfViewDegrees),
-                                             aspectRatio, 0.1f, 100.0f);
+                                             aspectRatio, 0.01f, 100.0f);
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
 }
@@ -180,7 +180,7 @@ Component::PerspCamera Component::PerspCamera::create(int resWidth,
   const float aspectRatio =
       static_cast<float>(resWidth) / static_cast<float>(resHeight);
   glm::mat4 perspectiveMatrix = glm::perspective(
-      glm::radians(fieldOfViewDegrees), aspectRatio, 0.1f, 100.0f);
+      glm::radians(fieldOfViewDegrees), aspectRatio, 0.01f, 100.0f);
   // calculate camera direction
   const glm::vec3 cameraFront = glm::normalize(glm::vec3( //
       cos(glm::radians(yaw)) * cos(glm::radians(pitch)),  //

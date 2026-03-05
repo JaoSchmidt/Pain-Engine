@@ -146,8 +146,8 @@ void CubeBatch::allocateCube(const glm::mat4 &transform, const Color &tintColor,
   ptr->texIndex = textureIndex;
   ptr->tilingFactor = tilingFactor;
   ptr->transform = transform;
-  ptr++;
-  m_count++;
+  ptr++;     // increase vertex index
+  m_count++; // instance indice or instance counter
 #ifndef NDEBUG
   statsCount++;
 #endif

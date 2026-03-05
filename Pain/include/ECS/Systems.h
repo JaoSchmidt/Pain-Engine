@@ -66,18 +66,32 @@ struct IOnEvent {
   virtual void onEvent(const SDL_Event &event) = 0;
 };
 
-/// @brief Interface for systems that participate in rendering.
-struct IOnRender {
-  virtual ~IOnRender() = default;
+/// @brief Interface for systems that participate in 2d rendering.
+struct IOn3dRender {
+  virtual ~IOn3dRender() = default;
 
   /**
    * @brief Called during the render phase.
    *
-   * @param renderer Active 2D renderer.
+   * @param renderer Owns an active 2D renderer.
    * @param debug Whether debug rendering is enabled.
    * @param dt Frame delta time.
    */
-  virtual void onRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
+  virtual void on3dRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
+};
+
+/// @brief Interface for systems that participate in 3d rendering.
+struct IOn2dRender {
+  virtual ~IOn2dRender() = default;
+
+  /**
+   * @brief Called during the render phase.
+   *
+   * @param renderer Owns an active 3D renderer.
+   * @param debug Whether debug rendering is enabled.
+   * @param dt Frame delta time.
+   */
+  virtual void on2dRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
 };
 
 /**
@@ -260,7 +274,7 @@ template <typename TL> struct TagsAllRegistered;
 template <typename T>
 concept HasAnySystemInterface =
     std::is_base_of_v<IOnUpdate, T> || std::is_base_of_v<IOnEvent, T> ||
-    std::is_base_of_v<IOnRender, T>;
+    std::is_base_of_v<IOn2dRender, T> || std::is_base_of_v<IOn3dRender, T>;
 
 /** @brief Checks whether a system defines a Tags type. */
 template <typename T>

@@ -14,31 +14,34 @@
 namespace pain
 {
 SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
-                                Shader &shader)
+                                std::string name)
 {
   constexpr float radius = 0.5f;
-  const uint32_t verticePerSphere = 2 + (slices - 2) * stacks;
+  const uint32_t verticePerSphere = (stacks - 2) * slices +     // Slices
+                                    2 * slices;                 // Poles
   const uint32_t indicesPerSphere = slices * 3 +                // top cap
                                     (stacks - 3) * slices * 6 + // middle
                                     slices * 3;                 // bottom cap
   // -------- BUILD STATIC INDICES --------
-  uint32_t *indices = new uint32_t[indicesPerSphere];
+  std::unique_ptr<uint32_t[]> indices =
+      std::make_unique<uint32_t[]>(indicesPerSphere);
 
-  const uint32_t northPole = 0;
-  const uint32_t southPole = 1 + (stacks - 2) * slices;
-  uint8_t i = 0; // indice only
+  const uint32_t northPoleStart = 0;
+  const uint32_t firstRingStart = slices;
+  const uint32_t southPoleStart = slices + (stacks - 2) * slices;
+  uint32_t i = 0; // indice only
   // Top cap
   for (uint32_t slice = 0; slice < slices; ++slice) {
     uint32_t next = (slice + 1) % slices;
-    indices[i] = northPole;
-    indices[i + 1] = 1 + next;
-    indices[i + 2] = 1 + slice;
+    indices[i] = northPoleStart + slice;
+    indices[i + 1] = firstRingStart + next;
+    indices[i + 2] = firstRingStart + slice;
     i += 3;
   }
 
   // Middle Indices
   for (uint32_t stack = 0; stack < stacks - 3; ++stack) {
-    uint32_t ringStart = 1 + stack * slices;
+    uint32_t ringStart = firstRingStart + stack * slices;
     uint32_t nextRingStart = ringStart + slices;
 
     for (uint32_t slice = 0; slice < slices; ++slice) {
@@ -61,24 +64,31 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
   }
 
   // Bottom cap
-  uint32_t lastRing = southPole - slices;
+  uint32_t lastRingStart = firstRingStart + (stacks - 3) * slices;
   for (uint32_t slice = 0; slice < slices; ++slice) {
     uint32_t next = (slice + 1) % slices;
-    indices[i] = lastRing + slice;
-    indices[i + 1] = lastRing + next;
-    indices[i + 2] = southPole;
+    indices[i] = lastRingStart + slice;
+    indices[i + 1] = lastRingStart + next;
+    indices[i + 2] = southPoleStart + slice;
     i += 3;
   }
-  delete[] indices;
 
   // -------- BUILD STATIC VERTICES --------
   std::unique_ptr<Vertex[]> vertices =
       std::make_unique<Vertex[]>(verticePerSphere);
   Vertex *pVertex = vertices.get();
 
-  pVertex->position = {0.f, radius, 0.f};
-  pVertex->texCoord = {0.5f, 0.0f};
-  ++pVertex;
+  // pVertex->position = {0.f, radius, 0.f};
+  // pVertex->texCoord = {0.5f, 1.f};
+  // ++pVertex;
+
+  for (uint32_t slice = 0; slice < slices; ++slice) {
+    float u = fdiv(slice, slices);
+
+    pVertex->position = {0.f, radius, 0.f};
+    pVertex->texCoord = {1.f - u, 1.f};
+    ++pVertex;
+  }
 
   for (uint32_t stack = 1; stack < stacks - 1; ++stack) {
     const float v = fdiv(stack, stacks);
@@ -104,19 +114,15 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
     }
   }
 
-  pVertex->position = {0.0f, -radius, 0.0f};
-  pVertex->texCoord = {0.5f, 1.0f};
-  // -------- SHADER --------
-  // Shader shader =
-  //     *Shader::createFromFile("resources/default/shaders/TexturePhong.glsl");
+  for (uint32_t slice = 0; slice < slices; ++slice) {
+    float u = fdiv(slice, slices);
 
-  int *samplers = new int[backend::getTMU()];
-  for (int i = 0; i < backend::getTMUi(); ++i)
-    samplers[i] = i;
-
-  shader.bind();
-  shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
-  delete[] samplers;
+    pVertex->position = {0.f, -radius, 0.f};
+    pVertex->texCoord = {1.f - u, 0.f};
+    ++pVertex;
+  }
+  // pVertex->position = {0.0f, -radius, 0.0f};
+  // pVertex->texCoord = {0.5f, 0.0f};
 
   return SphereBatch(
       *VertexBuffer::createStaticVertexBuffer(
@@ -134,24 +140,24 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
               {ShaderDataType::Float, "a_TilingFactor", false, true},
               {ShaderDataType::Mat4, "a_Transform", false, true},
           }),
-      *IndexBuffer::createIndexBuffer(indices, indicesPerSphere),
-      indicesPerSphere);
+      *IndexBuffer::createIndexBuffer(indices.get(), indicesPerSphere),
+      indicesPerSphere, name);
 }
 
 SphereBatch::SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
-                         IndexBuffer &&ib_,
-                         uint32_t indicesPerSphere)
+                         IndexBuffer &&ib_, uint32_t indicesPerSphere,
+                         std::string name)
     : vbo(std::move(vbo_)),                                              //
       vboInstance(std::move(vboInstance_)),                              //
       ib(std::move(ib_)),                                                //
       vao(*VertexArray::createVertexArray(vbo, vboInstance, ib)),        //
       ptrInit(std::make_unique<SphereInstanceVertex[]>(MaxPolyhedrons)), //
       ptr(ptrInit.get()),                                                //
-      m_indicesPerSphere(indicesPerSphere) {};
+      m_indicesPerSphere(indicesPerSphere), m_name(name) {};
 
 void SphereBatch::resetPtr()
 {
-  indexCount = 0;
+  m_count = 0;
   ptr = ptrInit.get();
 }
 void SphereBatch::resetAll()
@@ -166,21 +172,20 @@ void SphereBatch::resetAll()
 
 void SphereBatch::flush(Texture **textures, uint32_t textureCount)
 {
-  if (!indexCount)
+  if (!m_count)
     return;
   vao.bind();
   vbo.bind();
 
   vboInstance.bind();
   const uint32_t count = static_cast<uint32_t>(ptr - ptrInit.get());
-  vboInstance.setData(ptrInit.get(), count * sizeof(Vertex));
+  vboInstance.setData(ptrInit.get(), count * sizeof(SphereInstanceVertex));
 
   for (uint32_t i = 0; i < textureCount; i++)
     textures[i]->bindToSlot(i);
 
   ib.bind();
-  backend::drawIndexed(vao, indexCount * m_indicesPerSphere);
-  // PLOG_T("Being flushed");
+  backend::drawIndexedInstanced(vao, m_indicesPerSphere, m_count);
 #ifndef NDEBUG
   drawCount++;
 #endif
@@ -196,16 +201,12 @@ void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
                                    float textureIndex)
 {
   PROFILE_FUNCTION();
-
-  // glm::mat3 normalMatrix =
-  // glm::transpose(glm::inverse(glm::mat3(transform)));
-
   ptr->color = tintColor.value;
   ptr->texIndex = textureIndex;
   ptr->tilingFactor = tilingFactor;
   ptr->transform = transform;
   ++ptr;
-  indexCount++;
+  m_count++;
 #ifndef NDEBUG
   statsCount++;
 #endif

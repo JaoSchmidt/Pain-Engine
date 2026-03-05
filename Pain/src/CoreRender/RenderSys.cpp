@@ -19,6 +19,11 @@ namespace pain
 {
 namespace Systems
 {
+// NOTE: pay attention that the systems are communicating directly with the
+// renderers, meaning the state of the API (opengl, vulkan, directx) NEEDS to be
+// programmed to render the batch at any moment, including the transparency,
+// depth, dual face, etc
+// This means you probl. need to call like backend::enableXX() from here
 
 constexpr std::array<SphereDivision, 3> sphereDivisions = {
     SphereDivision::D_8x8, SphereDivision::D_16x16, SphereDivision::D_32x32};
@@ -26,8 +31,8 @@ constexpr std::array<SphereDivision, 3> sphereDivisions = {
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render::onRender(Renderers &renderer, bool isMinimized,
-                      DeltaTime currentTime)
+void Render::on2dRender(Renderers &renderer, bool isMinimized,
+                        DeltaTime currentTime)
 {
   UNUSED(isMinimized)
   UNUSED(currentTime)
@@ -124,6 +129,14 @@ void Render::onRender(Renderers &renderer, bool isMinimized,
       }
     }
   }
+}
+
+void Render::on3dRender(Renderers &renderer, bool isMinimized,
+                        DeltaTime currentTime)
+{
+  UNUSED(isMinimized)
+  UNUSED(currentTime)
+  PROFILE_FUNCTION();
   {
     PROFILE_SCOPE("Scene::renderSystems - spheres");
     auto chunks =
@@ -134,8 +147,8 @@ void Render::onRender(Renderers &renderer, bool isMinimized,
       const auto *mat = std::get<2>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         if (mesh->shape == MeshShape::Cube) {
-          // renderer.renderer3d.submitCube(t->m_position, mesh->size,
-          //                                *mat->m_material);
+          renderer.renderer3d.submitCube(t->m_position, mesh->size,
+                                         *mat->m_material);
         } else {
           renderer.renderer3d.submitUVSphere(t->m_position, mesh->size,
                                              sphereDivisions[mesh->shape],

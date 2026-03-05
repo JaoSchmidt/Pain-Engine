@@ -109,17 +109,18 @@ public:
   //                 Texture &texture, float tilingFactor);
   void submitCube(const glm::vec3 &position, float size,
                   const Material &material);
-  /// @brief submit a rotated cube polyhedron.
+  /// @brief submit a rotated cube polyhedron. Rotation dimensions are in
+  /// radians
   void submitCube(const glm::vec3 &position, float size,
                   const Material &material, const glm::vec3 &rotation);
 
   /// @brief submit a UV sphere polyhedron.
   void submitUVSphere(const glm::vec3 &position, float size, SphereDivision div,
                       const Material &material);
-  /// @brief submit a rotating UV sphere polyhedron.
-  void submitUVSphere(const glm::vec3 &position, float size,
-                      const glm::vec3 &rotation, SphereDivision div,
-                      const Material &material);
+  /// @brief submit a rotating UV sphere polyhedron. Rotation dimensions are in
+  /// radians
+  void submitUVSphere(const glm::vec3 &position, float size, SphereDivision div,
+                      const Material &material, const glm::vec3 &rotation);
 
   void submitLight(const glm::vec3 &pos, const Color &color);
 

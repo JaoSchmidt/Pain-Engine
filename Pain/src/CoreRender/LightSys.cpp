@@ -20,8 +20,8 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void LightSys::onRender(Renderers &renderer, bool isMinimized,
-                        DeltaTime currentTime)
+void LightSys::on3dRender(Renderers &renderer, bool isMinimized,
+                          DeltaTime currentTime)
 {
   UNUSED(isMinimized)
   UNUSED(currentTime)

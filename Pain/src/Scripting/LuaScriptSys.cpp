@@ -68,8 +68,8 @@ void LuaScript::onEvent(const SDL_Event &e)
   }
 }
 
-void LuaScript::onRender(Renderers &renderer, bool isMinimized,
-                         DeltaTime currentTime)
+void LuaScript::on3dRender(Renderers &renderer, bool isMinimized,
+                           DeltaTime currentTime)
 {
   PROFILE_SCOPE("onRender - LuaScripts");
 

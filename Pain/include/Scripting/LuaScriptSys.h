@@ -64,7 +64,7 @@ namespace Systems
 struct LuaScript : public System<WorldComponents>,
                    IOnUpdate,
                    IOnEvent,
-                   IOnRender {
+                   IOn3dRender {
   /**
    * @brief Component tags required by this system.
    *
@@ -114,8 +114,8 @@ struct LuaScript : public System<WorldComponents>,
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void onRender(Renderers &renderer, bool isMinimized,
-                DeltaTime currentTime) override;
+  void on3dRender(Renderers &renderer, bool isMinimized,
+                  DeltaTime currentTime) override;
 };
 
 } // namespace Systems

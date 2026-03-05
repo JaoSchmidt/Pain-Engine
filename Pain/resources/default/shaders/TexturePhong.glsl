@@ -3,10 +3,10 @@
 			
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec2 a_TexCoord;
-layout(location = 2) in mat4 a_Transform; // 2, 3, 4, 5
-layout(location = 6) in vec4 a_Color;
-layout(location = 7) in float a_TexIndex;
-layout(location = 8) in float a_TilingFactor;
+layout(location = 2) in vec4 a_Color;
+layout(location = 3) in float a_TexIndex;
+layout(location = 4) in float a_TilingFactor;
+layout(location = 5) in mat4 a_Transform; // 2, 3, 4, 5
 
 uniform mat4 u_ViewProjection;
 

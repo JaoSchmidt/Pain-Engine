@@ -247,9 +247,12 @@ public:
   /** @brief Dispatches input events to systems implementing IOnEvent. */
   void updateSystems(const SDL_Event &event);
 
-  /** @brief Executes render callbacks on systems implementing IOnRender. */
-  void renderSystems(Renderers &renderers, bool isMinimized,
-                     DeltaTime currentTime);
+  /** @brief Executes render callbacks on systems implementing IOn2dRender. */
+  void render2dSystems(Renderers &renderers, bool isMinimized,
+                       DeltaTime currentTime);
+  /** @brief Executes render callbacks on systems implementing IOn3dRender. */
+  void render3dSystems(Renderers &renderers, bool isMinimized,
+                       DeltaTime currentTime);
 
   /**
    * @brief Retrieves a system by its concrete type.
@@ -339,7 +342,8 @@ protected:
   /// Cached system lists for fast iteration.
   std::vector<IOnUpdate *> m_updateSystems;
   std::vector<IOnEvent *> m_eventSystems;
-  std::vector<IOnRender *> m_renderSystems;
+  std::vector<IOn3dRender *> m_3dRenderSystems;
+  std::vector<IOn2dRender *> m_2dRenderSystems;
 
   /// Thread pool used by the scene.
   ThreadPool &m_threadPool;

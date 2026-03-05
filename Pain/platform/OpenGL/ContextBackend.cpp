@@ -56,7 +56,7 @@ void InitRenderer()
   // Create Renderer
   // =============================================================== //
 
-  // NOTE: This enable 3d and can be changed later in case we need some camera
+  // NOTE: This enable 3d but can be changed later in case we need some camera
   // mechanic
   // Also, to enable GL_DEPTH, you must also enable those:
   // GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
@@ -65,6 +65,7 @@ void InitRenderer()
   glDepthFunc(GL_LEQUAL);
   glDepthMask(GL_TRUE);
   glDisable(GL_BLEND);
+
   // allow transparency
   // glEnable(GL_BLEND);
   // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

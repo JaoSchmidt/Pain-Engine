@@ -152,8 +152,10 @@ public:
     Sys *s = static_cast<Sys *>(itSystem->second.get());
     if constexpr (std::derived_from<Sys, IOnEvent>)
       m_eventSystems.emplace_back(s);
-    if constexpr (std::derived_from<Sys, IOnRender>)
-      m_renderSystems.emplace_back(s);
+    if constexpr (std::derived_from<Sys, IOn2dRender>)
+      m_2dRenderSystems.emplace_back(s);
+    if constexpr (std::derived_from<Sys, IOn3dRender>)
+      m_3dRenderSystems.emplace_back(s);
     if constexpr (std::derived_from<Sys, IOnUpdate>)
       m_updateSystems.emplace_back(s);
   }

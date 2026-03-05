@@ -7,8 +7,8 @@
 // Scene.cpp
 #include "ECS/Scene.h"
 
-#include "CoreRender/RenderSys.h"
 #include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/RenderSys.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/Sprite.h"
 #include "GUI/ImGuiSys.h"
@@ -315,15 +315,23 @@ void AbstractScene<Manager>::updateSystems(const SDL_Event &event)
   for (auto *sys : m_eventSystems)
     static_cast<IOnEvent *>(sys)->onEvent(event);
 }
-
 template <reg::CompileTimeBitMaskType Manager>
-void AbstractScene<Manager>::renderSystems(Renderers &renderers,
-                                           bool isMinimized,
-                                           DeltaTime currentTime)
+void AbstractScene<Manager>::render3dSystems(Renderers &renderers,
+                                             bool isMinimized,
+                                             DeltaTime currentTime)
 {
-  for (auto *sys : m_renderSystems)
-    static_cast<IOnRender *>(sys)->onRender(renderers, isMinimized,
-                                            currentTime);
+  for (auto *sys : m_3dRenderSystems)
+    static_cast<IOn3dRender *>(sys)->on3dRender(renderers, isMinimized,
+                                                currentTime);
+}
+template <reg::CompileTimeBitMaskType Manager>
+void AbstractScene<Manager>::render2dSystems(Renderers &renderers,
+                                             bool isMinimized,
+                                             DeltaTime currentTime)
+{
+  for (auto *sys : m_2dRenderSystems)
+    static_cast<IOn2dRender *>(sys)->on2dRender(renderers, isMinimized,
+                                                currentTime);
 }
 
 template class AbstractScene<WorldComponents>;

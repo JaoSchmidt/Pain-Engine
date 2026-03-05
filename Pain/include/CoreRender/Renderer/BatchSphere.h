@@ -41,10 +41,10 @@ struct SphereBatch {
   std::unique_ptr<SphereInstanceVertex[]> ptrInit;
   SphereInstanceVertex *ptr = nullptr;
   // std::vector<int> drawOrder;
-  uint32_t indexCount = 0; // works for both draw order indexes and gpu indices
+  uint32_t m_count = 0; // works for both draw order indexes and gpu indices
   // std::unique_ptr<Vertex[]> sortBuffer;
 
-  static SphereBatch create(uint32_t slices, uint32_t stacks, Shader &shader);
+  static SphereBatch create(uint32_t slices, uint32_t stacks, std::string name);
 
   void allocateSphereUV(const glm::mat4 &transform, const Color &tintColor,
                         float tilingFactor, float textureIndex);
@@ -54,9 +54,10 @@ struct SphereBatch {
 
 private:
   SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
-              IndexBuffer &&ib_, uint32_t indicesPerSphere);
+              IndexBuffer &&ib_, uint32_t indicesPerSphere, std::string name);
 
   const uint32_t m_indicesPerSphere = 0;
+  std::string m_name;
   // void swapQuadVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
   // void sortByDrawOrder();
 };

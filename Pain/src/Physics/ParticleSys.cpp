@@ -28,8 +28,9 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
   }
 }
 
-void Systems::ParticleSys::onRender(pain::Renderers &renderer, bool isMinimized,
-                                    pain::DeltaTime currentTime)
+void Systems::ParticleSys::on2dRender(pain::Renderers &renderer,
+                                      bool isMinimized,
+                                      pain::DeltaTime currentTime)
 {
   UNUSED(isMinimized)
   PROFILE_FUNCTION();

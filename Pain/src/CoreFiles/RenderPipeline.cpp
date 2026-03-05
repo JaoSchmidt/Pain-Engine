@@ -141,26 +141,26 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene &uiScene)
 {
-  // TODO: This needs to be redone because there is no way to tell
-  // worldScene.renderSystems to render 3d or 2d
   m_frameBuffer.bind();
   backend::clear();
-  // if (renderers.renderer3d.hasCamera()) {
-  renderers.renderer3d.beginScene(currentTime, worldScene);
-  worldScene.renderSystems(renderers, isMinimized, currentTime);
-  renderers.renderer3d.endScene(worldScene);
-  // }
-  // else {
-  //   backend::clear();
-  // }
-  // if (renderers.renderer2d.hasCamera()) {
-  //   backend::disable3d();
-  //   renderers.renderer2d.beginScene(currentTime, worldScene);
-  //   worldScene.renderSystems(renderers, isMinimized, currentTime);
-  //   renderers.renderer2d.endScene();
-  // }
+  const bool enable3d = renderers.renderer3d.hasCamera();
+  const bool enable2d = renderers.renderer2d.hasCamera();
+
+  if (enable3d) {
+    backend::enable3d();
+    renderers.renderer3d.beginScene(currentTime, worldScene);
+    worldScene.render3dSystems(renderers, isMinimized, currentTime);
+    renderers.renderer3d.endScene(worldScene);
+  }
+  if (enable2d) {
+    backend::disable3d();
+    renderers.renderer2d.beginScene(currentTime, worldScene);
+    worldScene.render2dSystems(renderers, isMinimized, currentTime);
+    renderers.renderer2d.endScene();
+  }
+
   m_frameBuffer.unbind();
-  uiScene.renderSystems(renderers, isMinimized, currentTime);
+  uiScene.render2dSystems(renderers, isMinimized, currentTime);
 }
 
 } // namespace pain
