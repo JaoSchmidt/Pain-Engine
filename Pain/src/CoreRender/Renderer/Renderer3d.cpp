@@ -175,30 +175,19 @@ void Renderer3d::flush()
 void Renderer3d::submitCube(const glm::vec3 &position, float size,
                             const Material &material)
 {
-  MaterialKey key{.shader = material.m_shader,
-                  .params = material.m_params,
-                  .flags = material.m_flags};
-  auto it = m_cubeBatchCache.find(key);
-  if (it == m_cubeBatchCache.end()) {
-    auto [newIt, _] =
-        m_cubeBatchCache.emplace(std::move(key), CubeBatch::create("batch"));
-    it = newIt;
-  }
-  CubeBatch &batch = it->second;
-  if (batch.m_count >= CubeBatch::MaxPolyhedrons) {
-    beforeFlush(it->first);
-    batch.flush(m.textureSlots, m.textureSlotIndex);
-    batch.resetPtr();
-  }
-
-  const float texIndex = allocateTextures(*material.m_texture);
-  glm::mat4 transform = getUniformScaleTransform(position, size);
-  batch.allocateCube(transform, material.m_color, material.m_tilingFactor,
-                     texIndex);
+  const glm::mat4 transform = getUniformScaleTransform(position, size);
+  submitCube(transform, material);
 }
 
 void Renderer3d::submitCube(const glm::vec3 &position, float size,
                             const Material &material, const glm::vec3 &rotation)
+{
+  const glm::mat4 transform =
+      getUniformScaleTransform(position, size, rotation);
+  submitCube(transform, material);
+}
+void Renderer3d::submitCube(const glm::mat4 &transform,
+                            const Material &material)
 {
   MaterialKey key{.shader = material.m_shader,
                   .params = material.m_params,
@@ -218,8 +207,6 @@ void Renderer3d::submitCube(const glm::vec3 &position, float size,
   }
 
   const float texIndex = allocateTextures(*material.m_texture);
-  const glm::mat4 transform =
-      getUniformScaleTransform(position, size, rotation);
   batch.allocateCube(transform, material.m_color, material.m_tilingFactor,
                      texIndex);
 }
@@ -228,33 +215,22 @@ void Renderer3d::submitUVSphere(const glm::vec3 &position, float size,
                                 SphereDivision div, const Material &material)
 {
   PROFILE_FUNCTION();
-  MaterialKey key{.shader = material.m_shader,
-                  .params = material.m_params,
-                  .flags = material.m_flags};
-  auto it = m_sphereBatchCache.find(key);
-  if (it == m_sphereBatchCache.end()) {
-    auto [newIt, _] = m_sphereBatchCache.emplace(
-        std::move(key),
-        SphereBatch::create(TP_VEC2(getResolution(div)), "batch"));
-    it = newIt;
-  }
-  SphereBatch &batch = it->second;
-
-  if (batch.m_count >= CubeBatch::MaxPolyhedrons) {
-    beforeFlush(it->first);
-    batch.flush(m.textureSlots, m.textureSlotIndex);
-    batch.resetPtr();
-  }
-
-  const float texIndex = allocateTextures(*material.m_texture);
   const glm::mat4 transform = getUniformScaleTransform(position, size);
-  batch.allocateSphereUV(transform, material.m_color, material.m_tilingFactor,
-                         texIndex);
+  submitUVSphere(transform, div, material);
 }
 
 void Renderer3d::submitUVSphere(const glm::vec3 &position, float size,
                                 SphereDivision div, const Material &material,
                                 const glm::vec3 &rotation)
+{
+  PROFILE_FUNCTION();
+  const glm::mat4 transform =
+      getUniformScaleTransform(position, size, rotation);
+  submitUVSphere(transform, div, material);
+}
+
+void Renderer3d::submitUVSphere(const glm::mat4 &transform, SphereDivision div,
+                                const Material &material)
 {
   PROFILE_FUNCTION();
   MaterialKey key{.shader = material.m_shader,
@@ -274,10 +250,7 @@ void Renderer3d::submitUVSphere(const glm::vec3 &position, float size,
     batch.flush(m.textureSlots, m.textureSlotIndex);
     batch.resetPtr();
   }
-
   const float texIndex = allocateTextures(*material.m_texture);
-  const glm::mat4 transform =
-      getUniformScaleTransform(position, size, rotation);
   batch.allocateSphereUV(transform, material.m_color, material.m_tilingFactor,
                          texIndex);
 }

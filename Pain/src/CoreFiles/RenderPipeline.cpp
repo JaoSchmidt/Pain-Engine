@@ -6,7 +6,7 @@
 
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/CameraComponent.h"
-#include "CoreRender/Renderer/RenderContext.h"
+#include "CoreRender/Renderer/Renderers.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "Misc/Events.h"
@@ -143,24 +143,24 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
 {
   m_frameBuffer.bind();
   backend::clear();
-  const bool enable3d = renderers.renderer3d.hasCamera();
-  const bool enable2d = renderers.renderer2d.hasCamera();
+  const bool enable3d = renderers.m_renderer3d.hasCamera();
+  const bool enable2d = renderers.m_renderer2d.hasCamera();
 
   if (enable3d) {
     backend::enable3d();
-    renderers.renderer3d.beginScene(currentTime, worldScene);
-    worldScene.render3dSystems(renderers, isMinimized, currentTime);
-    renderers.renderer3d.endScene(worldScene);
+    renderers.m_renderer3d.beginScene(currentTime, worldScene);
+    worldScene.renderSystems(renderers, isMinimized, currentTime);
+    renderers.m_renderer3d.endScene(worldScene);
   }
   if (enable2d) {
     backend::disable3d();
-    renderers.renderer2d.beginScene(currentTime, worldScene);
-    worldScene.render2dSystems(renderers, isMinimized, currentTime);
-    renderers.renderer2d.endScene();
+    renderers.m_renderer2d.beginScene(currentTime, worldScene);
+    worldScene.renderSystems(renderers, isMinimized, currentTime);
+    renderers.m_renderer2d.endScene();
   }
 
   m_frameBuffer.unbind();
-  uiScene.render2dSystems(renderers, isMinimized, currentTime);
+  uiScene.renderSystems(renderers, isMinimized, currentTime);
 }
 
 } // namespace pain

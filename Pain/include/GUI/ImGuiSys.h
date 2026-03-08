@@ -53,7 +53,7 @@ namespace Systems
  *
  * The system assumes a single ImGui context is active at runtime.
  */
-struct ImGuiSys : public System<UIComponents>, IOn2dRender, IOnEvent {
+struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
   /// @brief Component tags required by this system.
   using Tags = TypeList<ImGuiComponent>;
 
@@ -94,8 +94,8 @@ struct ImGuiSys : public System<UIComponents>, IOn2dRender, IOnEvent {
    * @param isMinimized Indicates whether the application window is minimized.
    * @param currentTime Current frame time.
    */
-  void on2dRender(Renderers &renderer, bool isMinimized,
-                  DeltaTime currentTime) override;
+  void onRender(Renderers &renderers, bool isMinimized,
+                DeltaTime currentTime) override;
 
   /**
    * @brief Event callback invoked for every incoming platform event.

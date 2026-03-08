@@ -115,8 +115,8 @@ void Application::stopLoop(bool restartFlag)
 void Application::ensureCamera()
 {
   // set some camera
-  if (!m_renderers.renderer2d.hasCamera() &&
-      !m_renderers.renderer3d.hasCamera()) {
+  if (!m_renderers.m_renderer2d.hasCamera() &&
+      !m_renderers.m_renderer3d.hasCamera()) {
     PLOG_I("Camera is missing, searching for 2d camera component");
     bool hasCameraComponent = false;
     for (auto &chunk : m_worldScene.query<cmp::OrthoCamera>()) {

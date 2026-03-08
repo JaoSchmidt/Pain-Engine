@@ -102,18 +102,14 @@ public:
   // ================================================================= //
 
   /// @brief submit a cube polyhedron.
-  // void submitCube(const glm::vec3 &position, float size,
-  //                 const Material &material);
-
-  // void submitCube(const glm::vec3 &position, float size, const Color &color,
-  //                 Texture &texture, float tilingFactor);
   void submitCube(const glm::vec3 &position, float size,
                   const Material &material);
   /// @brief submit a rotated cube polyhedron. Rotation dimensions are in
   /// radians
   void submitCube(const glm::vec3 &position, float size,
                   const Material &material, const glm::vec3 &rotation);
-
+  /// @brief submits cubes directly with transform
+  void submitCube(const glm::mat4 &transform, const Material &material);
   /// @brief submit a UV sphere polyhedron.
   void submitUVSphere(const glm::vec3 &position, float size, SphereDivision div,
                       const Material &material);
@@ -121,19 +117,10 @@ public:
   /// radians
   void submitUVSphere(const glm::vec3 &position, float size, SphereDivision div,
                       const Material &material, const glm::vec3 &rotation);
-
+  /// @brief submits sphere directly with transform
+  void submitUVSphere(const glm::mat4 &transform, SphereDivision div,
+                      const Material &material);
   void submitLight(const glm::vec3 &pos, const Color &color);
-
-  // ================================================================= //
-  // Particles
-  // ================================================================= //
-
-  // /// @brief Begin rendering a particle spray batch.
-  // void beginSprayParticle(const ParticleSprayComponent
-  // &particleSprayComponent);
-  //
-  // /// @brief Submit a single particle to the current spray batch.
-  // void drawSprayParticle(const SprayParticle &p);
 
   // ================================================================= //
   // Transforms

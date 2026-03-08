@@ -20,7 +20,6 @@
 #include "Assets/ManagerTexture.h"
 #include "CoreRender/Buffers/Shader.h"
 #include "CoreRender/Buffers/Texture.h"
-#include "CoreRender/Renderer/Misc.h"
 #include "platform/ContextBackend.h"
 
 #include <variant>

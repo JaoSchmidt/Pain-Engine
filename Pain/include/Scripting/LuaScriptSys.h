@@ -64,7 +64,7 @@ namespace Systems
 struct LuaScript : public System<WorldComponents>,
                    IOnUpdate,
                    IOnEvent,
-                   IOn3dRender {
+                   IOnRender {
   /**
    * @brief Component tags required by this system.
    *
@@ -107,15 +107,15 @@ struct LuaScript : public System<WorldComponents>,
    * Called during the render phase after visibility and renderer state
    * have been resolved.
    *
-   * @param renderer Active 2D renderer.
+   * @param renderer Allow indirect commands to the renderers.
    * @param isMinimized Indicates whether the application window is minimized.
    * @param currentTime Current frame time or delta time reference.
    *
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void on3dRender(Renderers &renderer, bool isMinimized,
-                  DeltaTime currentTime) override;
+  void onRender(Renderers &renderers, bool isMinimized,
+                DeltaTime currentTime) override;
 };
 
 } // namespace Systems

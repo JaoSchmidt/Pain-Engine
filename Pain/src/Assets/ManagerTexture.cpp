@@ -8,7 +8,7 @@
 #include "Assets/ManagerTexture.h"
 #include "Assets/ManagerFile.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/RenderContext.h"
+#include "CoreRender/Renderer/Renderers.h"
 #include "Misc/TextureSheet.h"
 
 #include <exception>
@@ -34,8 +34,8 @@ Renderer3d *s_renderer3d;
 
 void TextureManager::addRendererForDeletingTextures(Renderers &renderers)
 {
-  s_renderer2d = &renderers.renderer2d;
-  s_renderer3d = &renderers.renderer3d;
+  s_renderer2d = &renderers.m_renderer2d;
+  s_renderer3d = &renderers.m_renderer3d;
 }
 
 // ---------------------------------------------------------- //

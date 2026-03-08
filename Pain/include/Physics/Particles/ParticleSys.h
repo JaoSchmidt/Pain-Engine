@@ -64,7 +64,7 @@ namespace Systems
  * @see System
  * @see IOnUpdate
  */
-struct ParticleSys : public System<WorldComponents>, IOnUpdate, IOn2dRender {
+struct ParticleSys : public System<WorldComponents>, IOnUpdate, IOnRender {
   /**
    * @brief Component tags required by this system.
    *
@@ -95,8 +95,8 @@ struct ParticleSys : public System<WorldComponents>, IOnUpdate, IOn2dRender {
    * IOnUpdate.
    */
   void onUpdate(DeltaTime deltaTime) override;
-  void on2dRender(pain::Renderers &renderer, bool isMinimized,
-                  DeltaTime deltaTime) override;
+  void onRender(Renderers &renderers, bool isMinimized,
+                DeltaTime deltaTime) override;
 };
 
 } // namespace Systems

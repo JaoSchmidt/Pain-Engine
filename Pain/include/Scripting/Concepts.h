@@ -12,7 +12,8 @@
 namespace pain
 {
 struct Renderers;
-}
+class RenderContext;
+} // namespace pain
 
 /** Concepts used during NativeScriptComponent::bind() to validate script
  * callback signatures. These concepts detect whether a user script exposes
@@ -27,34 +28,42 @@ struct Renderers;
 /** Detects whether a type exposes a public onCreate() method with no
  * parameters. */
 template <typename T>
-concept has_onCreate_method = requires(T &&t) {
+concept hasOnCreateMethod = requires(T &&t) {
   { t.onCreate() };
 };
 
 /** Detects whether a type exposes a public onRender(Renderers&, bool,
  * DeltaTime) method. */
 template <typename T>
-concept has_onRender_method =
+concept hasOnRenderMethod =
+    requires(T &&t, pain::RenderContext &r, bool m, pain::DeltaTime d) {
+      { t.onRender(r, m, d) };
+    };
+
+/** Detects whether a type exposes a public onRender(Renderers&, bool,
+ * DeltaTime) method. */
+template <typename T>
+concept hasOnSystemRenderMethod =
     requires(T &&t, pain::Renderers &r, bool m, pain::DeltaTime d) {
       { t.onRender(r, m, d) };
     };
 
 /** Detects whether a type exposes a public onUpdate(DeltaTime) method. */
 template <typename T>
-concept has_onUpdate_method = requires(T &&t, pain::DeltaTime d) {
+concept hasOnUpdateMethod = requires(T &&t, pain::DeltaTime d) {
   { t.onUpdate(d) };
 };
 
 /** Detects whether a type exposes a public onDestroy() method with no
  * parameters. */
 template <typename T>
-concept has_onDestroy_method = requires(T &&t) {
+concept hasOnDestroyMethod = requires(T &&t) {
   { t.onDestroy() };
 };
 
 /** Detects whether a type exposes a public onEvent(const SDL_Event&) method. */
 template <typename T>
-concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
+concept hasOnEventMethod = requires(T &&t, const SDL_Event &e) {
   { t.onEvent(e) };
 };
 
@@ -66,28 +75,33 @@ concept has_onEvent_method = requires(T &&t, const SDL_Event &e) {
 
 /** Detects a private onCreate() method that is not publicly callable. */
 template <typename T>
-concept has_private_onCreate =
-    requires { sizeof(&T::onCreate); } && !has_onCreate_method<T>;
+concept hasPrivateOnCreate =
+    requires { sizeof(&T::onCreate); } && !hasOnCreateMethod<T>;
 
 /** Detects a private onUpdate() method that is not publicly callable. */
 template <typename T>
-concept has_private_onUpdate =
-    requires { sizeof(&T::onUpdate); } && !has_onUpdate_method<T>;
+concept hasPrivateOnUpdate =
+    requires { sizeof(&T::onUpdate); } && !hasOnUpdateMethod<T>;
 
 /** Detects a private onRender() method that is not publicly callable. */
 template <typename T>
-concept has_private_onRender =
-    requires { sizeof(&T::onRender); } && !has_onRender_method<T>;
+concept hasPrivateOnSystemRender =
+    requires { sizeof(&T::onRender); } && !hasOnSystemRenderMethod<T>;
+
+/** Detects a private onRender() method that is not publicly callable. */
+template <typename T>
+concept hasPrivateOnRender =
+    requires { sizeof(&T::onRender); } && !hasOnRenderMethod<T>;
 
 /** Detects a private onEvent() method that is not publicly callable. */
 template <typename T>
-concept has_private_onEvent =
-    requires { sizeof(&T::onEvent); } && !has_onEvent_method<T>;
+concept hasPrivateOnEvent =
+    requires { sizeof(&T::onEvent); } && !hasOnEventMethod<T>;
 
 /** Detects a private onDestroy() method that is not publicly callable. */
 template <typename T>
-concept has_private_onDestroy =
-    requires { sizeof(&T::onDestroy); } && !has_onDestroy_method<T>;
+concept hasPrivateOnDestroy =
+    requires { sizeof(&T::onDestroy); } && !hasOnDestroyMethod<T>;
 
 // --------------------------------------------------------------- //
 // concepts for static asserts. Use this to check if you or other developers are
@@ -97,72 +111,72 @@ concept has_private_onDestroy =
 /** Detects whether a type declares any callable onRender member regardless of
  * signature. */
 template <typename T>
-concept has_any_callable_onRender = requires(T t) { &T::onRender; };
+concept hasAnyCallableOnRender = requires(T t) { &T::onRender; };
 
 /** Detects whether a type declares any callable onUpdate member regardless of
  * signature. */
 template <typename T>
-concept has_any_callable_onUpdate = requires(T t) { &T::onUpdate; };
+concept hasAnyCallableOnUpdate = requires(T t) { &T::onUpdate; };
 
 /** Detects whether a type declares any callable onEvent member regardless of
  * signature. */
 template <typename T>
-concept has_any_callable_onEvent = requires(T t) { &T::onEvent; };
+concept hasAnyCallableOnEvent = requires(T t) { &T::onEvent; };
 
 /** Detects whether a type declares any callable onCreate member regardless of
  * signature. */
 template <typename T>
-concept has_any_callable_onCreate = requires(T t) { &T::onCreate; };
+concept hasAnyCallableOnCreate = requires(T t) { &T::onCreate; };
 
 /** Detects whether a type declares any callable onDestroy member regardless of
  * signature. */
 template <typename T>
-concept has_any_callable_onDestroy = requires(T t) { &T::onDestroy; };
+concept hasAnyCallableOnDestroy = requires(T t) { &T::onDestroy; };
 
 /** Performs compile-time validation of script callback signatures and
  * visibility. */
 template <typename T> void checkScriptMethods()
 {
   // Check for wrong signatures
-  if constexpr (has_any_callable_onRender<T> && !has_onRender_method<T>) {
+  if constexpr (hasAnyCallableOnRender<T> && !hasOnRenderMethod<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
                          "onRender(Renderers&, bool, DeltaTime).");
   }
-  if constexpr (has_any_callable_onUpdate<T> && !has_onUpdate_method<T>) {
+  if constexpr (hasAnyCallableOnUpdate<T> && !hasOnUpdateMethod<T>) {
     static_assert(false, "Error: onUpdate() has wrong signature! Should be "
                          "onUpdate(DeltaTime).");
   }
-  if constexpr (has_any_callable_onEvent<T> && !has_onEvent_method<T>) {
+  if constexpr (hasAnyCallableOnEvent<T> && !hasOnEventMethod<T>) {
     static_assert(false, "Error: onEvent() has wrong signature! Should be "
                          "onEvent(const SDL_Event&).");
   }
-  if constexpr (has_any_callable_onCreate<T> && !has_onCreate_method<T>) {
+  if constexpr (hasAnyCallableOnCreate<T> && !hasOnCreateMethod<T>) {
     static_assert(false, "Error: onCreate() has wrong signature! Should be "
                          "onCreate() with no parameters.");
   }
-  if constexpr (has_any_callable_onDestroy<T> && !has_onDestroy_method<T>) {
+  if constexpr (hasAnyCallableOnDestroy<T> && !hasOnDestroyMethod<T>) {
     static_assert(false, "Error: onDestroy() has wrong signature! Should be "
                          "onDestroy() with no parameters.");
   }
 
   // Check for private methods
-  if constexpr (has_private_onCreate<T>) {
+  if constexpr (hasPrivateOnCreate<T>) {
     static_assert(false, "Error: onCreate() exists but is not public! Make "
                          "sure it's in the public section.");
   }
-  if constexpr (has_private_onUpdate<T>) {
+  if constexpr (hasPrivateOnUpdate<T>) {
     static_assert(false, "Error: onUpdate() exists but is not public! Make "
                          "sure it's in the public section.");
   }
-  if constexpr (has_private_onRender<T>) {
+  if constexpr (hasPrivateOnRender<T>) {
     static_assert(false, "Error: onRender() exists but is not public! Make "
                          "sure it's in the public section.");
   }
-  if constexpr (has_private_onEvent<T>) {
+  if constexpr (hasPrivateOnEvent<T>) {
     static_assert(false, "Error: onEvent() exists but is not public! Make sure "
                          "it's in the public section.");
   }
-  if constexpr (has_private_onDestroy<T>) {
+  if constexpr (hasPrivateOnDestroy<T>) {
     static_assert(false, "Error: onDestroy() exists but is not public! Make "
                          "sure it's in the public section.");
   }
@@ -173,37 +187,37 @@ template <typename T> void checkScriptMethods()
 template <typename T> void checkImGuiScriptMethods()
 {
   // Check for wrong signatures
-  if constexpr (has_any_callable_onRender<T> && !has_onRender_method<T>) {
+  if constexpr (hasAnyCallableOnRender<T> && !hasOnSystemRenderMethod<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
                          "onRender(Renderers&, bool, DeltaTime).");
   }
-  if constexpr (has_any_callable_onEvent<T> && !has_onEvent_method<T>) {
+  if constexpr (hasAnyCallableOnEvent<T> && !hasOnEventMethod<T>) {
     static_assert(false, "Error: onEvent() has wrong signature! Should be "
                          "onEvent(const SDL_Event&).");
   }
-  if constexpr (has_any_callable_onCreate<T> && !has_onCreate_method<T>) {
+  if constexpr (hasAnyCallableOnCreate<T> && !hasOnCreateMethod<T>) {
     static_assert(false, "Error: onCreate() has wrong signature! Should be "
                          "onCreate() with no parameters.");
   }
-  if constexpr (has_any_callable_onDestroy<T> && !has_onDestroy_method<T>) {
+  if constexpr (hasAnyCallableOnDestroy<T> && !hasOnDestroyMethod<T>) {
     static_assert(false, "Error: onDestroy() has wrong signature! Should be "
                          "onDestroy() with no parameters.");
   }
 
   // Check for private methods
-  if constexpr (has_private_onCreate<T>) {
+  if constexpr (hasPrivateOnCreate<T>) {
     static_assert(false, "Error: onCreate() exists but is not public! Make "
                          "sure it's in the public section.");
   }
-  if constexpr (has_private_onRender<T>) {
+  if constexpr (hasPrivateOnSystemRender<T>) {
     static_assert(false, "Error: onRender() exists but is not public! Make "
                          "sure it's in the public section.");
   }
-  if constexpr (has_private_onEvent<T>) {
+  if constexpr (hasPrivateOnEvent<T>) {
     static_assert(false, "Error: onEvent() exists but is not public! Make sure "
                          "it's in the public section.");
   }
-  if constexpr (has_private_onDestroy<T>) {
+  if constexpr (hasPrivateOnDestroy<T>) {
     static_assert(false, "Error: onDestroy() exists but is not public! Make "
                          "sure it's in the public section.");
   }

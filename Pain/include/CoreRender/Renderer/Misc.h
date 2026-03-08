@@ -5,6 +5,7 @@
  */
 
 #pragma once
+#include <array>
 #include <cstdint>
 #include <glm/glm.hpp>
 
@@ -146,13 +147,41 @@ enum class RenderLayer : uint8_t {
  * @brief Pre defined divisions on the sphere polygon
  */
 enum class SphereDivision : uint8_t { D_8x8, D_16x16, D_32x32, Count };
-
-constexpr glm::ivec2 resolutions[] = {{8, 8}, {16, 16}, {32, 32}};
-
+/** @brief (slices, stacks) value of each sphere division */
+constexpr glm::ivec2 s_resolutions[] = {{8, 8}, {16, 16}, {32, 32}};
+/** @brief return the (slices, stacks) for each sphere division */
 constexpr glm::uvec2 getResolution(SphereDivision r)
 {
-  return resolutions[static_cast<uint32_t>(r)];
+  return s_resolutions[static_cast<uint32_t>(r)];
 }
+constexpr std::array<SphereDivision, 3> s_sphereDivisions = {
+    SphereDivision::D_8x8, SphereDivision::D_16x16, SphereDivision::D_32x32};
+
+/** Render sumbition types used during scripts to communicate with the renderer
+ */
+enum class RenderCommandType : uint8_t {
+  Sphere8x8,
+  Sphere16x16,
+  Sphere32x32,
+  Cube,
+  Sprite,
+  DebugLine,
+  LightPoint,
+  Count
+};
+constexpr std::array<RenderCommandType, 3> s_renderCommandTypes = {
+    RenderCommandType::Sphere8x8,   //
+    RenderCommandType::Sphere16x16, //
+    RenderCommandType::Sphere32x32};
+
+/** Simple geometry types to be used with the mesh */
+enum MeshShape {
+  Shpere_8x8,   //
+  Shpere_16x16, //
+  Shpere_32x32, //
+  Cube,         //
+  Count         // Other flexible shapes soon
+};
 
 /** Total number of supported render layers. */
 static constexpr uint8_t NumLayers = 7;

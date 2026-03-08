@@ -56,10 +56,9 @@ void ImGuiSys::onEvent(const SDL_Event &event)
     }
   }
 }
-void ImGuiSys::on2dRender(Renderers &renderer, bool isMinimized,
-                          DeltaTime currentTime)
+void ImGuiSys::onRender(Renderers &renderer, bool isMinimized,
+                        DeltaTime currentTime)
 {
-  UNUSED(currentTime);
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   ::ImGui::NewFrame();

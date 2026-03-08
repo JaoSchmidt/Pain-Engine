@@ -8,7 +8,7 @@
 // RenderSys.cpp
 #include "CoreRender/LightSys.h"
 #include "CoreRender/LightComponent.h"
-#include "CoreRender/Renderer/RenderContext.h"
+#include "CoreRender/Renderer/Renderers.h"
 #include "Debugging/Profiling.h"
 #include "Physics/Movement3dComponent.h"
 
@@ -20,8 +20,8 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void LightSys::on3dRender(Renderers &renderer, bool isMinimized,
-                          DeltaTime currentTime)
+void LightSys::onRender(Renderers &renderer, bool isMinimized,
+                        DeltaTime currentTime)
 {
   UNUSED(isMinimized)
   UNUSED(currentTime)
@@ -34,7 +34,7 @@ void LightSys::on3dRender(Renderers &renderer, bool isMinimized,
       auto *t = std::get<0>(chunk.arrays);
       auto *l = std::get<1>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
-        renderer.renderer3d.submitLight(t[i].m_position, l[i].m_color);
+        renderer.m_renderer3d.submitLight(t[i].m_position, l[i].m_color);
       }
     }
   }

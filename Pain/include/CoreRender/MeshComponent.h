@@ -18,19 +18,11 @@
 
 #pragma once
 
+#include "CoreRender/Renderer/Misc.h"
 #include "ECS/Components/ComponentManager.h"
-#include "glm/ext/vector_float3.hpp"
 
 namespace pain
 {
-
-enum MeshShape {
-  Shpere_8x8,   //
-  Shpere_16x16, //
-  Shpere_32x32, //
-  Cube,         //
-  Count         // Other flexible shapes soon
-};
 
 /**
  * @brief ECS component representing the geometry of a 3d model.

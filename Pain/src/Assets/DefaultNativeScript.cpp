@@ -20,11 +20,10 @@ void ScriptAssetManager::DefaultNativeScript::onEvent(const SDL_Event &e)
   UNUSED(e)
   PLOG_W("You are updating a script that hasn't been initialized!");
 }
-void ScriptAssetManager::DefaultNativeScript::onRender(Renderers &renderer,
-                                                       bool isMinimized,
-                                                       DeltaTime currentTime)
+void ScriptAssetManager::DefaultNativeScript::onRender(
+    RenderContext &renderContext, bool isMinimized, DeltaTime currentTime)
 {
-  UNUSED(renderer)
+  UNUSED(renderContext)
   UNUSED(isMinimized)
   UNUSED(currentTime)
   PLOG_W("You are trying to render a script that hasn't been initialized!");

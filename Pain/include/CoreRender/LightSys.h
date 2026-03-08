@@ -69,7 +69,7 @@ namespace Systems
  * @see System
  * @see IOnRender
  */
-struct LightSys : public System<WorldComponents>, IOn3dRender {
+struct LightSys : public System<WorldComponents>, IOnRender {
   /**
    * @brief Component signature required by this system.
    *
@@ -102,8 +102,8 @@ struct LightSys : public System<WorldComponents>, IOn3dRender {
    * @note This method is invoked only because the system inherits from
    * IOnRender.
    */
-  void on3dRender(Renderers &renderer, bool isMinimized,
-                  DeltaTime currentTime) override;
+  void onRender(Renderers &renderer, bool isMinimized,
+                DeltaTime currentTime) override;
 };
 
 } // namespace Systems

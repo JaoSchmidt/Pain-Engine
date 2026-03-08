@@ -7,7 +7,7 @@
 // Application.h
 #pragma once
 #include "CoreFiles/RenderPipeline.h"
-#include "CoreRender/Renderer/RenderContext.h"
+#include "CoreRender/Renderer/Renderers.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "pch.h"
@@ -16,7 +16,6 @@
 #include "Core.h"
 #include "CoreFiles/EndGameFlags.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "Debugging/DebuggingImGui.h"
 #include "GUI/ImGuiSys.h"
 #include <sol/state.hpp>
 
@@ -162,7 +161,7 @@ public:
   void set2dRendererCamera(const reg::Entity cameraEntity, int width = 0,
                            int height = 0)
   {
-    m_renderers.renderer2d.changeCamera(cameraEntity);
+    m_renderers.m_renderer2d.changeCamera(cameraEntity);
     PLOG_I("w = {}, h = {}", width, height);
     if (!(width == 0 && height == 0)) {
       PLOG_I("w = {}, h = {}", width, height);
@@ -173,7 +172,7 @@ public:
   void set3dRendererCamera(const reg::Entity cameraEntity, int width = 0,
                            int height = 0)
   {
-    m_renderers.renderer3d.changeCamera(cameraEntity);
+    m_renderers.m_renderer3d.changeCamera(cameraEntity);
     if (!(width == 0 && height == 0))
       m_renderers.setViewPort(0, 0, width, height);
   }
@@ -193,7 +192,7 @@ public:
   {
     m_worldScene.createComponents(m_worldScene.getEntity(),
                                   std::forward<Components>(args)...);
-    m_renderers.renderer2d.setCellGridSize(collisionGridSize);
+    m_renderers.m_renderer2d.setCellGridSize(collisionGridSize);
     return m_worldScene;
   }
 

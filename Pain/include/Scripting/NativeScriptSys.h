@@ -63,7 +63,7 @@ namespace Systems
 struct NativeScript : public System<WorldComponents>,
                       IOnUpdate,
                       IOnEvent,
-                      IOn3dRender {
+                      IOnRender {
   /**
    * @brief Component tags required by this system.
    *
@@ -112,8 +112,8 @@ struct NativeScript : public System<WorldComponents>,
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void on3dRender(Renderers &renderer, bool isMinimized,
-                  DeltaTime currentTime) override;
+  void onRender(Renderers &renderers, bool isMinimized,
+                DeltaTime currentTime) override;
 };
 
 } // namespace Systems

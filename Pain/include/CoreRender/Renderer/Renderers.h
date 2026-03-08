@@ -5,6 +5,7 @@
  */
 
 #pragma once
+#include "CoreRender/RenderContext.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/Renderer3d.h"
 #include "platform/ContextBackend.h"
@@ -14,8 +15,9 @@ namespace pain
 struct Renderers {
   static Renderers create();
   MaterialManager m_materialManager;
-  Renderer2d renderer2d;
-  Renderer3d renderer3d;
+  Renderer2d m_renderer2d;
+  Renderer3d m_renderer3d;
+  RenderContext m_renderContext;
 
   void setViewPort(int x, int y, int width, int height)
   {

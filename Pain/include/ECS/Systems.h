@@ -26,6 +26,7 @@ namespace pain
 {
 class DeltaTime;
 struct Renderers;
+class RenderContext;
 
 /**
  * @brief Compile-time typelist used for tagging systems.
@@ -67,31 +68,19 @@ struct IOnEvent {
 };
 
 /// @brief Interface for systems that participate in 2d rendering.
-struct IOn3dRender {
-  virtual ~IOn3dRender() = default;
+struct IOnRender {
+  virtual ~IOnRender() = default;
 
   /**
-   * @brief Called during the render phase.
+   * @brief Called during the script phase. Used later to render materials in a
+   * specific order
    *
-   * @param renderer Owns an active 2D renderer.
+   * @param renderContext Allow script render commands to be stored for later
+   * @param renderer Owns active renderers.
    * @param debug Whether debug rendering is enabled.
    * @param dt Frame delta time.
    */
-  virtual void on3dRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
-};
-
-/// @brief Interface for systems that participate in 3d rendering.
-struct IOn2dRender {
-  virtual ~IOn2dRender() = default;
-
-  /**
-   * @brief Called during the render phase.
-   *
-   * @param renderer Owns an active 3D renderer.
-   * @param debug Whether debug rendering is enabled.
-   * @param dt Frame delta time.
-   */
-  virtual void on2dRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
+  virtual void onRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
 };
 
 /**
@@ -274,7 +263,7 @@ template <typename TL> struct TagsAllRegistered;
 template <typename T>
 concept HasAnySystemInterface =
     std::is_base_of_v<IOnUpdate, T> || std::is_base_of_v<IOnEvent, T> ||
-    std::is_base_of_v<IOn2dRender, T> || std::is_base_of_v<IOn3dRender, T>;
+    std::is_base_of_v<IOnRender, T>;
 
 /** @brief Checks whether a system defines a Tags type. */
 template <typename T>

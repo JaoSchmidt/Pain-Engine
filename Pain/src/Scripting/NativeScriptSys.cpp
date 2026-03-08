@@ -5,6 +5,7 @@
  */
 
 #include "Scripting/NativeScriptSys.h"
+#include "CoreRender/Renderer/Renderers.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/NativeScript.h"
 
@@ -49,9 +50,10 @@ void NativeScript::onEvent(const SDL_Event &e)
   }
 }
 
-void NativeScript::on3dRender(Renderers &renderer, bool isMinimized,
-                              DeltaTime currentTime)
+void NativeScript::onRender(Renderers &renderers, bool isMinimized,
+                            DeltaTime currentTime)
 {
+  UNUSED(renderers);
   PROFILE_SCOPE("Scene::renderSystems - NativeScripts");
 
   auto chunks = query<NativeScriptComponent>();
@@ -63,7 +65,8 @@ void NativeScript::on3dRender(Renderers &renderer, bool isMinimized,
       auto &nsc = scripts[i];
 
       if (nsc.instance && nsc.onRenderFunction) {
-        nsc.onRenderFunction(nsc.instance, renderer, isMinimized, currentTime);
+        nsc.onRenderFunction(nsc.instance, renderers.m_renderContext,
+                             isMinimized, currentTime);
       }
     }
   }

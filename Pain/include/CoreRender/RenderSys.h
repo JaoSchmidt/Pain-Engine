@@ -74,7 +74,7 @@ namespace Systems
  * @see System
  * @see IOnRender
  */
-struct Render : public System<WorldComponents>, IOn2dRender, IOn3dRender {
+struct Render : public System<WorldComponents>, IOnRender {
   /**
    * @brief Component signature required by this system.
    *
@@ -105,15 +105,10 @@ struct Render : public System<WorldComponents>, IOn2dRender, IOn3dRender {
    * @param currentTime  Current frame time.
    *
    * @note This method is invoked only because the system inherits from
-   * IOn3dRender.
+   * IOnSystemRender.
    */
-  void on3dRender(Renderers &renderer, bool isMinimized,
-                  DeltaTime currentTime) override;
-  /**
-   * Same as IOn3dRender, except it will work on 2d render contexts
-   * */
-  void on2dRender(Renderers &renderer, bool isMinimized,
-                  DeltaTime currentTime) override;
+  void onRender(Renderers &renderer, bool isMinimized,
+                DeltaTime currentTime) override;
 };
 
 } // namespace Systems

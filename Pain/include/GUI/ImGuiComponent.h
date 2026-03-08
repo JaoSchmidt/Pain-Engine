@@ -18,7 +18,7 @@
  * Script types may optionally implement the following callbacks:
  *  - onCreate()
  *  - onDestroy()
- *  - onRender(Renderers&, bool, DeltaTime)
+ *  - onRender(RenderContext&, bool, DeltaTime)
  *  - onEvent(const SDL_Event&)
  *
  * Presence of callbacks is detected at compile time using scripting concepts.
@@ -34,6 +34,7 @@
 
 namespace pain
 {
+class RenderContext;
 template <typename SceneT> class GameObject;
 class UIScene;
 
@@ -105,7 +106,7 @@ public:
       instance = nullptr;
     };
 
-    if constexpr (has_onCreate_method<T>) {
+    if constexpr (hasOnCreateMethod<T>) {
       onCreateFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onCreate();
       };
@@ -113,7 +114,7 @@ public:
       onCreateFunction = nullptr;
     }
 
-    if constexpr (has_onDestroy_method<T>) {
+    if constexpr (hasOnCreateMethod<T>) {
       onDestroyFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
@@ -121,7 +122,7 @@ public:
       onDestroyFunction = nullptr;
     }
 
-    if constexpr (has_onRender_method<T>) {
+    if constexpr (hasOnSystemRenderMethod<T>) {
       onRenderFunction = [](Scriptable *instance, Renderers &renderer,
                             bool isMinimized, DeltaTime currentTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized,
@@ -131,7 +132,7 @@ public:
       onRenderFunction = nullptr;
     }
 
-    if constexpr (has_onEvent_method<T>) {
+    if constexpr (hasOnEventMethod<T>) {
       onEventFunction = [](Scriptable *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
@@ -168,7 +169,7 @@ public:
       instance = nullptr;
     };
 
-    if constexpr (has_onCreate_method<T>) {
+    if constexpr (hasOnCreateMethod<T>) {
       onCreateFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onCreate();
       };
@@ -176,7 +177,7 @@ public:
       onCreateFunction = nullptr;
     }
 
-    if constexpr (has_onDestroy_method<T>) {
+    if constexpr (hasOnDestroyMethod<T>) {
       onDestroyFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
@@ -184,7 +185,7 @@ public:
       onDestroyFunction = nullptr;
     }
 
-    if constexpr (has_onRender_method<T>) {
+    if constexpr (hasOnSystemRenderMethod<T>) {
       onRenderFunction = [](Scriptable *instance, Renderers &renderer,
                             bool isMinimized, DeltaTime currentTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized,
@@ -194,7 +195,7 @@ public:
       onRenderFunction = nullptr;
     }
 
-    if constexpr (has_onEvent_method<T>) {
+    if constexpr (hasOnEventMethod<T>) {
       onEventFunction = [](Scriptable *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
