@@ -35,10 +35,21 @@ struct CircleShape {
  * @brief Axis-Aligned Bounding Box (AABB) shape.
  *
  * The box is centered on the entity position and defined using half extents.
+ * Mainly used for collision
  */
 struct AABBShape {
   glm::vec2 halfSize = {0.1f,
                         0.1f}; /**< Half-size extents along X and Y axes. */
+};
+
+/**
+ * @brief Rect shape defined by full size.
+ *
+ * Mainly used for rendering or simple shape representation rather than
+ * strict collision math.
+ */
+struct RectShape {
+  glm::vec2 size = {0.1f, 0.1f}; /**< Full size of the rectangle. */
 };
 
 /**
@@ -48,7 +59,17 @@ struct AABBShape {
  * strict collision math.
  */
 struct QuadShape {
-  glm::vec2 size = {0.1f, 0.1f}; /**< Full size of the rectangle. */
+  float side; /**< Full size of the quad. */
+};
+
+/**
+ * @brief Triangle shape defined by it height and base sizes
+ *
+ * Mainly used for simple stuff
+ */
+struct TriangleShape {
+  float base = 0.1f;   /**< Base of the triangle */
+  float height = 0.1f; /**< Height of the triangle */
 };
 
 /**

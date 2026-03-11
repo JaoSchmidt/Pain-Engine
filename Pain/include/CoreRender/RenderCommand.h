@@ -1,7 +1,6 @@
 #pragma once
 #include "CoreRender/Buffers/Material.h"
 #include "CoreRender/Renderer/Misc.h"
-#include "ECS/Components/Sprite.h"
 
 class RenderContext;
 
@@ -17,9 +16,15 @@ struct RenderCommand {
       glm::mat4 transform;
     } mesh;
     struct {
-      const SpriteComponent *sprite;
+      const Material *material;
       glm::mat4 transform;
+      RenderLayer layer;
     } sprite;
+    struct {
+      const Material *material;
+      glm::mat4 transform;
+      SphereDivision div;
+    } sphere;
     struct {
       glm::vec3 a;
       glm::vec3 b;

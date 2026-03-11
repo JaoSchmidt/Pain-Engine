@@ -11,13 +11,13 @@
 
 #include "CoreRender/Buffers/Texture.h"
 #include "CoreRender/Buffers/VertexArray.h"
-#include "CoreRender/Renderer/BatchCircles.h"
 #include "CoreRender/Renderer/BatchQuad.h"
 #include "CoreRender/Renderer/BatchSpray.h"
 #include "CoreRender/Renderer/BatchText.h"
 #include "CoreRender/Renderer/BatchTri.h"
 #include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/MiscDebugGrid.h"
+#include "CoreRender/Renderer/Stats.h"
 #include "CoreRender/Text/Font.h"
 #include "ECS/Registry/Entity.h"
 #include "Physics/Particles/SprayCmp.h"
@@ -43,21 +43,6 @@ class UIScene;
  *  - Call endScene().
  */
 struct Renderer2d {
-  /** @brief Aggregated rendering statistics for a batch type.*/
-  /* Fields:
-   * - count: number of objects
-   * - indices: total index count
-   * - vertices: total vertex count
-   * - draws: draw calls issued
-   * - name: batch name
-   */
-  struct Stats {
-    uint32_t count;
-    uint32_t indices;
-    uint32_t vertices;
-    uint32_t draws;
-    const char *name;
-  };
   /// @brief Factory function to create a renderer instance.
   static Renderer2d createRenderer2d(MaterialManager &materialManager);
 
@@ -91,60 +76,63 @@ struct Renderer2d {
   void clearEntireRenderer();
 
   // ================================================================= //
-  // Draw Circles
+  // Submit Quads
   // ================================================================= //
+
+  /// @brief Submit an axis-aligned textured quad.
+  void submitQuad(const glm::vec2 &position, float size, RenderLayer layer,
+                  const Material &material);
 
   /**
-   * @brief Draw a 2D circle.
-   *
-   * @param position Circle center in world space.
-   * @param radius   Circle radius.
-   * @param tintColor Color multiplier.
-   * @param textureCoordinate Optional texture coordinates.
-   */
-  void drawCircle(const glm::vec2 &position, const float radius,
-                  const Color &tintColor,
-                  const std::array<glm::vec2, 4> &textureCoordinate = {
-                      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                      glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-
-  // ================================================================= //
-  // Draw Quads
-  // ================================================================= //
-
-  /// @brief Draw an axis-aligned textured quad.
-  void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                const Color &tintColor, RenderLayer layer, Texture &texture,
-                const float tilingFactor = 1.0f,
-                const std::array<glm::vec2, 4> &textureCoordinate = {
-                    glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                    glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-
-  /**
-   * @brief Draw a rotated textured quad.
+   * @brief Submit a rotated textured quad. Quads, compared to rect are
+   * instanced. Meaning they are faster
    *
    * @param rotationRadians Rotation angle in radians.
    */
-  void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                const Color &tintColor, const float rotationRadians,
-                RenderLayer layer, Texture &texture,
-                const float tilingFactor = 1.0f,
-                const std::array<glm::vec2, 4> &textureCoordinate = {
-                    glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                    glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
+  void submitQuad(const glm::vec2 &position, float size,
+                  const float rotationRadians, RenderLayer layer,
+                  const Material &material);
+
+  /// @brief Submit an axis-aligned textured quad.
+  void submitQuad(const glm::mat4 &transform, RenderLayer layer,
+                  const Material &material);
 
   // ================================================================= //
-  // Draw Triangles
+  // Submit Rect
   // ================================================================= //
 
-  /// @brief Draw a colored triangle primitive.
-  void drawTri(const glm::vec2 &position, const glm::vec2 &size,
-               const glm::vec4 &tintColor);
+  /// @brief Submit an axis-aligned textured rect.
+  void submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                  RenderLayer layer, const Material &material);
 
-  /// @brief Draw a rotated triangle primitive.
-  void drawTri(const glm::vec2 &position, const glm::vec2 &size,
-               const glm::vec4 &tintColor, const float rotationRadians);
+  /**
+   * @brief Submit a rotated textured rect.
+   *
+   * @param rotationRadians Rotation angle in radians.
+   */
+  void submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                  const float rotationRadians, RenderLayer layer,
+                  const Material &material);
 
+  /// @brief Submit an axis-aligned textured rect.
+  void submitRect(const glm::mat4 &transform, RenderLayer layer,
+                  const Material &material);
+
+  // ================================================================= //
+  // Submit Triangles
+  // ================================================================= //
+
+  /// @brief Submit a colored triangle primitive.
+  void submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                 RenderLayer layer, const Material &material);
+
+  /// @brief Submit a rotated triangle primitive.
+  void submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                 const float rotationRadians, RenderLayer layer,
+                 const Material &material);
+
+  void submitTri(const glm::mat4 &transform, RenderLayer layer,
+                 const Material &material);
   // ================================================================= //
   // Particles
   // ================================================================= //
@@ -153,15 +141,15 @@ struct Renderer2d {
   void beginSprayParticle(const ParticleSprayComponent &particleSprayComponent);
 
   /// @brief Submit a single particle to the current spray batch.
-  void drawSprayParticle(const SprayParticle &p);
+  void submitSprayParticle(const SprayParticle &p);
 
   // ================================================================= //
   // Text
   // ================================================================= //
 
   /// @brief Draw a UTF-8 string using a font atlas.
-  void drawString(const glm::vec2 &position, const char *string,
-                  const Font &font, const glm::vec4 &color);
+  void submitString(const glm::vec2 &position, const char *string,
+                    const Font &font, const glm::vec4 &color);
 
   // ================================================================= //
   // Transforms
@@ -174,6 +162,12 @@ struct Renderer2d {
   /// @brief Build a transform matrix without rotation.
   const glm::mat4 getTransform(const glm::vec2 &position,
                                const glm::vec2 &size);
+  /// @brief Build a transform matrix with rotation.
+  const glm::mat4 getUniformTransform(const glm::vec2 &position, float size,
+                                      const float rotationRadians);
+
+  /// @brief Build a transform matrix without rotation.
+  const glm::mat4 getUniformTransform(const glm::vec2 &position, float size);
 
   // ================================================================= //
   // Resources / Debug
@@ -189,42 +183,35 @@ struct Renderer2d {
    */
   void setCellGridSize(float size);
 
-  /**
-   * @brief Retrieve rendering statistics for a specific batch type.
-   *
-   * Example:
-   * @code
-   * auto stats = renderer.getStatistics<QuadBatch>();
-   * @endcode
-   */
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getQuadStatistics();
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getTriStatistics();
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getSprayStatistics();
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getTextStatistics();
+
+private:
   template <typename Batch>
     requires requires(Batch &b) { b.statsCount; }
-  Stats getStatistics()
+  Stats getStatistics(Batch &b)
   {
     if constexpr (std::is_same_v<Batch, TriBatch>)
-      return {m.triBatch.statsCount, m.triBatch.statsCount * 3,
-              m.triBatch.statsCount * 3, m.triBatch.drawCount, "Triangules"};
+      return {"Triangles", b.statsCount, b.statsCount * 3, b.statsCount * 3,
+              b.drawCount};
     else if constexpr (std::is_same_v<Batch, TextBatch>)
-      return {m.textBatch.statsCount, m.textBatch.statsCount * 6,
-              m.textBatch.statsCount * 4, m.textBatch.drawCount, "Glyphs"};
-    else if constexpr (std::is_same_v<Batch, CircleBatch>)
-      return {m.circleBatch.statsCount, m.circleBatch.statsCount * 6,
-              m.circleBatch.statsCount * 4, m.circleBatch.drawCount, "Circles"};
+      return {"Glyphs", m.textBatch.statsCount, m.textBatch.statsCount * 6,
+              m.textBatch.statsCount * 4, m.textBatch.drawCount};
     else if constexpr (std::is_same_v<Batch, SprayBatch>)
-      return {m.sprayBatch.statsCount, m.sprayBatch.statsCount * 6,
-              m.sprayBatch.statsCount * 4, m.sprayBatch.drawCount, "Sprays"};
+      return {"Sprays", m.sprayBatch.statsCount, m.sprayBatch.statsCount * 6,
+              m.sprayBatch.statsCount * 4, m.sprayBatch.drawCount};
     else if constexpr (std::is_same_v<Batch, QuadBatch>) {
-      uint32_t statsCount = 0;
-      uint32_t drawCount = 0;
-      for (QuadBatch &batch : m.quadBatches) {
-        statsCount += batch.statsCount;
-        drawCount += batch.drawCount;
-      }
-      return {statsCount, statsCount * 6, statsCount * 4, drawCount, "Quads"};
+      return {"Quads", b.statsCount, b.statsCount * 6, b.statsCount * 4,
+              b.drawCount};
     }
   }
 
-private:
   float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
@@ -236,9 +223,6 @@ private:
 
   struct M {
     MaterialManager &materialManager;
-    std::array<QuadBatch, NumLayers> quadBatches;
-    TriBatch triBatch;
-    CircleBatch circleBatch;
     SprayBatch sprayBatch;
     TextBatch textBatch;
     DebugGrid debugGrid;

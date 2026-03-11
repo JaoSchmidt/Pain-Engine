@@ -146,12 +146,12 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
   const bool enable3d = renderers.m_renderer3d.hasCamera();
   const bool enable2d = renderers.m_renderer2d.hasCamera();
 
-  if (enable3d) {
-    backend::enable3d();
-    renderers.m_renderer3d.beginScene(currentTime, worldScene);
-    worldScene.renderSystems(renderers, isMinimized, currentTime);
-    renderers.m_renderer3d.endScene(worldScene);
-  }
+  // if (enable3d) {
+  //   backend::enable3d();
+  //   renderers.m_renderer3d.beginScene(currentTime, worldScene);
+  //   worldScene.renderSystems(renderers, isMinimized, currentTime);
+  //   renderers.m_renderer3d.endScene(worldScene);
+  // }
   if (enable2d) {
     backend::disable3d();
     renderers.m_renderer2d.beginScene(currentTime, worldScene);

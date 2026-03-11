@@ -128,6 +128,7 @@ struct ParticleSprayComponent {
     if (args.capacity == 0) {
       c.autoEmit = false;
     } else {
+      c.particles.reserve(args.capacity);
       c.particles.push_back(SprayParticle{.alive = false});
     }
     return c;

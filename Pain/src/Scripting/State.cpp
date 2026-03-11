@@ -7,7 +7,7 @@
 // State.cpp
 #include "Scripting/State.h"
 #include "CoreFiles/LogWrapper.h"
-#include "ECS/Components/Sprite.h"
+#include "CoreRender/SpriteComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Scripting/LuaScriptComponent.h"
 #include "Scripting/SchedulerComponent.h"
@@ -64,13 +64,13 @@ sol::state createLuaState()
                                  Color(uint8_t, uint8_t, uint8_t, uint8_t)>());
   // ------ COMPONENTS ----------------------------------------
   // type returned by get_sprite(self)
-  lua.new_usertype<SpriteComponent>(
-      "SpriteComponent", sol::no_constructor,            //
-      "m_size", &SpriteComponent::m_size,                //
-      "m_color", &SpriteComponent::color,                //
-      "m_tilingFactor", &SpriteComponent::m_tilingFactor //
-      // NOTE: not going to put texture right now because too much work
-  );
+  // lua.new_usertype<SpriteComponent>(
+  //     "SpriteComponent", sol::no_constructor,            //
+  //     "m_size", &SpriteComponent::m_size,                //
+  //     "m_color", &SpriteComponent::color,                //
+  //     "m_tilingFactor", &SpriteComponent::m_tilingFactor //
+  //     // NOTE: not going to put texture right now because too much work
+  // );
   // type returned by get_movement(self)
   lua.new_usertype<Movement2dComponent>(
       "Movement2dComponent", sol::no_constructor,     //

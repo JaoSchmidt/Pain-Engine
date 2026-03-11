@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// QuadBatch.h
+// RectBatch.h
 #pragma once
 
 #include "CoreRender/Buffers/Shader.h"
@@ -14,7 +14,7 @@
 namespace pain
 {
 
-struct QuadVertex {
+struct RectVertex {
   glm::vec3 position;
   glm::vec2 texCoord;
   uint32_t color;
@@ -22,10 +22,10 @@ struct QuadVertex {
   float tilingFactor;
 };
 
-struct QuadBatch {
-  using Vertex = QuadVertex;
+struct RectBatch {
+  using Vertex = RectVertex;
   static constexpr uint32_t IndiceSize = 6;
-  static constexpr uint32_t VerticesPerQuad = 4;
+  static constexpr uint32_t VerticesPerRect = 4;
   static constexpr uint32_t MaxPolygons = 5000;
   static constexpr uint32_t MaxVertices = MaxPolygons * 4;
   static constexpr uint32_t MaxIndices = MaxPolygons * IndiceSize;
@@ -43,9 +43,9 @@ struct QuadBatch {
 
   // std::unique_ptr<Vertex[]> sortBuffer;
 
-  static QuadBatch create();
+  static RectBatch create();
 
-  void allocateQuad(const glm::mat4 &transform, const Color &tintColor,
+  void allocateRect(const glm::mat4 &transform, const Color &tintColor,
                     const float tilingFactor, const float textureIndex,
                     const std::array<glm::vec2, 4> &textureCoordinate);
   void resetAll();
@@ -53,8 +53,8 @@ struct QuadBatch {
   void flush(Texture **textures, uint32_t textureCount);
 
 private:
-  QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_);
-  // void swapQuadVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
+  RectBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_);
+  // void swapRectVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
   // void sortByDrawOrder();
 };
 } // namespace pain

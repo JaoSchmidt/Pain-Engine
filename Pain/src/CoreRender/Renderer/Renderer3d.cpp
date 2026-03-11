@@ -20,8 +20,13 @@
 
 namespace pain
 {
-
-// std::map<MaterialKey, CubeBatch> m_cubeBatchCache;
+struct MaterialKey {
+  Shader *shader;
+  std::variant<ParamPBR, ParamPhong, ParamSimplest> params;
+  uint32_t flags; // Transparent, DoubleSided, etc.
+  auto operator<=>(const MaterialKey &) const = default;
+};
+std::map<MaterialKey, CubeBatch> m_cubeBatchCache;
 std::map<MaterialKey, SphereBatch> m_sphereBatchCache;
 extern const Texture *m_fontAtlasTexture;
 
@@ -35,13 +40,22 @@ void Renderer3d::changeCamera(reg::Entity cameraEntity)
   m.cameraEntity = cameraEntity;
 }
 
-Renderer3d::Stats Renderer3d::getCubeStatistics()
+Stats Renderer3d::getCubeStatistics()
 {
   Stats cubeStats = {"Cubes"};
   for (auto it = m_cubeBatchCache.begin(); it != m_cubeBatchCache.end(); it++) {
     cubeStats += getStatistics(it->second);
   }
   return cubeStats;
+}
+Stats Renderer3d::getSphereStatistics()
+{
+  Stats stats = {"Sphere"};
+  for (auto it = m_sphereBatchCache.begin(); it != m_sphereBatchCache.end();
+       it++) {
+    stats += getStatistics(it->second);
+  }
+  return stats;
 }
 
 void Renderer3d::beginScene(DeltaTime globalTime, const Scene &scene,
@@ -130,7 +144,7 @@ void Renderer3d::endScene(const Scene &scene)
   flush();
 }
 
-void beforeFlush(const MaterialKey &mat)
+void beforeFlush3d(const MaterialKey &mat)
 {
   mat.shader->bind();
   // Upload instancing??
@@ -156,12 +170,12 @@ void Renderer3d::flush()
 
   // bindTextures();
   for (auto it = m_cubeBatchCache.begin(); it != m_cubeBatchCache.end(); it++) {
-    beforeFlush(it->first);
+    beforeFlush3d(it->first);
     it->second.flush(m.textureSlots, m.textureSlotIndex);
   }
   for (auto it = m_sphereBatchCache.begin(); it != m_sphereBatchCache.end();
        it++) {
-    beforeFlush(it->first);
+    beforeFlush3d(it->first);
     it->second.flush(m.textureSlots, m.textureSlotIndex);
   }
   // m.cubeBatch.flush(m.textureSlots, m.textureSlotIndex,
@@ -201,12 +215,12 @@ void Renderer3d::submitCube(const glm::mat4 &transform,
   CubeBatch &batch = it->second;
 
   if (batch.m_count >= CubeBatch::MaxPolyhedrons) {
-    beforeFlush(it->first);
+    beforeFlush3d(it->first);
     batch.flush(m.textureSlots, m.textureSlotIndex);
     batch.resetPtr();
   }
 
-  const float texIndex = allocateTextures(*material.m_texture);
+  const float texIndex = allocateTextures(material.getTexture());
   batch.allocateCube(transform, material.m_color, material.m_tilingFactor,
                      texIndex);
 }
@@ -246,11 +260,11 @@ void Renderer3d::submitUVSphere(const glm::mat4 &transform, SphereDivision div,
   SphereBatch &batch = it->second;
 
   if (batch.m_count >= CubeBatch::MaxPolyhedrons) {
-    beforeFlush(it->first);
+    beforeFlush3d(it->first);
     batch.flush(m.textureSlots, m.textureSlotIndex);
     batch.resetPtr();
   }
-  const float texIndex = allocateTextures(*material.m_texture);
+  const float texIndex = allocateTextures(material.getTexture());
   batch.allocateSphereUV(transform, material.m_color, material.m_tilingFactor,
                          texIndex);
 }
@@ -337,9 +351,8 @@ Renderer3d Renderer3d::createRenderer3d(MaterialManager &materialManager)
       &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
   return Renderer3d([textureSlots, &materialManager] {
     return M{
-        .materialManager = materialManager,           //
-        .textureSlots = textureSlots,                 //
-        .cubeBatch = CubeBatch::create("m.cubeBatch") //
+        .materialManager = materialManager, //
+        .textureSlots = textureSlots,       //
     };
   }); //
 }

@@ -20,28 +20,6 @@ namespace
 uint32_t s_binded = 0;
 } // namespace
 
-Shader::~Shader()
-{
-  if (m_programId)
-    backend::destroyShaderProgram(m_programId);
-}
-
-Shader::Shader(Shader &&o)
-    : m_name(std::move(o.m_name)), m_programId(o.m_programId)
-{
-  o.m_programId = 0;
-}
-
-Shader &Shader::operator=(Shader &&o)
-{
-  if (this != &o) {
-    m_name = std::move(o.m_name);
-    m_programId = o.m_programId;
-    o.m_programId = 0;
-  }
-  return *this;
-}
-
 void Shader::bind() const
 {
   backend::bindShader(m_programId);
@@ -208,5 +186,24 @@ Shader::createFromFn(const std::string &name,
 
 Shader::Shader(std::string name, uint32_t programId)
     : m_name(name), m_programId(programId) {};
-
+Shader::Shader(Shader &&other) noexcept
+    : m_name(std::move(other.m_name)), m_programId(other.m_programId)
+{
+  other.m_programId = 0;
+}
+Shader &Shader::operator=(Shader &&other) noexcept
+{
+  if (this != &other) {
+    backend::destroyShaderProgram(m_programId);
+    m_name = std::move(other.m_name);
+    m_programId = other.m_programId;
+    other.m_programId = 0;
+  }
+  return *this;
+}
+Shader::~Shader()
+{
+  if (m_programId)
+    backend::destroyShaderProgram(m_programId);
+}
 } // namespace pain

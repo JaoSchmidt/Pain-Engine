@@ -134,12 +134,12 @@ static constexpr Color TransparentBlack{0, 0, 0, 128};
  */
 enum class RenderLayer : uint8_t {
   Distant = 0,
-  FurtherBack = 1,
-  Background = 2,
-  Default = 3,
-  Closer = 4,
-  MuchCloser = 5,
-  TouchingCamera = 6,
+  FurtherBack,
+  Background,
+  Default,
+  Closer,
+  MuchCloser,
+  TouchingCamera,
 };
 
 /**
@@ -158,21 +158,19 @@ constexpr std::array<SphereDivision, 3> s_sphereDivisions = {
     SphereDivision::D_8x8, SphereDivision::D_16x16, SphereDivision::D_32x32};
 
 /** Render sumbition types used during scripts to communicate with the renderer
+ * Modifying this requires a modification of RenderContext.h and RenderSys.h
  */
 enum class RenderCommandType : uint8_t {
-  Sphere8x8,
-  Sphere16x16,
-  Sphere32x32,
+  Sphere,
   Cube,
-  Sprite,
+  Quad,
+  Rect,
+  Circle,
+  Triangle,
   DebugLine,
   LightPoint,
   Count
 };
-constexpr std::array<RenderCommandType, 3> s_renderCommandTypes = {
-    RenderCommandType::Sphere8x8,   //
-    RenderCommandType::Sphere16x16, //
-    RenderCommandType::Sphere32x32};
 
 /** Simple geometry types to be used with the mesh */
 enum MeshShape {

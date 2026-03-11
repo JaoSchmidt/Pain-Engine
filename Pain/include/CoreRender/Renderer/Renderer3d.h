@@ -10,6 +10,7 @@
 #include "CoreRender/Renderer/BatchCube.h"
 #include "CoreRender/Renderer/BatchQuad.h"
 #include "CoreRender/Renderer/BatchSphere.h"
+#include "CoreRender/Renderer/Stats.h"
 #include "Physics/Particles/SprayCmp.h"
 #include "pch.h"
 
@@ -40,37 +41,6 @@ struct ResolvedMaterial;
 class Renderer3d
 {
 public:
-  /** @brief Aggregated rendering statistics for a batch type.*/
-  /* Fields:
-   * - count: number of objects
-   * - indices: total index count
-   * - vertices: total vertex count
-   * - draws: draw calls issued
-   * - name: batch name
-   */
-  struct Stats {
-    const char *name;      ///< Human-readable batch name
-    uint32_t count = 0;    ///< Number of objects in the batch
-    uint32_t indices = 0;  ///< Total index count submitted
-    uint32_t vertices = 0; ///< Total vertex count submitted
-    uint32_t draws = 0;    ///< Number of draw calls issued
-
-    Stats &operator+=(const Stats &s)
-    {
-      count += s.count;
-      indices += s.indices;
-      vertices += s.vertices;
-      draws += s.draws;
-      return *this;
-    }
-    Stats operator+(const Stats &s) const
-    {
-      Stats result = *this;
-      result += s;
-      return result;
-    }
-  };
-
   /// @brief Factory function to create a renderer instance.
   static Renderer3d createRenderer3d(MaterialManager &materialManager);
   Renderer3d &operator=(Renderer3d &&o) noexcept;
@@ -120,6 +90,7 @@ public:
   /// @brief submits sphere directly with transform
   void submitUVSphere(const glm::mat4 &transform, SphereDivision div,
                       const Material &material);
+  /// @brief a light position to be used by other shaders
   void submitLight(const glm::vec3 &pos, const Color &color);
 
   // ================================================================= //
@@ -152,6 +123,7 @@ public:
    * @endcode
    */
   Stats getCubeStatistics();
+  Stats getSphereStatistics();
 
 private:
   float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
@@ -162,7 +134,6 @@ private:
                            const glm::ivec2 &resolution,
                            const glm::vec3 &cameraPos);
   void bindTextures();
-  // void beforeFlush(const MaterialKey &mat);
   float allocateTextures(Texture &texture);
   ResolvedMaterial resolveMaterial(const MaterialComponent &mat);
 
@@ -173,6 +144,9 @@ private:
     if constexpr (std::is_same_v<Batch, CubeBatch>) {
       return {"Cubes", b.statsCount, b.statsCount * 8, b.statsCount * 3,
               b.drawCount};
+    } else if constexpr (std::is_same_v<Batch, SphereBatch>) {
+      return {"Spheres", b.statsCount, b.statsCount * b.m_indicesPerSphere,
+              b.statsCount * b.m_verticesPerSphere, b.drawCount};
     }
   }
   struct M {
@@ -188,13 +162,10 @@ private:
     reg::Entity cameraEntity = reg::Entity{-1};
     Shader *currentShader = nullptr;
 
-    CubeBatch cubeBatch;
-
     // replaced by m_textBatch.fontAtlas
     // const Texture *m_fontAtlasTexture = nullptr;
   };
 
-  std::map<MaterialKey, CubeBatch> m_cubeBatchCache = {};
   M m;
   template <typename NRVO>
     requires std::same_as<std::invoke_result_t<NRVO>, M>

@@ -141,11 +141,12 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
               {ShaderDataType::Mat4, "a_Transform", false, true},
           }),
       *IndexBuffer::createIndexBuffer(indices.get(), indicesPerSphere),
-      indicesPerSphere, name);
+      indicesPerSphere, verticePerSphere, name);
 }
 
 SphereBatch::SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
                          IndexBuffer &&ib_, uint32_t indicesPerSphere,
+                         uint32_t verticesPerSphere,
                          std::string name)
     : vbo(std::move(vbo_)),                                              //
       vboInstance(std::move(vboInstance_)),                              //
@@ -153,7 +154,8 @@ SphereBatch::SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
       vao(*VertexArray::createVertexArray(vbo, vboInstance, ib)),        //
       ptrInit(std::make_unique<SphereInstanceVertex[]>(MaxPolyhedrons)), //
       ptr(ptrInit.get()),                                                //
-      m_indicesPerSphere(indicesPerSphere), m_name(name) {};
+      m_indicesPerSphere(indicesPerSphere),
+      m_verticesPerSphere(verticesPerSphere), m_name(name) {};
 
 void SphereBatch::resetPtr()
 {

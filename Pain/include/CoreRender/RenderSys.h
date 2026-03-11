@@ -36,8 +36,10 @@
 
 #include "Assets/DeltaTime.h"
 #include "Core.h"
+#include "CoreRender/MeshComponent.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
+#include "Physics/Movement3dComponent.h"
 
 namespace pain
 {
@@ -46,6 +48,7 @@ struct Renderer2d;
 struct Transform2dComponent;
 struct RotationComponent;
 struct SpriteComponent;
+struct MaterialComponent;
 
 namespace Systems
 {
@@ -88,7 +91,10 @@ struct Render : public System<WorldComponents>, IOnRender {
    */
   using Tags = TypeList<Transform2dComponent, //
                         SpriteComponent,      //
-                        RotationComponent>;
+                        RotationComponent,    //
+                        Transform3dComponent, //
+                        MeshComponent,        //
+                        MaterialComponent>;
 
   /** @brief Inherit base System constructors. */
   using System::System;

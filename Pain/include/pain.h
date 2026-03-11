@@ -38,10 +38,10 @@
 #include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/Renderer3d.h"
+#include "CoreRender/SpriteComponent.h"
 #include "CoreRender/Text/Font.h"
 // ECS
 #include "ECS/Components/NativeScript.h"
-#include "ECS/Components/Sprite.h"
 #include "ECS/EventDispatcher.h"
 #include "ECS/Scene.h"
 #include "ECS/Scriptable.h"

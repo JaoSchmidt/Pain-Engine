@@ -61,14 +61,14 @@ void InitRenderer()
   // Also, to enable GL_DEPTH, you must also enable those:
   // GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
 
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL);
-  glDepthMask(GL_TRUE);
-  glDisable(GL_BLEND);
+  // glEnable(GL_DEPTH_TEST);
+  // glDepthFunc(GL_LEQUAL);
+  // glDepthMask(GL_TRUE);
+  // glDisable(GL_BLEND);
 
   // allow transparency
-  // glEnable(GL_BLEND);
-  // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   // HACK: allow textures with 3 channels to align properly, e.g. font textures.
   // No idea why it works tho, perhaps I will find a proper doc later
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

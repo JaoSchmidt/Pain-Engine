@@ -47,14 +47,13 @@ struct Transform3d;
 struct Movement2d;
 struct Movement3d;
 struct ParticleSpray;
+struct ParticleTrail;
 struct GridParticle;
 struct Rotation;
 struct Sprite;
 struct Mesh;
 struct Material;
 struct Light;
-struct Spriteless;
-struct Triangule;
 struct NativeScript;
 struct ImGuiScript;
 struct Collider;
@@ -73,24 +72,23 @@ struct SAPCollider;
  * and should be done carefully.
  */
 using WorldComponents = reg::CompileTimeBitMask< //
-    tag::OrthoCamera,                            // 1
-    tag::PerspCamera,                            // 2
-    tag::Transform2d,                            // 4
-    tag::Movement2d,                             // 8
-    tag::Transform3d,                            // 16
-    tag::Movement3d,                             // 32
-    tag::NativeScript,                           // 64
-    tag::ParticleSpray,                          // 128
-    tag::Rotation,                               // 256
-    tag::Sprite,                                 // 512
-    tag::Spriteless,                             // 1024
-    tag::Triangule,                              // 2048
-    tag::LuaScript,                              // 4096
-    tag::SAPCollider,                            // 8192
-    tag::LuaScheduleTask,                        // 16384
-    tag::Mesh,                                   // 32768
-    tag::Material,                               // 65536
-    tag::Light                                   // 131072
+    tag::OrthoCamera,                            // 01
+    tag::PerspCamera,                            // 02
+    tag::Transform2d,                            // 03
+    tag::Movement2d,                             // 04
+    tag::Transform3d,                            // 05
+    tag::Movement3d,                             // 06
+    tag::NativeScript,                           // 07
+    tag::ParticleSpray,                          // 08
+    tag::Rotation,                               // 09
+    tag::Sprite,                                 // 10
+    tag::LuaScript,                              // 11
+    tag::SAPCollider,                            // 12
+    tag::LuaScheduleTask,                        // 13
+    tag::Mesh,                                   // 14
+    tag::Material,                               // 15
+    tag::Light,                                  // 16
+    tag::ParticleTrail                           // 17
     >;
 
 /**

@@ -52,11 +52,14 @@ struct SphereBatch {
   void resetPtr();
   void flush(Texture **textures, uint32_t textureCount);
 
+  const uint32_t m_indicesPerSphere = 0;
+  const uint32_t m_verticesPerSphere = 0;
+
 private:
   SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
-              IndexBuffer &&ib_, uint32_t indicesPerSphere, std::string name);
+              IndexBuffer &&ib_, uint32_t indicesPerSphere,
+              uint32_t verticesPerSphere, std::string name);
 
-  const uint32_t m_indicesPerSphere = 0;
   std::string m_name;
   // void swapQuadVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
   // void sortByDrawOrder();

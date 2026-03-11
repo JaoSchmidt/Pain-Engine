@@ -25,16 +25,15 @@ TriBatch TriBatch::create()
           MaxVertices * sizeof(Vertex),
           {
               {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::Float4, "a_Color"},
+              {ShaderDataType::UByte4, "a_Color", true},
           }),
       *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
-      *Shader::createFromFile("resources/default/shaders/Triangles.glsl"),
   };
 }
 
-TriBatch::TriBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
+TriBatch::TriBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_)
     : vbo(std::move(vbo_)), ib(std::move(ib_)),
-      vao(*VertexArray::createVertexArray(vbo, ib)), shader(std::move(shader_)),
+      vao(*VertexArray::createVertexArray(vbo, ib)),
       cpuBuffer(std::make_unique<Vertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
 
@@ -62,7 +61,6 @@ void TriBatch::flush()
   const uint32_t count = static_cast<uint32_t>(ptr - cpuBuffer.get());
   vbo.setData(cpuBuffer.get(), count * sizeof(Vertex));
 
-  shader.bind();
   ib.bind();
   backend::drawIndexed(vao, indexCount);
 #ifndef NDEBUG
@@ -70,8 +68,7 @@ void TriBatch::flush()
 #endif
 }
 
-void TriBatch::allocateTri(const glm::mat4 &transform,
-                           const glm::vec4 &tintColor)
+void TriBatch::allocateTri(const glm::mat4 &transform, const Color &tintColor)
 {
   constexpr glm::vec4 TriVertexPositions[3] = {
       glm::vec4(0.0f, 0.5f, 0.f, 1.f),
@@ -81,7 +78,7 @@ void TriBatch::allocateTri(const glm::mat4 &transform,
   PROFILE_FUNCTION();
   for (unsigned i = 0; i < 3; i++) {
     ptr->position = transform * TriVertexPositions[i];
-    ptr->color = tintColor;
+    ptr->color = tintColor.value;
     ptr++;
   }
   indexCount += 3;

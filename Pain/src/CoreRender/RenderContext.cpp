@@ -29,7 +29,7 @@ void RenderContext::submitUVSphere(const glm::vec3 &position, float size,
                                    SphereDivision div, const Material &material)
 {
   m_commands.emplace_back(
-      s_renderCommandTypes[static_cast<uint8_t>(div)],
+      RenderCommandType::Sphere,
       RenderCommand::Data{
           {&material, getUniformScaleTransform(position, size)} //
       } //
@@ -40,7 +40,7 @@ void RenderContext::submitUVSphere(const glm::vec3 &position, float size,
                                    const glm::vec3 &rotation)
 {
   m_commands.emplace_back(
-      s_renderCommandTypes[static_cast<uint8_t>(div)],
+      RenderCommandType::Sphere,
       RenderCommand::Data{
           {&material, getUniformScaleTransform(position, size, rotation)} //
       } //
@@ -57,6 +57,114 @@ void RenderContext::submitLight(const glm::vec3 &pos, const Color &color)
   );
 }
 
+// ================================================================= //
+// Submit 2d functions
+// ================================================================= //
+
+void RenderContext::submitQuad(const glm::vec2 &position, float size,
+                               RenderLayer layer, const Material &material)
+{
+  m_commands.emplace_back(
+      RenderCommandType::Quad,
+      RenderCommand::Data{
+          .sprite{&material, getUniformScaleTransform(position, size), layer} //
+      } //
+  );
+}
+void RenderContext::submitQuad(const glm::vec2 &position, float size,
+                               const float rotationRadians, RenderLayer layer,
+                               const Material &material)
+{
+  m_commands.emplace_back(
+      RenderCommandType::Quad,
+      RenderCommand::Data{
+          .sprite{&material,
+                  getUniformScaleTransform(position, size, rotationRadians),
+                  layer} //
+      } //
+  );
+}
+void RenderContext::submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                               RenderLayer layer, const Material &material)
+{
+  m_commands.emplace_back(
+      RenderCommandType::Rect,
+      RenderCommand::Data{
+          .sprite{&material, getTransform(position, size), layer} //
+      } //
+  );
+}
+void RenderContext::submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                               const float rotationRadians, RenderLayer layer,
+                               const Material &material)
+{
+  m_commands.emplace_back(
+      RenderCommandType::Rect,
+      RenderCommand::Data{
+          .sprite{&material, getTransform(position, size, rotationRadians),
+                  layer} //
+      } //
+  );
+}
+void RenderContext::submitTri(const glm::vec2 &position, float size,
+                              RenderLayer layer, const Material &material)
+{
+  m_commands.emplace_back(
+      RenderCommandType::Triangle,
+      RenderCommand::Data{
+          .sprite{&material, getUniformScaleTransform(position, size), layer} //
+      } //
+  );
+}
+void RenderContext::submitTri(const glm::vec2 &position, float size,
+                              const float rotationRadians, RenderLayer layer,
+                              const Material &material)
+{
+  m_commands.emplace_back(
+      RenderCommandType::Triangle,
+      RenderCommand::Data{
+          .sprite{&material,
+                  getUniformScaleTransform(position, size, rotationRadians),
+                  layer} //
+      } //
+  );
+}
+
+// =================================================================== //
+// Private Transforms
+// =================================================================== //
+
+glm::mat4 RenderContext::getTransform(const glm::vec2 &position,
+                                      const glm::vec2 &size,
+                                      float rotationAngleRadians)
+{
+  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
+         glm::rotate(glm::mat4(1.0f), rotationAngleRadians,
+                     {0.0f, 0.0f, 1.0f}) *
+         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+}
+glm::mat4 RenderContext::getTransform(const glm::vec2 &position,
+                                      const glm::vec2 &size)
+{
+  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
+         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+}
+
+glm::mat4 RenderContext::getUniformScaleTransform(const glm::vec2 &position,
+                                                  float size,
+                                                  float rotationAngleRadians)
+{
+  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
+         glm::rotate(glm::mat4(1.0f), rotationAngleRadians,
+                     {0.0f, 0.0f, 1.0f}) *
+         glm::scale(glm::mat4(1.0f), {size, size, 1.0f});
+}
+glm::mat4 RenderContext::getUniformScaleTransform(const glm::vec2 &position,
+                                                  float size)
+{
+  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
+         glm::scale(glm::mat4(1.0f), {size, size, 1.0f});
+}
 glm::mat4 RenderContext::getUniformScaleTransform(const glm::vec3 &position,
                                                   float size)
 {

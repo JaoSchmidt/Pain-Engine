@@ -10,8 +10,8 @@
 #include "CoreRender/MeshComponent.h"
 #include "CoreRender/RenderContext.h"
 #include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/SpriteComponent.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Components/Sprite.h"
 #include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
@@ -38,80 +38,34 @@ void Render::onRender(Renderers &renderer, bool isMinimized,
   UNUSED(isMinimized)
   UNUSED(currentTime)
   PROFILE_FUNCTION();
+  Renderer2d &renderer2d = renderer.m_renderer2d;
   {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");
 
-    auto chunks =
-        queryConst<Transform2dComponent, SpriteComponent, RotationComponent>();
+    auto chunks = queryConst<Transform2dComponent, SpriteComponent,
+                             RotationComponent, MaterialComponent>();
     for (auto &chunk : chunks) {
       auto *t = std::get<0>(chunk.arrays);
       auto *s = std::get<1>(chunk.arrays);
       auto *r = std::get<2>(chunk.arrays);
+      const MaterialComponent *m = std::get<3>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         std::visit(
-            [&](auto &&tex) {
-              using T = std::decay_t<decltype(tex)>;
-              if constexpr (std::is_same_v<T, SheetStruct>) {
-                renderer.m_renderer2d.drawQuad(
-                    t[i].m_position, s[i].m_size, s[i].color,
-                    r[i].m_rotationAngle, s[i].layer,
-                    s[i].getTextureFromTextureSheet(), s[i].m_tilingFactor,
-                    s[i].getCoords());
-              } else {
-                renderer.m_renderer2d.drawQuad(t[i].m_position, s[i].m_size,
-                                               s[i].color, r[i].m_rotationAngle,
-                                               s[i].layer, s[i].getTexture(),
-                                               s[i].m_tilingFactor);
-              }
-            },
-            s[i].m_tex);
-      }
-    }
-  }
-  {
-    PROFILE_SCOPE("Scene::renderSystems - texture quads");
-    auto chunks = queryConst<Transform2dComponent, SpriteComponent>(
-        exclude<RotationComponent>);
-    for (auto &chunk : chunks) {
-      auto *t = std::get<0>(chunk.arrays);
-      auto *s = std::get<1>(chunk.arrays);
-      for (size_t i = 0; i < chunk.count; ++i) {
-        std::visit(
-            [&](auto &tex) {
-              using T = std::decay_t<decltype(tex)>;
-              if constexpr (std::is_same_v<T, SheetStruct>) {
-                renderer.m_renderer2d.drawQuad(
-                    t[i].m_position, s[i].m_size, s[i].color, s[i].layer,
-                    s[i].getTextureFromTextureSheet(), s[i].m_tilingFactor,
-                    s[i].getCoords());
-              } else {
-                renderer.m_renderer2d.drawQuad(
-                    t[i].m_position, s[i].m_size, s[i].color, s[i].layer,
-                    s[i].getTexture(), s[i].m_tilingFactor);
-              }
-            },
-            s[i].m_tex);
-      }
-    }
-  }
-  {
-    PROFILE_SCOPE("Scene::renderSystems - spriteless quads");
-    auto chunks = queryConst<Transform2dComponent, SpritelessComponent>();
-    for (auto &chunk : chunks) {
-      auto *t = std::get<0>(chunk.arrays);
-      auto *s = std::get<1>(chunk.arrays);
-      for (size_t i = 0; i < chunk.count; ++i) {
-        std::visit(
-            [&](auto &&shape1) {
-              using T1 = std::decay_t<decltype(shape1)>;
-              if constexpr (std::is_same_v<T1, QuadShape>) {
-                renderer.m_renderer2d.drawQuad(
-                    t[i].m_position, shape1.size, s[i].color, s[i].layer,
-                    TextureManager::getDefaultTexture(
-                        TextureManager::DefaultTexture::Blank, false));
-              } else if constexpr (std::is_same_v<T1, CircleShape>) {
-                renderer.m_renderer2d.drawCircle(t[i].m_position, shape1.radius,
-                                                 s[i].color);
+            [&](auto &shape) {
+              using T = std::decay_t<decltype(shape)>;
+              if constexpr (std::is_same_v<T, QuadShape>) {
+                renderer2d.submitQuad(t[i].m_position, shape.side,
+                                      r[i].m_rotationAngle, s[i].layer, *m[i]);
+              } else if constexpr (std::is_same_v<T, RectShape>) {
+                renderer2d.submitRect(t[i].m_position, shape.size,
+                                      r[i].m_rotationAngle, s[i].layer, *m[i]);
+              } else if constexpr (std::is_same_v<T, TriangleShape>) {
+                renderer2d.submitTri(t[i].m_position,
+                                     {shape.base, shape.height},
+                                     r[i].m_rotationAngle, s[i].layer, *m[i]);
+              } else if constexpr (std::is_same_v<T, RectShape>) {
+                renderer2d.submitRect(t[i].m_position, shape.size,
+                                      r[i].m_rotationAngle, s[i].layer, *m[i]);
               }
             },
             s[i].m_shape);
@@ -119,17 +73,66 @@ void Render::onRender(Renderers &renderer, bool isMinimized,
     }
   }
   {
-    PROFILE_SCOPE("Scene::renderSystems - triangles");
-    auto chunks = queryConst<Transform2dComponent, TrianguleComponent>();
+    PROFILE_SCOPE("Scene::renderSystems - texture quads");
+    auto chunks =
+        queryConst<Transform2dComponent, SpriteComponent, MaterialComponent>(
+            exclude<RotationComponent>);
     for (auto &chunk : chunks) {
       auto *t = std::get<0>(chunk.arrays);
-      auto *tri = std::get<1>(chunk.arrays);
+      auto *s = std::get<1>(chunk.arrays);
+      auto *m = std::get<2>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
-        renderer.m_renderer2d.drawTri(t[i].m_position, tri[i].m_height,
-                                      tri[i].m_color);
+        std::visit(
+            [&](auto &shape) {
+              using T = std::decay_t<decltype(shape)>;
+              if constexpr (std::is_same_v<T, QuadShape>) {
+                renderer2d.submitQuad(t[i].m_position, shape.side, s[i].layer,
+                                      *m[i]);
+              } else if constexpr (std::is_same_v<T, RectShape>) {
+                renderer2d.submitRect(t[i].m_position, shape.size, s[i].layer,
+                                      *m[i]);
+              } else if constexpr (std::is_same_v<T, TriangleShape>) {
+                renderer2d.submitTri(t[i].m_position,
+                                     {shape.base, shape.height}, s[i].layer,
+                                     *m[i]);
+              }
+            },
+            s[i].m_shape);
       }
     }
   }
+  {
+    PROFILE_SCOPE("Scene::renderSystems - scripts");
+    auto &commands = renderer.m_renderContext.getCommands();
+
+    for (const auto &cmd : commands) {
+      switch (cmd.m_type) {
+      case RenderCommandType::Quad:
+        renderer2d.submitQuad(           //
+            cmd.m_data.sprite.transform, //
+            cmd.m_data.sprite.layer,     //
+            *cmd.m_data.sprite.material);
+        break;
+      case RenderCommandType::Triangle:
+        renderer2d.submitTri(            //
+            cmd.m_data.sprite.transform, //
+            cmd.m_data.sprite.layer,     //
+            *cmd.m_data.sprite.material);
+        break;
+      case RenderCommandType::Rect:
+        renderer2d.submitRect(           //
+            cmd.m_data.sprite.transform, //
+            cmd.m_data.sprite.layer,     //
+            *cmd.m_data.sprite.material);
+        break;
+
+      default:
+        break;
+      }
+    }
+  }
+
+  Renderer3d &renderer3d = renderer.m_renderer3d;
   {
     PROFILE_SCOPE("Scene::renderSystems - spheres");
     auto chunks =
@@ -137,15 +140,13 @@ void Render::onRender(Renderers &renderer, bool isMinimized,
     for (auto &chunk : chunks) {
       const auto *t = std::get<0>(chunk.arrays);
       const auto *mesh = std::get<1>(chunk.arrays);
-      const auto *mat = std::get<2>(chunk.arrays);
+      const MaterialComponent *m = std::get<2>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         if (mesh->shape == MeshShape::Cube) {
-          renderer.m_renderer3d.submitCube(t->m_position, mesh->size,
-                                           *mat->m_material);
+          renderer3d.submitCube(t->m_position, mesh->size, *m[i]);
         } else {
-          renderer.m_renderer3d.submitUVSphere(t->m_position, mesh->size,
-                                               s_sphereDivisions[mesh->shape],
-                                               *mat->m_material);
+          renderer3d.submitUVSphere(t->m_position, mesh->size,
+                                    s_sphereDivisions[mesh->shape], *m[i]);
         }
       }
     }
@@ -156,33 +157,29 @@ void Render::onRender(Renderers &renderer, bool isMinimized,
 
     for (const auto &cmd : commands) {
       switch (cmd.m_type) {
-
       case RenderCommandType::Cube:
-        renderer.m_renderer3d.submitCube(cmd.m_data.mesh.transform,
-                                         *cmd.m_data.mesh.material);
-        break;
-
-      case RenderCommandType::Sphere8x8:
-      case RenderCommandType::Sphere16x16:
-      case RenderCommandType::Sphere32x32:
-        renderer.m_renderer3d.submitUVSphere(
-            cmd.m_data.mesh.transform,
-            s_sphereDivisions[static_cast<uint8_t>(cmd.m_type)],
+        renderer3d.submitCube(         //
+            cmd.m_data.mesh.transform, //
             *cmd.m_data.mesh.material);
         break;
-
+      case RenderCommandType::Sphere:
+        renderer3d.submitUVSphere(       //
+            cmd.m_data.sphere.transform, //
+            cmd.m_data.sphere.div,       //
+            *cmd.m_data.sphere.material);
+        break;
       case RenderCommandType::LightPoint:
-        renderer.m_renderer3d.submitLight(cmd.m_data.lightPoint.position,
-                                          cmd.m_data.lightPoint.color);
+        renderer3d.submitLight(             //
+            cmd.m_data.lightPoint.position, //
+            cmd.m_data.lightPoint.color);
         break;
 
       default:
         break;
       }
     }
-
-    renderer.m_renderContext.clear();
   }
+  renderer.m_renderContext.clear();
 }
 
 } // namespace Systems

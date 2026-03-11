@@ -9,8 +9,8 @@
 
 #include "CoreRender/Buffers/Texture.h"
 #include "CoreRender/RenderSys.h"
+#include "CoreRender/SpriteComponent.h"
 #include "Debugging/Profiling.h"
-#include "ECS/Components/Sprite.h"
 #include "GUI/ImGuiSys.h"
 #include "Misc/Events.h"
 #include "Physics/Collision/Collider.h"
@@ -72,79 +72,47 @@ void AbstractScene<Manager>::addEntityFunctions(const char *sceneName,
   // ------------------------------------------------------------
   sol::table scene = lua.create_table();
 
-  if constexpr (Manager::template isRegistered<SpritelessComponent>())
-    scene.set_function(
-        "Spriteless",
-        sol::overload(
-            [&](glm::vec2 size, sol::optional<Color> oColor) {
-              return LuaComponentDesc{
-                  getSingleBitmask<SpritelessComponent>(),
-                  [=, this](reg::Entity e, reg::Bitmask b) {
-                    if (oColor) {
-                      m_registry.manualPush(
-                          e, b, SpritelessComponent::createQuad(size, *oColor));
-                    } else {
-                      m_registry.manualPush(
-                          e, b, SpritelessComponent::createQuad(size));
-                    }
-                  }};
-            },
-            [&](float radius, sol::optional<Color> oColor) {
-              return LuaComponentDesc{
-                  getSingleBitmask<SpritelessComponent>(),
-                  [=, this](reg::Entity e, reg::Bitmask b) {
-                    if (oColor) {
-                      m_registry.manualPush(
-                          e, b,
-                          SpritelessComponent::createCircle(radius, *oColor));
-                    } else {
-                      m_registry.manualPush(
-                          e, b, SpritelessComponent::createCircle(radius));
-                    }
-                  }};
-            }));
   // ------------------------------------------------------------
   //  Sprite Component bind
   // ------------------------------------------------------------
   if constexpr (Manager::template isRegistered<SpriteComponent>())
-    scene.set_function( //
-        "Sprite",       //
-        sol::overload(
-            [&](const char *path, sol::optional<glm::vec2> oSize) {
-              glm::vec2 size = oSize.value_or(glm::vec2{0.1f, 0.1f});
-              return LuaComponentDesc{
-                  getSingleBitmask<SpriteComponent>(),
-                  [=, this](reg::Entity e, reg::Bitmask b) { //
-                    m_registry.manualPush(
-                        e, b, SpriteComponent::create({.m_size = size}, path));
-                  }};
-            },
-            [&](const char *path, unsigned short id,
-                sol::optional<glm::vec2> oSize) {
-              glm::vec2 size = oSize.value_or(glm::vec2{0.1f, 0.1f});
-              return LuaComponentDesc{
-                  getSingleBitmask<SpriteComponent>(),
-                  [=, this](reg::Entity e, reg::Bitmask b) {
-                    m_registry.manualPush(
-                        e, b,
-                        SpriteComponent::create({.m_size = size}, path, id));
-                  }};
-            }));
-  // ------------------------------------------------------------
-  //  Movement2d Component bind
-  // ------------------------------------------------------------
-  if constexpr (Manager::template isRegistered<Movement2dComponent>())
-    scene["Movement2d"] = [&](sol::optional<glm::vec2> oVel,
-                              sol::optional<float> oRotationSpeed) {
-      float rotationSpeed = oRotationSpeed.value_or(1.f);
-      glm::vec2 vel = oVel.value_or(glm::vec2(0.f, 0.f));
-      return LuaComponentDesc{
-          getSingleBitmask<Movement2dComponent>(),
-          [vel, rotationSpeed, this](reg::Entity e, reg::Bitmask b) {
-            m_registry.manualPush(e, b,
-                                  Movement2dComponent{vel, rotationSpeed});
-          }};
-    };
+    // scene.set_function( //
+    //     "Sprite",       //
+    //     sol::overload(
+    //         [&](const char *path, sol::optional<glm::vec2> oSize) {
+    //           glm::vec2 size = oSize.value_or(glm::vec2{0.125f, 0.125f});
+    //           return LuaComponentDesc{
+    //               getSingleBitmask<SpriteComponent>(),
+    //               [=, this](reg::Entity e, reg::Bitmask b) { //
+    //                 m_registry.manualPush(
+    //                     e, b, SpriteComponent::createRect({}, *oSize));
+    //               }};
+    //         },
+    //         [&](const char *path, unsigned short id,
+    //             sol::optional<glm::vec2> oSize) {
+    //           glm::vec2 size = oSize.value_or(glm::vec2{0.1f, 0.1f});
+    //           return LuaComponentDesc{
+    //               getSingleBitmask<SpriteComponent>(),
+    //               [=, this](reg::Entity e, reg::Bitmask b) {
+    //                 m_registry.manualPush(
+    //                     e, b, SpriteComponent::create({.m_size = size}));
+    //               }};
+    //         }));
+    // ------------------------------------------------------------
+    //  Movement2d Component bind
+    // ------------------------------------------------------------
+    if constexpr (Manager::template isRegistered<Movement2dComponent>())
+      scene["Movement2d"] = [&](sol::optional<glm::vec2> oVel,
+                                sol::optional<float> oRotationSpeed) {
+        float rotationSpeed = oRotationSpeed.value_or(1.f);
+        glm::vec2 vel = oVel.value_or(glm::vec2(0.f, 0.f));
+        return LuaComponentDesc{
+            getSingleBitmask<Movement2dComponent>(),
+            [vel, rotationSpeed, this](reg::Entity e, reg::Bitmask b) {
+              m_registry.manualPush(e, b,
+                                    Movement2dComponent{vel, rotationSpeed});
+            }};
+      };
   // ------------------------------------------------------------
   //  Rotation Component bind
   // ------------------------------------------------------------

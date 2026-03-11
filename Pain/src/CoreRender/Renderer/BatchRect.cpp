@@ -4,8 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// QuadBatch.cpp
-#include "CoreRender/Renderer/BatchQuad.h"
+// RectBatch.cpp
+#include "CoreRender/Renderer/BatchRect.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "platform/ContextBackend.h"
@@ -14,7 +14,7 @@
 namespace pain
 {
 
-QuadBatch QuadBatch::create()
+RectBatch RectBatch::create()
 {
   std::vector<uint32_t> indices(MaxIndices);
   for (uint32_t i = 0, offset = 0; i < MaxIndices; i += 6, offset += 4) {
@@ -27,7 +27,18 @@ QuadBatch QuadBatch::create()
     indices[i + 5] = offset + 0;
   }
 
-  return QuadBatch{
+  Shader shader =
+      *Shader::createFromFile("resources/default/shaders/Texture.glsl");
+
+  // Set texture samplers once
+  int *samplers = new int[backend::getTMU()];
+  for (int i = 0; i < backend::getTMUi(); i++)
+    samplers[i] = i;
+
+  shader.bind();
+  shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
+  delete[] samplers;
+  return RectBatch{
       std::move(*VertexBuffer::createVertexBuffer(
           MaxVertices * sizeof(Vertex),
           {
@@ -39,19 +50,19 @@ QuadBatch QuadBatch::create()
           })),
       std::move(*IndexBuffer::createIndexBuffer(indices.data(), MaxIndices))};
 }
-QuadBatch::QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_)
+RectBatch::RectBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_)
     : vbo(std::move(vbo_)), ib(std::move(ib_)),         //
       vao(*VertexArray::createVertexArray(vbo, ib)),    //
       ptrInit(std::make_unique<Vertex[]>(MaxVertices)), //
       ptr(ptrInit.get())                                //
 {};
 
-void QuadBatch::resetPtr()
+void RectBatch::resetPtr()
 {
   indexCount = 0;
   ptr = ptrInit.get();
 }
-void QuadBatch::resetAll()
+void RectBatch::resetAll()
 {
   resetPtr();
 #ifndef NDEBUG
@@ -60,7 +71,7 @@ void QuadBatch::resetAll()
 #endif
 }
 
-void QuadBatch::flush(Texture **textures, uint32_t textureCount)
+void RectBatch::flush(Texture **textures, uint32_t textureCount)
 {
   if (!indexCount)
     return;
@@ -81,28 +92,25 @@ void QuadBatch::flush(Texture **textures, uint32_t textureCount)
 #endif
 }
 
-void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
+void RectBatch::allocateRect(const glm::mat4 &transform, const Color &tintColor,
                              const float tilingFactor, const float textureIndex,
                              const std::array<glm::vec2, 4> &textureCoordinate)
 {
   PROFILE_FUNCTION();
-  constexpr glm::vec4 QuadVertexPositions[4] = {
+  constexpr glm::vec4 RectVertexPositions[4] = {
       glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
       glm::vec4(0.5f, -0.5f, 0.f, 1.f),
       glm::vec4(0.5f, 0.5f, 0.f, 1.f),
       glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
   };
   for (unsigned i = 0; i < 4; i++) {
-    *ptr = {
-        transform * QuadVertexPositions[i], //
-        textureCoordinate[i],               //
-        tintColor.value,                    //
-        textureIndex,                       //
-        tilingFactor,                       //
-    };
+    ptr->position = transform * RectVertexPositions[i];
+    ptr->color = tintColor.value;
+    ptr->texCoord = textureCoordinate[i];
+    ptr->texIndex = textureIndex;
+    ptr->tilingFactor = tilingFactor;
     ptr++;
   }
-
   // drawOrder[indexCount] = order;
   indexCount++;
 #ifndef NDEBUG

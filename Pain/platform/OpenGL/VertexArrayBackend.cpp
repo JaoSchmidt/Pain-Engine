@@ -63,11 +63,23 @@ constexpr GLenum getComponentGLType(ShaderDataType type)
       GL_UNSIGNED_BYTE, // UByte
   };
 
-  static_assert(static_cast<GLenum>(ShaderDataType::Bool) <
+  static_assert(static_cast<uint32_t>(ShaderDataType::Bool) <
                     sizeof(types) / sizeof(types[0]),
                 "Missing entry in types array");
 
   return types[static_cast<uint32_t>(type)];
+}
+constexpr bool canBeNormalized(ShaderDataType type)
+{
+  switch (type) {
+  case ShaderDataType::UByte:
+  case ShaderDataType::UByte2:
+  case ShaderDataType::UByte3:
+  case ShaderDataType::UByte4:
+    return true;
+  default:
+    return false;
+  }
 }
 
 uint32_t createVertexArray()
@@ -108,6 +120,10 @@ void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId,
   const auto &layout = vertexBuffer.getLayout();
   // big atributes only
   for (const BufferElement &element : layout) {
+    if (element.normalized && !canBeNormalized(element.type)) {
+      P_ASSERT(!element.normalized || canBeNormalized(element.type),
+               "Invalid normalized vertex attribute type.");
+    }
     // ---------------------------
     // Handle matrices separately
     // ---------------------------

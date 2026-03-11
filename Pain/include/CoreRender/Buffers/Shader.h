@@ -21,7 +21,6 @@ namespace pain
 class Shader
 {
 public:
-  NONCOPYABLE(Shader);
   // ============================================================= //
   // **Creation**
   // ============================================================= //
@@ -46,8 +45,9 @@ public:
                std::function<std::pair<std::string, std::string>()> fn);
 
   ~Shader();
-  Shader(Shader &&o);
-  Shader &operator=(Shader &&o);
+  Shader(Shader &&o) noexcept;
+  Shader &operator=(Shader &&o) noexcept;
+  NONCOPYABLE(Shader);
 
   /** Returns the backend shader program handle. */
   uint32_t getId() const { return m_programId; }
@@ -89,6 +89,7 @@ public:
   void uploadUniformIntArray(const std::string &name, int *values,
                              uint32_t size, bool isError = true);
 
+  int getUniformLocation(const std::string &name, bool isError = true) const;
   // ============================================================= //
   // **Utilities**
   // ============================================================= //
@@ -99,7 +100,6 @@ public:
 private:
   Shader() = default;
   Shader(std::string name, uint32_t programId);
-  int getUniformLocation(const std::string &name, bool isError = true) const;
   std::string m_name = "undefined";
   uint32_t m_programId = 0;
 };

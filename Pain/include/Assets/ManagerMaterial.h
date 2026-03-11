@@ -14,21 +14,14 @@
 namespace pain
 {
 enum class DefaultShader : uint8_t {
-  Texture,         // Texture.glsl
-  Simple3d,        // TextureInstancing.glsl
+  Texture = 0,     // Texture.glsl
+  Instancing,      // TextureInstancing.glsl
   TexturePhong,    // TexturePhong.glsl
   Circles,         // Circles.glsl
   Grid,            // GridParticles.glsl
   Text,            // Renderer2dText.glsl
   SimpleTriangles, // SimpleTriangles.glsl
   Count
-};
-
-struct MaterialKey {
-  Shader *shader;
-  std::variant<ParamPBR, ParamPhong, ParamSimplest> params;
-  uint32_t flags; // Transparent, DoubleSided, etc.
-  auto operator<=>(const MaterialKey &) const = default;
 };
 
 /** Holds and owns shaders and materials */
@@ -62,12 +55,16 @@ public:
                            const pain::MaterialCreationInfo &createInfo);
 
   Material &getMaterial(const std::string &name);
+  /// @brief get simple default material
+  Material &getDefaultMaterial();
+  const Material &getDefaultMaterial() const;
 
 private:
   MaterialManager(
       std::array<Shader, static_cast<size_t>(DefaultShader::Count)> shaders);
   std::array<Shader, static_cast<size_t>(DefaultShader::Count)>
       m_defaultShaders;
+  Material m_defaultMaterial;
   std::map<std::string, Shader> m_shaders = {};
   std::map<std::string, Material> m_materials = {};
 };

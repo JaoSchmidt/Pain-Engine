@@ -19,7 +19,7 @@ MaterialManager MaterialManager::create()
           *Shader::createFromFile( //
               "Texture", "resources/default/shaders/Texture.glsl"),
           *Shader::createFromFile( //
-              "Simple3d", "resources/default/shaders/TextureInstancing.glsl"),
+              "Instancing", "resources/default/shaders/TextureInstancing.glsl"),
           *Shader::createFromFile( //
               "TexturePhong", "resources/default/shaders/TexturePhong.glsl"),
           *Shader::createFromFile( //
@@ -36,14 +36,27 @@ MaterialManager MaterialManager::create()
 MaterialManager::MaterialManager(
     std::array<Shader, static_cast<size_t>(DefaultShader::Count)> shaders)
     : m_defaultShaders(std::move(shaders)),
-      m_materials{
-          {
-              "TexturePhong", Material::create(MaterialCreationInfo{
-                                  .params = ParamPhong(),
-                                  .shader = m_defaultShaders[1],
-                              }) //
-          },
-      } {};
+      m_defaultMaterial{
+          Material::create(MaterialCreationInfo{
+              .color = Colors::Red,
+              .params = ParamSimplest(),
+              .shader = m_defaultShaders[0],
+          }) //
+          ,
+      }
+{
+  int *samplers = new int[backend::getTMU()];
+  for (int i = 0; i < backend::getTMUi(); i++)
+    samplers[i] = i;
+
+  for (uint8_t i = 0; i < static_cast<uint8_t>(DefaultShader::Count); i++) {
+    m_defaultShaders[i].bind();
+    if (m_defaultShaders[i].getUniformLocation("u_Textures", false) != -1)
+      m_defaultShaders[i].uploadUniformIntArray("u_Textures", samplers,
+                                                backend::getTMU());
+  }
+  delete[] samplers;
+};
 
 // ============================================================= //
 // **Shader API**
@@ -129,6 +142,11 @@ Material &MaterialManager::getMaterial(const std::string &name)
   }
 
   return it->second;
+}
+Material &MaterialManager::getDefaultMaterial() { return m_defaultMaterial; }
+const Material &MaterialManager::getDefaultMaterial() const
+{
+  return std::as_const(m_defaultMaterial);
 }
 
 } // namespace pain

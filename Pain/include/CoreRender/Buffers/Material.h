@@ -18,6 +18,7 @@
 #pragma once
 
 #include "Assets/ManagerTexture.h"
+#include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Buffers/Shader.h"
 #include "CoreRender/Buffers/Texture.h"
 #include "platform/ContextBackend.h"
@@ -26,19 +27,31 @@
 
 namespace pain
 {
+
+/**
+ * @brief Reference to a texture sheet entry.
+ *
+ * Stores a pointer to a texture sheet and an index identifying the sub-texture
+ * inside the sheet.
+ */
+struct SheetStruct {
+  TextureSheet *sheet; /**< Texture sheet reference. */
+  unsigned short id;   /**< Sub-texture index inside the sheet. */
+};
+
 struct ParamPBR {         /// Physically Based Rendering
   float roughness = 1.0f; ///< 1 = matte
   float metallic = 0.0f;  ///< 0 = dielectric
   float emission = 0.0f;  ///< Light emission
   auto operator<=>(const ParamPBR &) const = default;
 };
-struct ParamPhong {       // Phong only parameters
+struct ParamPhong {       /// Phong only parameters
   float ambient = 1.0f;   ///< 1 = full lit
   float highlight = 0.2f; ///< 1 = light source dominates
   float diffuse = 0.3f;   ///< 1 = Shadow
   auto operator<=>(const ParamPhong &) const = default;
 };
-struct ParamSimplest { // Super simple like Texture.glsl
+struct ParamSimplest { /// Super simple. To work with Texture.glsl
   int id = 0;
   auto operator<=>(const ParamSimplest &) const = default;
 };
@@ -69,6 +82,7 @@ struct MaterialCreationInfo {
  * type-safe getters.
  */
 struct Material {
+  using TextureVariant = std::variant<Texture *, SheetStruct>;
   std::variant<ParamPBR, ParamPhong, ParamSimplest> m_params =
       ParamPBR{};                       ///< Shader specific parameters
   Color m_color = {255, 255, 255, 255}; ///< Tint color.
@@ -82,12 +96,16 @@ struct Material {
     DoubleSided = 1 << 2  //
   };
 
-  /** @brief Texture source used by the material.
+  /** @brief Either Texture or TextureSheet source used by the material.
    * Defaults to a fallback texture to ensure safe rendering, but you should
    * define manually. Otherwise will generate an warning */
-  Texture *m_texture =
-      &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
-
+  TextureVariant m_texture = TextureVariant{&TextureManager::getDefaultTexture(
+      TextureManager::DefaultTexture::Blank, false)};
+  /** @brief small checker, used mainly on asserts */
+  bool isTextureSheet() const
+  {
+    return std::holds_alternative<SheetStruct>(m_texture);
+  }
   // ------------------------------------------------------------
   // Factory functions
   // ------------------------------------------------------------
@@ -115,6 +133,67 @@ struct Material {
         .m_shader = &info.shader,
         .m_texture = &info.texture,
     };
+  }
+
+  // ------------------------------------------------------------
+  // Getters
+  // ------------------------------------------------------------
+
+  /**
+   * @brief Returns texture coordinates for a texture-sheet sprite.
+   *
+   * @warning Undefined behavior if the sprite is not backed by a texture sheet.
+   */
+  const std::array<glm::vec2, 4> &getCoords() const
+  {
+    SheetStruct sheet = std::get<SheetStruct>(m_texture);
+    return (*sheet.sheet)[sheet.id];
+  }
+  /**
+   * @brief Returns the underlying texture when using a direct texture.
+   *
+   * @warning Undefined behavior if the sprite is backed by a texture sheet.
+   */
+  Texture &getTexture() const { return *std::get<Texture *>(m_texture); }
+
+  /**
+   * @brief Returns the texture associated with the active texture sheet.
+   *
+   * @warning Undefined behavior if the sprite is not backed by a texture sheet.
+   */
+  Texture &getTextureFromTextureSheet() const
+  {
+    return std::get<SheetStruct>(m_texture).sheet->getTexture();
+  }
+  // ------------------------------------------------------------
+  // Setters
+  // ------------------------------------------------------------
+
+  /** @brief Assigns a direct texture reference. */
+  void setTexture(Texture &texture)
+  {
+    P_ASSERT_W(!isTextureSheet(),
+               "You are defining a TextureSheet in a material that originally "
+               "used plain Textures");
+    m_texture = TextureVariant{&texture};
+  }
+
+  /** @brief Loads and assigns a texture from a file path. */
+  void setTexture(const char *filepath)
+  {
+    P_ASSERT_W(!isTextureSheet(),
+               "You are defining a TextureSheet in a material that originally "
+               "used plain Textures");
+    m_texture = TextureVariant{&TextureManager::getTexture(filepath)};
+  }
+
+  /** @brief Assigns a texture sheet entry. */
+  void setTextureSheet(TextureSheet &sheet, unsigned short id)
+  {
+    P_ASSERT_W(isTextureSheet(),
+               "You are defining a Texture in a material that originally "
+               "used Texture Sheets");
+    m_texture = TextureVariant{SheetStruct{&sheet, id}};
   }
 };
 

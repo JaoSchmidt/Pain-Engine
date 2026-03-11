@@ -8,6 +8,7 @@
 #include "CoreRender/Renderer/Renderers.h"
 #include "Debugging/Profiling.h"
 #include "Physics/MovementComponent.h"
+#include "Physics/Particles/TrailCmp.h"
 #include "Physics/RotationComponent.h"
 
 // static constexpr glm::mat3 rotate90{glm::vec3(0, -1, 0), glm::vec3(1, 0, 0),
@@ -24,6 +25,27 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
     auto *__restrict pc = std::get<0>(chunk.arrays);
     for (size_t i = 0; i < chunk.count; i++) {
       pc[i].elapsed += deltaTime;
+    }
+  }
+  {
+    PROFILE_SCOPE("Scene::updateSystems - trail");
+    auto chunks = query<Transform2dComponent, TrailComponent>();
+
+    for (auto &chunk : chunks) {
+      auto *tc = std::get<0>(chunk.arrays);
+      auto *trail = std::get<1>(chunk.arrays);
+
+      for (size_t i = 0; i < chunk.count; i++) {
+        auto &t = trail[i];
+
+        if (t.points.empty() ||
+            glm::distance(t.points.back(), tc[i].m_position) > t.minDistance) {
+          t.points.push_back(tc[i].m_position);
+
+          if (t.points.size() > t.capacity)
+            t.points.erase(t.points.begin());
+        }
+      }
     }
   }
 }
@@ -77,7 +99,7 @@ void Systems::ParticleSys::onRender(Renderers &renderer, bool isMinimized,
         for (size_t j = 0; j < psc[i].particles.size(); j++) {
           SprayParticle &pa = psc[i].particles[j];
           if (pa.alive)
-            renderer.m_renderer2d.drawSprayParticle(pa);
+            renderer.m_renderer2d.submitSprayParticle(pa);
           // Remove dead particles
           if (currentTime - pa.startTime >= psc[i].lifeTime) {
             pa.alive = false;
