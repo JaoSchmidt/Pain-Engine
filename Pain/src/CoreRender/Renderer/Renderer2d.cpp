@@ -278,7 +278,7 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
   }
   QuadBatch &batch = it->second;
 
-  if (batch.indexCount >= QuadBatch::MaxIndices) {
+  if (batch.m_count >= QuadBatch::MaxIndices) {
     batch.flush(m.textureSlots, m.textureSlotIndex);
     batch.resetPtr();
   }
@@ -287,14 +287,11 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
     const float texIndex =
         allocateTextures(material.getTextureFromTextureSheet());
     batch.allocateQuad(transform, material.m_color, material.m_tilingFactor,
-                       texIndex, material.getCoords());
+                       texIndex);
   } else {
-    constexpr std::array<glm::vec2, 4> textureCoordinate = {
-        glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-        glm::vec2(0.0f, 1.0f)};
     const float texIndex = allocateTextures(material.getTexture());
     batch.allocateQuad(transform, material.m_color, material.m_tilingFactor,
-                       texIndex, textureCoordinate);
+                       texIndex);
   }
 }
 
@@ -462,7 +459,8 @@ Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
         .sprayBatch = SprayBatch::create(), //
         .textBatch = TextBatch::create(),   //
         .debugGrid = DebugGrid::create(),
-        .textureSlots = textureSlots //
+        .triBatch = TriBatch::create(),
+        .textureSlots = textureSlots, //
     };
   }); //
 }

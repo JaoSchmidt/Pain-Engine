@@ -19,7 +19,7 @@ DebugGrid DebugGrid::create(float gridSize)
       -1.0f, 1.0f,  //
   }; //
 
-  unsigned int indices[] = {0, 1, 2, 2, 3, 0};
+  unsigned int indices[] = {0, 1, 2, 0, 3, 2};
 
   Shader shader =
       *Shader::createFromFile("resources/default/shaders/InfiniteGrid.glsl");
@@ -47,7 +47,7 @@ void DebugGrid::flush()
   vao.bind();
   vbo.bind();
   shader.bind();
-  // ib.bind();
+  ib.bind();
 
   backend::drawIndexed(vao, 6);
 }

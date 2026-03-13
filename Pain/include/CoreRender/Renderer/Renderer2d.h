@@ -226,6 +226,8 @@ private:
     SprayBatch sprayBatch;
     TextBatch textBatch;
     DebugGrid debugGrid;
+
+    TriBatch triBatch;
     // texture initializer
     Texture *whiteTexture = nullptr;
     Texture **textureSlots;

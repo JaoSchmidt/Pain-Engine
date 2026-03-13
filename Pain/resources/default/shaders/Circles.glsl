@@ -6,6 +6,7 @@ layout(location = 1) in vec2 a_TexCoord;
 layout(location = 2) in vec4 a_Color;
 layout(location = 3) in float a_TexIndex;
 layout(location = 4) in float a_TilingFactor;
+layout(location = 5) in mat4 a_Transform;
 
 uniform mat4 u_ViewProjection;
 
@@ -18,7 +19,7 @@ void main()
 {
 	v_TexCoord = a_TexCoord;
 	v_Color = a_Color;
-	gl_Position = u_ViewProjection * vec4(a_Position, 1.0);	
+	gl_Position = u_ViewProjection * a_Transform * vec4(a_Position, 1.0);	
 }
 
 #shader fragment

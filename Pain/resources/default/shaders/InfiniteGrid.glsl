@@ -1,5 +1,6 @@
 #shader vertex
 #version 400 core
+// InfiniteGrid.glsl
 
 layout(location=0) in vec2 a_Position; // xy only
 
@@ -41,7 +42,7 @@ void main()
     vec2 p = v_WorldPos; 
     
     // fix grid disappearing when in low res
-    float u_Thickness = u_Thickness * 1080.0/u_resolution_y; 
+    float thickness = u_Thickness * 1080.0/u_resolution_y; 
     // BIG GRID -----------------------------------------------------
     float majorEvery = 32.0; 
     float majorCellSize = u_CellSize * majorEvery;
@@ -50,7 +51,7 @@ void main()
     vec2 gridMajor = abs((posWrappedMajor / majorCellSize) - 0.5);
     float lineDistMajor = min(gridMajor.x, gridMajor.y);
 
-    float majorThickness = u_Thickness * v_zoomLevel / majorCellSize;
+    float majorThickness = thickness * v_zoomLevel / majorCellSize;
     float line = 1.0 - step(majorThickness, lineDistMajor);
 
     // SMALL GRID -----------------------------------------------------
@@ -58,7 +59,7 @@ void main()
     vec2 grid = abs(posWrapped / u_CellSize);
     float lineDist = min(grid.x, grid.y);
 
-    float minorThickness = u_Thickness * 0.4 * v_zoomLevel / u_CellSize;
+    float minorThickness = thickness * 0.4 * v_zoomLevel / u_CellSize;
     float lineMinor = 1.0 - step(minorThickness, lineDist);
 
     float cellScreenPixels = (u_CellSize / v_zoomLevel) * u_resolution_y;

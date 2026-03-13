@@ -33,7 +33,7 @@ TriBatch TriBatch::create()
 
 TriBatch::TriBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_)
     : vbo(std::move(vbo_)), ib(std::move(ib_)),
-      vao(*VertexArray::createVertexArray(vbo, ib)),
+      vao(*VertexArray::createVertexArray(vbo, ib)), //
       cpuBuffer(std::make_unique<Vertex[]>(MaxVertices)),
       ptr(cpuBuffer.get()) {};
 

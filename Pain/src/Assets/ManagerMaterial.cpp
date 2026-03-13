@@ -40,7 +40,8 @@ MaterialManager::MaterialManager(
           Material::create(MaterialCreationInfo{
               .color = Colors::Red,
               .params = ParamSimplest(),
-              .shader = m_defaultShaders[0],
+              .shader =
+                  m_defaultShaders[static_cast<size_t>(DefaultShader::Texture)],
           }) //
           ,
       }
