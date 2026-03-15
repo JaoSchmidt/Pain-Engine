@@ -345,7 +345,6 @@ target_precompile_headers(${LIBRARY_NAME} PRIVATE
 
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/scriptGame")
 add_compile_definitions(${MACRO_DEFINITIONS})
 
 # Sync Resources
@@ -353,16 +352,8 @@ add_compile_definitions(${MACRO_DEFINITIONS})
 if(UNIX OR APPLE)
   add_custom_target(
     sync_resources
-    # Syncing with Example projects
-    COMMAND rsync -av "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
-            "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
-    # Syncing with project folder (for debug purposes)
-    COMMAND
-      rsync -av --chmod=F444,D555 
-      "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/default/"
-      "${CMAKE_SOURCE_DIR}/resources/default/"
-    # Syncing with game build folder
-    COMMAND rsync -av --chmod=F444,D555
+       # Syncing with game build folder
+    COMMAND rsync -av --chmod=Fa-w
       "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
       "${CMAKE_BINARY_DIR}/resources/"
     COMMENT "Syncing resources folder")
@@ -373,7 +364,7 @@ else()
     sync_resources
     COMMAND
       ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources"
-      "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources"
+      "${CMAKE_BINARY_DIR}/resources"
     COMMENT "Syncing resources folder")
 
   add_dependencies(${LIBRARY_NAME} sync_resources)
