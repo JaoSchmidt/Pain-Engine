@@ -13,6 +13,10 @@
 
 namespace pain
 {
+float inline fdiv(uint32_t divided, uint32_t divisor)
+{
+  return static_cast<float>(divided) / static_cast<float>(divisor);
+}
 SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
                                 std::string name)
 {
@@ -191,11 +195,6 @@ void SphereBatch::flush(Texture **textures, uint32_t textureCount)
 #ifndef NDEBUG
   drawCount++;
 #endif
-}
-
-float inline fdiv(uint32_t divided, uint32_t divisor)
-{
-  return static_cast<float>(divided) / static_cast<float>(divisor);
 }
 
 void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
