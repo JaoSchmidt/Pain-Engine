@@ -91,7 +91,7 @@ public:
    *
    * @param scene Scene containing camera components.
    */
-  void subscribeToViewportChange(Scene &scene);
+  void subscribeToEvents(Scene &scene, Renderers &renderers);
 
 private:
   /**

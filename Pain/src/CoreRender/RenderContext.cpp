@@ -31,7 +31,7 @@ void RenderContext::submitUVSphere(const glm::vec3 &position, float size,
   m_commands.emplace_back(
       RenderCommandType::Sphere,
       RenderCommand::Data{
-          {&material, getUniformScaleTransform(position, size)} //
+          .sphere{&material, getUniformScaleTransform(position, size), div} //
       } //
   );
 }
@@ -42,7 +42,8 @@ void RenderContext::submitUVSphere(const glm::vec3 &position, float size,
   m_commands.emplace_back(
       RenderCommandType::Sphere,
       RenderCommand::Data{
-          {&material, getUniformScaleTransform(position, size, rotation)} //
+          .sphere{&material, getUniformScaleTransform(position, size, rotation),
+                  div} //
       } //
   );
 }

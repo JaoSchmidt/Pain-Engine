@@ -8,7 +8,8 @@
 #include "ECS/Scene.h"
 
 #include "CoreRender/Buffers/Texture.h"
-#include "CoreRender/RenderSys.h"
+#include "CoreRender/Render2dSys.h"
+#include "CoreRender/Render3dSys.h"
 #include "CoreRender/SpriteComponent.h"
 #include "Debugging/Profiling.h"
 #include "GUI/ImGuiSys.h"
@@ -21,8 +22,6 @@
 #include "Scripting/LuaScriptSys.h"
 #include "Scripting/NativeScriptSys.h"
 #include "Scripting/State.h"
-
-#include "CoreRender/RenderSys.h"
 
 namespace
 {
@@ -75,44 +74,44 @@ void AbstractScene<Manager>::addEntityFunctions(const char *sceneName,
   // ------------------------------------------------------------
   //  Sprite Component bind
   // ------------------------------------------------------------
-  if constexpr (Manager::template isRegistered<SpriteComponent>())
-    // scene.set_function( //
-    //     "Sprite",       //
-    //     sol::overload(
-    //         [&](const char *path, sol::optional<glm::vec2> oSize) {
-    //           glm::vec2 size = oSize.value_or(glm::vec2{0.125f, 0.125f});
-    //           return LuaComponentDesc{
-    //               getSingleBitmask<SpriteComponent>(),
-    //               [=, this](reg::Entity e, reg::Bitmask b) { //
-    //                 m_registry.manualPush(
-    //                     e, b, SpriteComponent::createRect({}, *oSize));
-    //               }};
-    //         },
-    //         [&](const char *path, unsigned short id,
-    //             sol::optional<glm::vec2> oSize) {
-    //           glm::vec2 size = oSize.value_or(glm::vec2{0.1f, 0.1f});
-    //           return LuaComponentDesc{
-    //               getSingleBitmask<SpriteComponent>(),
-    //               [=, this](reg::Entity e, reg::Bitmask b) {
-    //                 m_registry.manualPush(
-    //                     e, b, SpriteComponent::create({.m_size = size}));
-    //               }};
-    //         }));
-    // ------------------------------------------------------------
-    //  Movement2d Component bind
-    // ------------------------------------------------------------
-    if constexpr (Manager::template isRegistered<Movement2dComponent>())
-      scene["Movement2d"] = [&](sol::optional<glm::vec2> oVel,
-                                sol::optional<float> oRotationSpeed) {
-        float rotationSpeed = oRotationSpeed.value_or(1.f);
-        glm::vec2 vel = oVel.value_or(glm::vec2(0.f, 0.f));
-        return LuaComponentDesc{
-            getSingleBitmask<Movement2dComponent>(),
-            [vel, rotationSpeed, this](reg::Entity e, reg::Bitmask b) {
-              m_registry.manualPush(e, b,
-                                    Movement2dComponent{vel, rotationSpeed});
-            }};
-      };
+  // if constexpr (Manager::template isRegistered<SpriteComponent>())
+  // scene.set_function( //
+  //     "Sprite",       //
+  //     sol::overload(
+  //         [&](const char *path, sol::optional<glm::vec2> oSize) {
+  //           glm::vec2 size = oSize.value_or(glm::vec2{0.125f, 0.125f});
+  //           return LuaComponentDesc{
+  //               getSingleBitmask<SpriteComponent>(),
+  //               [=, this](reg::Entity e, reg::Bitmask b) { //
+  //                 m_registry.manualPush(
+  //                     e, b, SpriteComponent::createRect({}, *oSize));
+  //               }};
+  //         },
+  //         [&](const char *path, unsigned short id,
+  //             sol::optional<glm::vec2> oSize) {
+  //           glm::vec2 size = oSize.value_or(glm::vec2{0.1f, 0.1f});
+  //           return LuaComponentDesc{
+  //               getSingleBitmask<SpriteComponent>(),
+  //               [=, this](reg::Entity e, reg::Bitmask b) {
+  //                 m_registry.manualPush(
+  //                     e, b, SpriteComponent::create({.m_size = size}));
+  //               }};
+  //         }));
+  // ------------------------------------------------------------
+  //  Movement2d Component bind
+  // ------------------------------------------------------------
+  if constexpr (Manager::template isRegistered<Movement2dComponent>())
+    scene["Movement2d"] = [&](sol::optional<glm::vec2> oVel,
+                              sol::optional<float> oRotationSpeed) {
+      float rotationSpeed = oRotationSpeed.value_or(1.f);
+      glm::vec2 vel = oVel.value_or(glm::vec2(0.f, 0.f));
+      return LuaComponentDesc{
+          getSingleBitmask<Movement2dComponent>(),
+          [vel, rotationSpeed, this](reg::Entity e, reg::Bitmask b) {
+            m_registry.manualPush(e, b,
+                                  Movement2dComponent{vel, rotationSpeed});
+          }};
+    };
   // ------------------------------------------------------------
   //  Rotation Component bind
   // ------------------------------------------------------------
@@ -212,11 +211,12 @@ sol::state &AbstractScene<Manager>::enchanceLuaState(sol::state &state)
 
 template <reg::CompileTimeBitMaskType Manager>
 void AbstractScene<Manager>::emplaceLuaScript(reg::Entity entity,
+                                              AbstractScene<Manager> &scene,
                                               const char *scriptPath)
   requires(Manager::template isRegistered<tag::LuaScript>())
 {
-  LuaScriptComponent &lc = getComponent<LuaScriptComponent>(entity);
-  lc.bind(m_luaState, scriptPath);
+  LuaScriptComponent &lc = scene.getComponent<LuaScriptComponent>(entity);
+  lc.bind(scene.m_luaState, scriptPath);
   if (lc.m_onCreate) {
     sol::protected_function_result result = (*lc.m_onCreate)(lc);
     if (!result.valid()) {
@@ -284,11 +284,12 @@ void AbstractScene<Manager>::updateSystems(const SDL_Event &event)
     static_cast<IOnEvent *>(sys)->onEvent(event);
 }
 template <reg::CompileTimeBitMaskType Manager>
-void AbstractScene<Manager>::renderSystems(Renderers &renderers,
+void AbstractScene<Manager>::renderSystems(RenderPass pass,
+                                           Renderers &renderers,
                                            bool isMinimized,
                                            DeltaTime currentTime)
 {
-  for (auto *sys : m_renderSystems)
+  for (auto *sys : m_renderSystems[static_cast<uint8_t>(pass)])
     static_cast<IOnRender *>(sys)->onRender(renderers, isMinimized,
                                             currentTime);
 }

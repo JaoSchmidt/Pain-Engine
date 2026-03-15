@@ -223,7 +223,9 @@ public:
    * @param entity Target entity.
    * @param scriptPath Path to the script file.
    */
-  void emplaceLuaScript(reg::Entity entity, const char *scriptPath)
+  static void emplaceLuaScript(reg::Entity entity,
+                               AbstractScene<Manager> &scene,
+                               const char *scriptPath)
     requires(Manager::template isRegistered<tag::LuaScript>());
 
   /** @brief Returns the shared Lua state used by the scene. */
@@ -248,7 +250,7 @@ public:
   void updateSystems(const SDL_Event &event);
 
   /** @brief Executes render callbacks on systems implementing IOnRender. */
-  void renderSystems(Renderers &renderers, bool isMinimized,
+  void renderSystems(RenderPass pass, Renderers &renderers, bool isMinimized,
                      DeltaTime currentTime);
 
   /**
@@ -339,7 +341,8 @@ protected:
   /// Cached system lists for fast iteration.
   std::vector<IOnUpdate *> m_updateSystems;
   std::vector<IOnEvent *> m_eventSystems;
-  std::vector<IOnRender *> m_renderSystems;
+  std::array<std::vector<IOnRender *>, (size_t)RenderPass::Count>
+      m_renderSystems;
 
   /// Thread pool used by the scene.
   ThreadPool &m_threadPool;

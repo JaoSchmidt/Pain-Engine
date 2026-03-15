@@ -77,7 +77,7 @@ namespace Systems
  * @see System
  * @see IOnRender
  */
-struct Render : public System<WorldComponents>, IOnRender {
+struct Render2d : public System<WorldComponents>, IOnRender {
   /**
    * @brief Component signature required by this system.
    *
@@ -115,6 +115,7 @@ struct Render : public System<WorldComponents>, IOnRender {
    */
   void onRender(Renderers &renderer, bool isMinimized,
                 DeltaTime currentTime) override;
+  RenderPass getRenderPass() const override { return RenderPass::Dim2d; }
 };
 
 } // namespace Systems

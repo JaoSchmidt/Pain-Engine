@@ -59,6 +59,17 @@ struct CollisionEvent {
     );
   }
 };
+struct ChangeActiveCameraEvent {
+  reg::Entity cam;
+  /** Converts this event into a Lua table representation. */
+  sol::table toLuaTable(const sol::state &lua) const
+  {
+    return lua.create_table_with( //
+        lua,                      //
+        "cam", cam                //
+    );
+  }
+};
 
 /**
  * List of event types synchronized with Lua.

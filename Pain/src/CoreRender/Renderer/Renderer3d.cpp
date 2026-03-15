@@ -58,28 +58,14 @@ Stats Renderer3d::getSphereStatistics()
   return stats;
 }
 
-void Renderer3d::beginScene(DeltaTime globalTime, const Scene &scene,
-                            const glm::mat4 &transform)
+void Renderer3d::beginScene(DeltaTime globalTime, const cmp::PerspCamera &pc,
+                            const Transform3dComponent &tc)
 {
   PROFILE_FUNCTION();
-  const Transform3dComponent &tc =
-      std::as_const(scene).getComponent<Transform3dComponent>(m.cameraEntity);
 
-  if (scene.hasAnyComponents<cmp::PerspCamera>(m.cameraEntity)) {
-    const cmp::PerspCamera &c =
-        std::as_const(scene).getComponent<Component::PerspCamera>(
-            m.cameraEntity);
-    uploadBasicUniforms(scene, c.getViewProjectionMatrix(), globalTime,
-                        transform, c.getResolution(), tc.m_position);
-  } else if (scene.hasAnyComponents<cmp::OrthoCamera>(m.cameraEntity)) {
-    const cmp::OrthoCamera &c =
-        std::as_const(scene).getComponent<Component::OrthoCamera>(
-            m.cameraEntity);
-    uploadBasicUniforms(scene, c.getViewProjectionMatrix(), globalTime,
-                        transform, c.getResolution(), tc.m_position);
-  } else {
-    PLOG_E("The Renderer3d could't decide which camera you are using");
-  }
+  uploadBasicUniforms(pc.getViewProjectionMatrix(), globalTime,
+                      pc.getResolution(), tc.m_position);
+
   // Going back to frist vertex
   // m.cubeBatch.resetAll();
   for (auto it = m_cubeBatchCache.begin(); it != m_cubeBatchCache.end(); it++) {
@@ -103,17 +89,14 @@ void Renderer3d::submitLight(const glm::vec3 &pos, const Color &color)
   }
 }
 
-void Renderer3d::uploadBasicUniforms(const Scene &scene,
-                                     const glm::mat4 &viewProjectionMatrix,
+void Renderer3d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                                      DeltaTime globalTime,
-                                     const glm::mat4 &transform,
                                      const glm::ivec2 &resolution,
                                      const glm::vec3 &cameraPos)
 {
-  UNUSED(scene);
   UNUSED(globalTime);
   UNUSED(resolution);
-  UNUSED(transform);
+  UNUSED(cameraPos);
   PROFILE_FUNCTION();
 
   for (auto it = m_cubeBatchCache.begin(); it != m_cubeBatchCache.end(); it++) {

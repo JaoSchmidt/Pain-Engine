@@ -11,6 +11,7 @@
 #include "CoreRender/Renderer/BatchQuad.h"
 #include "CoreRender/Renderer/BatchSphere.h"
 #include "CoreRender/Renderer/Stats.h"
+#include "Physics/Movement3dComponent.h"
 #include "Physics/Particles/SprayCmp.h"
 #include "pch.h"
 
@@ -58,11 +59,11 @@ public:
    * @brief Begin a new rendering scene.
    *
    * @param globalTime Global engine time.
-   * @param scene      Scene being rendered.
-   * @param transform  Optional root transform applied to all draws.
+   * @param perspCamera Perspecitve camera component
+   * @param position camera position
    */
-  void beginScene(DeltaTime globalTime, const Scene &scene,
-                  const glm::mat4 &transform = glm::mat4(1.0f));
+  void beginScene(DeltaTime globalTime, const cmp::PerspCamera &perspCamera,
+                  const Transform3dComponent &position);
 
   // @brief Flush all batches and finalize the scene.
   void endScene(const Scene &scene);
@@ -128,10 +129,8 @@ public:
 private:
   float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
   void flush();
-  void uploadBasicUniforms(const Scene &scene,
-                           const glm::mat4 &viewProjectionMatrix,
-                           DeltaTime globalTime, const glm::mat4 &transform,
-                           const glm::ivec2 &resolution,
+  void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
+                           DeltaTime globalTime, const glm::ivec2 &resolution,
                            const glm::vec3 &cameraPos);
   void bindTextures();
   float allocateTextures(Texture &texture);

@@ -11,6 +11,7 @@
 
 #include "CoreRender/Buffers/Texture.h"
 #include "CoreRender/Buffers/VertexArray.h"
+#include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/BatchQuad.h"
 #include "CoreRender/Renderer/BatchSpray.h"
 #include "CoreRender/Renderer/BatchText.h"
@@ -28,6 +29,7 @@ namespace pain
 // Frwd declare Scene
 class Scene;
 class UIScene;
+struct Transform2dComponent;
 
 /**
  * @brief 2D renderer facade built on top of batched OpenGL rendering.
@@ -63,11 +65,11 @@ struct Renderer2d {
    * @brief Begin a new rendering scene.
    *
    * @param globalTime Global engine time.
-   * @param scene      Scene being rendered.
-   * @param transform  Optional root transform applied to all draws.
+   * @param perspCamera Perspecitve camera component
+   * @param position camera position
    */
-  void beginScene(DeltaTime globalTime, const Scene &scene,
-                  const glm::mat4 &transform = glm::mat4(1.0f));
+  void beginScene(DeltaTime globalTime, const cmp::OrthoCamera &,
+                  const Transform2dComponent &position);
 
   // @brief Flush all batches and finalize the scene.
   void endScene();
@@ -215,8 +217,7 @@ private:
   float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                           DeltaTime globalTime, const glm::mat4 &transform,
-                           const glm::ivec2 &resolution,
+                           DeltaTime globalTime, const glm::ivec2 &resolution,
                            const glm::vec2 &cameraPos, const float zoomLevel);
   void bindTextures();
   float allocateTextures(Texture &texture);

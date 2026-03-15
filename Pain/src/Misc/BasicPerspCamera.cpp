@@ -28,7 +28,7 @@ reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionHeight,
       entity, pain::Transform3dComponent{}, //
       pain::RotationComponent{},            //
       pain::Movement3dComponent{},          //
-      cmp::PerspCamera::create(resolutionWidth, resolutionHeight,
+      cmp::PerspCamera::create(true, resolutionWidth, resolutionHeight,
                                fieldOfViewDegrees, entity, yaw, pitch), //
       pain::NativeScriptComponent{});
   pain::Scene::emplaceScript<PerspCameraScript>(entity, scene, yaw, pitch);
@@ -43,7 +43,7 @@ reg::Entity Dummy3dCamera::createBasicCamera(pain::Scene &scene,
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
       entity, pain::Transform3dComponent{},
-      Component::PerspCamera::create(resolutionWeigh, resolutionHeight,
+      Component::PerspCamera::create(true, resolutionWeigh, resolutionHeight,
                                      fieldOfViewDegrees, entity, yaw, pitch) //
   );
   return entity;

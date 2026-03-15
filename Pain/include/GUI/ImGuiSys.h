@@ -107,6 +107,8 @@ struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
    */
   void onEvent(const SDL_Event &e) override;
 
+  RenderPass getRenderPass() const override { return RenderPass::UI; };
+
 private:
   /// @brief Pointer to the active ImGui IO state.
   ImGuiIO *m_io = nullptr;

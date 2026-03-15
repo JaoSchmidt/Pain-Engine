@@ -17,6 +17,7 @@
 #pragma once
 
 #include "Core.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
@@ -81,6 +82,7 @@ struct IOnRender {
    * @param dt Frame delta time.
    */
   virtual void onRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
+  virtual RenderPass getRenderPass() const = 0;
 };
 
 /**

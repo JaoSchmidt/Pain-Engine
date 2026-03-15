@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+// Application.cpp
 #include "CoreFiles/Application.h"
 #include "Assets/HighResolutionTimer.h"
 #include "Assets/ManagerFile.h"
@@ -25,9 +26,7 @@
 
 namespace pain
 {
-pain::Application *pain::Application::s_app = nullptr;
-
-Application *Application::createApplication(AppContext &&context,
+Application *Application::createApplication(AppInit &&context,
                                             FrameBufferCreationInfo &&fbci)
 {
   // =========================================================================//
@@ -63,7 +62,6 @@ Application *Application::createApplication(AppContext &&context,
   // =========================================================================//
   // Application Initial setup before
   // =========================================================================//
-  sol::state luaState = createLuaState();
 
   // SDL_SetWindowGrab(m_window, SDL_TRUE);
   // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
@@ -76,38 +74,55 @@ Application *Application::createApplication(AppContext &&context,
   // config.ini file
   // =========================================================================//
 
-  Application *app = new Application(std::move(luaState), std::move(window),
-                                     std::move(sdlContext), std::move(fbci),
-                                     std::move(context));
+  Application *app = new Application(std::move(window), std::move(sdlContext),
+                                     std::move(fbci), std::move(context));
   if (app != nullptr) {
-    addComponentFunctions(app->m_luaState, app->m_worldScene);
-    addScheduler(app->m_luaState, app->m_worldScene);
-    app->m_worldScene.addEntityFunctions("World", app->m_luaState);
-    createLuaEventMap(app->m_luaState, app->m_eventDispatcher);
-    TextureManager::addRendererForDeletingTextures(app->m_renderers);
-    Application::s_app = app;
+    addComponentFunctions(app->m_ctx.luaState, app->m_runtime.worldScene);
+    addScheduler(app->m_ctx.luaState, app->m_runtime.worldScene);
+    app->m_runtime.worldScene.addEntityFunctions("World", app->m_ctx.luaState);
+    createLuaEventMap(app->m_ctx.luaState, app->m_ctx.eventDispatcher);
+    TextureManager::addRendererForDeletingTextures(app->m_ctx.renderers);
   }
   return app;
 }
-/* Creates window, opengl context and init glew*/
-// renderer is created BEFORE the asset manager, as the asset manager retrives
-// the default assets, it will slowly link some to the renderer cache
-Application::Application(sol::state &&luaState, SDL_Window *window,
-                         void *sdlContext, FrameBufferCreationInfo &&fbci,
-                         AppContext &&context)
-    : m{.context = context}, m_renderers(Renderers::create()),
-      m_threadPool(ThreadPool{}), m_luaState(std::move(luaState)),
-      m_eventDispatcher(m_luaState),
-      m_worldScene(Scene::create(m_eventDispatcher, m_luaState, m_threadPool)),
-      m_endGameFlags(), m_window(window), m_sdlContext(sdlContext),
-      m_renderPipeline(fbci.swapChainTarget
-                           ? RenderPipeline::create(m_eventDispatcher)
-                           : RenderPipeline::create(fbci, m_eventDispatcher)) {
-      };
+UIScene &Application::createUIScene()
+{
+  m_runtime.uiScene = std::make_unique<UIScene>(
+      m_ctx.eventDispatcher, m_ctx.luaState, m_ctx.threadPool);
+  m_runtime.uiScene->addSystem<Systems::ImGuiSys>(m_ctx.sdlContext,
+                                                  m_ctx.window);
+  return *m_runtime.uiScene;
+}
+
+EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
+                             FrameBufferCreationInfo &&fbci)
+    :                                 //
+      threadPool(ThreadPool{}),       //
+      luaState(createLuaState()),     //
+      eventDispatcher(luaState),      //
+      renderers(Renderers::create()), //
+      renderPipeline(fbci.swapChainTarget
+                         ? RenderPipeline::create(eventDispatcher)
+                         : RenderPipeline::create(fbci, eventDispatcher)), //
+      window(window),                                                      //
+      sdlContext(sdlContext)                                               //
+{};
+
+/** Initiate the application in the following order:
+ * m_config for small configurations
+ * m_ctx for the engine context. Must work relatively independent
+ * m_runtime for the world scene, which needs the engine context working
+ */
+Application::Application(SDL_Window *window, void *sdlContext,
+                         FrameBufferCreationInfo &&fbci, AppInit &&context)
+    : m_config{.init = context}, m_ctx(window, sdlContext, std::move(fbci)),
+      m_runtime{.worldScene = Scene::create(m_ctx.eventDispatcher,
+                                            m_ctx.luaState, m_ctx.threadPool)},
+      m_endGameFlags() {};
 
 void Application::stopLoop(bool restartFlag)
 {
-  m.isGameRunning = false;
+  m_config.isGameRunning = false;
   PLOG_I("Game has been stopped on {}", fmt::ptr(this));
   m_endGameFlags.restartGame = restartFlag;
 }
@@ -115,24 +130,24 @@ void Application::stopLoop(bool restartFlag)
 void Application::ensureCamera()
 {
   // set some camera
-  if (!m_renderers.m_renderer2d.hasCamera() &&
-      !m_renderers.m_renderer3d.hasCamera()) {
+  if (!m_ctx.renderers.m_renderer2d.hasCamera() &&
+      !m_ctx.renderers.m_renderer3d.hasCamera()) {
     PLOG_I("Camera is missing, searching for 2d camera component");
     bool hasCameraComponent = false;
-    for (auto &chunk : m_worldScene.query<cmp::OrthoCamera>()) {
+    for (auto &chunk : m_runtime.worldScene.query<cmp::OrthoCamera>()) {
       auto *c = std::get<0>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; i++) {
         hasCameraComponent = true;
-        set2dRendererCamera(c[i].m_entity, m.context.defaultWidth,
-                            m.context.defaultHeight);
+        set2dRendererCamera(c[i].m_entity, m_config.init.defaultWidth,
+                            m_config.init.defaultHeight);
       }
     }
-    for (auto &chunk : m_worldScene.query<cmp::PerspCamera>()) {
+    for (auto &chunk : m_runtime.worldScene.query<cmp::PerspCamera>()) {
       auto *c = std::get<0>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; i++) {
         hasCameraComponent = true;
-        set3dRendererCamera(c[i].m_entity, m.context.defaultWidth,
-                            m.context.defaultHeight);
+        set3dRendererCamera(c[i].m_entity, m_config.init.defaultWidth,
+                            m_config.init.defaultHeight);
       }
     }
 
@@ -140,9 +155,10 @@ void Application::ensureCamera()
     if (!hasCameraComponent) {
       PLOG_W("You didn't set a camera, using a default camera");
       reg::Entity camera = Dummy2dCamera::create(
-          m_worldScene, m.context.defaultWidth, m.context.defaultHeight, 1.f);
-      set2dRendererCamera(camera, m.context.defaultWidth,
-                          m.context.defaultHeight);
+          m_runtime.worldScene, m_config.init.defaultWidth,
+          m_config.init.defaultHeight, 1.f);
+      set2dRendererCamera(camera, m_config.init.defaultWidth,
+                          m_config.init.defaultHeight);
     }
   }
 }
@@ -152,16 +168,16 @@ EndGameFlags Application::run()
   backend::InitRenderer();
   ensureCamera();
   // creates a dummy ui scene
-  if (m_uiScene.get() == nullptr)
+  if (m_runtime.uiScene.get() == nullptr)
     createUIScene();
 
   // With all scenes created, we can now properly use it
-  m_renderPipeline.subscribeToViewportChange(m_worldScene);
+  m_ctx.renderPipeline.subscribeToEvents(m_runtime.worldScene, m_ctx.renderers);
 
   HighResolutionTimer frameTimer;
   DeltaTime accumulator = 0.0;
 
-  while (m.isGameRunning) {
+  while (m_config.isGameRunning) {
     DeltaTime deltaTime = frameTimer.tick();
     uint64_t elapsedTime = frameTimer.elapsedNanos();
 
@@ -169,17 +185,18 @@ EndGameFlags Application::run()
     // Calculate FPS sample
     // =============================================================== //
 
-    m.fpsSamples[m.currentSample] =
+    m_config.fpsSamples[m_config.currentSample] =
         static_cast<double>(DeltaTime::oneSecond()) /
         deltaTime.getNanoSeconds();
-    m.currentSample = (m.currentSample + 1) % m.FPS_SAMPLE_COUNT;
+    m_config.currentSample =
+        (m_config.currentSample + 1) % m_config.FPS_SAMPLE_COUNT;
 
-    if (m.currentSample % 64 == 0) { // update displayed fps
+    if (m_config.currentSample % 64 == 0) { // update displayed fps
       double currentTPS = 0.0;
-      for (const double fpsSample : m.fpsSamples) {
+      for (const double fpsSample : m_config.fpsSamples) {
         currentTPS += fpsSample;
       }
-      currentTPS /= m.FPS_SAMPLE_COUNT;
+      currentTPS /= m_config.FPS_SAMPLE_COUNT;
       IMGUI_PLOG_NAME("FPS", [currentTPS]() {
         const std::string fps = "FPS: " + std::to_string(currentTPS);
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
@@ -191,12 +208,12 @@ EndGameFlags Application::run()
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Updates");
-      DeltaTime deltaSeconds = deltaTime * m.timeMultiplier;
+      DeltaTime deltaSeconds = deltaTime * m_config.timeMultiplier;
       accumulator += deltaSeconds;
 
-      while (accumulator >= m.fixedFrameRate) {
-        m_worldScene.updateSystems(m.fixedFrameRate);
-        accumulator -= m.fixedFrameRate;
+      while (accumulator >= m_config.fixedFrameRate) {
+        m_runtime.worldScene.updateSystems(m_config.fixedFrameRate);
+        accumulator -= m_config.fixedFrameRate;
       }
     }
 
@@ -213,21 +230,22 @@ EndGameFlags Application::run()
           break;
         case SDL_WINDOWEVENT:
           if (event.window.event == SDL_WINDOWEVENT_CLOSE &&
-              event.window.windowID == SDL_GetWindowID(m_window))
+              event.window.windowID == SDL_GetWindowID(m_ctx.window))
             stopLoop();
           else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-            m.isMinimized = true;
+            m_config.isMinimized = true;
           else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
-            m.isMinimized = false;
+            m_config.isMinimized = false;
           else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-            m_renderPipeline.onWindowResized(event, m_renderers, m_worldScene);
+            m_ctx.renderPipeline.onWindowResized(event, m_ctx.renderers,
+                                                 m_runtime.worldScene);
           break;
         default:
           break;
         }
-        m_worldScene.updateSystems(event);
-        if (m_uiScene != nullptr)
-          m_uiScene->updateSystems(event);
+        m_runtime.worldScene.updateSystems(event);
+        if (m_runtime.uiScene != nullptr)
+          m_runtime.uiScene->updateSystems(event);
       }
     }
 
@@ -236,18 +254,19 @@ EndGameFlags Application::run()
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Rendering");
-      m_renderPipeline.pipeline(m_renderers, m.isMinimized, elapsedTime,
-                                m_worldScene, *m_uiScene);
-      P_ASSERT(m_window != nullptr, "m_window is nullptr")
-      SDL_GL_SwapWindow(m_window);
+      m_ctx.renderPipeline.pipeline(m_ctx.renderers, m_config.isMinimized,
+                                    elapsedTime, m_runtime.worldScene,
+                                    *m_runtime.uiScene);
+      P_ASSERT(m_ctx.window != nullptr, "m_window is nullptr")
+      SDL_GL_SwapWindow(m_ctx.window);
     }
 
     // =============================================================== //
     // Frame rate limiting
     // =============================================================== //
-    if (deltaTime.getSeconds() < m.fixedFPS) {
-      uint32_t sleepMs =
-          static_cast<uint32_t>((m.fixedFPS - deltaTime.getSeconds()) * 1000.0);
+    if (deltaTime.getSeconds() < m_config.fixedFPS) {
+      uint32_t sleepMs = static_cast<uint32_t>(
+          (m_config.fixedFPS - deltaTime.getSeconds()) * 1000.0);
       HighResolutionTimer::sleep(sleepMs);
     }
   };
@@ -261,10 +280,9 @@ Application::~Application()
   PLOG_I("Deleting application");
   TextureManager::clearTextures();
   FileManager::getDefaultLuaFile();
-  SDL_GL_DeleteContext(m_sdlContext);
-  SDL_DestroyWindow(m_window);
+  SDL_GL_DeleteContext(m_ctx.sdlContext);
+  SDL_DestroyWindow(m_ctx.window);
   SDL_Quit();
-  s_app = nullptr;
 }
 
 } // namespace pain

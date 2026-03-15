@@ -359,9 +359,9 @@ if(UNIX OR APPLE)
     # Syncing with project folder (for debug purposes)
     COMMAND
       rsync -av --chmod=F444,D555 
-      "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
-      "${CMAKE_SOURCE_DIR}/resources/"
-    # Syncing with game
+      "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/default/"
+      "${CMAKE_SOURCE_DIR}/resources/default/"
+    # Syncing with game build folder
     COMMAND rsync -av --chmod=F444,D555
       "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
       "${CMAKE_BINARY_DIR}/resources/"

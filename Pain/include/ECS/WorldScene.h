@@ -153,7 +153,7 @@ public:
     if constexpr (std::derived_from<Sys, IOnEvent>)
       m_eventSystems.emplace_back(s);
     if constexpr (std::derived_from<Sys, IOnRender>)
-      m_renderSystems.emplace_back(s);
+      m_renderSystems[static_cast<size_t>(s->getRenderPass())].emplace_back(s);
     if constexpr (std::derived_from<Sys, IOnUpdate>)
       m_updateSystems.emplace_back(s);
   }

@@ -21,7 +21,7 @@ reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionWidth,
   scene.createComponents(entity, pain::Transform2dComponent{}, //
                          pain::RotationComponent{},            //
                          pain::Movement2dComponent{},          //
-                         Component::OrthoCamera::create(resolutionWidth,
+                         Component::OrthoCamera::create(true, resolutionWidth,
                                                         resolutionHeight,
                                                         zoomLevel, entity), //
                          pain::NativeScriptComponent{});
@@ -36,7 +36,7 @@ reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
       entity, pain::Transform2dComponent{},
-      Component::OrthoCamera::create(resolutionWidth, resolutionHeight,
+      Component::OrthoCamera::create(true, resolutionWidth, resolutionHeight,
                                      zoomLevel, entity) //
   );
   return entity;

@@ -115,14 +115,14 @@ public:
     ImGui::SetCursorPosX(windowWidth - totalWidth);
 
     if (ImGui::Button("Exit", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(AppContext::configIniFile);
+      m_init.write(AppInit::configIniFile);
       m_app->stopLoop();
     }
 
     ImGui::SameLine(0.0f, spacing);
 
     if (ImGui::Button("Play", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(AppContext::configIniFile);
+      m_init.write(AppInit::configIniFile);
       m_app->stopLoop(true);
     }
 
@@ -150,7 +150,8 @@ Application *createLauncher()
   Application *settingsApp = Application::createApplication(
       {.title = title, .defaultWidth = width, .defaultHeight = height},
       {.swapChainTarget = true});
-  pain::UIScene &uiscene = settingsApp->createUIScene(pain::ImGuiComponent{});
+  pain::UIScene &uiscene = settingsApp->createUIScene();
+  uiscene.createComponents(uiscene.getEntity(), pain::ImGuiComponent{});
   UIScene::emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), uiscene,
                                              settingsApp);
 

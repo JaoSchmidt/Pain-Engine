@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 
+// NOTE: make sure this file never gets a dependency for this engine. It's
+// suppose to be very simple
 namespace pain
 {
 
@@ -121,6 +123,18 @@ static constexpr Color TransparentBlack{0, 0, 0, 128};
 } // namespace Colors
 
 /**
+ * @enum RenderPass
+ * @brief For ordering logical passes between render functions
+ */
+enum class RenderPass : uint8_t {
+  Dim3d,
+  Dim2d,
+  Script,
+  UI,
+  Count,
+};
+
+/**
  * @enum RenderLayer
  * @brief Logical depth ordering used by the renderer.
  *
@@ -141,6 +155,8 @@ enum class RenderLayer : uint8_t {
   MuchCloser,
   TouchingCamera,
 };
+/** Total number of supported render layers. */
+static constexpr uint8_t NumLayers = 7;
 
 /**
  * @enum SphereDivision
@@ -181,8 +197,6 @@ enum MeshShape {
   Count         // Other flexible shapes soon
 };
 
-/** Total number of supported render layers. */
-static constexpr uint8_t NumLayers = 7;
 /** @defgroup Rendering Rendering Core */
 
 } // namespace pain

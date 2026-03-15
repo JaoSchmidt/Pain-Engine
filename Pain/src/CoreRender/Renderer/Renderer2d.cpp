@@ -6,14 +6,13 @@
 
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Assets/ManagerTexture.h"
-#include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/BatchRect.h"
 #include "Debugging/Profiling.h"
 
+#include "CoreRender/CameraComponent.h"
 #include "ECS/WorldScene.h"
 #include "Physics/MovementComponent.h"
 #include "glm/ext/matrix_transform.hpp"
-
 #include "platform/ContextBackend.h"
 namespace pain
 {
@@ -60,17 +59,12 @@ void Renderer2d::changeCamera(reg::Entity cameraEntity)
   m.orthoCameraEntity = cameraEntity;
 }
 
-void Renderer2d::beginScene(DeltaTime globalTime, const Scene &scene,
-                            const glm::mat4 &transform)
+void Renderer2d::beginScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+                            const Transform2dComponent &tc)
 {
   PROFILE_FUNCTION();
-  const cmp::OrthoCamera &cc =
-      std::as_const(scene).getComponent<Component::OrthoCamera>(
-          m.orthoCameraEntity);
-  const Transform2dComponent &tc =
-      std::as_const(scene).getComponent<Transform2dComponent>(
-          m.orthoCameraEntity);
-  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime, transform,
+
+  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime,
                       cc.getResolution(), tc.m_position, cc.m_zoomLevel);
 
   for (auto it = m_triBatchCache.begin(); it != m_triBatchCache.end(); it++) {
@@ -88,7 +82,6 @@ void Renderer2d::beginScene(DeltaTime globalTime, const Scene &scene,
 
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                                      DeltaTime globalTime,
-                                     const glm::mat4 &transform,
                                      const glm::ivec2 &resolution,
                                      const glm::vec2 &cameraPos,
                                      float zoomLevel)
@@ -113,13 +106,11 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
   m.sprayBatch.shader.bind();
   m.sprayBatch.shader.uploadUniformMat4("u_ViewProjection",
                                         viewProjectionMatrix);
-  m.sprayBatch.shader.uploadUniformMat4("u_Transform", transform);
   m.sprayBatch.shader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
 
   m.textBatch.shader.bind();
   m.textBatch.shader.uploadUniformMat4("u_ViewProjection",
                                        viewProjectionMatrix);
-  m.textBatch.shader.uploadUniformMat4("u_Transform", transform);
 
   m.debugGrid.shader.bind();
   m.debugGrid.shader.uploadUniformFloat("u_zoomLevel", zoomLevel);

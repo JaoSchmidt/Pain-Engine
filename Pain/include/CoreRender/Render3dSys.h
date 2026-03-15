@@ -1,4 +1,3 @@
-
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,13 +36,20 @@
 
 #include "Assets/DeltaTime.h"
 #include "Core.h"
-#include "CoreRender/LightComponent.h"
+#include "CoreRender/MeshComponent.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
 #include "Physics/Movement3dComponent.h"
 
 namespace pain
 {
+// Forward declarations to avoid heavy renderer and component includes.
+struct Renderer2d;
+struct Transform2dComponent;
+struct RotationComponent;
+struct SpriteComponent;
+struct MaterialComponent;
+
 namespace Systems
 {
 
@@ -64,12 +70,14 @@ namespace Systems
  * @note As with any system, the render callback is only active because this
  * system inherits from IOnRender.
  *
- * @see Transform3dComponent
- * @see LightComponent
+ * @see Renderer2d
+ * @see Transform2dComponent
+ * @see SpriteComponent
+ * @see RotationComponent
  * @see System
  * @see IOnRender
  */
-struct LightSys : public System<WorldComponents>, IOnRender {
+struct Render3d : public System<WorldComponents>, IOnRender {
   /**
    * @brief Component signature required by this system.
    *
@@ -81,9 +89,12 @@ struct LightSys : public System<WorldComponents>, IOnRender {
    * Additional queries may selectively include or exclude components at
    * runtime.
    */
-  using Tags = TypeList<Transform3dComponent, //
-                        LightComponent        //
-                        >;
+  using Tags = TypeList<Transform2dComponent, //
+                        SpriteComponent,      //
+                        RotationComponent,    //
+                        Transform3dComponent, //
+                        MeshComponent,        //
+                        MaterialComponent>;
 
   /** @brief Inherit base System constructors. */
   using System::System;
@@ -100,7 +111,7 @@ struct LightSys : public System<WorldComponents>, IOnRender {
    * @param currentTime  Current frame time.
    *
    * @note This method is invoked only because the system inherits from
-   * IOnRender.
+   * IOnSystemRender.
    */
   void onRender(Renderers &renderer, bool isMinimized,
                 DeltaTime currentTime) override;

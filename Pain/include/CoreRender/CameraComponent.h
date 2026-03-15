@@ -82,9 +82,12 @@ namespace cmp
  * @brief **Resolution and aspect ratio container for cameras.**
  */
 struct CameraResolution {
+  bool m_active = false; ///< Signal as active to the render pipeline
   glm::ivec2 m_resolution;
   float m_aspectRatio;
-  reg::Entity m_entity;
+  reg::Entity m_entity = reg::Entity{-1};
+  glm::ivec2 m_screenPosition = glm::ivec2{
+      0}; ///< Where in the screen does the camera starts, usually at (0,0)
 
   /** Returns the current resolution. */
   const glm::ivec2 &getResolution() const;
@@ -108,8 +111,8 @@ struct OrthoCamera : CameraResolution {
   const glm::mat4 &getViewProjectionMatrix() const;
 
   /** Creates a new orthographic camera component. */
-  static OrthoCamera create(int resWidth, int resHeight, float zoomLevel,
-                            reg::Entity entity);
+  static OrthoCamera create(bool active, int resWidth, int resHeight,
+                            float zoomLevel, reg::Entity entity);
 
   /** Recomputes the view matrix from position and rotation. */
   void recalculateViewMatrix(const glm::vec2 &m_position,
@@ -127,8 +130,9 @@ struct OrthoCamera : CameraResolution {
   OrthoCamera() = delete;
 
 private:
-  OrthoCamera(float zoomLevel, pain::OrthographicMatrices oc, float aspectRatio,
-              int resWidth, int resHeight, reg::Entity entity);
+  OrthoCamera(bool active, float zoomLevel, pain::OrthographicMatrices oc,
+              float aspectRatio, int resWidth, int resHeight,
+              reg::Entity entity);
 };
 
 /**
@@ -146,7 +150,7 @@ struct PerspCamera : CameraResolution {
   const glm::mat4 &getViewProjectionMatrix() const;
 
   /** Creates a new perspective camera component. */
-  static PerspCamera create(int resWidth, int resHeight,
+  static PerspCamera create(bool active, int resWidth, int resHeight,
                             float fieldOfViewDegrees, reg::Entity entity,
                             float yaw, float pitch);
 
@@ -160,8 +164,9 @@ struct PerspCamera : CameraResolution {
   PerspCamera() = delete;
 
 private:
-  PerspCamera(pain::PerspectiveMatrices pe, float aspectRatio, int resWidth,
-              int resHeight, float fieldOfViewDegrees, reg::Entity entity);
+  PerspCamera(bool active, pain::PerspectiveMatrices pe, float aspectRatio,
+              int resWidth, int resHeight, float fieldOfViewDegrees,
+              reg::Entity entity);
 };
 
 } // namespace cmp

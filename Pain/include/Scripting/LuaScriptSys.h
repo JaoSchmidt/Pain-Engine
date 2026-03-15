@@ -116,6 +116,7 @@ struct LuaScript : public System<WorldComponents>,
    */
   void onRender(Renderers &renderers, bool isMinimized,
                 DeltaTime currentTime) override;
+  RenderPass getRenderPass() const override { return RenderPass::Script; }
 };
 
 } // namespace Systems
