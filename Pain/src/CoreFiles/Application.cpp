@@ -18,7 +18,7 @@
 #include "GUI/ImGuiSys.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/Events.h"
-#include "Scripting/State.h"
+#include "Scripting/Lua/State.h"
 #include "platform/ContextBackend.h"
 #include <SDL2/SDL_version.h>
 #include <memory>

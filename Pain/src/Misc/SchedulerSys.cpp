@@ -4,9 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "Scripting/SchedulerSys.h"
+#include "Misc/Schedule/SchedulerSys.h"
 #include "Debugging/Profiling.h"
-#include "Scripting/SchedulerComponent.h"
+#include "Misc/Schedule/SchedulerComponent.h"
 
 // NOTE: I believe lua script can be tough to paralize because of the OOP nature
 // of scripts

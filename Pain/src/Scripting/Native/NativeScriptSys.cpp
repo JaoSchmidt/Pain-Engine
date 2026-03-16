@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "Scripting/NativeScriptSys.h"
+#include "Scripting/Native/NativeScriptSys.h"
 #include "CoreRender/Renderer/Renderers.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/NativeScript.h"

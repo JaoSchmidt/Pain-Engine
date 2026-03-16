@@ -8,7 +8,7 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Scriptable.h"
-#include "Scripting/LuaScriptComponent.h"
+#include "Scripting/Lua/LuaScriptComponent.h"
 #include <sol/forward.hpp>
 #include <sol/sol.hpp>
 #include <sol/types.hpp>

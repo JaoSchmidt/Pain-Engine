@@ -211,7 +211,6 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
     renderers.m_renderer3d.endScene(worldScene);
   }
   if (wrap2d) {
-    backend::disable3d();
     renderers.m_renderer2d.beginScene(currentTime, wrap2d->first,
                                       wrap2d->second);
     worldScene.renderSystems(RenderPass::Dim2d, renderers, isMinimized,

@@ -4,9 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "Scripting/LuaScriptSys.h"
+#include "Scripting/Lua/LuaScriptSys.h"
 #include "Debugging/Profiling.h"
-#include "Scripting/LuaScriptComponent.h"
+#include "Scripting/Lua/LuaScriptComponent.h"
 #include <CoreRender/Renderer/Renderers.h>
 #include <sol/error.hpp>
 #include <sol/protected_function_result.hpp>

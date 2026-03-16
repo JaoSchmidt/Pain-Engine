@@ -108,6 +108,12 @@ public:
                                                   std::forward<Args>(args)...);
   }
 
+  template <reg::ECSComponent C>
+  void manualPush(reg::Entity entity, reg::Bitmask bitmask, C &&comps)
+  {
+    m_registry.manualPush(entity, bitmask, comps);
+  }
+
   /**
    * @brief Adds multiple components to an existing entity.
    *

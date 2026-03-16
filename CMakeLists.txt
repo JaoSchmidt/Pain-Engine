@@ -353,7 +353,7 @@ if(UNIX OR APPLE)
   add_custom_target(
     sync_resources
        # Syncing with game build folder
-    COMMAND rsync -av --chmod=Fa-w
+    COMMAND rsync -av --chmod=F444,D775
       "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
       "${CMAKE_BINARY_DIR}/resources/"
     COMMENT "Syncing resources folder")

@@ -5,12 +5,12 @@
  */
 
 // State.cpp
-#include "Scripting/State.h"
+#include "Scripting/Lua/State.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/SpriteComponent.h"
+#include "Misc/Schedule/SchedulerComponent.h"
 #include "Physics/MovementComponent.h"
-#include "Scripting/LuaScriptComponent.h"
-#include "Scripting/SchedulerComponent.h"
+#include "Scripting/Lua/LuaScriptComponent.h"
 #include <SDL2/SDL_scancode.h>
 #include <sol/object.hpp>
 #include <sol/sol.hpp>
@@ -62,15 +62,37 @@ sol::state createLuaState()
   lua.new_usertype<Color>(
       "Color", sol::constructors<Color(), Color(uint32_t),
                                  Color(uint8_t, uint8_t, uint8_t, uint8_t)>());
+
+  // ------ SHAPES ----------------------------------------
+  lua.new_usertype<pain::CircleShape>("CircleShape",
+                                      sol::constructors<pain::CircleShape()>(),
+                                      "radius", &pain::CircleShape::radius);
+  lua.new_usertype<pain::AABBShape>("AABBShape",
+                                    sol::constructors<pain::AABBShape()>(),
+                                    "halfSize", &pain::AABBShape::halfSize);
+  lua.new_usertype<pain::RectShape>("RectShape",
+                                    sol::constructors<pain::RectShape()>(),
+                                    "size", &pain::RectShape::size);
+  lua.new_usertype<pain::QuadShape>("QuadShape",
+                                    sol::constructors<pain::QuadShape()>(),
+                                    "side", &pain::QuadShape::side);
+  lua.new_usertype<pain::TriangleShape>(
+      "TriangleShape", sol::constructors<pain::TriangleShape()>(), "base",
+      &pain::TriangleShape::base, "height", &pain::TriangleShape::height);
+  // lua.new_usertype<pain::CapsuleShape>(
+  //     "CapsuleShape", sol::constructors<pain::CapsuleShape()>(), "height",
+  //     &pain::CapsuleShape::height, "radius", &pain::CapsuleShape::radius);
+
   // ------ COMPONENTS ----------------------------------------
-  // type returned by get_sprite(self)
-  // lua.new_usertype<SpriteComponent>(
-  //     "SpriteComponent", sol::no_constructor,            //
-  //     "m_size", &SpriteComponent::m_size,                //
-  //     "m_color", &SpriteComponent::color,                //
-  //     "m_tilingFactor", &SpriteComponent::m_tilingFactor //
-  //     // NOTE: not going to put texture right now because too much work
-  // );
+  lua.new_usertype<pain::SpriteComponent>(
+      "SpriteComponent", sol::no_constructor,                   //
+      "layer", &pain::SpriteComponent::layer,                   //
+      "create", &pain::SpriteComponent::create,                 //
+      "create_quad", &pain::SpriteComponent::createQuad,        //
+      "create_rect", &pain::SpriteComponent::createRect,        //
+      "create_circle", &pain::SpriteComponent::createCircle,    //
+      "create_triangle", &pain::SpriteComponent::createTriangle //
+  );
   // type returned by get_movement(self)
   lua.new_usertype<Movement2dComponent>(
       "Movement2dComponent", sol::no_constructor,     //

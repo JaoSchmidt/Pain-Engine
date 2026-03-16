@@ -48,11 +48,11 @@
 #include "ECS/Scriptable.h"
 #include "Physics/MovementComponent.h"
 // Scripts
-#include "Scripting/LuaScriptComponent.h"
-#include "Scripting/LuaScriptSys.h"
-#include "Scripting/NativeScriptSys.h"
-#include "Scripting/SchedulerComponent.h"
-#include "Scripting/SchedulerSys.h"
+#include "Misc/Schedule/SchedulerComponent.h"
+#include "Misc/Schedule/SchedulerSys.h"
+#include "Scripting/Lua/LuaScriptComponent.h"
+#include "Scripting/Lua/LuaScriptSys.h"
+#include "Scripting/Native/NativeScriptSys.h"
 
 #include "Physics/Collision/Collider.h"
 #include "Physics/Collision/SweepAndPruneSys.h"

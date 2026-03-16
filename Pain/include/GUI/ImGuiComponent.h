@@ -28,7 +28,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Scene.h"
-#include "Scripting/Concepts.h"
+#include "Scripting/Native/Concepts.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
 
