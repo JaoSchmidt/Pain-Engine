@@ -50,13 +50,6 @@ void Init()
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(Debug::glErrorHandler, 0);
 #endif
-  // glEnable(GL_BLEND); // valid enum
-  // PLOG_I("--------- Valid ---------------------");
-  // glEnable(999999); // invalid enum
-  // GLenum err = glGetError();
-  // PLOG_E("--------- Error ---------------------");
-  // PLOG_E(err);
-  // PLOG_E("--------- Finishing error -----------");
 }
 /** Initiate the render. Assumes 3d is being used */
 void InitRenderer()

@@ -11,10 +11,6 @@ CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
 .cmake/
 ## Debug stuff
-/resources/
-resources/*
-.luarc.json
-lua_types/
 target
 
 ## Doxygen
