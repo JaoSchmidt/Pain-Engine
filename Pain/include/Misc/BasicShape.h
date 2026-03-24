@@ -28,7 +28,7 @@ namespace pain
  * optionally offset by a collider component.
  */
 struct CircleShape {
-  float radius = 0.1f; /**< Radius of the circle in world units. */
+  float radius = 0.125f; /**< Radius of the circle in world units. */
 };
 
 /**
@@ -38,8 +38,8 @@ struct CircleShape {
  * Mainly used for collision
  */
 struct AABBShape {
-  glm::vec2 halfSize = {0.1f,
-                        0.1f}; /**< Half-size extents along X and Y axes. */
+  glm::vec2 halfSize = {0.125f,
+                        0.125f}; /**< Half-size extents along X and Y axes. */
 };
 
 /**
@@ -49,7 +49,7 @@ struct AABBShape {
  * strict collision math.
  */
 struct RectShape {
-  glm::vec2 size = {0.1f, 0.1f}; /**< Full size of the rectangle. */
+  glm::vec2 size = {0.125f, 0.125f}; /**< Full size of the rectangle. */
 };
 
 /**
@@ -68,8 +68,8 @@ struct QuadShape {
  * Mainly used for simple stuff
  */
 struct TriangleShape {
-  float base = 0.1f;   /**< Base of the triangle */
-  float height = 0.1f; /**< Height of the triangle */
+  float base = 0.125f;   /**< Base of the triangle */
+  float height = 0.125f; /**< Height of the triangle */
 };
 
 /**
@@ -79,8 +79,8 @@ struct TriangleShape {
  * Useful for character controllers and smooth collision behavior.
  */
 struct CapsuleShape {
-  float height = 0.1f; /**< Height of the central segment. */
-  float radius = 0.1f; /**< Radius of the capsule ends. */
+  float height = 0.125f; /**< Height of the central segment. */
+  float radius = 0.125f; /**< Radius of the capsule ends. */
 };
 
 /**

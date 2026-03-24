@@ -7,8 +7,8 @@
 // ManagerTexture.h
 #pragma once
 
-#include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "Misc/TextureSheet.h"
 
 namespace pain
@@ -133,9 +133,8 @@ TextureSheet &getTextureSheet(const char *filepath);
  *
  * @return Reference to the created or cached Texture.
  */
-Texture &createTexture(const char *pathOrName, bool clamp = false,
-                       bool isPath = true, bool keepOnCPUMemory = false,
-                       bool isError = true);
+Texture &createTexture(const char *path, bool clamp = false, bool isPath = true,
+                       bool keepOnCPUMemory = false, bool isError = true);
 
 /**
  * @brief Retrieves a texture if it exists, otherwise returns a default texture.

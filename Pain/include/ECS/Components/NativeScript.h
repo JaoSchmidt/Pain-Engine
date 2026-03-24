@@ -176,7 +176,7 @@ public:
     static_assert(std::is_constructible_v<T, Args...>,
                   "Error: You are binding a function whose constructor doesn't "
                   "implement constructor: (Scene&, Entity, "
-                  "Args...). Pherhaps you are using the defualt constructor "
+                  "Args...). Pherhaps you are using the default constructor "
                   "instead of coding `using Scriptable::SceneObject;`?");
     instance = new T(std::forward<Args>(args)...);
     destroyInstanceFunction = [](Scriptable *&instance) {

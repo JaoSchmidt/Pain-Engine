@@ -6,7 +6,7 @@
 
 // Events.cpp
 #include "Misc/Events.h"
-#include "ECS/EventDispatcher.h"
+#include "Events/EventDispatcher.h"
 namespace pain
 {
 enum class EventType : size_t {

@@ -14,19 +14,21 @@
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
+#include "ECS/WorldScene.h"
 #include "GUI/ImGuiDebugRegistry.h"
 #include "GUI/ImGuiSys.h"
-#include "Misc/BasicOrthoCamera.h"
 #include "Misc/Events.h"
+#include "Scripting/Lua/EngineBind.h"
 #include "Scripting/Lua/State.h"
+#include "Scripting/Lua/WorldSceneBind.h"
 #include "platform/ContextBackend.h"
+
 #include <SDL2/SDL_version.h>
 #include <memory>
-#include <thread>
 
 namespace pain
 {
-Application *Application::createApplication(AppInit &&context,
+Application *Application::createApplication(AppInit &&initConfig,
                                             FrameBufferCreationInfo &&fbci)
 {
   // =========================================================================//
@@ -46,8 +48,8 @@ Application *Application::createApplication(AppInit &&context,
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
   SDL_Window *window = SDL_CreateWindow(
-      context.title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-      context.defaultWidth, context.defaultHeight,
+      initConfig.title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+      initConfig.defaultWidth, initConfig.defaultHeight,
       SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
   if (window == nullptr)
     PLOG_E("Application window not initialized");
@@ -58,6 +60,7 @@ Application *Application::createApplication(AppInit &&context,
          sdl_version.patch);
 
   void *sdlContext = SDL_GL_CreateContext(window);
+
   backend::Init();
   // =========================================================================//
   // Application Initial setup before
@@ -75,32 +78,34 @@ Application *Application::createApplication(AppInit &&context,
   // =========================================================================//
 
   Application *app = new Application(std::move(window), std::move(sdlContext),
-                                     std::move(fbci), std::move(context));
+                                     std::move(fbci), initConfig);
   if (app != nullptr) {
-    addComponentFunctions(app->m_ctx.luaState, app->m_runtime.worldScene);
-    addScheduler(app->m_ctx.luaState, app->m_runtime.worldScene);
-    app->m_runtime.worldScene.addEntityFunctions("World", app->m_ctx.luaState);
+    // Before the loop, any object can be created. Therefore we bind stuff now
+    luabinder::bindDeltaTime(app->m_ctx.luaState);
+    luabinder::addLuaComponentFunctions(app->m_ctx.luaState,
+                                        app->m_runtime.worldScene);
+    luabinder::addScheduler(app->m_ctx.luaState, app->m_runtime.worldScene);
     createLuaEventMap(app->m_ctx.luaState, app->m_ctx.eventDispatcher);
+    luabinder::bindEngine(app->m_ctx.luaState);
+    luabinder::bindMaterial(app->m_ctx.luaState);
+    luabinder::bindEngineMM(app->m_ctx.luaState,
+                            app->m_ctx.renderers.m_materialManager);
+    luabinder::bindWorldComponents(app->m_runtime.worldScene,              //
+                                   app->m_ctx.luaState,                    //
+                                   app->m_ctx.renderers.m_materialManager, //
+                                   initConfig);
+    // other stuff
     TextureManager::addRendererForDeletingTextures(app->m_ctx.renderers);
   }
   return app;
 }
-UIScene &Application::createUIScene()
-{
-  m_runtime.uiScene = std::make_unique<UIScene>(
-      m_ctx.eventDispatcher, m_ctx.luaState, m_ctx.threadPool);
-  m_runtime.uiScene->addSystem<Systems::ImGuiSys>(m_ctx.sdlContext,
-                                                  m_ctx.window);
-  return *m_runtime.uiScene;
-}
-
 EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
                              FrameBufferCreationInfo &&fbci)
-    :                                 //
-      threadPool(ThreadPool{}),       //
-      luaState(createLuaState()),     //
-      eventDispatcher(luaState),      //
-      renderers(Renderers::create()), //
+    :                                        //
+      threadPool(ThreadPool{}),              //
+      luaState(luabinder::createLuaState()), //
+      eventDispatcher(luaState),             //
+      renderers(Renderers::create()),        //
       renderPipeline(fbci.swapChainTarget
                          ? RenderPipeline::create(eventDispatcher)
                          : RenderPipeline::create(fbci, eventDispatcher)), //
@@ -114,59 +119,15 @@ EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
  * m_runtime for the world scene, which needs the engine context working
  */
 Application::Application(SDL_Window *window, void *sdlContext,
-                         FrameBufferCreationInfo &&fbci, AppInit &&context)
-    : m_config{.init = context}, m_ctx(window, sdlContext, std::move(fbci)),
+                         FrameBufferCreationInfo &&fbci, AppInit initConfig)
+    : m_config{.init = initConfig}, m_ctx(window, sdlContext, std::move(fbci)),
       m_runtime{.worldScene = Scene::create(m_ctx.eventDispatcher,
                                             m_ctx.luaState, m_ctx.threadPool)},
       m_endGameFlags() {};
 
-void Application::stopLoop(bool restartFlag)
-{
-  m_config.isGameRunning = false;
-  PLOG_I("Game has been stopped on {}", fmt::ptr(this));
-  m_endGameFlags.restartGame = restartFlag;
-}
-
-void Application::ensureCamera()
-{
-  // set some camera
-  if (!m_ctx.renderers.m_renderer2d.hasCamera() &&
-      !m_ctx.renderers.m_renderer3d.hasCamera()) {
-    PLOG_I("Camera is missing, searching for 2d camera component");
-    bool hasCameraComponent = false;
-    for (auto &chunk : m_runtime.worldScene.query<cmp::OrthoCamera>()) {
-      auto *c = std::get<0>(chunk.arrays);
-      for (size_t i = 0; i < chunk.count; i++) {
-        hasCameraComponent = true;
-        set2dRendererCamera(c[i].m_entity, m_config.init.defaultWidth,
-                            m_config.init.defaultHeight);
-      }
-    }
-    for (auto &chunk : m_runtime.worldScene.query<cmp::PerspCamera>()) {
-      auto *c = std::get<0>(chunk.arrays);
-      for (size_t i = 0; i < chunk.count; i++) {
-        hasCameraComponent = true;
-        set3dRendererCamera(c[i].m_entity, m_config.init.defaultWidth,
-                            m_config.init.defaultHeight);
-      }
-    }
-
-    // creates a dummy camera in case it doesn't exist
-    if (!hasCameraComponent) {
-      PLOG_W("You didn't set a camera, using a default camera");
-      reg::Entity camera = Dummy2dCamera::create(
-          m_runtime.worldScene, m_config.init.defaultWidth,
-          m_config.init.defaultHeight, 1.f);
-      set2dRendererCamera(camera, m_config.init.defaultWidth,
-                          m_config.init.defaultHeight);
-    }
-  }
-}
-
 EndGameFlags Application::run()
 {
   backend::InitRenderer();
-  ensureCamera();
   // creates a dummy ui scene
   if (m_runtime.uiScene.get() == nullptr)
     createUIScene();
@@ -177,7 +138,7 @@ EndGameFlags Application::run()
   HighResolutionTimer frameTimer;
   DeltaTime accumulator = 0.0;
 
-  while (m_config.isGameRunning) {
+  while (m_config.isGameRunning) { // actual main game loop
     DeltaTime deltaTime = frameTimer.tick();
     uint64_t elapsedTime = frameTimer.elapsedNanos();
 
@@ -256,7 +217,7 @@ EndGameFlags Application::run()
       PROFILE_SCOPE("Application::run - Handle Rendering");
       m_ctx.renderPipeline.pipeline(m_ctx.renderers, m_config.isMinimized,
                                     elapsedTime, m_runtime.worldScene,
-                                    *m_runtime.uiScene);
+                                    m_runtime.uiScene.get());
       P_ASSERT(m_ctx.window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_ctx.window);
     }
@@ -273,6 +234,21 @@ EndGameFlags Application::run()
 
   PLOG_I("Reaching the end of run");
   return m_endGameFlags;
+}
+UIScene &Application::createUIScene()
+{
+  m_runtime.uiScene = std::make_unique<UIScene>(
+      m_ctx.eventDispatcher, m_ctx.luaState, m_ctx.threadPool);
+  m_runtime.uiScene->addSystem<Systems::ImGuiSys>(m_ctx.sdlContext,
+                                                  m_ctx.window);
+  return *m_runtime.uiScene;
+}
+
+void Application::stopLoop(bool restartFlag)
+{
+  m_config.isGameRunning = false;
+  PLOG_I("Game has been stopped on {}", fmt::ptr(this));
+  m_endGameFlags.restartGame = restartFlag;
 }
 
 Application::~Application()

@@ -10,11 +10,11 @@
 #include "Assets/DeltaTime.h"
 #include "Core.h"
 #include "CoreFiles/ThreadPool.h"
-#include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Registry/Bitmask.h"
 #include "ECS/Registry/Entity.h"
 #include "ECS/Systems.h"
+#include "Events/EventDispatcher.h"
 
 #include <sol/sol.hpp>
 #include <utility>
@@ -108,10 +108,19 @@ public:
                                                   std::forward<Args>(args)...);
   }
 
+  /**
+   * @brief Adds a single component to an existing entity. Force archetype
+   *
+   * @tparam Components ECS component types.
+   * @param entity Target entity.
+   * @param bitmask Target final assumed bitmask
+   * @param components Component instances to add.
+   * @return Tuple of references to the added components.
+   */
   template <reg::ECSComponent C>
   void manualPush(reg::Entity entity, reg::Bitmask bitmask, C &&comps)
   {
-    m_registry.manualPush(entity, bitmask, comps);
+    m_registry.manualPush(entity, bitmask, std::forward<C>(comps));
   }
 
   /**
@@ -237,14 +246,6 @@ public:
   /** @brief Returns the shared Lua state used by the scene. */
   sol::state &getSharedLuaState() { return m_luaState; }
 
-  /**
-   * @brief Registers entity creation and component binding helpers in Lua.
-   *
-   * @param sceneName Name exposed to the Lua environment.
-   * @param lua Lua state to bind into.
-   */
-  void addEntityFunctions(const char *sceneName, sol::state &lua);
-
   // =============================================================== //
   // SYSTEMS RELATED
   // =============================================================== //
@@ -313,6 +314,17 @@ public:
   const reg::EventDispatcher &getEventDispatcher() const
   {
     return m_eventDispatcher;
+  }
+
+  /**
+   * @brief Manually creates an entity with specific archetype. Use only if you
+   * have a bitmask ID, which you probably don't have nor need.
+   *
+   * @return Newly created entity identifier.
+   */
+  inline reg::Entity manualEntityCreation(reg::Bitmask bitmask)
+  {
+    return m_registry.createEntity(bitmask);
   }
 
   // =============================================================== //

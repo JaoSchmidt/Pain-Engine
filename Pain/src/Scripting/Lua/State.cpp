@@ -7,9 +7,11 @@
 // State.cpp
 #include "Scripting/Lua/State.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreRender/CameraComponent.h"
 #include "CoreRender/SpriteComponent.h"
 #include "Misc/Schedule/SchedulerComponent.h"
 #include "Physics/MovementComponent.h"
+#include "Physics/RotationComponent.h"
 #include "Scripting/Lua/LuaScriptComponent.h"
 #include <SDL2/SDL_scancode.h>
 #include <sol/object.hpp>
@@ -25,7 +27,7 @@ public:
   }
 };
 
-namespace pain
+namespace pain::luabinder
 {
 sol::state createLuaState()
 {
@@ -46,24 +48,78 @@ sol::state createLuaState()
       LUA_LOG_W("{}", arg.get<std::string>());
     }
   });
-  // clang-format off
   // ------ GRAPHICS ----------------------------------------
-  lua.new_usertype<glm::vec2>(
-      "vec2", sol::constructors<glm::vec2(), glm::vec2(float, float)>(),
-      "x", &glm::vec2::x, "y", &glm::vec2::y);
+  lua.new_usertype<glm::vec2>( //
+      "vec2",
+      sol::constructors<glm::vec2(), glm::vec2(float), glm::vec2(float, float),
+                        glm::vec2(const glm::vec3 &)>(),
+      "x", &glm::vec2::x,                                          //
+      "y", &glm::vec2::y,                                          //
+      "length", [](const glm::vec2 &v) { return glm::length(v); }, //
+      "normalized", [](const glm::vec2 &v) { return glm::normalize(v); },
+      // OPERATORS
+      sol::meta_function::addition,
+      [](const glm::vec2 &a, const glm::vec2 &b) { return a + b; },
+      sol::meta_function::subtraction,
+      [](const glm::vec2 &a, const glm::vec2 &b) { return a - b; },
+      sol::meta_function::unary_minus, //
+      [](const glm::vec2 &v) { return -v; }, sol::meta_function::multiplication,
+      sol::overload([](const glm::vec2 &v, float s) { return v * s; },
+                    [](float s, const glm::vec2 &v) { return v * s; }),
+      sol::meta_function::division,
+      [](const glm::vec2 &v, float s) { return v / s; });
+
   lua.new_usertype<glm::vec3>(
-      "vec3", sol::constructors<glm::vec3(), glm::vec3(float, float, float)>(),
-      "x", &glm::vec3::x, "y", &glm::vec3::y, "z", &glm::vec3::z);
+      "vec3",
+      sol::constructors<glm::vec3(), glm::vec3(float),
+                        glm::vec3(float, float, float)>(),
+      "x", &glm::vec3::x,                                                 //
+      "y", &glm::vec3::y,                                                 //
+      "z", &glm::vec3::z,                                                 //
+      "length", [](const glm::vec3 &v) { return glm::length(v); },        //
+      "normalized", [](const glm::vec3 &v) { return glm::normalize(v); }, //
+      "cross",
+      [](const glm::vec3 &v, const glm::vec3 &w) {
+        return glm::cross(v, w);
+      }, //
+      "to_vec2", [](const glm::vec3 &v) { return glm::vec2(v.x, v.y); },
+      // OPERATORS
+      sol::meta_function::addition,
+      [](const glm::vec3 &a, const glm::vec3 &b) { return a + b; },
+
+      sol::meta_function::subtraction,
+      [](const glm::vec3 &a, const glm::vec3 &b) { return a - b; },
+
+      sol::meta_function::unary_minus, [](const glm::vec3 &v) { return -v; },
+
+      sol::meta_function::multiplication,
+      sol::overload([](const glm::vec3 &v, float s) { return v * s; },
+                    [](float s, const glm::vec3 &v) { return v * s; }),
+
+      sol::meta_function::division,
+      [](const glm::vec3 &v, float s) { return v / s; });
+
   lua.new_usertype<glm::vec4>(
-      "vec4", sol::constructors<glm::vec4(), glm::vec4(float, float, float, float)>(),
-      "r", &glm::vec4::r, "g", &glm::vec4::g, "b", &glm::vec4::b, "a", &glm::vec4::a);
+      "vec4",
+      sol::constructors<glm::vec4(), glm::vec4(float),
+                        glm::vec4(float, float, float, float)>(),
+      "r", &glm::vec4::r, //
+      "g", &glm::vec4::g, //
+      "b", &glm::vec4::b, //
+      "a", &glm::vec4::a);
 
-  // clang-format on
-  lua.new_usertype<Color>(
-      "Color", sol::constructors<Color(), Color(uint32_t),
-                                 Color(uint8_t, uint8_t, uint8_t, uint8_t)>());
+  lua.new_usertype<Color>( //
+      "Color",
+      sol::constructors<   //
+          Color(),         //
+          Color(uint32_t), //
+          Color(int, int, int, int)>());
 
-  // ------ SHAPES ----------------------------------------
+  // ------------------------------------------------------------
+  //  COMPONENTS
+  // ------------------------------------------------------------
+
+  // ------ Sprite ----------------------------------------
   lua.new_usertype<pain::CircleShape>("CircleShape",
                                       sol::constructors<pain::CircleShape()>(),
                                       "radius", &pain::CircleShape::radius);
@@ -79,53 +135,95 @@ sol::state createLuaState()
   lua.new_usertype<pain::TriangleShape>(
       "TriangleShape", sol::constructors<pain::TriangleShape()>(), "base",
       &pain::TriangleShape::base, "height", &pain::TriangleShape::height);
-  // lua.new_usertype<pain::CapsuleShape>(
-  //     "CapsuleShape", sol::constructors<pain::CapsuleShape()>(), "height",
-  //     &pain::CapsuleShape::height, "radius", &pain::CapsuleShape::radius);
 
-  // ------ COMPONENTS ----------------------------------------
-  lua.new_usertype<pain::SpriteComponent>(
-      "SpriteComponent", sol::no_constructor,                   //
-      "layer", &pain::SpriteComponent::layer,                   //
-      "create", &pain::SpriteComponent::create,                 //
-      "create_quad", &pain::SpriteComponent::createQuad,        //
-      "create_rect", &pain::SpriteComponent::createRect,        //
-      "create_circle", &pain::SpriteComponent::createCircle,    //
-      "create_triangle", &pain::SpriteComponent::createTriangle //
+#define X(name) {#name, pain::RenderLayer::name},
+  lua.new_enum<pain::RenderLayer>("RenderLayer", {RENDER_LAYER_ENUM(X)});
+#undef X
+  lua.new_usertype<pain::SpriteCreationInfo>(
+      "SpriteCreationInfo", sol::constructors<pain::SpriteCreationInfo()>(),
+      "layer", &pain::SpriteCreationInfo::layer);
+  lua.new_usertype<SpriteComponent>(          //
+      "SpriteComponent", sol::no_constructor, //
+      "layer", &SpriteComponent::layer,       //
+      "create", &SpriteComponent::create      //
   );
+
+  // ------ Movement ----------------------------------------
   // type returned by get_movement(self)
   lua.new_usertype<Movement2dComponent>(
-      "Movement2dComponent", sol::no_constructor,     //
-      "m_velocity", &Movement2dComponent::m_velocity, //
-      "m_rotationSpeed", &Movement2dComponent::m_rotationSpeed);
+      "Movement2dComponent", sol::no_constructor,   //
+      "velocity", &Movement2dComponent::m_velocity, //
+      "rotationSpeed", &Movement2dComponent::m_rotationSpeed);
 
   // type returned by get_position(self)
-  lua.new_usertype<Transform2dComponent>(             //
-      "Transform2dComponent", sol::no_constructor,    //
-      "m_position", &Transform2dComponent::m_position //
+  lua.new_usertype<Transform2dComponent>(           //
+      "Transform2dComponent", sol::no_constructor,  //
+      "position", &Transform2dComponent::m_position //
   );
+
+  // type returned by get_rotation(self)
+  lua.new_usertype<RotationComponent>(              //
+      "RotationComponent", sol::no_constructor,     //
+      "angle", &RotationComponent::m_rotationAngle, //
+      "rotation", &RotationComponent::m_rotation    //
+  );
+
+  // type returned by get_rotation(self)
+  lua.new_usertype<::cmp::OrthoCamera>(                        //
+      "OrthoCamera", sol::no_constructor,                      //
+      "resolution", &::cmp::OrthoCamera::m_resolution,         //
+      "active", &::cmp::OrthoCamera::m_active,                 //
+      "aspectRatio", &::cmp::OrthoCamera::m_aspectRatio,       //
+      "screenPosition", &::cmp::OrthoCamera::m_screenPosition, //
+      "entity", &::cmp::OrthoCamera::m_entity,                 //
+      "zoomLevel", &::cmp::OrthoCamera::m_zoomLevel,           //
+      // methods
+      "get_view_projection_matrix",
+      &::cmp::OrthoCamera::getViewProjectionMatrix, //
+      "recalculate_view_matrix", &::cmp::OrthoCamera::recalculateViewMatrix,
+
+      // overloaded functions
+      "set_projection",
+      sol::overload(
+          static_cast<void (::cmp::OrthoCamera::*)(float, float, float, float)>(
+              &::cmp::OrthoCamera::setProjection),
+          static_cast<void (::cmp::OrthoCamera::*)(float, float)>(
+              &::cmp::OrthoCamera::setProjection),
+          static_cast<void (::cmp::OrthoCamera::*)(int, int)>(
+              &::cmp::OrthoCamera::setProjection)),
+      "set_zoom", &::cmp::OrthoCamera::setZoom,
+      // static factory
+      "create", &::cmp::OrthoCamera::create);
 
   // ------ EVENTS ----------------------------------------
   // Usage in Lua: "Input.isKeyPressed(Scancode.SPACE)"
   lua.new_enum<SDL_Scancode>(
-      "Scancode", //
+      "Scancode",
       {
-          {"SPACE", SDL_SCANCODE_SPACE},   //
-          {"W", SDL_SCANCODE_W},           //
-          {"A", SDL_SCANCODE_A},           //
-          {"S", SDL_SCANCODE_S},           //
-          {"D", SDL_SCANCODE_D},           //
-          {"UP", SDL_SCANCODE_UP},         //
-          {"DOWN", SDL_SCANCODE_DOWN},     //
-          {"LEFT", SDL_SCANCODE_LEFT},     //
-          {"RIGHT", SDL_SCANCODE_RIGHT},   //
-          {"ESCAPE", SDL_SCANCODE_ESCAPE}, //
-          {"RETURN", SDL_SCANCODE_RETURN}, //
-          {"LSHIFT", SDL_SCANCODE_LSHIFT}, //
-          {"RSHIFT", SDL_SCANCODE_RSHIFT}, //
-          {"LCTRL", SDL_SCANCODE_LCTRL},   //
-          {"RCTRL", SDL_SCANCODE_RCTRL},   //
-                                           // Add any other scancodes you need
+          {"SPACE", SDL_SCANCODE_SPACE},   {"A", SDL_SCANCODE_A},
+          {"B", SDL_SCANCODE_B},           {"C", SDL_SCANCODE_C},
+          {"D", SDL_SCANCODE_D},           {"E", SDL_SCANCODE_E},
+          {"F", SDL_SCANCODE_F},           {"G", SDL_SCANCODE_G},
+          {"H", SDL_SCANCODE_H},           {"I", SDL_SCANCODE_I},
+          {"J", SDL_SCANCODE_J},           {"K", SDL_SCANCODE_K},
+          {"L", SDL_SCANCODE_L},           {"M", SDL_SCANCODE_M},
+          {"N", SDL_SCANCODE_N},           {"O", SDL_SCANCODE_O},
+          {"P", SDL_SCANCODE_P},           {"Q", SDL_SCANCODE_Q},
+          {"R", SDL_SCANCODE_R},           {"S", SDL_SCANCODE_S},
+          {"T", SDL_SCANCODE_T},           {"U", SDL_SCANCODE_U},
+          {"V", SDL_SCANCODE_V},           {"W", SDL_SCANCODE_W},
+          {"X", SDL_SCANCODE_X},           {"Y", SDL_SCANCODE_Y},
+          {"Z", SDL_SCANCODE_Z},           {"NUM_0", SDL_SCANCODE_0},
+          {"NUM_1", SDL_SCANCODE_1},       {"NUM_2", SDL_SCANCODE_2},
+          {"NUM_3", SDL_SCANCODE_3},       {"NUM_4", SDL_SCANCODE_4},
+          {"NUM_5", SDL_SCANCODE_5},       {"NUM_6", SDL_SCANCODE_6},
+          {"NUM_7", SDL_SCANCODE_7},       {"NUM_8", SDL_SCANCODE_8},
+          {"NUM_9", SDL_SCANCODE_9},       {"UP", SDL_SCANCODE_UP},
+          {"DOWN", SDL_SCANCODE_DOWN},     {"LEFT", SDL_SCANCODE_LEFT},
+          {"RIGHT", SDL_SCANCODE_RIGHT},   {"ESCAPE", SDL_SCANCODE_ESCAPE},
+          {"RETURN", SDL_SCANCODE_RETURN}, {"LSHIFT", SDL_SCANCODE_LSHIFT},
+          {"RSHIFT", SDL_SCANCODE_RSHIFT}, {"LCTRL", SDL_SCANCODE_LCTRL},
+          {"RCTRL", SDL_SCANCODE_RCTRL},
       });
   lua.new_usertype<InputManager>(   //
       "Input", sol::no_constructor, //
@@ -135,40 +233,6 @@ sol::state createLuaState()
   // ------ GAME ENGINE EVENTS -----------------------------
   return lua;
 };
-
-template <typename AbstractScene>
-void addComponentFunctions(sol::state &lua, AbstractScene &worldScene)
-{
-  lua.new_usertype<pain::LuaScriptComponent>(
-      "LuaScriptComponent", "get_position",
-      [&](pain::LuaScriptComponent &c) -> sol::object {
-        if (worldScene.template hasAnyComponents<pain::Transform2dComponent>(
-                c.entity))
-          return sol::make_reference(
-              lua,
-              std::ref(
-                  worldScene.template getComponent<pain::Transform2dComponent>(
-                      c.entity)));
-        return sol::nil;
-      },
-      "get_sprite",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (worldScene.template hasAnyComponents<SpriteComponent>(c.entity))
-          return sol::make_reference(
-              lua, std::ref(worldScene.template getComponent<SpriteComponent>(
-                       c.entity)));
-        return sol::nil;
-      },
-      "get_movement",
-      [&](LuaScriptComponent &c) -> sol::object {
-        if (worldScene.template hasAnyComponents<Movement2dComponent>(c.entity))
-          return sol::make_reference(
-              lua,
-              std::ref(worldScene.template getComponent<Movement2dComponent>(
-                  c.entity)));
-        return sol::nil;
-      });
-}
 
 // NOTE: maybe I should move this into a single space?
 void addScheduler(sol::state &lua, Scene &worldScene)
@@ -183,10 +247,4 @@ void addScheduler(sol::state &lua, Scene &worldScene)
   lua["Scheduler"] = scheduler_api;
 }
 
-template void pain::addComponentFunctions<pain::Scene>(sol::state &,
-                                                       pain::Scene &);
-
-// template void pain::addComponentFunctions<pain::UIScene>(sol::state &,
-//                                                          pain::UIScene &);
-//
-} // namespace pain
+} // namespace pain::luabinder

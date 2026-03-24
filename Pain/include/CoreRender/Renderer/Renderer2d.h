@@ -159,14 +159,14 @@ struct Renderer2d {
 
   /// @brief Build a transform matrix with rotation.
   const glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size,
-                               const float rotationRadians);
+                               const float rotationAngle);
 
   /// @brief Build a transform matrix without rotation.
   const glm::mat4 getTransform(const glm::vec2 &position,
                                const glm::vec2 &size);
   /// @brief Build a transform matrix with rotation.
   const glm::mat4 getUniformTransform(const glm::vec2 &position, float size,
-                                      const float rotationRadians);
+                                      const float rotationAngle);
 
   /// @brief Build a transform matrix without rotation.
   const glm::mat4 getUniformTransform(const glm::vec2 &position, float size);

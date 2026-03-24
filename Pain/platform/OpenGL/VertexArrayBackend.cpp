@@ -105,12 +105,6 @@ void unbindVertexArray() { glBindVertexArray(0); }
 void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId,
                      uint32_t &index)
 {
-
-  // TODO: I eventually need to make glGetError to work smh
-  // glBindBuffer(GL_ARRAY_BUFFER, 999999);
-  // GLenum err = glGetError();
-  // PLOG_E("Error");
-  // PLOG_E(err);
   P_ASSERT(
       vertexBuffer.getLayout().getElements().size() > 0,
       "VertexArray.h: Can't add a vertexBuffer that doesn't have a layout");

@@ -10,11 +10,13 @@
 #include "Core.h"
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
+#include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Scriptable.h"
 #include "ECS/UIScene.h"
 #include "Misc/BasicOrthoCamera.h"
+#include "Physics/MovementComponent.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 #include <cstdio>
@@ -150,6 +152,14 @@ Application *createLauncher()
   Application *settingsApp = Application::createApplication(
       {.title = title, .defaultWidth = width, .defaultHeight = height},
       {.swapChainTarget = true});
+  Scene &scene = settingsApp->getWorldScene();
+  // creates a simple and dumb camera to avoid any
+  // assert later. This makes no difference in release
+  scene.createComponents(                              //
+      scene.getEntity(), pain::Transform2dComponent{}, //
+      Component::OrthoCamera::create(true, width, height, 5.f,
+                                     scene.getEntity()) //
+  );
   pain::UIScene &uiscene = settingsApp->createUIScene();
   uiscene.createComponents(uiscene.getEntity(), pain::ImGuiComponent{});
   UIScene::emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), uiscene,

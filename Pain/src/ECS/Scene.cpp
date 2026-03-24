@@ -7,29 +7,15 @@
 // Scene.cpp
 #include "ECS/Scene.h"
 
-#include "CoreRender/Buffers/Texture.h"
-#include "CoreRender/Render2dSys.h"
-#include "CoreRender/Render3dSys.h"
-#include "CoreRender/SpriteComponent.h"
 #include "Debugging/Profiling.h"
-#include "GUI/ImGuiSys.h"
-#include "Misc/Events.h"
 #include "Physics/Collision/Collider.h"
 #include "Physics/Collision/SweepAndPruneSys.h"
-#include "Physics/MovementComponent.h"
-#include "Physics/RotationComponent.h"
 #include "Scripting/Lua/LuaScriptComponent.h"
 #include "Scripting/Lua/LuaScriptSys.h"
-#include "Scripting/Lua/State.h"
-#include "Scripting/Native/NativeScriptSys.h"
 
 namespace
 {
-struct LuaComponentDesc {
-  reg::Bitmask bit;
-  std::function<void(reg::Entity, reg::Bitmask)> emplace;
-  std::function<void(reg::Entity)> onEmplace = nullptr;
-};
+
 } // namespace
 namespace pain
 {
@@ -63,147 +49,6 @@ void pushComponentInto(reg::ArcheRegistry<Manager> &registry,
 }
 
 template <reg::CompileTimeBitMaskType Manager>
-void AbstractScene<Manager>::addEntityFunctions(const char *sceneName,
-                                                sol::state &lua)
-{
-  // ------------------------------------------------------------
-  //  Spriteless Component bind
-  // ------------------------------------------------------------
-  sol::table scene = lua.create_table();
-
-  // ------------------------------------------------------------
-  //  Sprite Component bind
-  // ------------------------------------------------------------
-  // if constexpr (Manager::template isRegistered<SpriteComponent>())
-  //   scene.set_function( //
-  //       "Sprite",       //
-  //       sol::overload(
-  //           [&](const char *path, sol::optional<glm::vec2> oSize) {
-  //             glm::vec2 size = oSize.value_or(glm::vec2{0.125f, 0.125f});
-  //             return LuaComponentDesc{
-  //                 getSingleBitmask<SpriteComponent>(),
-  //                 [=, this](reg::Entity e, reg::Bitmask b) { //
-  //                   m_registry.manualPush(
-  //                       e, b, SpriteComponent::createRect({}, *oSize));
-  //                 }};
-  //           },
-  //           [&](const char *path, unsigned short id,
-  //               sol::optional<glm::vec2> oSize) {
-  //             glm::vec2 size = oSize.value_or(glm::vec2{0.1f, 0.1f});
-  //             return LuaComponentDesc{
-  //                 getSingleBitmask<SpriteComponent>(),
-  //                 [=, this](reg::Entity e, reg::Bitmask b) {
-  //                   m_registry.manualPush(
-  //                       e, b, SpriteComponent::create({.m_size = size}));
-  //                 }};
-  //           }));
-  // ------------------------------------------------------------
-  //  Movement2d Component bind
-  // ------------------------------------------------------------
-  if constexpr (Manager::template isRegistered<Movement2dComponent>())
-    scene["Movement2d"] = [&](sol::optional<glm::vec2> oVel,
-                              sol::optional<float> oRotationSpeed) {
-      float rotationSpeed = oRotationSpeed.value_or(1.f);
-      glm::vec2 vel = oVel.value_or(glm::vec2(0.f, 0.f));
-      return LuaComponentDesc{
-          getSingleBitmask<Movement2dComponent>(),
-          [vel, rotationSpeed, this](reg::Entity e, reg::Bitmask b) {
-            m_registry.manualPush(e, b,
-                                  Movement2dComponent{vel, rotationSpeed});
-          }};
-    };
-  // ------------------------------------------------------------
-  //  Rotation Component bind
-  // ------------------------------------------------------------
-  if constexpr (Manager::template isRegistered<RotationComponent>())
-    scene["Rotation"] = [&](sol::optional<float> oInitialAngle) { //
-      float rot = oInitialAngle.value_or(1.f);
-      return LuaComponentDesc{
-          getSingleBitmask<Transform2dComponent>(),
-          [rot, this](reg::Entity e, reg::Bitmask b) {
-            m_registry.manualPush(e, b, RotationComponent{rot});
-          } //
-      };
-    };
-
-  // ------------------------------------------------------------
-  //  Transform2d Component bind
-  // ------------------------------------------------------------
-  if constexpr (Manager::template isRegistered<Transform2dComponent>())
-    scene["Transform2d"] = [&](sol::optional<glm::vec2> oPos) { //
-      glm::vec2 pos = oPos.value_or(glm::vec2(0.f, 0.f));
-      return LuaComponentDesc{
-          getSingleBitmask<Transform2dComponent>(),
-          [pos, this](reg::Entity e, reg::Bitmask b) {
-            m_registry.manualPush(e, b, Transform2dComponent{pos});
-          } //
-      };
-    };
-  // ------------------------------------------------------------
-  //  Sweep and Prune Component bind
-  // ------------------------------------------------------------
-  if constexpr (Manager::template isRegistered<SAPCollider>())
-    scene.set_function(
-        "SAPCollider",
-        sol::overload(
-            [&](glm::vec2 size, sol::optional<bool> oTrigger,
-                sol::optional<glm::vec2> oOffset) {
-              bool isTrigger = oTrigger.value_or(false);
-              glm::vec2 offset = oOffset.value_or(glm::vec2{0.f, 0.f});
-
-              return LuaComponentDesc{
-                  getSingleBitmask<SAPCollider>(),
-                  [=, this](reg::Entity e, reg::Bitmask b) {
-                    m_registry.manualPush(
-                        e, b, SAPCollider::createAABB(size, isTrigger, offset));
-                  },
-                  [this](reg::Entity e) {
-                    onComponentAdded<SAPCollider>(*this, e);
-                  }};
-            },
-
-            [&](float radius, sol::optional<bool> oTrigger,
-                sol::optional<glm::vec2> oOffset) {
-              bool isTrigger = oTrigger.value_or(false);
-              glm::vec2 offset = oOffset.value_or(glm::vec2{0.f, 0.f});
-
-              return LuaComponentDesc{
-                  getSingleBitmask<SAPCollider>(),
-                  [=, this](reg::Entity e, reg::Bitmask b) {
-                    m_registry.manualPush(
-                        e, b,
-                        SAPCollider::createCircle(radius, isTrigger, offset));
-                  },
-                  [this](reg::Entity e) {
-                    onComponentAdded<SAPCollider>(*this, e);
-                  }};
-            }));
-  // scene.new_usertype<LuaComponentDesc>("Component", sol::no_constructor);
-  scene["create_entity"] = [&](sol::table components) {
-    reg::Bitmask archetype{};
-
-    for (const auto &kv : components) {
-      const auto &d = kv.second.as<LuaComponentDesc>();
-      archetype |= d.bit;
-    }
-
-    reg::Entity e = m_registry.createEntity(archetype);
-
-    for (auto &kv : components) {
-      auto &d = kv.second.as<LuaComponentDesc>();
-      d.emplace(e, archetype);
-    }
-    for (auto &kv : components) {
-      auto &d = kv.second.as<LuaComponentDesc>();
-      if (d.onEmplace)
-        d.onEmplace(e);
-    }
-    return e;
-  };
-  lua[sceneName] = scene;
-}
-
-template <reg::CompileTimeBitMaskType Manager>
 sol::state &AbstractScene<Manager>::enchanceLuaState(sol::state &state)
 {
   return state;
@@ -220,8 +65,7 @@ void AbstractScene<Manager>::emplaceLuaScript(reg::Entity entity,
   if (lc.m_onCreate) {
     sol::protected_function_result result = (*lc.m_onCreate)(lc);
     if (!result.valid()) {
-      PLOG_E("Lua error (m_onUpdateFunction): {}",
-             result.get<sol::error>().what());
+      PLOG_E("Lua error on create: {}", result.get<sol::error>().what());
     }
   }
 }

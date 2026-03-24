@@ -356,6 +356,11 @@ if(UNIX OR APPLE)
     COMMAND rsync -av --chmod=F444,D775
       "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
       "${CMAKE_BINARY_DIR}/resources/"
+      # Syncing with game folder (for debug purposes)
+    COMMAND
+      rsync -av --chmod=F444,D775
+      "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
+      "${CMAKE_SOURCE_DIR}/resources/"
     COMMENT "Syncing resources folder")
   # Add dependency to sync_resources target on make
   add_dependencies(${LIBRARY_NAME} sync_resources)

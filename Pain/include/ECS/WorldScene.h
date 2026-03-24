@@ -10,6 +10,7 @@
 #include "Scene.h"
 namespace pain
 {
+
 /**
  * @brief Scene specialization dedicated to gameplay / world simulation.
  *

@@ -134,6 +134,15 @@ enum class RenderPass : uint8_t {
   Count,
 };
 
+#define RENDER_LAYER_ENUM(X)                                                   \
+  X(Distant)                                                                   \
+  X(FurtherBack)                                                               \
+  X(Background)                                                                \
+  X(Default)                                                                   \
+  X(Closer)                                                                    \
+  X(MuchCloser)                                                                \
+  X(TouchingCamera)
+
 /**
  * @enum RenderLayer
  * @brief Logical depth ordering used by the renderer.
@@ -147,14 +156,11 @@ enum class RenderPass : uint8_t {
  * - Simple depth abstraction without full Z-buffer reliance.
  */
 enum class RenderLayer : uint8_t {
-  Distant = 0,
-  FurtherBack,
-  Background,
-  Default,
-  Closer,
-  MuchCloser,
-  TouchingCamera,
+#define X(name) name,
+  RENDER_LAYER_ENUM(X)
+#undef X
 };
+
 /** Total number of supported render layers. */
 static constexpr uint8_t NumLayers = 7;
 

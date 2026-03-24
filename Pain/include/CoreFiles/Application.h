@@ -6,6 +6,7 @@
 
 // Application.h
 #pragma once
+#include "CoreFiles/AppInitConfig.h"
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/Renderer/Renderers.h"
 #include "ECS/UIScene.h"
@@ -21,26 +22,6 @@
 
 namespace pain
 {
-
-/**
- * @struct AppContext
- * @brief Configuration structure used to initialize the Application.
- *
- * Provides window parameters and configuration file paths used during startup.
- */
-struct AppInit {
-  /** Default external configuration file name. */
-  static constexpr const char *configIniFile = "config.ini";
-  /** Default internal configuration file name. */
-  static constexpr const char *internalConfigFile = "internalConfig.ini";
-  /** Window title displayed in the OS window. */
-  const char *title = "Unnamed Game";
-  /** Initial window width in pixels. */
-  int defaultWidth = 800;
-  /** Initial window height in pixels. */
-  int defaultHeight = 600;
-};
-
 struct EngineContext {
   /// Multi Thread Pool
   ThreadPool threadPool;
@@ -181,7 +162,7 @@ public:
 
 private:
   Application(SDL_Window *window, void *sdlContext,
-              FrameBufferCreationInfo &&fbci, AppInit &&context);
+              FrameBufferCreationInfo &&fbci, AppInit context);
 
   void ensureCamera();
 

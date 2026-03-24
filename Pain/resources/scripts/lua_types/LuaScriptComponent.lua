@@ -1,6 +1,11 @@
 ---@class vec2
 ---@field x number
 ---@field y number
+---@operator add(vec2): vec2
+---@operator sub(vec2): vec2
+---@operator mul(number): vec2
+---@operator div(number): vec2
+---@operator unm: vec2
 vec2 = {}
 
 ---Create a new vec2
@@ -13,7 +18,17 @@ function vec2.new(x, y) end
 ---@field x number
 ---@field y number
 ---@field z number
+---@operator add(vec3): vec3
+---@operator sub(vec3): vec3
+---@operator mul(number): vec3
+---@operator div(number): vec3
+---@operator unm: vec3
 vec3 = {}
+
+---Retrieve vec.xy from vec3
+---@overload fun(): vec3
+---@return vec2
+function vec3:to_vec2() end
 
 ---Create a new vec3
 ---@overload fun(): vec3
@@ -35,28 +50,42 @@ vec4 = {}
 function vec4.new(r, g, b, a) end
 
 ---@class SpriteComponent
----@field m_size vec2 Size of the sprite
----@field m_color vec4 Color tint of the sprite (RGBA)
----@field m_tilingFactor number Tiling factor for texture repetition
+---@field size vec2 Size of the sprite
+---@field color vec4 Color tint of the sprite (RGBA)
+---@field tilingFactor number Tiling factor for texture repetition
 SpriteComponent = {}
 
----@class MovementComponent
----@field m_velocity vec3 Velocity direction vector
----@field m_translationSpeed number Translation speed multiplier
----@field m_rotationSpeed number Rotation speed multiplier
-MovementComponent = {}
+---@class Movement2dComponent
+---@field velocity vec2 Velocity direction vector
+---@field translationSpeed number Translation speed multiplier
+---@field rotationSpeed number Rotation speed multiplier
+Movement2dComponent = {}
 
----@class TransformComponent
----@field m_position vec3 World position of the entity
-TransformComponent = {}
+---@class Movement3dComponent
+---@field velocity vec3 Velocity direction vector
+---@field translationSpeed number Translation speed multiplier
+---@field rotationSpeed number Rotation speed multiplier
+Movement3dComponent = {}
+
+---@class Transform2dComponent
+---@field position vec2 World position of the entity
+Transform2dComponent = {}
+
+---@class Transform3dComponent
+---@field position vec3 World position of the entity
+Transform3dComponent = {}
+
+---@class RotationComponent
+---@field rotation number World rotation of the entity
+RotationComponent = {}
 
 ---@class LuaScriptComponent
 LuaScriptComponent = {}
 
 ---Get the TransformComponent of this entity
 ---@param self LuaScriptComponent
----@return TransformComponent|nil transform The transform component or nil if not present
-function LuaScriptComponent:get_position() end
+---@return Transform2dComponent|nil transform The transform component or nil if not present
+function LuaScriptComponent:get_2d_position() end
 
 ---Get the SpriteComponent of this entity
 ---@param self LuaScriptComponent
@@ -65,5 +94,15 @@ function LuaScriptComponent:get_sprite() end
 
 ---Get the MovementComponent of this entity
 ---@param self LuaScriptComponent
----@return MovementComponent|nil movement The movement component or nil if not present
-function LuaScriptComponent:get_movement() end
+---@return Movement2dComponent|nil movement The movement component or nil if not present
+function LuaScriptComponent:get_2d_movement() end
+
+---Get the RotationComponent of this entity
+---@param self LuaScriptComponent
+---@return RotationComponent|nil movement The movement component or nil if not present
+function LuaScriptComponent:get_rotation() end
+
+---Get the OrthoCameraComponent  of this entity
+---@param self LuaScriptComponent
+---@return OrthoCameraCmp|nil movement The movement component or nil if not present
+function LuaScriptComponent:get_ortho_camera() end

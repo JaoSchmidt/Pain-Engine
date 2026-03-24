@@ -75,7 +75,7 @@ public:
    * @param uiScene Scene containing UI entities and systems.
    */
   void pipeline(Renderers &renderers, bool isMinimized, DeltaTime currentTime,
-                Scene &worldScene, UIScene &uiScene);
+                Scene &worldScene, UIScene *uiScene);
 
   /** @brief Framebuffer owned by the render pipeline. */
   FrameBuffer m_frameBuffer;

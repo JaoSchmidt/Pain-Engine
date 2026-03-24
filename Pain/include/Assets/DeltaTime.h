@@ -8,6 +8,11 @@
 
 #include "pch.h"
 
+namespace sol
+{
+class state;
+}
+
 namespace pain
 {
 
@@ -41,7 +46,7 @@ public:
   }
 
   /** @return Duration in milliseconds (double precision). */
-  inline double getMiliSeconds() const
+  inline double getMilliSeconds() const
   {
     return static_cast<double>(m_time) * milsec_d;
   }
@@ -62,7 +67,7 @@ public:
   }
 
   /** @return Duration in milliseconds (float precision). */
-  inline float getMiliSecondsf() const
+  inline float getMilliSecondsf() const
   {
     return static_cast<float>(m_time) * milsec_f;
   }
@@ -127,7 +132,7 @@ public:
   inline static constexpr uint64_t oneSecond() { return 1'000'000'000; }
 
   /** @return Nanoseconds in one millisecond. */
-  inline static constexpr uint64_t oneMiliSecond() { return 1'000'000; }
+  inline static constexpr uint64_t oneMilliSecond() { return 1'000'000; }
 
   /** @return Nanoseconds in one microsecond. */
   inline static constexpr uint64_t oneMicroSecond() { return 1'000; }
@@ -171,5 +176,11 @@ inline DeltaTime operator/(const DeltaTime &dt, double scalar)
 {
   return DeltaTime(static_cast<uint64_t>((double)dt.m_time / scalar));
 }
+
+namespace luabinder
+{
+/// @brief bind DeltaTime class to lua
+void bindDeltaTime(sol::state &lua);
+} // namespace luabinder
 
 } // namespace pain

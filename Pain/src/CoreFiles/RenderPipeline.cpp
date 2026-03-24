@@ -190,7 +190,7 @@ retrieve3dCamera(Scene &scene)
 
 void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
-                              UIScene &uiScene)
+                              UIScene *uiScene)
 {
   m_frameBuffer.bind();
   backend::clear();
@@ -201,7 +201,7 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
   worldScene.renderSystems(RenderPass::Script, renderers, isMinimized,
                            currentTime);
 
-  P_ASSERT_W(wrap3d || wrap2d, "No active defualt camera");
+  P_ASSERT_W(wrap3d || wrap2d, "No active default camera");
   if (wrap3d) {
     backend::enable3d();
     renderers.m_renderer3d.beginScene(currentTime, wrap3d->first,
@@ -211,6 +211,7 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
     renderers.m_renderer3d.endScene(worldScene);
   }
   if (wrap2d) {
+    backend::disable3d();
     renderers.m_renderer2d.beginScene(currentTime, wrap2d->first,
                                       wrap2d->second);
     worldScene.renderSystems(RenderPass::Dim2d, renderers, isMinimized,
@@ -221,7 +222,8 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
   renderers.m_renderContext.clear();
 
   m_frameBuffer.unbind();
-  uiScene.renderSystems(RenderPass::UI, renderers, isMinimized, currentTime);
+  if (uiScene)
+    uiScene->renderSystems(RenderPass::UI, renderers, isMinimized, currentTime);
 }
 
 } // namespace pain

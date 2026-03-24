@@ -1,0 +1,26 @@
+--==============================================================
+-- Color
+--==============================================================
+
+---@class Color
+---@field value integer   -- Packed RGBA value (0xAABBGGRR)
+---@field r integer       -- Red channel   (0–255)
+---@field g integer       -- Green channel (0–255)
+---@field b integer       -- Blue channel  (0–255)
+---@field a integer       -- Alpha channel (0–255)
+
+---Creates a Color.
+---
+---Supports multiple constructors:
+---
+---Lua usage:
+---```lua
+----- default (all zero)
+---local c1 = Color()
+---
+----- from packed value (0xAABBGGRR)
+---local c2 = Color(0xFFFFFFFF)
+---
+----- from RGBA channels
+---local c3 = Color(255, 0, 0)        -- red (alpha defaults to 255)
+---local c4 = Color(255, 0, 0, 128)   -- semi-transparent red

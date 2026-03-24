@@ -1,4 +1,14 @@
 {
   "workspace.library": ["./lua_types"],
-  "diagnostics.globals": ["Script", "Input", "Scancode", "LuaScriptComponent", "Events"]
+  "diagnostics.globals": [
+    "Script",
+    "Input",
+    "Scancode",
+    "LuaScriptComponent",
+    "Events",
+    "World",
+    "Engine",
+    "Color",
+    "DefaultShader"
+  ]
 }

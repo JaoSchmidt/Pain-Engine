@@ -12,7 +12,6 @@
 
 #include "platform/TextureBackend.h"
 #include <cstdint>
-#include <iostream>
 #include <optional>
 
 #define STB_IMAGE_IMPLEMENTATION

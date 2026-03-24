@@ -213,15 +213,15 @@ Texture &TextureManager::getDefaultTexture(DefaultTexture defTex, bool isError)
   }
 }
 
-Texture &TextureManager::createTexture(const char *pathOrName, bool clamp,
+Texture &TextureManager::createTexture(const char *path, bool clamp,
                                        bool isPath, bool keepOnCPUMemory,
                                        bool isError)
 {
   std::string key = "";
   if (isPath)
-    key = getFullPath(pathOrName);
+    key = getFullPath(path);
   else
-    key = pathOrName;
+    key = path;
   const auto search = s_textureMap.find(key);
   if (search != s_textureMap.end()) {
     return search->second;

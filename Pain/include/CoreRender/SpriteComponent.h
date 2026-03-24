@@ -32,71 +32,57 @@ namespace pain
 {
 
 /**
- * @brief Configuration used when creating a SpriteComponent.
+ * @brief Descriptor used to construct a SpriteComponent.
  *
- * Acts as a lightweight descriptor to initialize a sprite with common visual
- * properties without directly touching the component fields.
+ * Encapsulates all parameters required to initialize a sprite. It is intended
+ * to be passed to SpriteComponent::create() and allows callers to configure
+ * sprites without directly accessing component fields.
+ *
+ *  - shape defines the geometric representation of the sprite. The default
+ * is a QuadShape. Some shapes like circles need to be drawn using materials
+ *  - layer defines the order in which the sprite will be draw
  */
 struct SpriteCreationInfo {
   RenderLayer layer = RenderLayer::Default; /**< Rendering order layer. */
+  std::variant<QuadShape, RectShape, TriangleShape> shape = QuadShape{};
 };
 
 /**
  * @brief ECS component representing a textured sprite.
  *
- * A sprite may reference either:
- *  - A single texture.
- *  - A texture sheet entry.
+ * Stores the minimal data required by rendering systems to draw a sprite.
+ * This includes:
+ *  - render ordering (layer)
+ *  - geometric shape information.
  *
- * The active texture source is stored as a variant and accessed through
- * type-safe getters.
+ * The component is intentionally data-only and contains no rendering logic.
+ * All rendering behavior is handled by external systems.
+ *
+ * Shape data is stored internally as a variant
  */
 struct SpriteComponent {
   using tag = tag::Sprite;
-
+  static_assert(std::is_copy_constructible_v<
+                std::variant<QuadShape, RectShape, TriangleShape>>);
+  static_assert(std::is_copy_assignable_v<
+                std::variant<QuadShape, RectShape, TriangleShape>>);
   RenderLayer layer = RenderLayer::Default; /**< Rendering order layer. */
-  std::variant<CircleShape, QuadShape, RectShape, TriangleShape> m_shape =
-      QuadShape(); /**< Shape geometry. */
+  std::variant<QuadShape, RectShape, TriangleShape> m_shape =
+      QuadShape{}; /**< Shape geometry. */
 
   // ------------------------------------------------------------
   // Factory functions
   // ------------------------------------------------------------
-
   /**
-   * @brief Creates a sprite using the default texture.
-   *
+   * @brief Creates a sprite
    * @param info Sprite configuration parameters.
    */
   static SpriteComponent create(const SpriteCreationInfo &info = {})
   {
-    return SpriteComponent{.layer = info.layer};
-  }
-  /** @brief Creates a quad primitive. */
-  static SpriteComponent createQuad(const SpriteCreationInfo &info = {},
-                                    float size = 0.125f)
-  {
-    return SpriteComponent{.layer = info.layer, .m_shape = QuadShape(size)};
-  }
-  /** @brief Creates a rect primitive. */
-  static SpriteComponent createRect(const SpriteCreationInfo &info = {},
-                                    const glm::vec2 &size = {0.125f, 0.25})
-  {
-    return SpriteComponent{.layer = info.layer, .m_shape = RectShape(size)};
-  }
-  /** @brief Creates a circle primitive. */
-  static SpriteComponent createCircle(const SpriteCreationInfo &info = {},
-                                      float radius = 0.125f)
-  {
-    return SpriteComponent{.layer = info.layer, .m_shape = CircleShape(radius)};
-  }
-
-  /** @brief Creates a colored circle primitive. */
-  static SpriteComponent createTriangle(const SpriteCreationInfo &info = {},
-                                        float base = 0.125f,
-                                        float height = 0.125f)
-  {
-    return SpriteComponent{.layer = info.layer,
-                           .m_shape = TriangleShape(base, height)};
+    SpriteComponent s;
+    s.layer = info.layer;
+    s.m_shape = info.shape;
+    return s;
   }
 };
 

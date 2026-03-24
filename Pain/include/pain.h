@@ -43,15 +43,16 @@
 #include "CoreRender/Text/Font.h"
 // ECS
 #include "ECS/Components/NativeScript.h"
-#include "ECS/EventDispatcher.h"
 #include "ECS/Scene.h"
 #include "ECS/Scriptable.h"
-#include "Physics/MovementComponent.h"
+// Events
+#include "Events/EventDispatcher.h"
 // Scripts
 #include "Misc/Schedule/SchedulerComponent.h"
 #include "Misc/Schedule/SchedulerSys.h"
 #include "Scripting/Lua/LuaScriptComponent.h"
 #include "Scripting/Lua/LuaScriptSys.h"
+#include "Scripting/Lua/WorldSceneBind.h"
 #include "Scripting/Native/NativeScriptSys.h"
 
 #include "Physics/Collision/Collider.h"

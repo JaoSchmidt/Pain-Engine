@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "ECS/EventDispatcher.h"
+#include "Events/EventDispatcher.h"
 
 // lua and native scripts should be allow to only emit/enqueue events about
 // gameplay stuff

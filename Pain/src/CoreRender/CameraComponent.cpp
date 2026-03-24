@@ -44,6 +44,7 @@ OrthographicMatrices::OrthographicMatrices(glm::mat4 projectionMatrix,
 void ::cmp::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
                                                const float rotation)
 {
+  // PLOG_E("Radians = {}, angle = {}", glm::radians(rotation), rotation);
   glm::mat4 transform =
       glm::translate(glm::mat4(1.0f), glm::vec3(position, 0)) *
       glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0, 0, 1));
@@ -52,7 +53,11 @@ void ::cmp::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
 }
-
+void ::cmp::OrthoCamera::setZoom(float zoom)
+{
+  m_zoomLevel = zoom;
+  setProjection(-m_aspectRatio * zoom, m_aspectRatio * zoom, -zoom, zoom);
+}
 void ::cmp::OrthoCamera::setProjection(int width, int height)
 {
   setResolution(width, height);
@@ -125,6 +130,7 @@ void Component::CameraResolution::setResolution(int w, int h)
 {
   m_resolution = glm::ivec2(w, h);
 }
+float cmp::CameraResolution::getAspectRatio() const { return m_aspectRatio; }
 const glm::mat4 &Component::PerspCamera::getViewProjectionMatrix() const
 {
   return m_matrices.m_viewProjectionCache;

@@ -22,6 +22,7 @@ int s_fragmentUnits;
 
 void Init()
 {
+
   int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
   if (version == 0) {
     PLOG_E("Error: Failed to initialize glad");
@@ -44,14 +45,23 @@ void Init()
   glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
   PLOG_T("GPU Texture Mapping Units: {}", maxTextureUnits);
   s_fragmentUnits = maxTextureUnits;
+
 #ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(Debug::glErrorHandler, 0);
 #endif
+  // glEnable(GL_BLEND); // valid enum
+  // PLOG_I("--------- Valid ---------------------");
+  // glEnable(999999); // invalid enum
+  // GLenum err = glGetError();
+  // PLOG_E("--------- Error ---------------------");
+  // PLOG_E(err);
+  // PLOG_E("--------- Finishing error -----------");
 }
 /** Initiate the render. Assumes 3d is being used */
 void InitRenderer()
 {
+
   // =============================================================== //
   // Create Renderer
   // =============================================================== //

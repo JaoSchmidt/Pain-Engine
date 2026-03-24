@@ -19,8 +19,8 @@
 #include "Core.h"
 #include "CoreRender/Renderer/Misc.h"
 #include "ECS/Components/ComponentManager.h"
-#include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
+#include "Events/EventDispatcher.h"
 #include <iostream>
 
 namespace pain

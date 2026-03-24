@@ -94,6 +94,8 @@ struct CameraResolution {
 
   /** Updates resolution and derived values. */
   void setResolution(int w, int h);
+  /// gets aspectRatio, mainly used on lua binding
+  float getAspectRatio() const;
 };
 
 /**
@@ -115,8 +117,7 @@ struct OrthoCamera : CameraResolution {
                             float zoomLevel, reg::Entity entity);
 
   /** Recomputes the view matrix from position and rotation. */
-  void recalculateViewMatrix(const glm::vec2 &m_position,
-                             const float m_rotation);
+  void recalculateViewMatrix(const glm::vec2 &m_position, const float m_angle);
 
   /** Sets projection explicitly using screen bounds. */
   void setProjection(float left, float right, float bottom, float top);
@@ -127,6 +128,8 @@ struct OrthoCamera : CameraResolution {
   /** Sets projection using window dimensions. */
   void setProjection(int width, int height);
 
+  /** Sets zoom level. */
+  void setZoom(float zoom);
   OrthoCamera() = delete;
 
 private:

@@ -63,9 +63,6 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
                 renderer2d.submitTri(t[i].m_position,
                                      {shape.base, shape.height},
                                      r[i].m_rotationAngle, s[i].layer, *m[i]);
-              } else if constexpr (std::is_same_v<T, RectShape>) {
-                renderer2d.submitRect(t[i].m_position, shape.size,
-                                      r[i].m_rotationAngle, s[i].layer, *m[i]);
               }
             },
             s[i].m_shape);

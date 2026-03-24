@@ -22,6 +22,13 @@ namespace pain
 {
 
 /**
+ * @brief Descriptor used to construct a Movement2dComponent.
+ */
+struct Transform2dCreationInfo {
+  glm::vec2 position{0.0f, 0.0f}; /**< Position in 2D space. */
+};
+
+/**
  * @brief 2D transform component storing position.
  *
  * Represents the world or local position of an entity in 2D space.
@@ -45,8 +52,19 @@ struct Transform2dComponent {
 
   /** @brief Creates a copy of this transform component. */
   Transform2dComponent clone() const { return *this; }
+  static Transform2dComponent create(const Transform2dCreationInfo &info)
+  {
+    return Transform2dComponent{info.position};
+  }
 };
 
+/**
+ * @brief Descriptor used to construct a Movement2dComponent.
+ */
+struct Movement2dCreationInfo {
+  glm::vec2 velocity{0.0f, 0.0f}; /**< Linear velocity in 2D space. */
+  float rotationSpeed{10.0f};     /**< Angular rotation speed. */
+};
 /**
  * @brief 2D movement component storing velocity and rotation speed.
  *
@@ -57,10 +75,15 @@ struct Movement2dComponent {
   using tag = tag::Movement2d;
 
   glm::vec2 m_velocity{0.0f, 0.0f}; /**< Linear velocity in 2D space. */
-  float m_rotationSpeed{0.0f};      /**< Angular rotation speed. */
+  float m_rotationSpeed{10.0f};     /**< Angular rotation speed. */
 
   /** @brief Creates a copy of this transform component. */
   Movement2dComponent clone() const { return *this; }
+  /** @brief Creates Movement2dComponent using a struct */
+  static Movement2dComponent create(const Movement2dCreationInfo &info)
+  {
+    return Movement2dComponent{info.velocity, info.rotationSpeed};
+  }
 };
 
 } // namespace pain
