@@ -17,6 +17,9 @@
 #include <sol/object.hpp>
 #include <sol/sol.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
+
 class InputManager
 {
 public:
@@ -33,30 +36,47 @@ sol::state createLuaState()
 {
   sol::state lua;
   lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
-  lua.set_function("print", [](sol::variadic_args va) {
+  lua.set_function("print", [&](sol::variadic_args va) {
+    sol::function tostring = lua["tostring"];
+    std::string out;
     for (auto arg : va) {
-      LUA_LOG_I("{}", arg.get<std::string>());
+      sol::object result = tostring(arg);
+      out += result.as<std::string>() + " ";
     }
+    LUA_LOG_I("{}", out);
   });
-  lua.set_function("print_error", [](sol::variadic_args va) {
+  lua.set_function("print_error", [&](sol::variadic_args va) {
+    sol::function tostring = lua["tostring"];
+    std::string out;
     for (auto arg : va) {
-      LUA_LOG_E("{}", arg.get<std::string>());
+      sol::object result = tostring(arg);
+      out += result.as<std::string>() + " ";
     }
+    LUA_LOG_E("{}", out);
   });
-  lua.set_function("print_warning", [](sol::variadic_args va) {
+  lua.set_function("print_warning", [&](sol::variadic_args va) {
+    sol::function tostring = lua["tostring"];
+    std::string out;
     for (auto arg : va) {
-      LUA_LOG_W("{}", arg.get<std::string>());
+      sol::object result = tostring(arg);
+      out += result.as<std::string>() + " ";
     }
+    LUA_LOG_W("{}", out);
   });
   // ------ GRAPHICS ----------------------------------------
   lua.new_usertype<glm::vec2>( //
       "vec2",
       sol::constructors<glm::vec2(), glm::vec2(float), glm::vec2(float, float),
                         glm::vec2(const glm::vec3 &)>(),
-      "x", &glm::vec2::x,                                          //
-      "y", &glm::vec2::y,                                          //
-      "length", [](const glm::vec2 &v) { return glm::length(v); }, //
-      "normalized", [](const glm::vec2 &v) { return glm::normalize(v); },
+      "x", &glm::vec2::x,                                            //
+      "y", &glm::vec2::y,                                            //
+      "length", [](const glm::vec2 &v) { return glm::length(v); },   //
+      "length2", [](const glm::vec2 &v) { return glm::length2(v); }, //
+      "normalize", [](const glm::vec2 &v) { return glm::normalize(v); },
+      sol::meta_function::to_string,
+      [](const glm::vec2 &v) {
+        return "(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ")";
+      },
       // OPERATORS
       sol::meta_function::addition,
       [](const glm::vec2 &a, const glm::vec2 &b) { return a + b; },
@@ -73,15 +93,21 @@ sol::state createLuaState()
       "vec3",
       sol::constructors<glm::vec3(), glm::vec3(float),
                         glm::vec3(float, float, float)>(),
-      "x", &glm::vec3::x,                                                 //
-      "y", &glm::vec3::y,                                                 //
-      "z", &glm::vec3::z,                                                 //
-      "length", [](const glm::vec3 &v) { return glm::length(v); },        //
-      "normalized", [](const glm::vec3 &v) { return glm::normalize(v); }, //
+      "x", &glm::vec3::x,                                                //
+      "y", &glm::vec3::y,                                                //
+      "z", &glm::vec3::z,                                                //
+      "length", [](const glm::vec3 &v) { return glm::length(v); },       //
+      "normalize", [](const glm::vec3 &v) { return glm::normalize(v); }, //
       "cross",
       [](const glm::vec3 &v, const glm::vec3 &w) {
         return glm::cross(v, w);
       }, //
+      sol::meta_function::to_string,
+      [](const glm::vec3 &v) {
+        return "(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ", " +
+               std::to_string(v.z) + ")";
+      },
+
       "to_vec2", [](const glm::vec3 &v) { return glm::vec2(v.x, v.y); },
       // OPERATORS
       sol::meta_function::addition,
@@ -107,6 +133,16 @@ sol::state createLuaState()
       "g", &glm::vec4::g, //
       "b", &glm::vec4::b, //
       "a", &glm::vec4::a);
+
+  lua.new_usertype<reg::Entity>(
+      "Entity", sol::constructors<reg::Entity(), reg::Entity(uint32_t)>(), //
+      sol::meta_function::to_string,
+      [](const reg::Entity &e) { return std::to_string(e.value); },
+      sol::meta_function::equal_to,
+      [](const reg::Entity &a, const reg::Entity &b) {
+        return a.value == b.value;
+      } //
+  );
 
   lua.new_usertype<Color>( //
       "Color",
@@ -191,7 +227,6 @@ sol::state createLuaState()
               &::cmp::OrthoCamera::setProjection),
           static_cast<void (::cmp::OrthoCamera::*)(int, int)>(
               &::cmp::OrthoCamera::setProjection)),
-      "set_zoom", &::cmp::OrthoCamera::setZoom,
       // static factory
       "create", &::cmp::OrthoCamera::create);
 

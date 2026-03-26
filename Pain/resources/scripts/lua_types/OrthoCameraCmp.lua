@@ -4,6 +4,7 @@
 
 ---@class OrthoCameraCmp
 ---@field zoomLevel number           -- Zoom factor (higher = zoomed in)
+---@field aspectRatio number           -- Aspect Ratio
 ---@field active boolean              -- Whether this camera is active in the render pipeline
 ---@field entity integer             -- Owning entity
 ---@field screenPosition ivec2       -- Screen-space offset (usually vec2(0,0))
@@ -36,4 +37,4 @@ function OrthoCameraCmp:set_projection(...) end
 
 ---Recomputes zoom
 ---@param zoom number
-function OrthoCameraCmp:set_zoom(zoom) end
+function OrthoCameraCmp:add_zoom(zoom) end

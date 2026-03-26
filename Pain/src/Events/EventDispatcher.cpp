@@ -14,12 +14,12 @@ namespace reg
 {
 using LuaListener = sol::protected_function;
 
-void EventDispatcher::subscribe(size_t eventId, sol::function &fn)
+void EventDispatcher::subscribe(size_t eventId, sol::function fn)
 {
   PLOG_I("Lua event {} subscription", eventId);
-  m_luaSubscribers[eventId].push_back(fn);
+  m_luaSubscribers[eventId].push_back(std::move(fn));
 }
-void EventDispatcher::enqueue(size_t eventId, const sol::table &event)
+void EventDispatcher::enqueue(size_t eventId, const sol::table event)
 {
   if (hasEventHandlerLua(eventId)) {
     std::vector<sol::table> &vec = m_luaPending[eventId];
@@ -41,9 +41,11 @@ void EventDispatcher::trigger(size_t eventId, const sol::table &event)
 
 void EventDispatcher::updateLua()
 {
-  for (auto &[type, pendingQueue] : m_luaPending)
+  for (auto &[type, pendingQueue] : m_luaPending) {
     for (const sol::table &table : pendingQueue)
       trigger(type, table);
+    pendingQueue.clear();
+  }
 }
 
 bool EventDispatcher::hasEventHandlerLua(size_t id) const

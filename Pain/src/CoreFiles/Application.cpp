@@ -15,6 +15,7 @@
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Debugging/Profiling.h"
 #include "ECS/WorldScene.h"
+#include "Events/LuaInputEvent.h"
 #include "GUI/ImGuiDebugRegistry.h"
 #include "GUI/ImGuiSys.h"
 #include "Misc/Events.h"
@@ -82,8 +83,6 @@ Application *Application::createApplication(AppInit &&initConfig,
   if (app != nullptr) {
     // Before the loop, any object can be created. Therefore we bind stuff now
     luabinder::bindDeltaTime(app->m_ctx.luaState);
-    luabinder::addLuaComponentFunctions(app->m_ctx.luaState,
-                                        app->m_runtime.worldScene);
     luabinder::addScheduler(app->m_ctx.luaState, app->m_runtime.worldScene);
     createLuaEventMap(app->m_ctx.luaState, app->m_ctx.eventDispatcher);
     luabinder::bindEngine(app->m_ctx.luaState);
@@ -94,6 +93,7 @@ Application *Application::createApplication(AppInit &&initConfig,
                                    app->m_ctx.luaState,                    //
                                    app->m_ctx.renderers.m_materialManager, //
                                    initConfig);
+    luabinder::LuaInputEvent::bindInputEvents(app->m_ctx.luaState);
     // other stuff
     TextureManager::addRendererForDeletingTextures(app->m_ctx.renderers);
   }

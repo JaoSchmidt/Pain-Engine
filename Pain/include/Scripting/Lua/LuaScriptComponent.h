@@ -98,9 +98,9 @@ struct LuaScriptComponent {
   // Metadata
   // ------------------------------------------------------------
 
-  const char *m_scriptPath =
-      FileManager::getDefaultLuaFile(); /**< Path to the bound Lua script. */
-  reg::Entity entity;                   /**< Owning ECS entity. */
+  // const char *m_scriptPath =
+  reg::Entity m_entity; /**< Owning ECS entity. */
+  sol::table m_scriptTable;
 };
 
 } // namespace pain

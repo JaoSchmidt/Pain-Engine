@@ -8,11 +8,19 @@
 ---@operator unm: vec2
 vec2 = {}
 
----Create a new vec2
----@overload fun(): vec2
----@overload fun(x: number, y: number): vec2
+---@param self vec2
+---@return number
+function vec2.length(self) end
+
+---@param self vec2
+---@return number
+function vec2.length2(self) end
+
+---@param self vec2
 ---@return vec2
-function vec2.new(x, y) end
+function vec2.normalize(self) end
+
+-- =======================================================
 
 ---@class vec3
 ---@field x number
@@ -35,6 +43,24 @@ function vec3:to_vec2() end
 ---@overload fun(x: number, y: number, z: number): vec3
 ---@return vec3
 function vec3.new(x, y, z) end
+
+---Returns the length (magnitude) of the vector.
+---@param self vec3
+---@return number
+function vec3.length(self) end
+
+---Returns a normalized (unit length) vector.
+---@param self vec3
+---@return vec3
+function vec3.normalize(self) end
+
+---Computes the cross product between two vectors.
+---@param self vec3
+---@param other vec3
+---@return vec3
+function vec3.cross(self, other) end
+
+-- =======================================================
 
 ---@class vec4
 ---@field r number Red component
@@ -81,28 +107,3 @@ RotationComponent = {}
 
 ---@class LuaScriptComponent
 LuaScriptComponent = {}
-
----Get the TransformComponent of this entity
----@param self LuaScriptComponent
----@return Transform2dComponent|nil transform The transform component or nil if not present
-function LuaScriptComponent:get_2d_position() end
-
----Get the SpriteComponent of this entity
----@param self LuaScriptComponent
----@return SpriteComponent|nil sprite The sprite component or nil if not present
-function LuaScriptComponent:get_sprite() end
-
----Get the MovementComponent of this entity
----@param self LuaScriptComponent
----@return Movement2dComponent|nil movement The movement component or nil if not present
-function LuaScriptComponent:get_2d_movement() end
-
----Get the RotationComponent of this entity
----@param self LuaScriptComponent
----@return RotationComponent|nil movement The movement component or nil if not present
-function LuaScriptComponent:get_rotation() end
-
----Get the OrthoCameraComponent  of this entity
----@param self LuaScriptComponent
----@return OrthoCameraCmp|nil movement The movement component or nil if not present
-function LuaScriptComponent:get_ortho_camera() end

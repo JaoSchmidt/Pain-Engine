@@ -6,6 +6,7 @@
 
 #include "Scripting/Lua/LuaScriptSys.h"
 #include "Debugging/Profiling.h"
+#include "Events/LuaInputEvent.h"
 #include "Scripting/Lua/LuaScriptComponent.h"
 #include <CoreRender/Renderer/Renderers.h>
 #include <sol/error.hpp>
@@ -32,7 +33,7 @@ void LuaScript::onUpdate(DeltaTime deltaTime)
 
       if (lsc.m_onUpdateFunction) {
         sol::protected_function_result result =
-            (*lsc.m_onUpdateFunction)(lsc, deltaTime);
+            (*lsc.m_onUpdateFunction)(lsc.m_scriptTable, deltaTime);
 
         if (!result.valid()) {
           PLOG_E("Lua error (m_onUpdateFunction): {}",
@@ -48,6 +49,7 @@ void LuaScript::onEvent(const SDL_Event &e)
   PROFILE_SCOPE("onEvent - LuaScripts");
 
   auto chunks = query<LuaScriptComponent>();
+  const luabinder::LuaInputEvent ie{&e};
 
   for (auto &chunk : chunks) {
     auto *scripts = std::get<0>(chunk.arrays);
@@ -57,7 +59,7 @@ void LuaScript::onEvent(const SDL_Event &e)
 
       if (lsc.m_onEventFunction) {
         sol::protected_function_result result =
-            (*lsc.m_onEventFunction)(lsc, e);
+            (*lsc.m_onEventFunction)(lsc.m_scriptTable, ie);
 
         if (!result.valid()) {
           PLOG_E("Lua error (m_onEventFunction): {}",
@@ -82,8 +84,8 @@ void LuaScript::onRender(Renderers &renderer, bool isMinimized,
       auto &lsc = scripts[i];
 
       if (lsc.m_onRenderFunction) {
-        sol::protected_function_result result =
-            (*lsc.m_onRenderFunction)(lsc, renderer, isMinimized, currentTime);
+        sol::protected_function_result result = (*lsc.m_onRenderFunction)(
+            lsc.m_scriptTable, renderer, isMinimized, currentTime);
 
         if (!result.valid()) {
           PLOG_E("Lua error (m_onRenderFunction): {}",

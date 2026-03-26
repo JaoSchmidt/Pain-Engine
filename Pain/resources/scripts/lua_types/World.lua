@@ -34,7 +34,7 @@ World = {}
 ---then applied to the entity.
 ---
 ---@param components table<number, LuaComponentDesc>
----@return integer entity
+---@return Entity entity
 function World.create_entity(components) end
 
 --==============================================================
@@ -320,3 +320,48 @@ function World.emplace_lua_script(entity, scriptPath) end
 ---@param info? OrthoCameraCreationInfo
 ---@return LuaComponentDesc
 function World.OrthoCamera(info) end
+
+---@class Entity
+---@field value integer # Engine entity identifier (opaque handle)
+
+---Gets the 2D transform (position) component of an entity.
+---Returns `nil` if the entity does not have this component.
+---@param e Entity
+---@return Transform2dComponent|nil
+---@overload fun(self: ScriptSelf): Transform2dComponent|nil
+function World.get_2d_position(e) end
+
+---Gets the sprite component of an entity.
+---Returns `nil` if the entity does not have this component.
+---@param e Entity
+---@return SpriteComponent|nil
+---@overload fun(self: ScriptSelf): SpriteComponent|nil
+function World.get_sprite(e) end
+
+---Gets the 2D movement component of an entity.
+---Returns `nil` if the entity does not have this component.
+---@param e Entity
+---@return Movement2dComponent|nil
+---@overload fun(self: ScriptSelf): Movement2dComponent|nil
+function World.get_2d_movement(e) end
+
+---Gets the rotation component of an entity.
+---Returns `nil` if the entity does not have this component.
+---@param e Entity
+---@return RotationComponent|nil
+---@overload fun(self: ScriptSelf): RotationComponent|nil
+function World.get_rotation(e) end
+
+---Gets the Lua script component attached to an entity.
+---Returns `nil` if the entity does not have this component.
+---@param e Entity
+---@return ScriptSelf|nil
+---@overload fun(self: ScriptSelf): ScriptSelf|nil
+function World.get_lua_script(e) end
+
+---Gets the orthographic camera component of an entity.
+---Returns `nil` if the entity does not have this component.
+---@param e Entity
+---@return OrthoCameraCmp|nil
+---@overload fun(self: ScriptSelf): OrthoCameraCmp|nil
+function World.get_ortho_camera(e) end

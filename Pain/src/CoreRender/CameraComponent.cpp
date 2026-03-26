@@ -53,9 +53,9 @@ void ::cmp::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
 }
-void ::cmp::OrthoCamera::setZoom(float zoom)
+void ::cmp::OrthoCamera::addZoom(float zoom)
 {
-  m_zoomLevel = zoom;
+  m_zoomLevel += zoom;
   setProjection(-m_aspectRatio * zoom, m_aspectRatio * zoom, -zoom, zoom);
 }
 void ::cmp::OrthoCamera::setProjection(int width, int height)

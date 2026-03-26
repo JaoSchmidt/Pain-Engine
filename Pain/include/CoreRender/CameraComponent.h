@@ -128,8 +128,8 @@ struct OrthoCamera : CameraResolution {
   /** Sets projection using window dimensions. */
   void setProjection(int width, int height);
 
-  /** Sets zoom level. */
-  void setZoom(float zoom);
+  /** Adds to zoom level. */
+  void addZoom(float zoom);
   OrthoCamera() = delete;
 
 private:

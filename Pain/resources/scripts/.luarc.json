@@ -1,14 +1,17 @@
 {
   "workspace.library": ["./lua_types"],
   "diagnostics.globals": [
-    "Script",
-    "Input",
-    "Scancode",
-    "LuaScriptComponent",
-    "Events",
-    "World",
-    "Engine",
     "Color",
-    "DefaultShader"
+    "DefaultShader",
+    "DeltaTime",
+    "Engine",
+    "Events",
+    "Input",
+    "InputEvent",
+    "LuaScriptComponent",
+    "OrthoCameraCmp",
+    "Scancode",
+    "Script",
+    "World"
   ]
 }

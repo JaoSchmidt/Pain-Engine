@@ -63,7 +63,7 @@ void AbstractScene<Manager>::emplaceLuaScript(reg::Entity entity,
   LuaScriptComponent &lc = scene.getComponent<LuaScriptComponent>(entity);
   lc.bind(scene.m_luaState, scriptPath);
   if (lc.m_onCreate) {
-    sol::protected_function_result result = (*lc.m_onCreate)(lc);
+    sol::protected_function_result result = (*lc.m_onCreate)(lc.m_scriptTable);
     if (!result.valid()) {
       PLOG_E("Lua error on create: {}", result.get<sol::error>().what());
     }

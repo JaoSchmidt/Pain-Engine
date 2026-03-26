@@ -122,7 +122,7 @@ public:
    * @tparam Event Event type.
    * @param event Event instance to enqueue.
    */
-  template <LuaConvertable Event> void enqueue(const Event &event)
+  template <LuaConvertable Event> void enqueue(Event event)
   {
     if (hasEventHandler<Event>()) {
       EventQueue &pending = getPendingEvents<Event>();
@@ -143,8 +143,9 @@ public:
    */
   void update()
   {
-    for (auto &[type, pendingQueue] : m_pending)
+    for (auto &[type, pendingQueue] : m_pending) {
       pendingQueue.dispatch();
+    }
     updateLua();
   }
 
@@ -201,14 +202,14 @@ public:
    * @param id Numeric event identifier.
    * @param fn Lua callback function.
    */
-  void subscribe(size_t id, sol::function &fn);
+  void subscribe(size_t id, sol::function fn);
   /**
    * @brief Enqueues a Lua-only event to be dispatched during update().
    *
    * @param id Numeric event identifier.
    * @param data Lua table payload.
    */
-  void enqueue(size_t id, const sol::table &data);
+  void enqueue(size_t id, const sol::table data);
   /**
    * @brief Immediately triggers a Lua-only event.
    *
