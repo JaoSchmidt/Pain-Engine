@@ -84,7 +84,9 @@ struct ChangeActiveCameraEvent {
  * Usage:
  *   X(EventStructType, LuaVisibleName)
  */
-#define EVENT_TYPE_LIST X(CollisionEvent, Collision)
+#define EVENT_TYPE_LIST                                                        \
+  X(CollisionEvent, Collision)                                                 \
+  X(ImGuiViewportChangeEvent, ImGuiChange)
 
 /**
  * Creates and registers the Lua Event API.

@@ -1,6 +1,7 @@
 --- @enum EventType
 EventType = {
 	Collision = 1,
+	ImGuiChange = 2,
 }
 
 ---@class CollisionEvent
