@@ -282,9 +282,11 @@ function World.LuaScript() end
 --- World.emplaceLuaScript(e, "scripts/player.lua")
 ---```
 ---
----@param entity integer        -- Target entity
+---@param entity Entity        -- Target entity
 ---@param scriptPath string     -- Path to Lua script file
-function World.emplace_lua_script(entity, scriptPath) end
+---@param init_args table     -- Arguments to pass to the script
+---@overload fun (entity:Entity, scriptPath:string)
+function World.emplace_lua_script(entity, scriptPath, init_args) end
 
 --==============================================================
 -- OrthoCamera Component Creation

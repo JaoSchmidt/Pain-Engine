@@ -30,7 +30,7 @@ void LuaScript::onUpdate(DeltaTime deltaTime)
 
     for (size_t i = 0; i < chunk.count; ++i) {
       auto &lsc = scripts[i];
-
+      // PLOG_I("name = {}", lsc.m_scriptPath);
       if (lsc.m_onUpdateFunction) {
         sol::protected_function_result result =
             (*lsc.m_onUpdateFunction)(lsc.m_scriptTable, deltaTime);

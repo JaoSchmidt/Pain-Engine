@@ -93,6 +93,8 @@ Application *Application::createApplication(AppInit &&initConfig,
                                    app->m_ctx.luaState,                    //
                                    app->m_ctx.renderers.m_materialManager, //
                                    initConfig);
+    luabinder::bindAppInitConfig(app->m_ctx.luaState, initConfig);
+    ::luabinder::bindImguiDebug(app->m_ctx.luaState);
     luabinder::LuaInputEvent::bindInputEvents(app->m_ctx.luaState);
     // other stuff
     TextureManager::addRendererForDeletingTextures(app->m_ctx.renderers);

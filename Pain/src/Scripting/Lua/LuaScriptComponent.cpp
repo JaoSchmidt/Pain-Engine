@@ -51,7 +51,7 @@ void LuaScriptComponent::bind(sol::state &lua, const char *scriptPath)
 
   if (!scriptPath)
     scriptPath = FileManager::getDefaultLuaFile();
-
+  m_scriptPath = scriptPath;
   lua["Script"] = script_api;
   sol::load_result script =
       lua.load(FileManager::getLuaScriptSource(scriptPath), scriptPath);
@@ -67,4 +67,5 @@ void LuaScriptComponent::bind(sol::state &lua, const char *scriptPath)
     return;
   }
 }
+
 } // namespace pain

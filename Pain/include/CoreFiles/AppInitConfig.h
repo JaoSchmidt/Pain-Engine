@@ -1,4 +1,7 @@
 #pragma once
+#include "sol/state.hpp"
+namespace pain
+{
 
 /**
  * @struct AppContext
@@ -20,3 +23,10 @@ struct AppInit {
   /** Initial camera zoom, assuming a 2d camera */
   float defaultZoom2d = 1.f;
 };
+
+namespace luabinder
+{
+void bindAppInitConfig(sol::state &lua, const AppInit &init);
+};
+
+} // namespace pain

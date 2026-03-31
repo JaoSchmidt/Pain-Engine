@@ -6,8 +6,11 @@
 
 #include "GUI/ImGuiDebugRegistry.h"
 #include "CoreFiles/LogWrapper.h"
+#include "imgui.h"
 #include <algorithm>
 #include <functional>
+#include <sol/sol.hpp>
+#include <sol/state.hpp>
 #include <string>
 
 // To be used inside ImGuiDebugMenu
@@ -46,3 +49,37 @@ void renderAll()
   }
 }
 } // namespace ImGuiDebugRegistry
+
+namespace luabinder
+{
+
+void bindImguiDebug(sol::state &lua)
+{
+  sol::table ig = lua.create_named_table("ImGui");
+  ig.set_function("Text", [](const std::string &name, const std::string &text) {
+    ImGuiDebugRegistry::add(name, [text]() { //
+      ImGui::TextUnformatted(text.c_str());
+    });
+  });
+  lua.script(R"(
+        function IMGUI_PLOG_NAME(name,...)
+            local args = {...}
+            local text = table.concat(args, " ")
+
+            ImGui.Text(name, text)
+        end
+    )");
+  lua.script(R"(
+        function IMGUI_PLOG(...)
+            local info = debug.getinfo(2, "Sl")
+            local name = (info.short_src or "lua") .. ":" .. (info.currentline or 0)
+
+            local args = {...}
+            local text = table.concat(args, " ")
+
+            ImGui.Text(name, text)
+        end
+    )");
+}
+
+} // namespace luabinder

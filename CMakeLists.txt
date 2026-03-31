@@ -102,6 +102,7 @@ elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
             /EHsc # Exception handling model
             /Zi # Generate debug info
             /std:c++20 # C++20 standard
+            /bigobj # prevents exceeded obj format limit bug
   )
   set_target_properties(${LIBRARY_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
 else()

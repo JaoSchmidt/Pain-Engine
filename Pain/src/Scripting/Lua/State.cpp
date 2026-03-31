@@ -14,6 +14,7 @@
 #include "Physics/RotationComponent.h"
 #include "Scripting/Lua/LuaScriptComponent.h"
 #include <SDL2/SDL_scancode.h>
+#include <filesystem>
 #include <sol/object.hpp>
 #include <sol/sol.hpp>
 
@@ -30,18 +31,63 @@ public:
   }
 };
 
+int my_exception_handler(lua_State *L,
+                         sol::optional<const std::exception &> maybe_exception,
+                         sol::string_view description)
+{
+  // L is the lua state, which you can wrap in a state_view if necessary
+  // maybe_exception will contain exception, if it exists
+  // description will either be the what() of the exception or a description
+  // saying that we hit the general-case catch(...)
+  std::cout << "An exception occurred in a function, here's what it says ";
+  if (maybe_exception) {
+    std::cout << "(straight from the exception): ";
+    const std::exception &ex = *maybe_exception;
+    std::cout << ex.what() << std::endl;
+  } else {
+    std::cout << "(from the description parameter): ";
+    std::cout.write(description.data(),
+                    static_cast<std::streamsize>(description.size()));
+    std::cout << std::endl;
+  }
+
+  // you must push 1 element onto the stack to be
+  // transported through as the error object in Lua
+  // note that Lua -- and 99.5% of all Lua users and libraries -- expects a
+  // string so we push a single string (in our case, the description of the
+  // error)
+  return sol::stack::push(L, description);
+}
+
+namespace fs = std::filesystem;
+
 namespace pain::luabinder
 {
 sol::state createLuaState()
 {
   sol::state lua;
-  lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
+  lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math,
+                     sol::lib::string, sol::lib::io, sol::lib::coroutine,sol::lib::debug,
+                     sol::lib::table);
+  sol::table package = lua["package"];
+  package["path"] = std::string(package["path"]) +
+                    ";/usr/local/share/lua/5.1/?.lua"
+                    ";/usr/local/share/lua/5.1/?/init.lua";
+  package["cpath"] =
+      std::string(package["cpath"]) + ";/usr/local/lib/lua/5.1/?.so";
+
+  lua.set_exception_handler(&my_exception_handler);
+
   lua.set_function("print", [&](sol::variadic_args va) {
     sol::function tostring = lua["tostring"];
     std::string out;
     for (auto arg : va) {
       sol::object result = tostring(arg);
-      out += result.as<std::string>() + " ";
+      if (!result.valid()) {
+        out += "[invalid] ";
+      } else {
+        out += result.as<std::string>() + " ";
+      }
     }
     LUA_LOG_I("{}", out);
   });

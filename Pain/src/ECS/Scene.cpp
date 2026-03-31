@@ -55,18 +55,37 @@ sol::state &AbstractScene<Manager>::enchanceLuaState(sol::state &state)
 }
 
 template <reg::CompileTimeBitMaskType Manager>
-void AbstractScene<Manager>::emplaceLuaScript(reg::Entity entity,
-                                              AbstractScene<Manager> &scene,
-                                              const char *scriptPath)
+void AbstractScene<Manager>::emplaceLuaScript( //
+    reg::Entity entity,                        //
+    AbstractScene<Manager> &scene,             //
+    const char *scriptPath,                    //
+    const sol::table &initArgs)
+  requires(Manager::template isRegistered<tag::LuaScript>())
+{
+  LuaScriptComponent &lc = scene.getComponent<LuaScriptComponent>(entity);
+  lc.bind(scene.m_luaState, scriptPath);
+  if (lc.m_onCreate) {
+    if (initArgs == sol::nil)
+      PLOG_E("init args is nill on {}", scriptPath);
+    sol::protected_function_result result =
+        (*lc.m_onCreate)(lc.m_scriptTable, initArgs);
+    if (!result.valid())
+      PLOG_E("Lua error on create: {}", result.get<sol::error>().what());
+  }
+}
+template <reg::CompileTimeBitMaskType Manager>
+void AbstractScene<Manager>::emplaceLuaScript( //
+    reg::Entity entity,                        //
+    AbstractScene<Manager> &scene,             //
+    const char *scriptPath)
   requires(Manager::template isRegistered<tag::LuaScript>())
 {
   LuaScriptComponent &lc = scene.getComponent<LuaScriptComponent>(entity);
   lc.bind(scene.m_luaState, scriptPath);
   if (lc.m_onCreate) {
     sol::protected_function_result result = (*lc.m_onCreate)(lc.m_scriptTable);
-    if (!result.valid()) {
+    if (!result.valid())
       PLOG_E("Lua error on create: {}", result.get<sol::error>().what());
-    }
   }
 }
 

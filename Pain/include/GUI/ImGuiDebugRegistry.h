@@ -9,6 +9,7 @@
 
 #include "Core.h"
 #include <functional>
+#include <sol/state.hpp>
 #include <string>
 
 namespace ImGuiDebugRegistry
@@ -36,6 +37,12 @@ void clear();
 /** Executes all registered debug functions in order. */
 void renderAll();
 } // namespace ImGuiDebugRegistry
+
+namespace luabinder
+{
+/** bind ImGuiDebugRegistry to lua */
+void bindImguiDebug(sol::state &lua);
+} // namespace luabinder
 
 // ============================================================= //
 // **Debug Convenience Macros**

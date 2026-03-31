@@ -34,8 +34,17 @@ void EventDispatcher::enqueue(size_t eventId, const sol::table event)
 void EventDispatcher::trigger(size_t eventId, const sol::table &event)
 {
   std::vector<sol::function> &list = m_luaSubscribers[eventId];
-  for (sol::function &handler : list) {
-    handler(event);
+  for (sol::protected_function &handler : list) {
+
+    if (!handler.valid()) {
+      PLOG_E("Lua hanlder function is invalid");
+      continue;
+    }
+    sol::protected_function_result result = handler(event);
+    if (!result.valid()) {
+      sol::error err = result;
+      PLOG_E("Lua error (trigger): {}", result.get<sol::error>().what());
+    }
   }
 }
 

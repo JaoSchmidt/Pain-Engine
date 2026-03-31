@@ -134,7 +134,8 @@ public:
         newArchetype.fetchComponent<Components>(newColumn)...);
   }
 
-  // If bitmask is known, you can manually push components into the archetype
+  /// Assuming bitmask is known, you can manually push components into the
+  /// archetype. Only use this for binding outside c++
   template <ECSComponent C>
   void manualPush(Entity entity, Bitmask bitmask, C &&comps)
   {

@@ -20,6 +20,7 @@
 #include <SDL2/SDL_events.h>
 
 #include "Assets/ManagerFile.h"
+#include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/ComponentManager.h"
 #include <sol/sol.hpp>
 
@@ -101,6 +102,44 @@ struct LuaScriptComponent {
   // const char *m_scriptPath =
   reg::Entity m_entity; /**< Owning ECS entity. */
   sol::table m_scriptTable;
+  std::string m_scriptPath;
+  NONCOPYABLE(LuaScriptComponent);
+
+  // ------------------------------------------------------------
+  // Move assignment and constructor
+  // ------------------------------------------------------------
+
+  LuaScriptComponent &operator=(LuaScriptComponent &&other) noexcept
+  {
+    if (this != &other) {
+      m_onCreate = std::move(other.m_onCreate);
+      m_onUpdateFunction = std::move(other.m_onUpdateFunction);
+      m_onEventFunction = std::move(other.m_onEventFunction);
+      m_onRenderFunction = std::move(other.m_onRenderFunction);
+      m_onDestroy = std::move(other.m_onDestroy);
+
+      m_entity = other.m_entity;
+      m_scriptTable = std::move(other.m_scriptTable);
+      m_scriptPath = std::move(other.m_scriptPath);
+
+      // Reset other
+      other.m_entity = reg::Entity{};
+      other.m_scriptPath = nullptr;
+    }
+    return *this;
+  }
+
+  LuaScriptComponent(LuaScriptComponent &&other) noexcept
+      : m_onCreate(std::move(other.m_onCreate)),
+        m_onUpdateFunction(std::move(other.m_onUpdateFunction)),
+        m_onEventFunction(std::move(other.m_onEventFunction)),
+        m_onRenderFunction(std::move(other.m_onRenderFunction)),
+        m_onDestroy(std::move(other.m_onDestroy)), m_entity(other.m_entity),
+        m_scriptTable(std::move(other.m_scriptTable)),
+        m_scriptPath(std::move(other.m_scriptPath))
+  {
+    other.m_entity = reg::Entity{-1};
+  }
 };
 
 } // namespace pain

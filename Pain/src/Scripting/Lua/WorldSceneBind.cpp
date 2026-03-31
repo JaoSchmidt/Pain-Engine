@@ -300,8 +300,11 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
           } //
       };
     };
-
-    worldTbl["emplace_lua_script"].set_function(
+    worldTbl["emplace_lua_script"] = sol::overload(
+        [&scene](reg::Entity entity, const std::string &scriptPath,
+                 const sol::table &initArgs) {
+          Scene::emplaceLuaScript(entity, scene, scriptPath.c_str(), initArgs);
+        },
         [&scene](reg::Entity entity, const std::string &scriptPath) {
           Scene::emplaceLuaScript(entity, scene, scriptPath.c_str());
         });
@@ -329,82 +332,83 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
     return e;
   };
 
-  worldTbl["get_2d_position"] = [&](reg::Entity e) -> sol::object {
-    if (scene.hasAnyComponents<pain::Transform2dComponent>(e))
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<pain::Transform2dComponent>(e)));
-    return sol::nil;
-  };
-  worldTbl["get_sprite"] = [&](reg::Entity e) -> sol::object {
-    if (scene.hasAnyComponents<SpriteComponent>(e))
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<SpriteComponent>(e)));
-    return sol::nil;
-  };
-  worldTbl["get_2d_movement"] = [&](reg::Entity e) -> sol::object {
-    if (scene.hasAnyComponents<Movement2dComponent>(e))
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<Movement2dComponent>(e)));
-    return sol::nil;
-  };
-  worldTbl["get_rotation"] = [&](reg::Entity e) -> sol::object {
-    if (scene.hasAnyComponents<RotationComponent>(e)) {
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<RotationComponent>(e)));
-    }
-    return sol::nil;
-  };
-  worldTbl["get_lua_script"] = [&](reg::Entity e) -> sol::object {
-    if (scene.hasAnyComponents<LuaScriptComponent>(e)) {
-      return sol::make_object(
-          lua, scene.getComponent<LuaScriptComponent>(e).m_scriptTable);
-    }
-    return sol::nil;
-  };
-  worldTbl["get_ortho_camera"] = [&](reg::Entity e) -> sol::object {
-    if (scene.hasAnyComponents<cmp::OrthoCamera>(e))
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<cmp::OrthoCamera>(e)));
-    return sol::nil;
-  };
-  // =========== Self reference =================================
-  worldTbl["get_2d_position"] = [&](sol::table self) -> sol::object {
-    reg::Entity e = self["entity"];
-    if (scene.hasAnyComponents<pain::Transform2dComponent>(e))
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<pain::Transform2dComponent>(e)));
-    return sol::nil;
-  };
-  worldTbl["get_sprite"] = [&](sol::table self) -> sol::object {
-    reg::Entity e = self["entity"];
-    if (scene.hasAnyComponents<SpriteComponent>(e))
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<SpriteComponent>(e)));
-    return sol::nil;
-  };
-  worldTbl["get_2d_movement"] = [&](sol::table self) -> sol::object {
-    reg::Entity e = self["entity"];
-    if (scene.hasAnyComponents<Movement2dComponent>(e))
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<Movement2dComponent>(e)));
-    return sol::nil;
-  };
-  worldTbl["get_rotation"] = [&](sol::table self) -> sol::object {
-    reg::Entity e = self["entity"];
-    if (scene.hasAnyComponents<RotationComponent>(e)) {
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<RotationComponent>(e)));
-    }
-    return sol::nil;
-  };
-  worldTbl["get_ortho_camera"] = [&](sol::table self) -> sol::object {
-    reg::Entity e = self["entity"];
-    if (scene.hasAnyComponents<cmp::OrthoCamera>(e))
-      return sol::make_reference(
-          lua, std::ref(scene.getComponent<cmp::OrthoCamera>(e)));
+  worldTbl["get_lua_script"] = [&](reg::Entity e) -> sol::table {
+    if (scene.hasAnyComponents<LuaScriptComponent>(e))
+      return scene.getComponent<LuaScriptComponent>(e).m_scriptTable;
     return sol::nil;
   };
 
+  // =========== Self reference =================================
+  worldTbl["get_2d_position"] = sol::overload(
+      [&](reg::Entity e) -> sol::object {
+        if (scene.hasAnyComponents<pain::Transform2dComponent>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<pain::Transform2dComponent>(e)));
+        return sol::nil;
+      },
+      [&](sol::table self) -> sol::object {
+        reg::Entity e = self["entity"];
+        if (scene.hasAnyComponents<pain::Transform2dComponent>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<pain::Transform2dComponent>(e)));
+        return sol::nil;
+      });
+  worldTbl["get_sprite"] = sol::overload(
+      [&](reg::Entity e) -> sol::object {
+        if (scene.hasAnyComponents<SpriteComponent>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<SpriteComponent>(e)));
+        return sol::nil;
+      },
+      [&](sol::table self) -> sol::object {
+        reg::Entity e = self["entity"];
+        if (scene.hasAnyComponents<SpriteComponent>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<SpriteComponent>(e)));
+        return sol::nil;
+      });
+  worldTbl["get_2d_movement"] = sol::overload(
+      [&](reg::Entity e) -> sol::object {
+        if (scene.hasAnyComponents<Movement2dComponent>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<Movement2dComponent>(e)));
+        return sol::nil;
+      },
+      [&](sol::table self) -> sol::object {
+        reg::Entity e = self["entity"];
+        if (scene.hasAnyComponents<Movement2dComponent>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<Movement2dComponent>(e)));
+        return sol::nil;
+      });
+  worldTbl["get_rotation"] = sol::overload(
+      [&](reg::Entity e) -> sol::object {
+        if (scene.hasAnyComponents<RotationComponent>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<RotationComponent>(e)));
+        return sol::nil;
+      },
+      [&](sol::table self) -> sol::object {
+        reg::Entity e = self["entity"];
+        if (scene.hasAnyComponents<RotationComponent>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<RotationComponent>(e)));
+        return sol::nil;
+      });
+  worldTbl["get_ortho_camera"] = sol::overload(
+      [&](reg::Entity e) -> sol::object {
+        if (scene.hasAnyComponents<cmp::OrthoCamera>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<cmp::OrthoCamera>(e)));
+        return sol::nil;
+      },
+      [&](sol::table self) -> sol::object {
+        reg::Entity e = self["entity"];
+        if (scene.hasAnyComponents<cmp::OrthoCamera>(e))
+          return sol::make_reference(
+              lua, std::ref(scene.getComponent<cmp::OrthoCamera>(e)));
+        return sol::nil;
+      });
   lua["World"] = worldTbl;
 }
 

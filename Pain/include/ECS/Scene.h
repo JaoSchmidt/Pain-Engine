@@ -122,6 +122,22 @@ public:
   {
     m_registry.manualPush(entity, bitmask, std::forward<C>(comps));
   }
+  /**
+   * @brief Emplace a single component to an existing entity. Force archetype
+   * Should be used only outside c++
+   *
+   * @tparam Components ECS component types.
+   * @param entity Target entity.
+   * @param bitmask Target final assumed bitmask
+   * @param components Component instances to add.
+   * @return Tuple of references to the added components.
+   */
+  template <reg::ECSComponent C, typename... Args>
+  void manualEmplace(reg::Entity entity, reg::Bitmask bitmask, Args &&...args)
+  {
+    m_registry.template manualEmplace<C>(entity, bitmask,
+                                         std::forward<Args>(args)...);
+  }
 
   /**
    * @brief Adds multiple components to an existing entity.
@@ -230,6 +246,19 @@ public:
   // LUA SCRIPTING RELATED
   // =============================================================== //
 
+  /**
+   * @brief Attaches and initializes a Lua script component on an entity.
+   *
+   * Only available when the LuaScriptComponent is registered by the manager.
+   *
+   * @param entity Target entity.
+   * @param scriptPath Path to the script file.
+   * @param initArgs
+   */
+  static void
+  emplaceLuaScript(reg::Entity entity, AbstractScene<Manager> &scene,
+                   const char *scriptPath, const sol::table &initArgs)
+    requires(Manager::template isRegistered<tag::LuaScript>());
   /**
    * @brief Attaches and initializes a Lua script component on an entity.
    *

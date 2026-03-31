@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
 
 #include "Core.h"
@@ -77,7 +76,6 @@ public:
     m_entities.emplace_back(entity);
     return column;
   }
-
   // directly add the component to the archetype, should be used N time per
   // entity, with N being the entity's number of components
   template <typename C, typename... Args> Column pushComponent(Args &&...args)

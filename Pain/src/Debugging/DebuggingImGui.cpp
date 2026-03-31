@@ -50,9 +50,8 @@ void ImGuiDebugMenu::Script::onRender(Renderers &renderers, bool isMinimized,
   // buttons and logic
   if (m_frameCount > 0) {
     m_frameCount--;
-    if (m_frameCount == 0) {
+    if (m_frameCount == 0)
       PROFILE_CLOSE();
-    }
   }
   if (ImGui::Button("Begin Profile")) {
     m_frameCount = m_displayedCount;
