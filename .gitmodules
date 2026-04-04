@@ -8,7 +8,7 @@
 	path = Pain/external/SDL
 	url = https://github.com/libsdl-org/SDL
 [submodule "Pain/external/imgui"]
-	path = Pain/external/imgui
+	path = Example/PainlessEditor/external/imgui
 	url = https://github.com/ocornut/imgui.git
 [submodule "Pain/external/freetype"]
 	path = Pain/external/freetype
@@ -37,3 +37,6 @@
 [submodule "Pain/external/stb"]
 	path = Pain/external/stb
 	url = https://github.com/nothings/stb.git
+[submodule "Pain/external/implot"]
+	path = Example/PainlessEditor/external/implot
+	url = https://github.com/epezent/implot.git

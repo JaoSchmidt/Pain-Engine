@@ -7,7 +7,6 @@
 // ColDetection.cpp
 #include "Physics/Collision/ColDetection.h"
 #include "CoreFiles/LogWrapper.h"
-#include "GUI/ImGuiDebugRegistry.h"
 #include "glm/ext/vector_float2.hpp"
 #include "imgui.h"
 #include <utility>

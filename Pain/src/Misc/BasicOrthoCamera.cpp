@@ -7,7 +7,6 @@
 #include "Misc/BasicOrthoCamera.h"
 #include "CoreRender/CameraComponent.h"
 #include "ECS/Components/NativeScript.h"
-#include "GUI/ImGuiDebugRegistry.h"
 #include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"

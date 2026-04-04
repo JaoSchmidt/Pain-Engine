@@ -19,9 +19,9 @@
 
 #include "Core.h"
 #include "ECS/Scriptable.h"
-#include "GUI/ImGuiSys.h"
+#include "ImGuiSys.h"
 
-namespace pain::ImGuiDebugMenu
+namespace painless::ImGuiDebugMenu
 {
 
 /** Creates the ImGui debug menu entity inside a UI scene. */
@@ -39,7 +39,8 @@ public:
   Script &operator=(Script &&) = delete;
 
   /** Renders the debug menu and executes registered debug callbacks. */
-  void onRender(Renderers &renderers, bool isMinimized, DeltaTime currentTime);
+  void onRender(pain::Renderers &renderers, bool isMinimized,
+                pain::DeltaTime currentTime);
 
   /** Cleans up debug registry state when destroyed. */
   void onDestroy();
@@ -58,4 +59,4 @@ private:
   int m_frameCount = 1;
 };
 
-} // namespace pain::ImGuiDebugMenu
+} // namespace painless::ImGuiDebugMenu

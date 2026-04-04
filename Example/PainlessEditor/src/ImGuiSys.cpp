@@ -4,14 +4,15 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "GUI/ImGuiSys.h"
+#include "ImGuiSys.h"
 
 #include "CoreFiles/LogWrapper.h"
-#include "GUI/ImGuiComponent.h"
+#include "ImGuiComponent.h"
 #include "SDL_video.h"
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
+#include "implot.h"
 
 namespace pain
 {
@@ -27,6 +28,7 @@ ImGuiSys::ImGuiSys(reg::ArcheRegistry<UIComponents> &archetype,
            "approach, read HACK inside ImGuiSystem.h class");
   ::IMGUI_CHECKVERSION();
   ::ImGui::CreateContext();
+  ImPlot::CreateContext();
   m_io = &::ImGui::GetIO();
   (void)m_io;
   m_io->ConfigFlags |= flags;
@@ -47,7 +49,7 @@ ImGuiSys::ImGuiSys(reg::ArcheRegistry<UIComponents> &archetype,
 void ImGuiSys::onEvent(const SDL_Event &event)
 {
   ImGui_ImplSDL2_ProcessEvent(&event);
-  auto chunks = query<ImGuiComponent>();
+  auto chunks = query<painless::ImGuiComponent>();
   for (auto &chunk : chunks) {
     auto *__restrict nsc = std::get<0>(chunk.arrays);
     for (size_t i = 0; i < chunk.count; ++i) {
@@ -64,9 +66,9 @@ void ImGuiSys::onRender(Renderers &renderer, bool isMinimized,
   ::ImGui::NewFrame();
 
   if (!isMinimized) {
-    // ::ImGui::ShowDemoWindow(); // Show demo window! :)
-
-    auto chunks = query<ImGuiComponent>();
+    // ::ImGui::ShowDemoWindow();
+    // ::ImPlot::ShowDemoWindow();
+    auto chunks = query<painless::ImGuiComponent>();
     for (auto &chunk : chunks) {
       auto *__restrict nscs = std::get<0>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
@@ -94,6 +96,7 @@ Systems::ImGuiSys::~ImGuiSys()
   PLOG_T("Shut ImGui System");
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplSDL2_Shutdown();
+  ImPlot::DestroyContext();
   ::ImGui::DestroyContext();
   m_io = nullptr;
   // delete m_io;

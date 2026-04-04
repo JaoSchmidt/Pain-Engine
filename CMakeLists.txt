@@ -222,57 +222,6 @@ else()
   )
 endif()
 
-# IMGUI
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui/.git")
-  message("Fetching Imgui")
-  FetchContent_Declare(
-    imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui
-    GIT_TAG v1.92.5-docking
-  )
-  FetchContent_MakeAvailable(imgui)
-
-  add_library(imgui STATIC
-      ${imgui_SOURCE_DIR}/imgui.cpp
-      ${imgui_SOURCE_DIR}/imgui_draw.cpp
-      ${imgui_SOURCE_DIR}/imgui_tables.cpp
-      ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-      ${imgui_SOURCE_DIR}/imgui_demo.cpp
-      ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
-      ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
-  )
-
-  target_include_directories(imgui PUBLIC
-      ${imgui_SOURCE_DIR}
-      ${imgui_SOURCE_DIR}/backends
-  )
-  target_link_libraries(imgui PRIVATE SDL2::SDL2)
-  target_sources(
-    imgui
-    PRIVATE ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp)
-else()
-  message("Using submodule for imgui")
-  set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui)
-  add_library(imgui STATIC
-      ${IMGUI_DIR}/imgui.cpp
-      ${IMGUI_DIR}/imgui_draw.cpp
-      ${IMGUI_DIR}/imgui_tables.cpp
-      ${IMGUI_DIR}/imgui_widgets.cpp
-      ${IMGUI_DIR}/imgui_demo.cpp
-      ${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp
-      ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-  )
-  target_include_directories(imgui PUBLIC
-      ${IMGUI_DIR}
-      ${IMGUI_DIR}/backends
-  )
-  target_link_libraries(imgui PRIVATE SDL2::SDL2)
-  target_sources(
-    imgui
-    PRIVATE ${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp)
-
-endif()
-
 # msdf-atlas-gen
 set(MSDF_ATLAS_USE_VCPKG OFF CACHE BOOL "" FORCE)
 set(MSDF_ATLAS_USE_SKIA OFF CACHE BOOL "" FORCE)
@@ -337,27 +286,30 @@ target_link_libraries(
          mINI
          glm::glm
          spdlog::spdlog_header_only
-         imgui
          msdf-atlas-gen
          sol2::sol2)
 
 target_precompile_headers(${LIBRARY_NAME} PRIVATE
                           ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h)
 
+set(ENGINE_DIRECTORY "${PROJECT_SOURCE_DIR}")
+add_subdirectory(Example/PainlessEditor)
+
 # =========== Resources/Assets Managment ==================================
 
 add_compile_definitions(${MACRO_DEFINITIONS})
 
+
 # Sync Resources
-# - Engine resources are small and can be sync anywhere
 if(UNIX OR APPLE)
+# NOTE: Engine resources are small and can be sync anywhere
   add_custom_target(
     sync_resources
        # Syncing with game build folder
     COMMAND rsync -av --chmod=F444,D775
       "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
       "${CMAKE_BINARY_DIR}/resources/"
-      # Syncing with game folder (for debug purposes)
+      # Syncing with main folder (for debugging inside nvim)
     COMMAND
       rsync -av --chmod=F444,D775
       "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
@@ -376,14 +328,21 @@ else()
   add_dependencies(${LIBRARY_NAME} sync_resources)
 endif()
 
-# =========== Dump shit to separete the compiler vomiting information ======
-# get current date (every build) set(COLOR_GREEN "\x1b[1;32m") set(COLOR_BLUE
-# "\x1b[1;34m") set(COLOR_RESET "\x1b[0m") string(TIMESTAMP NOW "%Y-%m-%d
-# %H:%M:%S")
-
-string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
+# Quality of Life (e.g.: ./notify_wrapper.sh ninja -j8)
+if(UNIX)
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/notify_wrapper.sh
+        ${CMAKE_CURRENT_BINARY_DIR}/notify_wrapper.sh
+        COPYONLY
+    )
+    file(CHMOD
+        ${CMAKE_BINARY_DIR}/notify_wrapper.sh
+        PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    )
+endif()
 
 if(UNIX)
+  string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
   add_custom_target(
     BuildInitialBanner ALL
     COMMAND

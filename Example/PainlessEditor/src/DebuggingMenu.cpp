@@ -5,21 +5,21 @@
  */
 
 // DebuggingImGui.cpp
-#include "Debugging/DebuggingImGui.h"
+#include "DebuggingMenu.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
-#include "GUI/ImGuiComponent.h"
-#include "GUI/ImGuiDebugRegistry.h"
+#include "ImGuiComponent.h"
+#include "ImGuiRegistry.h"
 #include "imgui.h"
 #include <string>
 
-namespace pain
+namespace painless
 {
 
 reg::Entity ImGuiDebugMenu::create(pain::UIScene &scene)
 {
   reg::Entity entity = scene.createEntity();
-  scene.createComponents(entity, pain::ImGuiComponent{});
+  scene.createComponents(entity, painless::ImGuiComponent{});
   return entity;
 }
 
@@ -29,8 +29,9 @@ ImGuiDebugMenu::Script::Script()
   m_resultFileName = generateTimestampedFilename("profile-", ".json");
 }
 
-void ImGuiDebugMenu::Script::onRender(Renderers &renderers, bool isMinimized,
-                                      DeltaTime currentTime)
+void ImGuiDebugMenu::Script::onRender(pain::Renderers &renderers,
+                                      bool isMinimized,
+                                      pain::DeltaTime currentTime)
 {
   UNUSED(renderers)
   UNUSED(isMinimized)
@@ -69,7 +70,7 @@ void ImGuiDebugMenu::Script::onRender(Renderers &renderers, bool isMinimized,
   }
 
   ImGui::Separator();
-  ImGuiDebugRegistry::renderAll();
+  ImGuiDebugRegistry::renderAll(InterfaceMenu::SIDEBAR);
 }
 
 std::string ImGuiDebugMenu::Script::generateTimestampedFilename(
@@ -100,4 +101,4 @@ ImGuiDebugMenu::Script::getNextAvailableFileName(const std::string &baseStem)
 }
 void ImGuiDebugMenu::Script::onDestroy() { ImGuiDebugRegistry::clear(); }
 
-} // namespace pain
+} // namespace painless

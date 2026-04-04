@@ -4,11 +4,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
 #include "CoreFiles/Application.h"
 
-namespace pain
+namespace painless
 {
-Application *createLauncher();
-} // namespace pain
+pain::Application *createLauncher();
+} // namespace painless

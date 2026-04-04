@@ -16,8 +16,6 @@
 #include "Debugging/Profiling.h"
 #include "ECS/WorldScene.h"
 #include "Events/LuaInputEvent.h"
-#include "GUI/ImGuiDebugRegistry.h"
-#include "GUI/ImGuiSys.h"
 #include "Misc/Events.h"
 #include "Scripting/Lua/EngineBind.h"
 #include "Scripting/Lua/State.h"
@@ -94,7 +92,6 @@ Application *Application::createApplication(AppInit &&initConfig,
                                    app->m_ctx.renderers.m_materialManager, //
                                    initConfig);
     luabinder::bindAppInitConfig(app->m_ctx.luaState, initConfig);
-    ::luabinder::bindImguiDebug(app->m_ctx.luaState);
     luabinder::LuaInputEvent::bindInputEvents(app->m_ctx.luaState);
     // other stuff
     TextureManager::addRendererForDeletingTextures(app->m_ctx.renderers);
@@ -155,15 +152,15 @@ EndGameFlags Application::run()
         (m_config.currentSample + 1) % m_config.FPS_SAMPLE_COUNT;
 
     if (m_config.currentSample % 64 == 0) { // update displayed fps
-      double currentTPS = 0.0;
+      m_config.currentTPS = 0.0;
       for (const double fpsSample : m_config.fpsSamples) {
-        currentTPS += fpsSample;
+        m_config.currentTPS += fpsSample;
       }
-      currentTPS /= m_config.FPS_SAMPLE_COUNT;
-      IMGUI_PLOG_NAME("FPS", [currentTPS]() {
-        const std::string fps = "FPS: " + std::to_string(currentTPS);
-        ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
-      });
+      m_config.currentTPS /= m_config.FPS_SAMPLE_COUNT;
+      // IMGUI_PLOG_NAME("FPS", [m_config.currentTPS]() {
+      //   const std::string fps = "FPS: " + std::to_string(currentTPS);
+      //   ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
+      // });
     }
 
     // =============================================================== //
@@ -241,8 +238,6 @@ UIScene &Application::createUIScene()
 {
   m_runtime.uiScene = std::make_unique<UIScene>(
       m_ctx.eventDispatcher, m_ctx.luaState, m_ctx.threadPool);
-  m_runtime.uiScene->addSystem<Systems::ImGuiSys>(m_ctx.sdlContext,
-                                                  m_ctx.window);
   return *m_runtime.uiScene;
 }
 

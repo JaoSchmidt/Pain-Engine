@@ -8,9 +8,15 @@
 #pragma once
 
 #include "Core.h"
+#include <cstdint>
 #include <functional>
 #include <sol/state.hpp>
 #include <string>
+
+enum class InterfaceMenu : uint8_t {
+  SIDEBAR,
+  BOTTOMBAR,
+};
 
 namespace ImGuiDebugRegistry
 {
@@ -29,13 +35,14 @@ using ImGuiFunc = std::function<void()>;
 
  This will copy the values of x and y. Rule of thumb: pass by references only
  internal members **/
-void add(const std::string &name, ImGuiFunc func, int order = 0);
+void add(const std::string &name, ImGuiFunc func,
+         InterfaceMenu menu = InterfaceMenu::SIDEBAR, int order = 0);
 /** Removes a previously registered debug function by name. */
 void remove(const std::string &name);
 /** Removes all registered debug entries. */
 void clear();
 /** Executes all registered debug functions in order. */
-void renderAll();
+void renderAll(InterfaceMenu menu);
 } // namespace ImGuiDebugRegistry
 
 namespace luabinder

@@ -53,6 +53,7 @@ Stats Renderer2d::getTriStatistics()
 Stats Renderer2d::getSprayStatistics() { return getStatistics(m.sprayBatch); }
 Stats Renderer2d::getTextStatistics() { return getStatistics(m.textBatch); }
 
+// TODO: exclude those 2 as soon as possible
 bool Renderer2d::hasCamera() { return m.orthoCameraEntity != reg::Entity{-1}; }
 void Renderer2d::changeCamera(reg::Entity cameraEntity)
 {

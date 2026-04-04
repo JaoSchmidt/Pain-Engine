@@ -197,19 +197,6 @@ public:
     return static_cast<S &>(*nsc.instance);
   }
 
-  /**
-   * @brief Retrieves an ImGui script instance from an entity.
-   *
-   * Only available if ImGuiComponent is registered for the scene type.
-   */
-  template <typename S>
-    requires(SceneType::template isRegistered<ImGuiComponent>())
-  S &getImGuiScript(reg::Entity entity)
-  {
-    ImGuiComponent &nsc = getComponent<ImGuiComponent>(entity);
-    return static_cast<S &>(*nsc.instance);
-  }
-
   // ------------------------------------------------------------
   // Removal
   // ------------------------------------------------------------

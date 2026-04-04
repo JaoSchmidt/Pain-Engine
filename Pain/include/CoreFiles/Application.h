@@ -17,7 +17,6 @@
 #include "Core.h"
 #include "CoreFiles/EndGameFlags.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "GUI/ImGuiSys.h"
 #include <sol/state.hpp>
 
 namespace pain
@@ -111,6 +110,10 @@ public:
   /** Returns the 2D renderer instance. */
   Renderers &getRenderers() { return m_ctx.renderers; }
 
+  /** Returns the 2D renderer instance. */
+  void *getRenderContext() { return m_ctx.sdlContext; }
+  SDL_Window *getRenderWindow() { return m_ctx.window; }
+
   /** Returns the framebuffer specification used by the render pipeline. */
   const FrameBufferCreationInfo &getFrameInfo() const
   {
@@ -183,6 +186,7 @@ private:
     constexpr static int FPS_SAMPLE_COUNT = 64;
     double fpsSamples[FPS_SAMPLE_COUNT] = {0};
     int currentSample = 1;
+    double currentTPS = 0;
     AppInit init;
   } m_config;
 

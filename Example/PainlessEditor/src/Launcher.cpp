@@ -4,8 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "GUI/Launcher.h"
-#include "Assets/ManagerFile.h"
+#include "Launcher.h"
 #include "Assets/ManagerIni.h"
 #include "Core.h"
 #include "CoreFiles/Application.h"
@@ -15,27 +14,30 @@
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Scriptable.h"
 #include "ECS/UIScene.h"
-#include "Misc/BasicOrthoCamera.h"
-#include "Physics/MovementComponent.h"
+#include "ImGuiComponent.h"
+#include "ImGuiEmplacer.h"
+#include "ImGuiSys.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 #include <cstdio>
+#include <pain.h>
 #include <stdio.h> /* defines FILENAME_MAX */
 
-namespace pain
+namespace painless
 {
 
-class ImGuiLauncher : public UIObject
+class ImGuiLauncher : public pain::UIObject
 {
 public:
-  ImGuiLauncher(reg::Entity entity, UIScene &scene, Application *app)
-      : UIObject(entity, scene), m_init(), m_app(app) {};
+  ImGuiLauncher(reg::Entity entity, pain::UIScene &scene,
+                pain::Application *app)
+      : pain::UIObject(entity, scene), m_init(), m_app(app) {};
   std::vector<std::string> m_availableResolutions;
 
   ~ImGuiLauncher() = default;
   NONCOPYABLE(ImGuiLauncher);
   ImGuiLauncher(ImGuiLauncher &&other) noexcept
-      : UIObject(std::move(other)),
+      : pain::UIObject(std::move(other)),
         m_availableResolutions(std::move(other.m_availableResolutions)),
         m_windowFlags(std::exchange(other.m_windowFlags, 0)),
         m_dockspaceOpen(std::exchange(other.m_dockspaceOpen, true)),
@@ -49,7 +51,8 @@ public:
     PLOG_I("Creating Launcher");
     m_init.readAndUpdate(true);
   }
-  void onRender(Renderers &renderer, bool isMinimized, DeltaTime deltaTime)
+  void onRender(pain::Renderers &renderer, bool isMinimized,
+                pain::DeltaTime deltaTime)
   {
     UNUSED(renderer)
     UNUSED(deltaTime)
@@ -117,14 +120,14 @@ public:
     ImGui::SetCursorPosX(windowWidth - totalWidth);
 
     if (ImGui::Button("Exit", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(AppInit::configIniFile);
+      m_init.write(pain::AppInit::configIniFile);
       m_app->stopLoop();
     }
 
     ImGui::SameLine(0.0f, spacing);
 
     if (ImGui::Button("Play", ImVec2(buttonWidth, buttonHeight))) {
-      m_init.write(AppInit::configIniFile);
+      m_init.write(pain::AppInit::configIniFile);
       m_app->stopLoop(true);
     }
 
@@ -138,21 +141,22 @@ private:
       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
       ImGuiWindowFlags_NoNavFocus;
   bool m_dockspaceOpen = true;
-  IniConfig m_init;
-  Application *m_app = nullptr;
+  pain::IniConfig m_init;
+  pain::Application *m_app = nullptr;
 };
 
-Application *createLauncher()
+pain::Application *createLauncher()
 {
   PLOG_T("Opening Settings App");
   const char *title = "Settings";
   const int width = 500;
   const int height = 200;
 
-  Application *settingsApp = Application::createApplication(
+  pain::Application *settingsApp = pain::Application::createApplication(
       {.title = title, .defaultWidth = width, .defaultHeight = height},
       {.swapChainTarget = true});
-  Scene &scene = settingsApp->getWorldScene();
+  pain::Scene &scene = settingsApp->getWorldScene();
+  settingsApp->getRenderers().m_renderer2d.setCellGridSize(0);
   // creates a simple and dumb camera to avoid any
   // assert later. This makes no difference in release
   scene.createComponents(                              //
@@ -161,10 +165,12 @@ Application *createLauncher()
                                      scene.getEntity()) //
   );
   pain::UIScene &uiscene = settingsApp->createUIScene();
-  uiscene.createComponents(uiscene.getEntity(), pain::ImGuiComponent{});
-  UIScene::emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), uiscene,
-                                             settingsApp);
+  uiscene.addSystem<pain::Systems::ImGuiSys>(settingsApp->getRenderContext(),
+                                             settingsApp->getRenderWindow());
+  uiscene.createComponents(uiscene.getEntity(), painless::ImGuiComponent{});
+  painless::emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), uiscene,
+                                              settingsApp);
 
   return settingsApp;
 }
-} // namespace pain
+} // namespace painless

@@ -35,9 +35,12 @@
 
 #include "imgui.h"
 
-namespace pain
+namespace painless
 {
 struct ImGuiComponent;
+}
+namespace pain
+{
 struct Renderer2d;
 
 namespace Systems
@@ -55,7 +58,7 @@ namespace Systems
  */
 struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
   /// @brief Component tags required by this system.
-  using Tags = TypeList<ImGuiComponent>;
+  using Tags = TypeList<painless::ImGuiComponent>;
 
   // HACK: The singleton (static) approach assumes that there
   // will be only one context necessary for Dear ImGui to work.

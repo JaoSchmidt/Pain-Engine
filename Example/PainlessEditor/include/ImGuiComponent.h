@@ -27,16 +27,18 @@
 
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/ComponentManager.h"
-#include "ECS/Scene.h"
 #include "Scripting/Native/Concepts.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
 
 namespace pain
 {
+class UIScene;
 class RenderContext;
 template <typename SceneT> class GameObject;
-class UIScene;
+} // namespace pain
+namespace painless
+{
 
 /**
  * @struct ImGuiComponent
@@ -60,11 +62,11 @@ class UIScene;
  */
 struct ImGuiComponent {
 private:
-  using Scriptable = GameObject<UIScene>;
+  using Scriptable = pain::GameObject<pain::UIScene>;
 
 public:
   /// @brief ECS component tag used for compile-time registration.
-  using tag = tag::ImGuiScript;
+  using tag = pain::tag::ImGuiScript;
   /**
    * @brief Pointer to the bound UI script instance (type-erased).
    *
@@ -79,8 +81,8 @@ public:
   void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
-  void (*onRenderFunction)(Scriptable *, Renderers &, bool,
-                           DeltaTime dt) = nullptr;
+  void (*onRenderFunction)(Scriptable *, pain::Renderers &, bool,
+                           pain::DeltaTime dt) = nullptr;
   void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
   ///@}
 
@@ -123,8 +125,8 @@ public:
     }
 
     if constexpr (hasOnSystemRenderMethod<T>) {
-      onRenderFunction = [](Scriptable *instance, Renderers &renderer,
-                            bool isMinimized, DeltaTime currentTime) {
+      onRenderFunction = [](Scriptable *instance, pain::Renderers &renderer,
+                            bool isMinimized, pain::DeltaTime currentTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized,
                                              currentTime);
       };
@@ -186,8 +188,8 @@ public:
     }
 
     if constexpr (hasOnSystemRenderMethod<T>) {
-      onRenderFunction = [](Scriptable *instance, Renderers &renderer,
-                            bool isMinimized, DeltaTime currentTime) {
+      onRenderFunction = [](Scriptable *instance, pain::Renderers &renderer,
+                            bool isMinimized, pain::DeltaTime currentTime) {
         static_cast<T *>(instance)->onRender(renderer, isMinimized,
                                              currentTime);
       };
@@ -272,4 +274,4 @@ public:
 };
 // initialize the pointers of the Scripts functions
 
-} // namespace pain
+} // namespace painless

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "GUI/ImGuiComponent.h"
 #include "Scene.h"
 namespace pain
 {
@@ -45,77 +44,6 @@ public:
    */
   static UIScene create(reg::EventDispatcher &eventDispatcher,
                         sol::state &solState, ThreadPool &threadPool);
-
-  // =============================================================== //
-  // IMGUI NATIVE SCRIPTING RELATED
-  // =============================================================== //
-
-  /**
-   * @brief Retrieves a bound ImGui native script instance from an entity.
-   *
-   * The entity must own an ImGuiComponent and its instance must be of type S.
-   *
-   * @tparam S Expected script type.
-   * @param entity Target entity.
-   * @return Reference to the script instance.
-   */
-  template <typename S>
-    requires(UIComponents::isRegistered<ImGuiComponent>())
-  S &getImGuiScript(reg::Entity entity)
-  {
-    ImGuiComponent &nsc = getComponent<ImGuiComponent>(entity);
-    return static_cast<S &>(*nsc.instance);
-  }
-
-  /**
-   * @brief Binds and initializes an already constructed ImGui script instance.
-   *
-   * The script object is moved into the ImGuiComponent and its onCreate
-   * callback is executed if available.
-   *
-   * @tparam N Script type.
-   * @param entity Target entity.
-   * @param scene Target UI scene.
-   * @param n Script instance to move.
-   * @return Reference to the bound script instance.
-   */
-  template <typename N>
-    requires(UIComponents::isRegistered<ImGuiComponent>())
-  static N &emplaceImGuiScript(reg::Entity entity, UIScene &scene, N &&n)
-  {
-    ImGuiComponent &nsc = scene.getComponent<ImGuiComponent>(entity);
-    nsc.bindAndInitiate<N>(std::move(n));
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-    return static_cast<N &>(*nsc.instance);
-  }
-
-  /**
-   * @brief Constructs and binds an ImGui script directly inside the component.
-   *
-   * The script is constructed using the provided arguments and immediately
-   * bound to the entity's ImGuiComponent. The onCreate callback is executed
-   * if available.
-   *
-   * @tparam T Script type.
-   * @tparam Args Constructor argument types.
-   * @param entity Target entity.
-   * @param scene Target UI scene.
-   * @param args Arguments forwarded to the script constructor.
-   * @return Reference to the constructed script instance.
-   */
-  template <typename T, typename... Args>
-    requires std::constructible_from<T, reg::Entity, UIScene &, Args...> &&
-             (UIComponents::isRegistered<ImGuiComponent>())
-  static T &emplaceImGuiScript(reg::Entity entity, UIScene &scene,
-                               Args &&...args)
-  {
-    ImGuiComponent &nsc = scene.getComponent<ImGuiComponent>(entity);
-    nsc.bindAndEmplace<T>(entity, scene, std::forward<Args>(args)...);
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-    return static_cast<T &>(*nsc.instance);
-  }
 
   /**
    * @brief Registers a system into the scene with compile-time validation.

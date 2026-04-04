@@ -16,9 +16,8 @@
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
-#include "GUI/ImGuiSys.h"
+
 // Misc
-#include "GUI/Launcher.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/BasicPerspCamera.h"
 #include "Misc/BasicShape.h"
