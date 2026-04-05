@@ -93,6 +93,8 @@ struct LuaScriptComponent {
   std::optional<sol::protected_function>
       m_onRenderFunction; /**< Called during rendering. */
   std::optional<sol::protected_function>
+      m_onUIFunction; /**< Mainly for UI libraries (e.g. ImGui). */
+  std::optional<sol::protected_function>
       m_onDestroy; /**< Called before component destruction. */
 
   // ------------------------------------------------------------
@@ -102,7 +104,9 @@ struct LuaScriptComponent {
   // const char *m_scriptPath =
   reg::Entity m_entity; /**< Owning ECS entity. */
   sol::table m_scriptTable;
+  // optionals
   std::string m_scriptPath;
+  // UILayer m_uiLayer;
   NONCOPYABLE(LuaScriptComponent);
 
   // ------------------------------------------------------------

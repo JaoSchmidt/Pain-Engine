@@ -45,6 +45,9 @@ void LuaScriptComponent::bind(sol::state &lua, const char *scriptPath)
   script_api["on_render"] = [&](sol::function f) {
     m_onRenderFunction = sol::protected_function(std::move(f));
   };
+  // script_api["on_ui"] = [&](sol::function f) {
+  //   m_onUIFunction = sol::protected_function(std::move(f));
+  // };
   script_api["on_destroy"] = [&](sol::function f) {
     m_onDestroy = sol::protected_function(std::move(f));
   };
