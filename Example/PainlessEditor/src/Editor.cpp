@@ -90,13 +90,17 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
         ImGui::DockBuilderRemoveNode(dockspace_id);
         ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
         ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
-        ImGuiID dock_id_left, dock_id_center;
+        ImGuiID dock_id_left, dock_id_center, dock_id_bottom;
 
-        // Split: 25% left
+        // Splits
         ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25f,
                                     &dock_id_left, &dock_id_center);
+        ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Down, 0.5f,
+                                    &dock_id_bottom, &dock_id_center);
+        // Windows
         ImGui::DockBuilderDockWindow("Stats", dock_id_left);
         ImGui::DockBuilderDockWindow("Viewport", dock_id_center);
+        ImGui::DockBuilderDockWindow("Panel", dock_id_bottom);
         ImGui::DockBuilderFinish(dockspace_id);
       }
     }
@@ -136,38 +140,24 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     ImVec2 avail = ImGui::GetContentRegionAvail();
     float splitterThickness = 4.0f;
 
-    float viewportHeight = avail.y * m_splitRatio;
-    float plotHeight = avail.y - viewportHeight - splitterThickness;
-    // float viewportHeight = avail.y * 0.7f;
-    // float plotHeight = avail.y - viewportHeight;
-
     if (textureID) {
-      ImVec2 viewportSize = ImVec2(avail.x, viewportHeight);
-      if (viewportSize.x != m_avail.x || viewportSize.y != m_avail.y) {
-        m_avail = viewportSize;
-        renderers.setViewPort(0, 0, viewportSize.x, viewportSize.y);
+      if (avail.x != m_avail.x || avail.y != m_avail.y) {
+        m_avail = avail;
+        renderers.setViewPort(0, 0, avail.x, avail.y);
         getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
-            {glm::vec2(viewportSize.x, viewportSize.y)});
+            {glm::vec2(avail.x, avail.y)});
       }
       ImGui::Image((ImTextureID)(uintptr_t)textureID, m_avail, {0, 1}, {1, 0});
     }
+    ImGui::End(); // "Viewport"
 
     // Small demo
 
-    ImGui::SetCursorPosY(ImGui::GetCursorPosY());
-
-    ImVec2 cursor = ImGui::GetCursorScreenPos();
-    ImRect bb(cursor, ImVec2(cursor.x + avail.x, cursor.y + splitterThickness));
-
-    ImGui::SplitterBehavior(bb, ImGui::GetID("ViewportPlotSplitter"),
-                            ImGuiAxis_Y, &viewportHeight, &plotHeight,
-                            50.0f, // min viewport size
-                            50.0f  // min plot size
-    );
-    m_splitRatio = viewportHeight / avail.y;
+    ImGui::Begin("Panel");
 
     float xs1[1001], ys1[1001];
     double xs2[20], ys2[20];
+
     for (int i = 0; i < 1001; ++i) {
       xs1[i] = i * 0.001f;
       ys1[i] = 0.5f + 0.5f * sinf(50 * (xs1[i] + (float)ImGui::GetTime() / 10));
@@ -176,8 +166,8 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
       xs2[i] = i * 1 / 19.0f;
       ys2[i] = xs2[i] * xs2[i];
     }
-    ImVec2 plotSize = ImVec2(avail.x, plotHeight);
-    if (ImPlot::BeginPlot("Line Plots", plotSize)) {
+    avail = ImGui::GetContentRegionAvail();
+    if (ImPlot::BeginPlot("Line Plots", avail)) {
       ImPlot::SetupAxes("x", "y");
       ImPlot::PlotLine("f(x)", xs1, ys1, 1001);
       ImPlot::PlotLine("g(x)", xs2, ys2, 20,
@@ -186,7 +176,7 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
       ImPlot::EndPlot();
     }
 
-    ImGui::End();
+    ImGui::End(); // Port
 
     // ImGui::Begin("Panel");
     //
