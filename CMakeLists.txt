@@ -310,23 +310,6 @@ else()
   add_dependencies(${LIBRARY_NAME} sync_resources)
 endif()
 
-# =========== Extra Stuff ==================================
-# Quality of Life (e.g.: ./notify_wrapper.sh ninja -j8)
-if(UNIX)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/notify_wrapper.sh
-                 ${CMAKE_CURRENT_BINARY_DIR}/notify_wrapper.sh COPYONLY)
-  file(
-    CHMOD
-    ${CMAKE_BINARY_DIR}/notify_wrapper.sh
-    PERMISSIONS
-    OWNER_READ
-    OWNER_EXECUTE
-    GROUP_READ
-    GROUP_EXECUTE
-    WORLD_READ
-    WORLD_EXECUTE)
-endif()
-
 if(UNIX)
   string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
   add_custom_target(
@@ -366,4 +349,23 @@ if(UNIX)
       printf
       "==========================================================================================\\033[0m\\n\\n"
     VERBATIM)
+
+  # Quality of Life (e.g.: ./notify_wrapper.sh ninja -j8)
+  set(NOTIFY_WRAPPER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/notify_wrapper.sh")
+  set(NOTIFY_WRAPPER_DST "${CMAKE_CURRENT_BINARY_DIR}/notify_wrapper.sh")
+
+  if(EXISTS ${NOTIFY_WRAPPER_SRC})
+    configure_file(${NOTIFY_WRAPPER_SRC} ${NOTIFY_WRAPPER_DST} COPYONLY)
+
+    file(
+      CHMOD
+      ${NOTIFY_WRAPPER_DST}
+      PERMISSIONS
+      OWNER_READ
+      OWNER_EXECUTE
+      GROUP_READ
+      GROUP_EXECUTE
+      WORLD_READ
+      WORLD_EXECUTE)
+  endif()
 endif()
