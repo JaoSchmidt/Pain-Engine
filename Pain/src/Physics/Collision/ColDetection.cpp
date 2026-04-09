@@ -8,7 +8,6 @@
 #include "Physics/Collision/ColDetection.h"
 #include "CoreFiles/LogWrapper.h"
 #include "glm/ext/vector_float2.hpp"
-#include "imgui.h"
 #include <utility>
 // Between same capulses
 namespace pain

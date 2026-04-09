@@ -25,7 +25,7 @@ namespace painless
  */
 template <typename S>
   requires(pain::UIComponents::isRegistered<ImGuiComponent>())
-S &getImGuiScript(reg::Entity entity, pain::UIScene &uiscene)
+S &getScript(reg::Entity entity, pain::UIScene &uiscene)
 {
   ImGuiComponent &nsc = uiscene.getComponent<ImGuiComponent>(entity);
   return static_cast<S &>(*nsc.instance);

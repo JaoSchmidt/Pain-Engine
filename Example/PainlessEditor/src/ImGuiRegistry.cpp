@@ -18,7 +18,7 @@ namespace ImGuiDebugRegistry
 {
 
 struct ImGuiItem {
-  InterfaceMenu menu;
+  painless::InterfaceMenu menu;
   const std::string name;
   int order;
   bool operator<(const ImGuiItem &other) const
@@ -36,7 +36,8 @@ std::map<ImGuiItem, ImGuiFunc> m_items;
 
 void clear() { m_items.clear(); }
 
-void add(const std::string &name, ImGuiFunc func, InterfaceMenu menu, int order)
+void add(const std::string &name, ImGuiFunc func, painless::InterfaceMenu menu,
+         int order)
 {
   m_items.insert_or_assign(ImGuiItem{menu, name, order}, ImGuiFunc(func));
 }
@@ -53,7 +54,7 @@ void remove(const std::string &name)
   }
 }
 
-void renderAll(InterfaceMenu menu)
+void renderAll(painless::InterfaceMenu menu)
 {
   for (auto &item : m_items) {
     if (item.first.menu == menu)

@@ -62,10 +62,6 @@
 #include "Physics/Particles/ParticleSys.h"
 #include "Physics/RotationComponent.h"
 
-#include <SDL2/SDL_events.h>
-
-#include "imgui.h"
-
 /// @name Logging Macros
 /// @{
 #define LOG_T(...) ::pain::logWrapper::GetClientLogger()->trace(__VA_ARGS__)

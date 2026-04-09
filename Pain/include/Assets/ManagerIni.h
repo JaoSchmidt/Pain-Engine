@@ -14,7 +14,6 @@
 #include "Core.h"
 #include "mini/ini.h"
 #include "pch.h"
-#include <utility>
 
 namespace pain
 {

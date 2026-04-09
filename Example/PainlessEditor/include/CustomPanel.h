@@ -1,0 +1,55 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+#pragma once
+
+// CustomPanel.h
+#include "UILayer.h"
+#include <sol/forward.hpp>
+
+#include "imgui.h"
+#include <functional>
+#include <map>
+#include <string>
+namespace painless
+{
+using onRenderFunc = std::function<void()>;
+
+struct SubPanel {
+  onRenderFunc m_onRender;
+  int m_order = 0;
+  int m_identifier = 0;
+  bool operator<(const SubPanel &other) const
+  {
+    return m_order < other.m_order;
+  }
+};
+
+struct PanelInfo {
+  float m_initalSplit;
+  InterfaceMenu m_parentDockerspace; // dockerspace parent
+  ImGuiID m_id = 0;
+};
+
+struct CustomEditor {
+  std::map<std::string, std::vector<SubPanel>> m_customPanels;
+  std::map<std::string, PanelInfo> m_panelInfo;
+
+  void registerPanel(const std::string name, float split, InterfaceMenu menu);
+  void addToPanel(const std::string &panelName, int identifier,
+                  onRenderFunc callback, int order = 0);
+  void addToPanelLua(const std::string &panelName, int identifier,
+                     sol::protected_function luaFunc, int order = 0);
+  void removeFromPanel(const std::string &panelName, int identifier);
+  void buildDockerWindow(ImGuiID dockerSidebar, ImGuiID dockerViewport);
+  void renderAll();
+};
+
+namespace luabinder
+{
+void bindToCustomPanels(sol::state &lua, CustomEditor &editor);
+}
+} // namespace painless

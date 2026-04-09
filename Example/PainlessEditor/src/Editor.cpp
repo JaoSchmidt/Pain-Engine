@@ -14,6 +14,7 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreRender/Buffers/FrameBuffer.h"
+#include "CustomPanel.h"
 #include "Misc/Events.h"
 #include "imgui_internal.h"
 #include "implot.h"
@@ -43,13 +44,12 @@ void showStats(const Stats &s)
 
 namespace painless
 {
-
 void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
                       pain::DeltaTime dt)
 {
   UNUSED(isMinimized)
   if (!m_app.getFrameInfo().swapChainTarget) {
-    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+    static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
 
     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent
     // window not dockable into, because it would be confusing to have two
@@ -82,26 +82,25 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     // DockSpace
     ImGuiIO &io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
-      ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-      ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-      static bool dockspace_initialized = false;
-      if (!dockspace_initialized) {
-        dockspace_initialized = true;
-        ImGui::DockBuilderRemoveNode(dockspace_id);
-        ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
-        ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
-        ImGuiID dock_id_left, dock_id_center, dock_id_bottom;
+      ImGuiID dockspaceID = ImGui::GetID("MyDockSpace");
+      ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
+      static bool dockspaceInitialized = false;
+      if (!dockspaceInitialized) {
+        dockspaceInitialized = true;
+        ImGui::DockBuilderRemoveNode(dockspaceID);
+        ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_CentralNode);
+        ImGui::DockBuilderSetNodeSize(dockspaceID, viewport->Size);
+        ImGuiID dockerIDSidebar, dockerIDViewport;
 
         // Splits
-        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25f,
-                                    &dock_id_left, &dock_id_center);
-        ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Down, 0.5f,
-                                    &dock_id_bottom, &dock_id_center);
+        ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25f,
+                                    &dockerIDSidebar, &dockerIDViewport);
+
         // Windows
-        ImGui::DockBuilderDockWindow("Stats", dock_id_left);
-        ImGui::DockBuilderDockWindow("Viewport", dock_id_center);
-        ImGui::DockBuilderDockWindow("Panel", dock_id_bottom);
-        ImGui::DockBuilderFinish(dockspace_id);
+        ImGui::DockBuilderDockWindow("Stats", dockerIDSidebar);
+        ImGui::DockBuilderDockWindow("Viewport", dockerIDViewport);
+        buildDockerWindow(dockerIDSidebar, dockerIDViewport);
+        ImGui::DockBuilderFinish(dockspaceID);
       }
     }
 
@@ -138,10 +137,10 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     ImGui::Begin("Viewport");
     uint32_t textureID = m_app.getFrameInfo().colorAttachmentTextureId;
     ImVec2 avail = ImGui::GetContentRegionAvail();
-    float splitterThickness = 4.0f;
 
     if (textureID) {
-      if (avail.x != m_avail.x || avail.y != m_avail.y) {
+      if (avail.x > 0 && avail.y > 0 &&
+          (avail.x != m_avail.x || avail.y != m_avail.y)) {
         m_avail = avail;
         renderers.setViewPort(0, 0, avail.x, avail.y);
         getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
@@ -151,10 +150,18 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     }
     ImGui::End(); // "Viewport"
 
-    // Small demo
+    renderAll();
 
-    ImGui::Begin("Panel");
+    ImGui::End();
+  }
+}
 
+Editor::Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app)
+    : pain::UIObject(entity, scene), m_app(app), m_imGuiDebugMenu()
+{
+
+  registerPanel("Plot", 0.5f, InterfaceMenu::BOTTOMBAR);
+  addToPanel("Plot", 0, []() {
     float xs1[1001], ys1[1001];
     double xs2[20], ys2[20];
 
@@ -166,7 +173,9 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
       xs2[i] = i * 1 / 19.0f;
       ys2[i] = xs2[i] * xs2[i];
     }
-    avail = ImGui::GetContentRegionAvail();
+
+    ImVec2 avail = ImGui::GetContentRegionAvail();
+
     if (ImPlot::BeginPlot("Line Plots", avail)) {
       ImPlot::SetupAxes("x", "y");
       ImPlot::PlotLine("f(x)", xs1, ys1, 1001);
@@ -175,18 +184,20 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
                         ImPlotProp_Flags, ImPlotLineFlags_Segments});
       ImPlot::EndPlot();
     }
+  });
 
-    ImGui::End(); // Port
-
-    // ImGui::Begin("Panel");
-    //
-    // ImGui::End();
-
-    ImGui::End();
-  }
+  static float value = 0.5f;
+  static bool checked = false;
+  registerPanel("MyPanel", 0.5f, InterfaceMenu::SIDEBAR);
+  addToPanel("MyPanel", 1, [&]() {
+    ImGui::Text("Hello from Lua!");
+    if (ImGui::Button("Click me")) {
+      PLOG_I("Button clicked!");
+    }
+    ImGui::Separator();
+    ImGui::Checkbox("Enable feature", &checked);
+    ImGui::SliderFloat("Value", &value, 0.0f, 1.0f);
+  });
 }
-
-Editor::Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app)
-    : pain::UIObject(entity, scene), m_app(app), m_imGuiDebugMenu() {};
 
 } // namespace painless

@@ -11,12 +11,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "CustomPanel.h"
 #include "DebuggingMenu.h"
 #include "imgui_internal.h"
 namespace painless
 {
 
-class Editor : public pain::UIObject
+class Editor : public pain::UIObject, public CustomEditor
 {
 public:
   ~Editor() { m_imGuiDebugMenu.onDestroy(); };
@@ -40,6 +41,6 @@ private:
   pain::Application &m_app;
   painless::ImGuiDebugMenu::Script m_imGuiDebugMenu;
   float m_splitRatio = 0.7f;
-  // TEMP BOTTOM BAR
+  // TEMP BOTTOM BA
 };
 } // namespace painless

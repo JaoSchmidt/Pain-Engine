@@ -67,15 +67,17 @@ sol::state createLuaState()
 {
   sol::state lua;
   lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math,
-                     sol::lib::string, sol::lib::io, sol::lib::coroutine,sol::lib::debug,
-                     sol::lib::table);
+                     sol::lib::string, sol::lib::io, sol::lib::coroutine,
+                     sol::lib::debug, sol::lib::table);
   sol::table package = lua["package"];
+#ifdef PLATFORM_IS_LINUX
   package["path"] = std::string(package["path"]) +
-                    ";/usr/local/share/lua/5.1/?.lua"
-                    ";/usr/local/share/lua/5.1/?/init.lua";
-  package["cpath"] =
-      std::string(package["cpath"]) + ";/usr/local/lib/lua/5.1/?.so";
-
+                    ";/usr/share/lua/5.4/?.lua"
+                    ";/usr/share/lua/5.4/?/init.lua";
+  package["cpath"] = std::string(package["cpath"]) + ";/usr/lib/lua/5.4/?.so";
+#elif defined PLATFORM_IS_WINDOWS
+  // TODO, get windows path
+#endif
   lua.set_exception_handler(&my_exception_handler);
 
   lua.set_function("print", [&](sol::variadic_args va) {
