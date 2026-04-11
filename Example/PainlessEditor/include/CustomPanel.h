@@ -7,8 +7,10 @@
 #pragma once
 
 // CustomPanel.h
+#include "Core.h"
+#include "CoreFiles/LogWrapper.h"
 #include "UILayer.h"
-#include <sol/forward.hpp>
+#include <sol/sol.hpp>
 
 #include "imgui.h"
 #include <functional>
@@ -37,19 +39,26 @@ struct PanelInfo {
 struct CustomEditor {
   std::map<std::string, std::vector<SubPanel>> m_customPanels;
   std::map<std::string, PanelInfo> m_panelInfo;
+  bool m_dockspaceInitialized = false;
+  ImGuiID m_dockerIDSidebar, m_dockerIDViewport;
 
   void registerPanel(const std::string name, float split, InterfaceMenu menu);
   void addToPanel(const std::string &panelName, int identifier,
                   onRenderFunc callback, int order = 0);
   void addToPanelLua(const std::string &panelName, int identifier,
-                     sol::protected_function luaFunc, int order = 0);
+                     sol::protected_function luaFunc, sol::optional<int> order);
   void removeFromPanel(const std::string &panelName, int identifier);
-  void buildDockerWindow(ImGuiID dockerSidebar, ImGuiID dockerViewport);
+  void buildDockerWindow();
   void renderAll();
+
+private:
+  void dockerspaceBuild(const std::string &panelName, PanelInfo &info);
 };
 
 namespace luabinder
 {
 void bindToCustomPanels(sol::state &lua, CustomEditor &editor);
-}
+void bindImPlot(sol::state &lua);
+void unbindCustomPanels(sol::state &lua);
+} // namespace luabinder
 } // namespace painless

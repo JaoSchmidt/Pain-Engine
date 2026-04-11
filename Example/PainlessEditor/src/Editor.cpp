@@ -84,22 +84,20 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
       ImGuiID dockspaceID = ImGui::GetID("MyDockSpace");
       ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
-      static bool dockspaceInitialized = false;
-      if (!dockspaceInitialized) {
-        dockspaceInitialized = true;
+      if (!m_dockspaceInitialized) {
+        m_dockspaceInitialized = true;
         ImGui::DockBuilderRemoveNode(dockspaceID);
         ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_CentralNode);
         ImGui::DockBuilderSetNodeSize(dockspaceID, viewport->Size);
-        ImGuiID dockerIDSidebar, dockerIDViewport;
 
         // Splits
         ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25f,
-                                    &dockerIDSidebar, &dockerIDViewport);
+                                    &m_dockerIDSidebar, &m_dockerIDViewport);
 
         // Windows
-        ImGui::DockBuilderDockWindow("Stats", dockerIDSidebar);
-        ImGui::DockBuilderDockWindow("Viewport", dockerIDViewport);
-        buildDockerWindow(dockerIDSidebar, dockerIDViewport);
+        ImGui::DockBuilderDockWindow("Stats", m_dockerIDSidebar);
+        ImGui::DockBuilderDockWindow("Viewport", m_dockerIDViewport);
+        buildDockerWindow();
         ImGui::DockBuilderFinish(dockspaceID);
       }
     }
@@ -159,45 +157,48 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
 Editor::Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app)
     : pain::UIObject(entity, scene), m_app(app), m_imGuiDebugMenu()
 {
+  painless::luabinder::bindToCustomPanels(m_app.getLuaState(), *this);
+  painless::luabinder::bindImPlot(m_app.getLuaState());
 
-  registerPanel("Plot", 0.5f, InterfaceMenu::BOTTOMBAR);
-  addToPanel("Plot", 0, []() {
-    float xs1[1001], ys1[1001];
-    double xs2[20], ys2[20];
+  // registerPanel("Plot", 0.5f, InterfaceMenu::BOTTOMBAR);
+  // addToPanel("Plot", 0, []() {
+  //   float xs1[1001], ys1[1001];
+  //   double xs2[20], ys2[20];
+  //
+  //   for (int i = 0; i < 1001; ++i) {
+  //     xs1[i] = i * 0.001f;
+  //     ys1[i] = 0.5f + 0.5f * sinf(50 * (xs1[i] + (float)ImGui::GetTime() /
+  //     10));
+  //   }
+  //   for (int i = 0; i < 20; ++i) {
+  //     xs2[i] = i * 1 / 19.0f;
+  //     ys2[i] = xs2[i] * xs2[i];
+  //   }
+  //
+  //   ImVec2 avail = ImGui::GetContentRegionAvail();
+  //
+  //   if (ImPlot::BeginPlot("Line Plots", avail)) {
+  //     ImPlot::SetupAxes("x", "y");
+  //     ImPlot::PlotLine("f(x)", xs1, ys1, 1001);
+  //     ImPlot::PlotLine("g(x)", xs2, ys2, 20,
+  //                      {ImPlotProp_Marker, ImPlotMarker_Circle,
+  //                       ImPlotProp_Flags, ImPlotLineFlags_Segments});
+  //     ImPlot::EndPlot();
+  //   }
+  // });
 
-    for (int i = 0; i < 1001; ++i) {
-      xs1[i] = i * 0.001f;
-      ys1[i] = 0.5f + 0.5f * sinf(50 * (xs1[i] + (float)ImGui::GetTime() / 10));
-    }
-    for (int i = 0; i < 20; ++i) {
-      xs2[i] = i * 1 / 19.0f;
-      ys2[i] = xs2[i] * xs2[i];
-    }
-
-    ImVec2 avail = ImGui::GetContentRegionAvail();
-
-    if (ImPlot::BeginPlot("Line Plots", avail)) {
-      ImPlot::SetupAxes("x", "y");
-      ImPlot::PlotLine("f(x)", xs1, ys1, 1001);
-      ImPlot::PlotLine("g(x)", xs2, ys2, 20,
-                       {ImPlotProp_Marker, ImPlotMarker_Circle,
-                        ImPlotProp_Flags, ImPlotLineFlags_Segments});
-      ImPlot::EndPlot();
-    }
-  });
-
-  static float value = 0.5f;
-  static bool checked = false;
-  registerPanel("MyPanel", 0.5f, InterfaceMenu::SIDEBAR);
-  addToPanel("MyPanel", 1, [&]() {
-    ImGui::Text("Hello from Lua!");
-    if (ImGui::Button("Click me")) {
-      PLOG_I("Button clicked!");
-    }
-    ImGui::Separator();
-    ImGui::Checkbox("Enable feature", &checked);
-    ImGui::SliderFloat("Value", &value, 0.0f, 1.0f);
-  });
+  // static float value = 0.5f;
+  // static bool checked = false;
+  // registerPanel("MyPanel", 0.5f, InterfaceMenu::SIDEBAR);
+  // addToPanel("MyPanel", 1, [&]() {
+  //   ImGui::Text("Hello from Lua!");
+  //   if (ImGui::Button("Click me")) {
+  //     PLOG_I("Button clicked!");
+  //   }
+  //   ImGui::Separator();
+  //   ImGui::Checkbox("Enable feature", &checked);
+  //   ImGui::SliderFloat("Value", &value, 0.0f, 1.0f);
+  // });
 }
 
 } // namespace painless

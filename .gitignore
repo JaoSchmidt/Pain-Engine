@@ -4,6 +4,7 @@ imgui.ini
 config.ini
 notify_wrapper.sh
 resources
+!Pain/resources
 # syncthing stuff
 .stfolder
 .stfolder
