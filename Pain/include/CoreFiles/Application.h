@@ -101,6 +101,11 @@ public:
   {
     m_config.isSimulation = !(m_config.isSimulation);
   }
+  /** Disable viewport events */
+  void inline setFocusedOrHovered(bool isFocusedOrHovered)
+  {
+    m_config.isFocusedOrHovered = isFocusedOrHovered;
+  }
   /** Returns a pointer to the simulation flag. */
   bool inline isSimulation() { return m_config.isSimulation; }
 
@@ -177,6 +182,7 @@ private:
     bool isRendering = true;
     bool isMinimized = false;
     bool isSimulation = false;
+    bool isFocusedOrHovered = true;
     constexpr static double fixedUpdateTime = 1.0 / 60.0;
     constexpr static double fixedFPS = 1.0 / 60.0;
     double timeMultiplier = 1.0;

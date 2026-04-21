@@ -25,6 +25,7 @@ namespace pain
 class RenderPipeline
 {
 public:
+  void temp();
   /**
    * @brief Creates a render pipeline using the *default* framebuffer
    * configuration.

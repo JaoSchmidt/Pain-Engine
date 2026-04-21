@@ -203,8 +203,9 @@ EndGameFlags Application::run()
         default:
           break;
         }
-        m_runtime.worldScene.updateSystems(event);
-        if (m_runtime.uiScene != nullptr)
+        if (m_config.isFocusedOrHovered)
+          m_runtime.worldScene.updateSystems(event);
+        else if (m_runtime.uiScene != nullptr)
           m_runtime.uiScene->updateSystems(event);
       }
     }

@@ -4,35 +4,11 @@
 -- ENUMS
 -- =========================
 
----@class InterfaceMenu
+---@enum InterfaceMenu
 InterfaceMenu = {
 	SIDEBAR = 0,
 	BOTTOMBAR = 1,
 }
-
--- =========================
--- CUSTOM EDITOR
--- =========================
-
----@class CustomEditor
-CustomEditor = {}
-
----Add a function to a panel
----@param name string
----@param identificator integer
----@param order integer
----@param fn fun()
-function CustomEditor:add_to_panel(name, identificator, fn, order) end
-
----Register a panel
----@param name string
----@param split number
----@param menu InterfaceMenu
-function CustomEditor:register_panel(name, split, menu) end
-
--- global instance injected from C++
----@type CustomEditor
-CustomEditor = CustomEditor
 
 -- =========================
 -- IMGUI
@@ -83,26 +59,39 @@ function ImGui.Begin(name) end
 
 function ImGui.End() end
 
+---@param text string
+---@param v number
+---@param min number
+---@param max number
+---@return boolean, number
+function ImGui.SliderFloat(text, v, min, max) end
+
+---@param text string
+---@param v number
+---@return boolean, integer
+function ImGui.InputInt(text, v) end
+
 -- =========================
--- IMPLOT
+-- CUSTOM EDITOR
 -- =========================
 
----@class ImPlot
-ImPlot = {}
+---@class CustomEditor
+CustomEditor = {}
 
----@param title string
----@param width number
----@param height number
----@return boolean
-function ImPlot.BeginPlot(title, width, height) end
+---Add a function to a panel
+---@param name string
+---@param identificator integer
+---@param fn fun(imgui: ImGui, implot: ImPlot)
+---@param order integer
+---@overload fun(name: string, identificator: integer, fn: fun(imgui, implot))
+function CustomEditor:add_to_panel(name, identificator, fn, order) end
 
-function ImPlot.EndPlot() end
+---Register a panel
+---@param name string
+---@param split number
+---@param menu InterfaceMenu
+function CustomEditor:register_panel(name, split, menu) end
 
----@param x_label string
----@param y_label string
-function ImPlot.SetupAxes(x_label, y_label) end
-
----@param label string
----@param xs number[]
----@param ys number[]
-function ImPlot.PlotLine(label, xs, ys) end
+-- global instance injected from C++
+---@type CustomEditor
+CustomEditor = CustomEditor

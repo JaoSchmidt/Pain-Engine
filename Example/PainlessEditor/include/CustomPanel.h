@@ -51,6 +51,9 @@ struct CustomEditor {
   void buildDockerWindow();
   void renderAll();
 
+  sol::table m_imgui;
+  sol::table m_implot;
+
 private:
   void dockerspaceBuild(const std::string &panelName, PanelInfo &info);
 };
@@ -58,7 +61,7 @@ private:
 namespace luabinder
 {
 void bindToCustomPanels(sol::state &lua, CustomEditor &editor);
-void bindImPlot(sol::state &lua);
+void bindImPlot(sol::state &lua, CustomEditor &editor);
 void unbindCustomPanels(sol::state &lua);
 } // namespace luabinder
 } // namespace painless

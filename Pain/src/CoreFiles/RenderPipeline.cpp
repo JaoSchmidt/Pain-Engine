@@ -188,6 +188,14 @@ retrieve3dCamera(Scene &scene)
   return {};
 }
 
+void RenderPipeline::temp()
+{
+  // PLOG_I("Size = ({},{})", m_frameBuffer.getWidth(),
+  // m_frameBuffer.getHeight());
+
+  // PLOG_I("IsInside = {}",);
+}
+
 void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene *uiScene)
