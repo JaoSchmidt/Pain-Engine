@@ -41,27 +41,26 @@ struct TrailComponent {
   bool autoEmit = true;      ///< Whether particles automatically spwan or not
   Color color = Colors::FullWhite;
   DeltaTime lifeTime = DeltaTime::oneSecond();
+  /**
+   * @brief Creates a TrailComponent using TrailComponentInitArgs
+   *
+   * Preallocates the point buffer using the specified capacity.
+   */
+  static TrailComponent create(const TrailComponentInitArgs &args)
+  {
+    TrailComponent c;
+
+    c.capacity = args.capacity;
+    c.minDistance = args.minDistance;
+    c.autoEmit = args.autoEmit;
+    c.color = args.color;
+    c.lifeTime = args.lifeTime;
+
+    // Reserve capacity to avoid reallocations during runtime
+    c.points.reserve(c.capacity);
+
+    return c;
+  }
 };
-
-/**
- * @brief Creates a TrailComponent using TrailComponentInitArgs
- *
- * Preallocates the point buffer using the specified capacity.
- */
-static TrailComponent create(const TrailComponentInitArgs &args)
-{
-  TrailComponent c;
-
-  c.capacity = args.capacity;
-  c.minDistance = args.minDistance;
-  c.autoEmit = args.autoEmit;
-  c.color = args.color;
-  c.lifeTime = args.lifeTime;
-
-  // Reserve capacity to avoid reallocations during runtime
-  c.points.reserve(c.capacity);
-
-  return c;
-}
 
 } // namespace pain

@@ -1,4 +1,5 @@
 #pragma once
+#include "CoreFiles/LogWrapper.h"
 #include "SDL_events.h"
 #include "sol/sol.hpp"
 

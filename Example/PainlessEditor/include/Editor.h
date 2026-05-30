@@ -26,13 +26,11 @@ public:
   // void init(Application *app) { m_app = app; }
 
   void onUpdate(pain::DeltaTime dt);
-  void onEvent(const SDL_Event &event);
   void onRender(pain::Renderers &renderers, bool isMinimized,
                 pain::DeltaTime dt);
   Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app);
 
-  bool m_viewportHovered = true;
-  bool m_viewportFocused = true;
+  bool m_wasFocused = false;
 
 private:
   ImGuiWindowFlags m_windowFlags =

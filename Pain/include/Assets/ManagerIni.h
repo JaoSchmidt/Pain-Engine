@@ -94,6 +94,7 @@ struct IniConfig {
 #define INI_CONFIGS                                                            \
   X(bool, hideConfig, false, "HideConfig");                                    \
   X(bool, fullscreen, false, "Fullscreen");                                    \
+  X(bool, fullwindow, false, "Fullwindow");                                    \
   X(int, defaultWidth, 800, "DefaultWidth");                                   \
   X(int, defaultHeight, 600, "DefaultHeight");                                 \
   X(std::string, assetsPath, FileManager::getCurrentWorkingDir("resources"), "AssetPath");

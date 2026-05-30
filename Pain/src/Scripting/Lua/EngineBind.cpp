@@ -57,10 +57,11 @@ MaterialCreationInfo parseMaterialInfo(sol::table t, pain::MaterialManager &mm)
   };
 }
 
-void luabinder::bindEngine(sol::state &lua)
+sol::table luabinder::bindEngine(sol::state &lua)
 {
   sol::table engineTbl = lua.create_table();
   lua["Engine"] = engineTbl;
+  return engineTbl;
 }
 
 void luabinder::bindEngineMM(sol::state &lua, MaterialManager &mm)

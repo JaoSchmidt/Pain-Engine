@@ -27,6 +27,15 @@
 
 namespace pain
 {
+void luabinder_bindEngineVelocity(sol::table &engine, Application &app)
+{
+  engine.set_function( //
+      "set_velocity",  //
+      [&app](double vel) {
+        app.setTimeMultiplier(vel); //
+      });
+}
+
 Application *Application::createApplication(AppInit &&initConfig,
                                             FrameBufferCreationInfo &&fbci)
 {
@@ -46,10 +55,27 @@ Application *Application::createApplication(AppInit &&initConfig,
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-  SDL_Window *window = SDL_CreateWindow(
-      initConfig.title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-      initConfig.defaultWidth, initConfig.defaultHeight,
-      SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+  int width = initConfig.defaultWidth;
+  int height = initConfig.defaultHeight;
+  SDL_Window *window = nullptr;
+  SDL_DisplayMode dm;
+  if (initConfig.fullWindow || initConfig.fullScreen) {
+    SDL_GetCurrentDisplayMode(0, &dm);
+    width = dm.w;
+    height = dm.h;
+  }
+  uint32_t flags =
+      SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
+
+  if (initConfig.fullWindow)
+    flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+
+  if (initConfig.fullScreen)
+    flags |= SDL_WINDOW_FULLSCREEN;
+
+  window = SDL_CreateWindow(initConfig.title, SDL_WINDOWPOS_CENTERED,
+                            SDL_WINDOWPOS_CENTERED, width, height, flags);
+
   if (window == nullptr)
     PLOG_E("Application window not initialized");
 
@@ -79,11 +105,13 @@ Application *Application::createApplication(AppInit &&initConfig,
   Application *app = new Application(std::move(window), std::move(sdlContext),
                                      std::move(fbci), initConfig);
   if (app != nullptr) {
+    // NOTE: lua binding...
     // Before the loop, any object can be created. Therefore we bind stuff now
     luabinder::bindDeltaTime(app->m_ctx.luaState);
     luabinder::addScheduler(app->m_ctx.luaState, app->m_runtime.worldScene);
     createLuaEventMap(app->m_ctx.luaState, app->m_ctx.eventDispatcher);
-    luabinder::bindEngine(app->m_ctx.luaState);
+    sol::table engine = luabinder::bindEngine(app->m_ctx.luaState);
+    luabinder_bindEngineVelocity(engine, *app);
     luabinder::bindMaterial(app->m_ctx.luaState);
     luabinder::bindEngineMM(app->m_ctx.luaState,
                             app->m_ctx.renderers.m_materialManager);
@@ -93,7 +121,7 @@ Application *Application::createApplication(AppInit &&initConfig,
                                    initConfig);
     luabinder::bindAppInitConfig(app->m_ctx.luaState, initConfig);
     luabinder::LuaInputEvent::bindInputEvents(app->m_ctx.luaState);
-    // other stuff
+    // other stuff unrelated to lua
     TextureManager::addRendererForDeletingTextures(app->m_ctx.renderers);
   }
   return app;
@@ -138,6 +166,7 @@ EndGameFlags Application::run()
   DeltaTime accumulator = 0.0;
 
   while (m_config.isGameRunning) { // actual main game loop
+    PROFILE_SCOPE("Application::run - Frame");
     DeltaTime deltaTime = frameTimer.tick();
     uint64_t elapsedTime = frameTimer.elapsedNanos();
 
@@ -205,7 +234,7 @@ EndGameFlags Application::run()
         }
         if (m_config.isFocusedOrHovered)
           m_runtime.worldScene.updateSystems(event);
-        else if (m_runtime.uiScene != nullptr)
+        if (m_runtime.uiScene != nullptr)
           m_runtime.uiScene->updateSystems(event);
       }
     }
@@ -226,6 +255,7 @@ EndGameFlags Application::run()
     // Frame rate limiting
     // =============================================================== //
     if (deltaTime.getSeconds() < m_config.fixedFPS) {
+      PROFILE_SCOPE("Application::run - delayed");
       uint32_t sleepMs = static_cast<uint32_t>(
           (m_config.fixedFPS - deltaTime.getSeconds()) * 1000.0);
       HighResolutionTimer::sleep(sleepMs);

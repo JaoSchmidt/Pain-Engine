@@ -56,19 +56,19 @@ struct Color {
    * @param a Alpha channel (0–255, defaults to 255)
    */
   constexpr Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255)
-      : value((uint32_t)a << 24 |
-              (uint32_t)b << 16 |
-              (uint32_t)g << 8  |
-              (uint32_t)r)
+      : value(static_cast<uint32_t>(a) << 24 |
+              static_cast<uint32_t>(b) << 16 |
+              static_cast<uint32_t>(g) << 8  |
+              static_cast<uint32_t>(r))
   {}
 
   // clang-format on
   constexpr glm::vec4 getVector() const
   {
-    return glm::vec4((value & 0xFF) / 255.0f,         // r
-                     ((value >> 8) & 0xFF) / 255.0f,  // g
-                     ((value >> 16) & 0xFF) / 255.0f, // b
-                     ((value >> 24) & 0xFF) / 255.0f  // a
+    return glm::vec4(static_cast<float>(value & 0xFF) / 255.0f,         // r
+                     static_cast<float>((value >> 8) & 0xFF) / 255.0f,  // g
+                     static_cast<float>((value >> 16) & 0xFF) / 255.0f, // b
+                     static_cast<float>((value >> 24) & 0xFF) / 255.0f  // a
     );
   }
 };

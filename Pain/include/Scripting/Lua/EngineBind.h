@@ -12,6 +12,6 @@ namespace pain::luabinder
 
 void bindEngineMM(sol::state &lua, MaterialManager &mm);
 void bindMaterial(sol::state &lua);
-void bindEngine(sol::state &lua);
+sol::table bindEngine(sol::state &lua);
 
 } // namespace pain::luabinder

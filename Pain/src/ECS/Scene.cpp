@@ -127,7 +127,7 @@ AbstractScene<Manager>::AbstractScene(reg::EventDispatcher &ed,
                                       ThreadPool &threadPool)
     : m_registry(), m_entity(createEntity()),
       m_luaState(enchanceLuaState(solState)), m_threadPool(threadPool),
-      m_eventDispatcher(ed){};
+      m_eventDispatcher(ed) {};
 
 template <reg::CompileTimeBitMaskType Manager>
 void AbstractScene<Manager>::updateSystems(DeltaTime deltaTime)
@@ -142,7 +142,7 @@ void AbstractScene<Manager>::updateSystems(DeltaTime deltaTime)
 template <reg::CompileTimeBitMaskType Manager>
 void AbstractScene<Manager>::updateSystems(const SDL_Event &event)
 {
-  PROFILE_SCOPE("Scene::updateSystems - events for nsc");
+  PROFILE_SCOPE("Scene::updateSystems - updates for native scripts");
   for (auto *sys : m_eventSystems)
     static_cast<IOnEvent *>(sys)->onEvent(event);
 }
@@ -152,6 +152,7 @@ void AbstractScene<Manager>::renderSystems(RenderPass pass,
                                            bool isMinimized,
                                            DeltaTime currentTime)
 {
+  PROFILE_SCOPE("Scene::renderSystems - rendering native scripts");
   for (auto *sys : m_renderSystems[static_cast<uint8_t>(pass)])
     static_cast<IOnRender *>(sys)->onRender(renderers, isMinimized,
                                             currentTime);

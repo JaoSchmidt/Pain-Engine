@@ -18,8 +18,7 @@
 #pragma once
 
 #include "Core.h"
-#include "ECS/Scriptable.h"
-#include "ImGuiSys.h"
+#include <pain.h>
 
 namespace painless::ImGuiDebugMenu
 {
@@ -56,7 +55,7 @@ private:
   std::string m_baseProfileName{"update"};
   std::string m_resultFileName{"result.json"};
   int m_displayedCount = 1;
-  int m_frameCount = 1;
+  int m_frameCount = -1;
 };
 
 } // namespace painless::ImGuiDebugMenu

@@ -13,14 +13,41 @@ function ImPlot.BeginPlot(title, width, height) end
 
 function ImPlot.EndPlot() end
 
+---@class ImPlotCondEnum
+---@field None 0
+---@field Always 1
+---@field Once 2
+---@type ImPlotCondEnum
+ImPlotCond = { None = 0, Always = 1, Once = 2 }
+
 ---@param x_label string
 ---@param y_label string
 function ImPlot.SetupAxes(x_label, y_label) end
 
+---@param x_min number
+---@param x_max number
+---@param y_min number
+---@param y_max number
+---@param plot_cond? ImPlotCondEnum
+function ImPlot.SetNextAxisLimits(x_min, x_max, y_min, y_max, plot_cond) end
+
+---@param x_min number
+---@param x_max number
+---@param y_min number
+---@param y_max number
+---@param plot_cond? ImPlotCondEnum
+function ImPlot.SetupAxesLimits(x_min, x_max, y_min, y_max, plot_cond) end
+
 ---@param label string
 ---@param xs number[]
 ---@param ys number[]
-function ImPlot.PlotLine(label, xs, ys) end
+function ImPlot.PlotScatter(label, xs, ys) end
+
+---@param label string
+---@param xs number[]
+---@param ys number[]
+---@param color? Color
+function ImPlot.PlotLine(label, xs, ys, color) end
 
 ---@class VecDouble
 local VecDouble = {}
@@ -61,6 +88,17 @@ function VecDouble:__newindex(index, value) end
 ---@return integer
 function VecDouble:__len() end
 
+---Downsample vector data into a smaller vector
+---@param finalSize integer
+---@return VecDouble
+function VecDouble:downsample(finalSize) end
+
+---@return number
+function VecDouble:min() end
+
+---@return number
+function VecDouble:max() end
+
 ----------------------------------------------------------------
 
 ---@class VecFloat
@@ -94,6 +132,12 @@ function VecFloat:__newindex(index, value) end
 ---@return integer
 function VecFloat:__len() end
 
+---@return number
+function VecFloat:min() end
+
+---@return number
+function VecFloat:max() end
+
 ----------------------------------------------------------------
 
 ---@class VecInt
@@ -126,3 +170,9 @@ function VecInt:__newindex(index, value) end
 
 ---@return integer
 function VecInt:__len() end
+
+---@return number
+function VecInt:min() end
+
+---@return number
+function VecInt:max() end

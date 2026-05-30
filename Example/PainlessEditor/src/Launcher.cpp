@@ -157,6 +157,7 @@ pain::Application *createLauncher()
       {.swapChainTarget = true});
   pain::Scene &scene = settingsApp->getWorldScene();
   settingsApp->getRenderers().m_renderer2d.setCellGridSize(0);
+  settingsApp->setFocusedOrHovered(false);
   // creates a simple and dumb camera to avoid any
   // assert later. This makes no difference in release
   scene.createComponents(                              //

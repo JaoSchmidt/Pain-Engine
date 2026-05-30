@@ -11,6 +11,7 @@
 #include "ImGuiComponent.h"
 #include "ImGuiRegistry.h"
 #include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
 #include <string>
 
 namespace painless
@@ -37,16 +38,15 @@ void ImGuiDebugMenu::Script::onRender(pain::Renderers &renderers,
   UNUSED(isMinimized)
   UNUSED(currentTime)
 
+#ifdef PROFILING
   ImGui::SeparatorText("Debug Info");
   const std::string fps = "FPS: " + std::to_string(m_currentTPS);
   ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
-  ImGui::InputText("Profile Base Name", &m_baseProfileName[0],
-                   m_baseProfileName.size());
+  ImGui::InputText("Profile Base Name", &m_baseProfileName);
   ImGui::InputInt("Frame Count", &m_displayedCount);
   ImGui::TextColored(ImVec4(1, 1, 0, 1),
                      "Note: 0 = run profiler indefinitely until stopped");
-  ImGui::InputText("Result File Name", &m_resultFileName[0],
-                   m_resultFileName.size());
+  ImGui::InputText("Result File Name", &m_resultFileName);
 
   // buttons and logic
   if (m_frameCount > 0) {
@@ -67,9 +67,14 @@ void ImGuiDebugMenu::Script::onRender(pain::Renderers &renderers,
       PROFILE_CLOSE();
       m_frameCount = -1; // Use -1 to indicate "not running"
     }
+  } else {
+    ImGui::BeginDisabled();
+    ImGui::Button("Stop Profile");
+    ImGui::EndDisabled();
   }
 
   ImGui::Separator();
+#endif
   ImGuiDebugRegistry::renderAll(InterfaceMenu::SIDEBAR);
 }
 

@@ -248,6 +248,19 @@ else()
   add_subdirectory("Pain/external/sol2")
 endif()
 
+# cpp-yaml
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/yaml-cpp/.git")
+  message("Fetching yaml-cpp")
+  FetchContent_Declare(
+    sol2
+    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+    GIT_TAG yaml-cpp-0.9.0)
+  FetchContent_MakeAvailable(yaml-cpp)
+else()
+  message("Using submodule for yaml-cpp")
+  add_subdirectory("Pain/external/yaml-cpp")
+endif()
+
 find_package(OpenGL REQUIRED)
 
 # SURPRESS WARNINGS INSIDE SOME LIBRARIES
@@ -267,6 +280,7 @@ target_link_libraries(
          lua_static
          glad
          mINI
+         yaml-cpp::yaml-cpp
          glm::glm
          spdlog::spdlog_header_only
          msdf-atlas-gen

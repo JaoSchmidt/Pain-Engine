@@ -10,11 +10,11 @@
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
 #include "UILayer.h"
-#include <sol/sol.hpp>
 
 #include "imgui.h"
 #include <functional>
 #include <map>
+#include <sol/sol.hpp>
 #include <string>
 namespace painless
 {
@@ -58,10 +58,4 @@ private:
   void dockerspaceBuild(const std::string &panelName, PanelInfo &info);
 };
 
-namespace luabinder
-{
-void bindToCustomPanels(sol::state &lua, CustomEditor &editor);
-void bindImPlot(sol::state &lua, CustomEditor &editor);
-void unbindCustomPanels(sol::state &lua);
-} // namespace luabinder
 } // namespace painless

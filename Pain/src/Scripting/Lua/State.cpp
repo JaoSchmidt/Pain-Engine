@@ -59,8 +59,6 @@ int my_exception_handler(lua_State *L,
   return sol::stack::push(L, description);
 }
 
-namespace fs = std::filesystem;
-
 namespace pain::luabinder
 {
 sol::state createLuaState()

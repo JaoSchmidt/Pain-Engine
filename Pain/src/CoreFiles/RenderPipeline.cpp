@@ -7,6 +7,7 @@
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/Renderers.h"
+#include "Debugging/Profiling.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "Misc/Events.h"
@@ -200,6 +201,7 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene *uiScene)
 {
+  PROFILE_FUNCTION();
   m_frameBuffer.bind();
   backend::clear();
   auto wrap2d = retrieve2dCamera(worldScene);

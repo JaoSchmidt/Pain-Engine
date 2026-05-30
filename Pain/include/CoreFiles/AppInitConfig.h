@@ -22,6 +22,10 @@ struct AppInit {
   int defaultHeight = 600;
   /** Initial camera zoom, assuming a 2d camera */
   float defaultZoom2d = 1.f;
+  /** Ignore Width and Height and fill entire window **/
+  bool fullWindow = false;
+  /** Ignore every other init config and fill the entire screen **/
+  bool fullScreen = false;
 };
 
 namespace luabinder

@@ -71,6 +71,26 @@ function ImGui.SliderFloat(text, v, min, max) end
 ---@return boolean, integer
 function ImGui.InputInt(text, v) end
 
+---@param text string
+---@param x integer
+---@param y integer
+---@param isBorder boolean
+---@return boolean
+function ImGui.BeginChild(text, x, y, isBorder) end
+
+function ImGui.EndChild() end
+
+---@param text string
+function ImGui.PushID(text) end
+
+function ImGui.PopID() end
+
+---@param min_x number
+---@param max_x number
+---@param min_y number
+---@param max_y number
+function ImGui.SetupAxesLimits(min_x, max_x, min_y, max_y) end
+
 -- =========================
 -- CUSTOM EDITOR
 -- =========================

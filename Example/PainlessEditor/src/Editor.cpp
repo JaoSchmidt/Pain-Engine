@@ -14,10 +14,10 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreRender/Buffers/FrameBuffer.h"
-#include "CustomPanel.h"
+#include "LuaImGuiBinder.h"
+#include "LuaImPlotBinder.h"
 #include "Misc/Events.h"
 #include "imgui_internal.h"
-#include "implot.h"
 
 void showStats(const Stats &s)
 {
@@ -120,22 +120,40 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     ImGui::Begin("Stats");
 
     // -------------------------------------------------- //
-    ImGui::Text("Renderer2D Stats:");
-    showStats(renderers.m_renderer2d.getQuadStatistics());
-    showStats(renderers.m_renderer2d.getTextStatistics());
-    showStats(renderers.m_renderer2d.getSprayStatistics());
-    showStats(renderers.m_renderer2d.getTriStatistics());
 
-    ImGui::Text("Renderer3D Stats:");
-    showStats(renderers.m_renderer3d.getCubeStatistics());
-    showStats(renderers.m_renderer3d.getSphereStatistics());
+    if (ImGui::TreeNodeEx("Renderer2D Stats:", // unique ID
+                          ImGuiTreeNodeFlags_Framed |
+                              ImGuiTreeNodeFlags_SpanAvailWidth,
+                          "Renderer2D Stats:")) {
+      showStats(renderers.m_renderer2d.getQuadStatistics());
+      showStats(renderers.m_renderer2d.getTextStatistics());
+      showStats(renderers.m_renderer2d.getSprayStatistics());
+      showStats(renderers.m_renderer2d.getTriStatistics());
+      ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Renderer3D Stats:", // unique ID
+                          ImGuiTreeNodeFlags_Framed |
+                              ImGuiTreeNodeFlags_SpanAvailWidth,
+                          "Renderer3D Stats:")) {
+      showStats(renderers.m_renderer3d.getCubeStatistics());
+      showStats(renderers.m_renderer3d.getSphereStatistics());
+      ImGui::TreePop();
+    }
     m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
     ImGui::End();
 
     ImGui::Begin("Viewport");
+    bool isNowFocused = (ImGui::IsWindowHovered() && ImGui::IsMouseDown(0)) ||
+                        ImGui::IsWindowFocused();
 
-    m_app.setFocusedOrHovered(ImGui::IsWindowHovered() ||
-                              ImGui::IsWindowFocused());
+    m_app.setFocusedOrHovered(isNowFocused);
+    if (!isNowFocused && m_wasFocused) {
+      m_app.setFocusedOrHovered(false);
+    }
+
+    m_wasFocused = isNowFocused;
+
     uint32_t textureID = m_app.getFrameInfo().colorAttachmentTextureId;
     ImVec2 avail = ImGui::GetContentRegionAvail();
 
@@ -156,14 +174,13 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     ImGui::End();
   }
 }
-void Editor::onEvent(const SDL_Event &event) {}
 void Editor::onUpdate(pain::DeltaTime dt) {}
 
 Editor::Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app)
     : pain::UIObject(entity, scene), m_app(app), m_imGuiDebugMenu()
 {
-  painless::luabinder::bindToCustomPanels(m_app.getLuaState(), *this);
-  painless::luabinder::bindImPlot(m_app.getLuaState(), *this);
+  luabinder::bindImGui(m_app.getLuaState(), *this);
+  luabinder::bindImPlot(m_app.getLuaState(), *this);
 }
 
 } // namespace painless

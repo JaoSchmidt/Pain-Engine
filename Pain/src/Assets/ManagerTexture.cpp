@@ -153,6 +153,8 @@ TextureSheet &getDefaultSheet(TextureManager::DefaultTexture defTex,
       PLOG_E("Using a default ERROR texture sheet");
     return s_textureSheetMap.at(ERROR_KEY);
   }
+  default:
+    std::abort();
   }
 }
 
@@ -206,10 +208,13 @@ Texture &TextureManager::getDefaultTexture(DefaultTexture defTex, bool isError)
       PLOG_E("Using a default ERROR texture");
     return s_textureMap.at(ERROR_KEY);
   }
-  case DefaultTexture::Blank:
+  case DefaultTexture::Blank: {
     if (isError)
       PLOG_W("Using a default blank texture");
     return s_textureMap.at(BLANK_KEY);
+  }
+  default:
+    std::abort();
   }
 }
 
