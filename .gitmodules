@@ -40,3 +40,6 @@
 [submodule "Pain/external/implot"]
 	path = Example/PainlessEditor/external/implot
 	url = https://github.com/epezent/implot.git
+[submodule "Pain/external/yaml-cpp"]
+	path = Pain/external/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git
