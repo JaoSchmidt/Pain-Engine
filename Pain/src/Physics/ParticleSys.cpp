@@ -38,12 +38,13 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
       for (size_t i = 0; i < chunk.count; i++) {
         auto &t = trail[i];
 
-        if (t.points.empty() ||
-            glm::distance(t.points.back(), tc[i].m_position) > t.minDistance) {
-          t.points.push_back(tc[i].m_position);
+        if (t.coordinates.empty() ||
+            glm::distance(t.coordinates.back(), tc[i].m_position) >
+                t.minDistance) {
+          t.coordinates.push_back(tc[i].m_position);
 
-          if (t.points.size() > t.capacity)
-            t.points.erase(t.points.begin());
+          if (t.coordinates.size() > t.capacity)
+            t.coordinates.erase(t.coordinates.begin());
         }
       }
     }
@@ -72,6 +73,7 @@ void Systems::ParticleSys::onRender(Renderers &renderer, bool isMinimized,
           static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5f;
       for (size_t i = 0; i < chunk.count; ++i) {
 
+        // creates a single, new particle
         if (psc[i].autoEmit && psc[i].elapsed > psc[i].interval) {
           SprayParticle &p = psc[i].particles[psc[i].currentParticle];
           psc[i].currentParticle =

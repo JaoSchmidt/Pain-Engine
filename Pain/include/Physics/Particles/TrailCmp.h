@@ -34,9 +34,9 @@ struct TrailComponentInitArgs {
 struct TrailComponent {
   using tag = tag::ParticleTrail;
 
-  std::vector<glm::vec2> points;
+  std::vector<glm::vec2> coordinates; // coordinates
 
-  unsigned capacity = 256;
+  unsigned capacity = 256;   // number of particles
   float minDistance = 0.01f; // avoid too many points
   bool autoEmit = true;      ///< Whether particles automatically spwan or not
   Color color = Colors::FullWhite;
@@ -57,7 +57,7 @@ struct TrailComponent {
     c.lifeTime = args.lifeTime;
 
     // Reserve capacity to avoid reallocations during runtime
-    c.points.reserve(c.capacity);
+    c.coordinates.reserve(c.capacity);
 
     return c;
   }
