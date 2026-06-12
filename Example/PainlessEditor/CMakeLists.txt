@@ -23,7 +23,7 @@ target_include_directories(${TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(Pain PRIVATE ${ENGINE_DIRECTORY}/Pain/include)
 
 # IMGUI
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/LICENSE.txt")
   message(
     "Fetching Imgui because ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/.git, doesn't exist"
   )
@@ -67,7 +67,7 @@ else()
 endif()
 
 # implot
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/implot/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/implot/LICENSE")
   message(
     "Fetching Implot because ${CMAKE_CURRENT_SOURCE_DIR}/external/implot/.git, doesn't exist"
   )

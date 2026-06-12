@@ -16,7 +16,7 @@ add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 # modules:")
 
 # foreach(source ${MODULES}) message("- ${source}") endforeach() target_sources(
-# ${LIBRARY_NAME} PUBLIC FILE_SET CXX_MODULES FILES ${MODULES} PRIVATE
+# ${LIBRARY_NAME} PUBLIC file_SET CXX_MODULES FILES ${MODULES} PRIVATE
 # ${SOURCES} )
 set(BUILD_SHARED_LIBS OFF)
 
@@ -171,7 +171,8 @@ else()
 endif()
 
 # perlin noise
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/PerlinNoise/.git")
+if(NOT EXISTS
+   "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/PerlinNoise/PerlinNoise.hpp")
   message("Fetching PerlinNoise")
   FetchContent_Declare(
     perlin
@@ -187,7 +188,7 @@ else()
 endif()
 
 # stb
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/stb/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/stb/README.md")
   message("Fetching stb")
   FetchContent_Declare(
     stb
@@ -209,7 +210,8 @@ set(MSDF_ATLAS_USE_VCPKG
 set(MSDF_ATLAS_USE_SKIA
     OFF
     CACHE BOOL "" FORCE)
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/msdf-atlas-gen/.git")
+if(NOT EXISTS
+   "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/msdf-atlas-gen/CMakeLists.txt")
   message("Fetching msdf-atlas-gen")
   FetchContent_Declare(
     msdf-atlas-gen
@@ -236,7 +238,7 @@ else()
 endif()
 
 # Sol2
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/sol2/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/sol2/CMakeLists.txt")
   message("Fetching Sol2")
   FetchContent_Declare(
     sol2
@@ -249,7 +251,8 @@ else()
 endif()
 
 # cpp-yaml
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/yaml-cpp/.git")
+if(NOT EXISTS
+   "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/yaml-cpp/CMakeLists.txt")
   message("Fetching yaml-cpp")
   FetchContent_Declare(
     sol2

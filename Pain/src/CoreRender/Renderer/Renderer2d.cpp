@@ -524,6 +524,7 @@ const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
   return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
          glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 }
+
 const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
                                          const glm::vec2 &size,
                                          const float rotationAngle)

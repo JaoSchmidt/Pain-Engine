@@ -18,6 +18,7 @@
 #include "Debugging/Profiling.h"
 
 // Misc
+#include "Misc/BasicMainScene.h"
 #include "Misc/BasicOrthoCamera.h"
 #include "Misc/BasicPerspCamera.h"
 #include "Misc/BasicShape.h"

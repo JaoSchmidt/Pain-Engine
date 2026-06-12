@@ -22,6 +22,7 @@
 namespace pain
 {
 struct Renderers;
+class Application;
 
 namespace Systems
 {
@@ -402,6 +403,11 @@ protected:
 
   /// Event dispatcher used by the scene.
   reg::EventDispatcher &m_eventDispatcher;
+
+  /* For making use of the application functionalities. Though it maybe more
+  useful if passed down to a specific object later in your game (e.g. debug
+  menus, speed up time menus, changing windows, etc)*/
+  // Application &m_app;
 };
 
 } // namespace pain

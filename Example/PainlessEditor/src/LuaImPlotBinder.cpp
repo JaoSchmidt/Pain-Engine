@@ -2,6 +2,7 @@
 #include "CoreRender/Renderer/Misc.h"
 #include "imgui.h"
 #include "implot.h"
+
 #define ImDrawIdx unsigned int
 namespace painless
 {

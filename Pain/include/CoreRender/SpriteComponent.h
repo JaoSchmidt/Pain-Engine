@@ -18,13 +18,9 @@
 
 #pragma once
 
-#include "Assets/ManagerTexture.h"
-#include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Buffers/Texture.h"
 #include "CoreRender/Renderer/Misc.h"
 #include "ECS/Components/ComponentManager.h"
 #include "Misc/BasicShape.h"
-#include "Misc/TextureSheet.h"
 
 #include <variant>
 

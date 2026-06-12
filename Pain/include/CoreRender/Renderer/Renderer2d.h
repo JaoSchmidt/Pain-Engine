@@ -158,18 +158,22 @@ struct Renderer2d {
   // ================================================================= //
 
   /// @brief Build a transform matrix with rotation.
-  const glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size,
-                               const float rotationAngle);
+  const static glm::mat4 getTransform(const glm::vec2 &position,
+                                      const glm::vec2 &size,
+                                      float rotationAngle);
 
   /// @brief Build a transform matrix without rotation.
-  const glm::mat4 getTransform(const glm::vec2 &position,
-                               const glm::vec2 &size);
+  const static glm::mat4 getTransform(const glm::vec2 &position,
+                                      const glm::vec2 &size);
+
   /// @brief Build a transform matrix with rotation.
-  const glm::mat4 getUniformTransform(const glm::vec2 &position, float size,
-                                      const float rotationAngle);
+  const static glm::mat4 getUniformTransform(const glm::vec2 &position,
+                                             float size,
+                                             const float rotationAngle);
 
   /// @brief Build a transform matrix without rotation.
-  const glm::mat4 getUniformTransform(const glm::vec2 &position, float size);
+  const static glm::mat4 getUniformTransform(const glm::vec2 &position,
+                                             float size);
 
   // ================================================================= //
   // Resources / Debug

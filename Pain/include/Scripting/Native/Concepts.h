@@ -140,7 +140,7 @@ template <typename T> void checkScriptMethods()
   // Check for wrong signatures
   if constexpr (hasAnyCallableOnRender<T> && !hasOnRenderMethod<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
-                         "onRender(Renderers&, bool, DeltaTime).");
+                         "onRender(RenderContext&, bool, DeltaTime).");
   }
   if constexpr (hasAnyCallableOnUpdate<T> && !hasOnUpdateMethod<T>) {
     static_assert(false, "Error: onUpdate() has wrong signature! Should be "

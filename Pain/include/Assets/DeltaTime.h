@@ -128,13 +128,13 @@ public:
   /** Raw time value in nanoseconds. */
   uint64_t m_time;
 
-  /** @return Nanoseconds in one second. */
+  /** @return Nanoseconds in one second, i.e. 1'000'000'000 nanoseconds */
   inline static constexpr uint64_t oneSecond() { return 1'000'000'000; }
 
-  /** @return Nanoseconds in one millisecond. */
+  /** @return Nanoseconds in one millisecond, i.e. 1'000'000 nanoseconds */
   inline static constexpr uint64_t oneMilliSecond() { return 1'000'000; }
 
-  /** @return Nanoseconds in one microsecond. */
+  /** @return Nanoseconds in one microsecond, i.e. 1'000 nanoseconds */
   inline static constexpr uint64_t oneMicroSecond() { return 1'000; }
 
 private:
