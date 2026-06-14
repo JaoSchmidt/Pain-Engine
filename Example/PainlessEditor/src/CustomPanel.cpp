@@ -83,7 +83,9 @@ void CustomEditor::addToPanel(const std::string &panelName, int identifier,
 {
   auto it = m_customPanels.find(panelName);
   if (it == m_customPanels.end()) {
-    PLOG_E("Error: no panel named {} registered");
+    PLOG_E("Error: no panel named {} registered, perhaps you forgot to call "
+           "registerPanel()?",
+           panelName);
     return;
   }
 
