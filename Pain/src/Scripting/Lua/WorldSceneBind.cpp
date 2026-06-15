@@ -162,7 +162,7 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
           if (oRotation)
             info.rotation = *oRotation;
           if (oInitialAngle)
-            info.rotationAngle = *oInitialAngle;
+            info.rotationRadians = *oInitialAngle;
           return LuaComponentDesc{
               scene.getSingleBitmask<RotationComponent>(),
               [info = std::move(info), &scene](reg::Entity e, reg::Bitmask b) {
@@ -175,7 +175,7 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
           if (oInfoTable) {
             sol::table t = *oInfoTable;
             if (auto angle = t["angle"]; angle.valid())
-              info.rotationAngle = angle.get<float>();
+              info.rotationRadians = angle.get<float>();
             if (auto rotation = t["rotation"]; rotation.valid())
               info.rotation = rotation.get<glm::vec3>();
           }

@@ -86,6 +86,7 @@ static constexpr Color FullWhite{255, 255, 255, 255};
 static constexpr Color Red{255, 0, 0, 255};
 static constexpr Color DarkRed{139, 0, 0, 255};
 static constexpr Color SoftPink{255, 182, 193, 255};
+static constexpr Color StrongPink{0xD40B95};
 static constexpr Color Magenta{255, 0, 255, 255};
 
 // Oranges / Yellows

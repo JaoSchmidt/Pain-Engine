@@ -280,15 +280,14 @@ public:
    * deletion.
    */
   NativeScriptComponent(NativeScriptComponent &&other) noexcept
+      : instance(other.instance),
+        destroyInstanceFunction(other.destroyInstanceFunction),
+        onCreateFunction(other.onCreateFunction),
+        onDestroyFunction(other.onDestroyFunction),
+        onRenderFunction(other.onRenderFunction),
+        onUpdateFunction(other.onUpdateFunction),
+        onEventFunction(other.onEventFunction)
   {
-    instance = other.instance;
-    destroyInstanceFunction = other.destroyInstanceFunction;
-    onCreateFunction = other.onCreateFunction;
-    onDestroyFunction = other.onDestroyFunction;
-    onRenderFunction = other.onRenderFunction;
-    onUpdateFunction = other.onUpdateFunction;
-    onEventFunction = other.onEventFunction;
-
     // Clear the other's instance to avoid double delete
     other.instance = nullptr;
     other.destroyInstanceFunction = nullptr;

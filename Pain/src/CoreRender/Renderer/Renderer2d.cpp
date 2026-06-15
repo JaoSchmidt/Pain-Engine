@@ -189,12 +189,11 @@ void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
 }
 
 void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
-                            const float rotation, RenderLayer layer,
+                            const float rotationRadians, RenderLayer layer,
                             const Material &material)
 {
   PROFILE_FUNCTION();
-  // PLOG_E("submitRect = {}, angle = {}", glm::radians(rotation), rotation);
-  const glm::mat4 transform = getTransform(position, size, rotation);
+  const glm::mat4 transform = getTransform(position, size, rotationRadians);
   submitRect(transform, layer, material);
 }
 void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
@@ -330,7 +329,6 @@ void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
     batch.flush();
     batch.resetPtr();
   }
-
   batch.allocateTri(transform, material.m_color);
 }
 
@@ -509,12 +507,11 @@ const glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
 }
 const glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
                                                 float scale,
-                                                const float rotationAngle)
+                                                const float rotationRadians)
 {
   PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle),
-                     {0.0f, 0.0f, 1.0f}) *
+         glm::rotate(glm::mat4(1.0f), rotationRadians, {0.0f, 0.0f, 1.0f}) *
          glm::scale(glm::mat4(1.0f), {scale, scale, 1.0f});
 }
 const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
@@ -527,12 +524,11 @@ const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
 
 const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
                                          const glm::vec2 &size,
-                                         const float rotationAngle)
+                                         const float rotationRadians)
 {
   PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle),
-                     {0.0f, 0.0f, 1.0f}) *
+         glm::rotate(glm::mat4(1.0f), rotationRadians, {0.0f, 0.0f, 1.0f}) *
          glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
 }
 

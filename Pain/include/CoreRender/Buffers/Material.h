@@ -69,6 +69,7 @@ struct MaterialCreationInfo {
   Shader &shader;
   Texture &texture =
       TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
+  std::string name = "";
 };
 
 /**
@@ -84,10 +85,10 @@ struct MaterialCreationInfo {
 struct Material {
   using TextureVariant = std::variant<Texture *, SheetStruct>;
   std::variant<ParamPBR, ParamPhong, ParamSimplest> m_params =
-      ParamPBR{};                       ///< Shader specific parameters
-  Color m_color = {255, 255, 255, 255}; ///< Tint color.
-  float m_tilingFactor = 1.f;           ///< Texture tiling multiplier.
-  Shader *m_shader = nullptr;           ///< Instanciated Shader
+      ParamPBR{};                     ///< Shader specific parameters
+  Color m_color = Colors::StrongPink; ///< Tint color.
+  float m_tilingFactor = 1.f;         ///< Texture tiling multiplier.
+  Shader *m_shader = nullptr;         ///< Instanciated Shader
 
   uint32_t m_flags = 0; ///< FlagOptions
   enum FlagOptions {
@@ -101,6 +102,8 @@ struct Material {
    * define manually. Otherwise will generate an warning */
   TextureVariant m_texture = TextureVariant{&TextureManager::getDefaultTexture(
       TextureManager::DefaultTexture::Blank, false)};
+  std::string m_name = "";
+
   /** @brief small checker, used mainly on asserts */
   bool isTextureSheet() const
   {
@@ -127,11 +130,13 @@ struct Material {
     delete[] samplers;
 
     return Material{
+        //
         .m_params = info.params,
         .m_color = info.color,
         .m_tilingFactor = info.tilingFactor,
         .m_shader = &info.shader,
         .m_texture = &info.texture,
+        .m_name = std::move(info.name),
     };
   }
 

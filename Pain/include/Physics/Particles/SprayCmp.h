@@ -104,6 +104,15 @@ struct ParticleSprayComponent {
       particles.push_back(SprayParticle{});
     }
   }
+  /**
+   * Get the current particle using `psc.particles[psc.currentParticle]`
+   * Then, use this function the get the next
+   */
+  void next()
+  { //
+    currentParticle = (currentParticle + 1) % maxNumberOfParticles;
+  }
+
   // ------------------------------------------------------------
   // Factory functions
   // ------------------------------------------------------------

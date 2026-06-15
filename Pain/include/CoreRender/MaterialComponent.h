@@ -34,6 +34,16 @@ struct MaterialComponent {
   Material &operator*() { return *m_material; }
   const Material &operator*() const { return *m_material; }
 
+  MaterialComponent(MaterialComponent &&o) : m_material(o.m_material) {};
+  MaterialComponent &operator=(MaterialComponent &&o) noexcept
+  {
+    if (this != &o) {
+      m_material = o.m_material;
+      o.m_material = nullptr;
+    }
+    return *this;
+  }
+
 private:
   MaterialComponent(Material &m) : m_material(&m) {};
   MaterialComponent(MaterialManager &mm)

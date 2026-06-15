@@ -7,12 +7,10 @@
 // RenderSys.cpp
 #include "CoreRender/Render2dSys.h"
 #include "CoreRender/MaterialComponent.h"
-#include "CoreRender/MeshComponent.h"
 #include "CoreRender/RenderContext.h"
 #include "CoreRender/Renderer/Renderers.h"
 #include "CoreRender/SpriteComponent.h"
 #include "Debugging/Profiling.h"
-#include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
 
@@ -55,14 +53,16 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
               using T = std::decay_t<decltype(shape)>;
               if constexpr (std::is_same_v<T, QuadShape>) {
                 renderer2d.submitQuad(t[i].m_position, shape.side,
-                                      r[i].m_rotationAngle, s[i].layer, *m[i]);
+                                      r[i].m_rotationRadians, s[i].layer,
+                                      *m[i]);
               } else if constexpr (std::is_same_v<T, RectShape>) {
                 renderer2d.submitRect(t[i].m_position, shape.size,
-                                      r[i].m_rotationAngle, s[i].layer, *m[i]);
+                                      r[i].m_rotationRadians, s[i].layer,
+                                      *m[i]);
               } else if constexpr (std::is_same_v<T, TriangleShape>) {
                 renderer2d.submitTri(t[i].m_position,
                                      {shape.base, shape.height},
-                                     r[i].m_rotationAngle, s[i].layer, *m[i]);
+                                     r[i].m_rotationRadians, s[i].layer, *m[i]);
               }
             },
             s[i].m_shape);
@@ -77,7 +77,7 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
     for (auto &chunk : chunks) {
       auto *t = std::get<0>(chunk.arrays);
       auto *s = std::get<1>(chunk.arrays);
-      auto *m = std::get<2>(chunk.arrays);
+      const MaterialComponent *m = std::get<2>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         std::visit(
             [&](auto &shape) {

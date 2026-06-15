@@ -76,8 +76,7 @@ void Systems::ParticleSys::onRender(Renderers &renderer, bool isMinimized,
         // creates a single, new particle
         if (psc[i].autoEmit && psc[i].elapsed > psc[i].interval) {
           SprayParticle &p = psc[i].particles[psc[i].currentParticle];
-          psc[i].currentParticle =
-              (psc[i].currentParticle + 1) % psc[i].maxNumberOfParticles;
+          psc[i].next();
 
           const float maxAngleDeg = psc[i].randAngleFactor; // 0..360
           const float maxAngleRad = glm::radians(maxAngleDeg);

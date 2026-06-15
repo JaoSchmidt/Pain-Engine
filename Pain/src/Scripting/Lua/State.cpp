@@ -244,10 +244,10 @@ sol::state createLuaState()
   );
 
   // type returned by get_rotation(self)
-  lua.new_usertype<RotationComponent>(              //
-      "RotationComponent", sol::no_constructor,     //
-      "angle", &RotationComponent::m_rotationAngle, //
-      "rotation", &RotationComponent::m_rotation    //
+  lua.new_usertype<RotationComponent>(                //
+      "RotationComponent", sol::no_constructor,       //
+      "angle", &RotationComponent::m_rotationRadians, //
+      "rotation", &RotationComponent::m_rotation      //
   );
 
   // type returned by get_rotation(self)

@@ -82,12 +82,12 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
     mc.m_velocity = moveDir * moveSpeed;
 
     if (state[SDL_SCANCODE_Q])
-      rc.m_rotationAngle += mc.m_rotationSpeed * deltaTime.getSecondsf();
+      rc.m_rotationRadians += mc.m_rotationSpeed * deltaTime.getSecondsf();
     if (state[SDL_SCANCODE_E])
-      rc.m_rotationAngle -= mc.m_rotationSpeed * deltaTime.getSecondsf();
+      rc.m_rotationRadians -= mc.m_rotationSpeed * deltaTime.getSecondsf();
 
     tc.m_position += mc.m_velocity * deltaTime.getSecondsf();
-    cc.recalculateViewMatrix(tc.m_position, rc.m_rotationAngle);
+    cc.recalculateViewMatrix(tc.m_position, rc.m_rotationRadians);
   } else { // TODO: finish 3d ortho version
     auto [mc, tc, cc] = getComponents<Movement3dComponent, Transform3dComponent,
                                       Component::OrthoCamera>();
