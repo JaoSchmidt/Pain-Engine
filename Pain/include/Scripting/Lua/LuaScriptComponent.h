@@ -78,7 +78,7 @@ struct LuaScriptComponent {
    * @param solstate Lua state used for script execution.
    * @param scriptPath Path to the Lua script file.
    */
-  void bind(sol::state &solstate, const char *scriptPath);
+  void bind(sol::state &lua, const char *scriptPath);
 
   // ------------------------------------------------------------
   // Script callbacks

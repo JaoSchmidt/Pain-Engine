@@ -37,10 +37,10 @@ CubeBatch CubeBatch::create(std::string name)
   }
 
   constexpr glm::vec2 FaceUVs[4] = {
-      {0.0f, 0.0f}, // bottom-left
-      {1.0f, 0.0f}, // bottom-right
-      {1.0f, 1.0f}, // top-right
-      {0.0f, 1.0f}, // top-left
+      {0.0F, 0.0F}, // bottom-left
+      {1.0F, 0.0F}, // bottom-right
+      {1.0F, 1.0F}, // top-right
+      {0.0F, 1.0F}, // top-left
   };
   constexpr uint32_t CubeFaces[6][4] = {
       {0, 1, 2, 3}, // front
@@ -51,14 +51,14 @@ CubeBatch CubeBatch::create(std::string name)
       {0, 1, 5, 4}, // bottom
   };
   constexpr glm::vec3 CubeVertexPositions[8] = {
-      {-0.5f, -0.5f, -0.5f}, // 0
-      {0.5f, -0.5f, -0.5f},  // 1
-      {0.5f, 0.5f, -0.5f},   // 2
-      {-0.5f, 0.5f, -0.5f},  // 3
-      {-0.5f, -0.5f, 0.5f},  // 4
-      {0.5f, -0.5f, 0.5f},   // 5
-      {0.5f, 0.5f, 0.5f},    // 6
-      {-0.5f, 0.5f, 0.5f},   // 7
+      {-0.5F, -0.5F, -0.5F}, // 0
+      {0.5F, -0.5F, -0.5F},  // 1
+      {0.5F, 0.5F, -0.5F},   // 2
+      {-0.5F, 0.5F, -0.5F},  // 3
+      {-0.5F, -0.5F, 0.5F},  // 4
+      {0.5F, -0.5F, 0.5F},   // 5
+      {0.5F, 0.5F, 0.5F},    // 6
+      {-0.5F, 0.5F, 0.5F},   // 7
   };
 
   std::unique_ptr<Vertex[]> vertices =
@@ -90,7 +90,8 @@ CubeBatch CubeBatch::create(std::string name)
               {ShaderDataType::Float, "a_TilingFactor", false, true},
               {ShaderDataType::Mat4, "a_Transform", false, true},
           }),
-      *IndexBuffer::createIndexBuffer(indices.data(), IndicesPerCube), name};
+      *IndexBuffer::createIndexBuffer(indices.data(), IndicesPerCube),
+      std::move(name)};
   // *IndexBuffer::createIndexBuffer(indices,
   //                                 sizeof(indices) / sizeof(indices[0]))};
 }
@@ -101,7 +102,7 @@ CubeBatch::CubeBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
       vao(*VertexArray::createVertexArray(vbo, vboInstance, ib)),      //
       ptrInit(std::make_unique<CubeInstanceVertex[]>(MaxPolyhedrons)), //
       ptr(ptrInit.get()),                                              //
-      m_name(name) {};
+      m_name(std::move(name)) {};
 
 void CubeBatch::resetPtr()
 {
@@ -110,7 +111,6 @@ void CubeBatch::resetPtr()
 }
 void CubeBatch::resetAll()
 {
-
   resetPtr();
 #ifndef NDEBUG
   statsCount = 0;
@@ -120,7 +120,7 @@ void CubeBatch::resetAll()
 //
 void CubeBatch::flush(Texture **textures, uint32_t textureCount)
 {
-  if (!m_count)
+  if (m_count == 0)
     return;
   vao.bind();
   vbo.bind();
@@ -139,7 +139,7 @@ void CubeBatch::flush(Texture **textures, uint32_t textureCount)
 #endif
 }
 void CubeBatch::allocateCube(const glm::mat4 &transform, const Color &tintColor,
-                             const float tilingFactor, const float textureIndex)
+                             float tilingFactor, float textureIndex)
 {
   PROFILE_FUNCTION();
   ptr->color = tintColor.value;

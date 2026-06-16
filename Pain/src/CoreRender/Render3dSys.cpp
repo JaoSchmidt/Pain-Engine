@@ -59,7 +59,7 @@ void Render3d::onRender(Renderers &renderer, bool isMinimized,
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - scripts");
-    auto &commands = renderer.m_renderContext.getCommands();
+    const auto &commands = renderer.m_renderContext.getCommands();
 
     for (const auto &cmd : commands) {
       switch (cmd.m_type) {

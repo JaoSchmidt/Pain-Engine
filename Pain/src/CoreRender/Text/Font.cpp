@@ -40,7 +40,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   P_ASSERT(ft, "Could not load FreeType library");
   // Load font file
   msdfgen::FontHandle *font = msdfgen::loadFont(ft, fontFilename);
-  if (!font) {
+  if (font == nullptr) {
     PLOG_W("Font file not found \"{}\"", fontFilename);
     throw std::runtime_error(std::string("Font file not found \"") +
                              std::string(fontFilename) + std::string("\""));

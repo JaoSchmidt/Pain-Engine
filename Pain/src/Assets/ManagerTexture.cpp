@@ -60,7 +60,7 @@ std::string getFullPath(const char *relativeOrAbsolute)
 void createDefaultTexture(TextureManager::DefaultTexture d, const char *path)
 {
   auto texOpt = Texture::createTexture(path, false, false);
-  std::string key = "";
+  std::string key;
   switch (d) {
   case TextureManager::DefaultTexture::General:
     key = GENERAL_KEY;
@@ -101,7 +101,7 @@ void TextureManager::initiateDefaultTextures()
 TextureSheet &TextureManager::createWithDimensions(
     const char *name, const char *texturePath, float spriteWidth,
     float spriteHeight, std::initializer_list<std::pair<int, int>> coords,
-    bool keepOnCPUMemory, float padding)
+    bool keepOnRAM, float padding)
 {
   auto search = s_textureSheetMap.find(name);
   if (search != s_textureSheetMap.end()) {
@@ -110,7 +110,7 @@ TextureSheet &TextureManager::createWithDimensions(
   }
 
   Texture &tex =
-      TextureManager::createTexture(texturePath, false, true, keepOnCPUMemory);
+      TextureManager::createTexture(texturePath, false, true, keepOnRAM);
   TextureSheet sheet = TextureSheet::createWithDimensions(
       tex, spriteWidth, spriteHeight, coords, padding);
 
@@ -122,7 +122,7 @@ TextureSheet &TextureManager::createWithDimensions(
 TextureSheet &TextureManager::createWithDivisions(
     const char *name, const char *texturePath, unsigned nlinesX,
     unsigned ncolumnsY, std::initializer_list<std::pair<int, int>> coords,
-    bool keepOnCPUMemory, float padding)
+    bool keepOnRAM, float padding)
 {
   auto search = s_textureSheetMap.find(name);
   if (search != s_textureSheetMap.end()) {
@@ -131,7 +131,7 @@ TextureSheet &TextureManager::createWithDivisions(
   }
 
   Texture &tex =
-      TextureManager::createTexture(texturePath, false, true, keepOnCPUMemory);
+      TextureManager::createTexture(texturePath, false, true, keepOnRAM);
   TextureSheet sheet = TextureSheet::createWithDivisions(
       tex, nlinesX, ncolumnsY, coords, padding);
 
@@ -158,9 +158,9 @@ TextureSheet &getDefaultSheet(TextureManager::DefaultTexture defTex,
   }
 }
 
-TextureSheet &TextureManager::getTextureSheet(const char *name)
+TextureSheet &TextureManager::getTextureSheet(const char *filepath)
 {
-  auto search = s_textureSheetMap.find(name);
+  auto search = s_textureSheetMap.find(filepath);
   if (search != s_textureSheetMap.end()) {
     return search->second;
   }
@@ -185,10 +185,9 @@ Texture &TextureManager::createDumpTexture(const char *name, uint32_t width,
   if (textOpt) {
     auto [it, inserted] = s_textureMap.emplace(name, std::move(*textOpt));
     return it->second;
-  } else {
-    PLOG_W("Using a default Texture instead of {}", name);
-    return getDefaultTexture(DefaultTexture::General, isError);
   }
+  PLOG_W("Using a default Texture instead of {}", name);
+  return getDefaultTexture(DefaultTexture::General, isError);
 }
 Texture &TextureManager::getDefaultTexture(DefaultTexture defTex, bool isError)
 {
@@ -205,7 +204,7 @@ Texture &TextureManager::getDefaultTexture(DefaultTexture defTex, bool isError)
   case DefaultTexture::Error: {
     auto t = getFullPath(ERROR_TEXTURE_PATH);
     if (isError)
-      PLOG_E("Using a default ERROR texture");
+      PLOG_E("Using a default ERROR texture\"{}\"", t);
     return s_textureMap.at(ERROR_KEY);
   }
   case DefaultTexture::Blank: {
@@ -222,7 +221,7 @@ Texture &TextureManager::createTexture(const char *path, bool clamp,
                                        bool isPath, bool keepOnCPUMemory,
                                        bool isError)
 {
-  std::string key = "";
+  std::string key;
   if (isPath)
     key = getFullPath(path);
   else
@@ -247,7 +246,7 @@ Texture &TextureManager::createTexture(const char *path, bool clamp,
 const Texture &TextureManager::getConstTexture(const char *pathOrName,
                                                bool isPath, bool isError)
 {
-  std::string key = "";
+  std::string key;
   if (isPath)
     key = getFullPath(pathOrName);
   else
@@ -262,7 +261,7 @@ const Texture &TextureManager::getConstTexture(const char *pathOrName,
 Texture &TextureManager::getTexture(const char *pathOrName, bool isPath,
                                     bool isError)
 {
-  std::string key = "";
+  std::string key;
   if (isPath)
     key = getFullPath(pathOrName);
   else
@@ -291,7 +290,7 @@ bool TextureManager::deleteTexture(const std::string &pathOrName, bool isPath)
     return false;
   }
   Texture &tex = search->second;
-  if (s_renderer2d) {
+  if (s_renderer2d != nullptr) {
     s_renderer2d->removeTexture(tex);
   } else {
     PLOG_W("Texture was not removed inside renderer");

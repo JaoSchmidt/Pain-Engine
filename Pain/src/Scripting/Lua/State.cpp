@@ -43,12 +43,12 @@ int my_exception_handler(lua_State *L,
   if (maybe_exception) {
     std::cout << "(straight from the exception): ";
     const std::exception &ex = *maybe_exception;
-    std::cout << ex.what() << std::endl;
+    std::cout << ex.what() << '\n';
   } else {
     std::cout << "(from the description parameter): ";
     std::cout.write(description.data(),
                     static_cast<std::streamsize>(description.size()));
-    std::cout << std::endl;
+    std::cout << '\n';
   }
 
   // you must push 1 element onto the stack to be

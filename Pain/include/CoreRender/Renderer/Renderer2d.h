@@ -52,7 +52,7 @@ struct Renderer2d {
   /// @brief Change the active camera entity used for rendering.
   void changeCamera(reg::Entity camera);
   /// @brief Returns true if a valid camera is currently bound.
-  bool hasCamera();
+  bool hasCamera() const;
 
   // ================================================================= //
   // Renderer basic wrapper around OpenGL
@@ -68,8 +68,8 @@ struct Renderer2d {
    * @param perspCamera Perspecitve camera component
    * @param position camera position
    */
-  void beginScene(DeltaTime globalTime, const cmp::OrthoCamera &,
-                  const Transform2dComponent &position);
+  void beginScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+                  const Transform2dComponent &tc);
 
   // @brief Flush all batches and finalize the scene.
   void endScene();
@@ -91,9 +91,8 @@ struct Renderer2d {
    *
    * @param rotationRadians Rotation angle in radians.
    */
-  void submitQuad(const glm::vec2 &position, float size,
-                  const float rotationRadians, RenderLayer layer,
-                  const Material &material);
+  void submitQuad(const glm::vec2 &position, float size, float rotationRadians,
+                  RenderLayer layer, const Material &material);
 
   /// @brief Submit an axis-aligned textured quad.
   void submitQuad(const glm::mat4 &transform, RenderLayer layer,
@@ -113,7 +112,7 @@ struct Renderer2d {
    * @param rotationRadians Rotation angle in radians.
    */
   void submitRect(const glm::vec2 &position, const glm::vec2 &size,
-                  const float rotationRadians, RenderLayer layer,
+                  float rotationRadians, RenderLayer layer,
                   const Material &material);
 
   /// @brief Submit an axis-aligned textured rect.
@@ -130,7 +129,7 @@ struct Renderer2d {
 
   /// @brief Submit a rotated triangle primitive.
   void submitTri(const glm::vec2 &position, const glm::vec2 &size,
-                 const float rotationRadians, RenderLayer layer,
+                 float rotationRadians, RenderLayer layer,
                  const Material &material);
 
   void submitTri(const glm::mat4 &transform, RenderLayer layer,
@@ -140,7 +139,7 @@ struct Renderer2d {
   // ================================================================= //
 
   /// @brief Begin rendering a particle spray batch.
-  void beginSprayParticle(const ParticleSprayComponent &particleSprayComponent);
+  void beginSprayParticle(const ParticleSprayComponent &psc);
 
   /// @brief Submit a single particle to the current spray batch.
   void submitSprayParticle(const SprayParticle &p);
@@ -158,22 +157,19 @@ struct Renderer2d {
   // ================================================================= //
 
   /// @brief Build a transform matrix with rotation.
-  const static glm::mat4 getTransform(const glm::vec2 &position,
-                                      const glm::vec2 &size,
-                                      float rotationAngle);
+  static glm::mat4 getTransform(const glm::vec2 &position,
+                                const glm::vec2 &size, float rotationRadians);
 
   /// @brief Build a transform matrix without rotation.
-  const static glm::mat4 getTransform(const glm::vec2 &position,
-                                      const glm::vec2 &size);
+  static glm::mat4 getTransform(const glm::vec2 &position,
+                                const glm::vec2 &size);
 
   /// @brief Build a transform matrix with rotation.
-  const static glm::mat4 getUniformTransform(const glm::vec2 &position,
-                                             float size,
-                                             const float rotationAngle);
+  static glm::mat4 getUniformTransform(const glm::vec2 &position, float scale,
+                                       float rotationRadians);
 
   /// @brief Build a transform matrix without rotation.
-  const static glm::mat4 getUniformTransform(const glm::vec2 &position,
-                                             float size);
+  static glm::mat4 getUniformTransform(const glm::vec2 &position, float scale);
 
   // ================================================================= //
   // Resources / Debug
@@ -218,11 +214,14 @@ private:
     }
   }
 
-  float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
+  static float constexpr smallSpacingOrder(short order)
+  {
+    return static_cast<float>(order) / 1024.F;
+  };
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                            DeltaTime globalTime, const glm::ivec2 &resolution,
-                           const glm::vec2 &cameraPos, const float zoomLevel);
+                           const glm::vec2 &cameraPos, float zoomLevel);
   void bindTextures();
   float allocateTextures(Texture &texture);
 

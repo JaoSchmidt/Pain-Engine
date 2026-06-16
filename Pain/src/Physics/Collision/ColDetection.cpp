@@ -65,15 +65,15 @@ ColDet::Result ColDet::checkAABBCollision(const glm::vec2 &center1,
         std::min(maxAABB1y, maxAABB2y) - std::max(minAABB1y, minAABB2y);
 
     // Collision normal = axis of minimum penetration
-    glm::vec2 collisionNormal(0.f);
+    glm::vec2 collisionNormal(0.F);
     float overlap = 0;
 
     if (overlapX < overlapY) { // axis choosen is {1,0}
       overlap = overlapX;
-      collisionNormal.x = (diff.x < 0.f) ? -1.f : 1.f;
+      collisionNormal.x = (diff.x < 0.F) ? -1.F : 1.F;
     } else {
       overlap = overlapY;
-      collisionNormal.y = (diff.y < 0.f) ? -1.f : 1.f;
+      collisionNormal.y = (diff.y < 0.F) ? -1.F : 1.F;
     }
 
     return {true, overlap, glm::normalize(collisionNormal)};
@@ -91,7 +91,7 @@ ColDet::Result ColDet::checkCircleCollision(const glm::vec2 &center1,
   if (collisionDistance < radius1 + radius2) {
     const glm::vec2 normal = center2 - center1;
     const glm::vec2 normalized =
-        glm::length(normal) > 0.0f ? glm::normalize(normal) : glm::vec2(0.0f);
+        glm::length(normal) > 0.0F ? glm::normalize(normal) : glm::vec2(0.0F);
     const float overlay = radius1 + radius2 - collisionDistance;
     return {true, overlay, normalized};
   } else {
@@ -113,7 +113,7 @@ ColDet::Result ColDet::checkAABBCollisionCircle(const glm::vec2 &center1,
   float distance = glm::length(normal);
 
   // Circle center is outside the AABB
-  if (distance > 0.0f) {
+  if (distance > 0.0F) {
     if (distance > radius2)
       return {false};
 
@@ -124,12 +124,11 @@ ColDet::Result ColDet::checkAABBCollisionCircle(const glm::vec2 &center1,
   glm::vec2 distancesToEdge = halfSize1 - glm::abs(diff);
 
   if (distancesToEdge.x < distancesToEdge.y) {
-    normal = glm::vec2((diff.x > 0) ? 1.0f : -1.0f, 0.0f);
+    normal = glm::vec2((diff.x > 0) ? 1.0F : -1.0F, 0.0F);
     return {true, distancesToEdge.x + radius2, normal};
-  } else {
-    normal = glm::vec2(0.0f, (diff.y > 0) ? 1.0f : -1.0f);
-    return {true, distancesToEdge.y + radius2, normal};
   }
+  normal = glm::vec2(0.0F, (diff.y > 0) ? 1.0F : -1.0F);
+  return {true, distancesToEdge.y + radius2, normal};
 }
 
 // ---------------------------------------------------------------------------

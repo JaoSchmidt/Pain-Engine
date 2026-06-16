@@ -31,8 +31,8 @@ void LightSys::onRender(Renderers &renderer, bool isMinimized,
 
     auto chunks = queryConst<Transform3dComponent, LightComponent>();
     for (auto &chunk : chunks) {
-      auto *t = std::get<0>(chunk.arrays);
-      auto *l = std::get<1>(chunk.arrays);
+      const auto *t = std::get<0>(chunk.arrays);
+      const auto *l = std::get<1>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         renderer.m_renderer3d.submitLight(t[i].m_position, l[i].m_color);
       }

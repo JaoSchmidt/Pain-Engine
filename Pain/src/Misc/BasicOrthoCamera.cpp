@@ -63,22 +63,22 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
         getComponents<Movement2dComponent, Transform2dComponent,
                       Component::OrthoCamera, RotationComponent>();
 
-    glm::vec3 moveDir{0.0f};
+    glm::vec3 moveDir{0.0F};
 
     if (state[SDL_SCANCODE_W])
-      moveDir -= glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+      moveDir -= glm::cross(rc.m_rotation, {0.0F, 0.0F, 1.0F});
     if (state[SDL_SCANCODE_S])
-      moveDir += glm::cross(rc.m_rotation, {0.0f, 0.0f, 1.0f});
+      moveDir += glm::cross(rc.m_rotation, {0.0F, 0.0F, 1.0F});
     if (state[SDL_SCANCODE_A])
       moveDir -= rc.m_rotation;
     if (state[SDL_SCANCODE_D])
       moveDir += rc.m_rotation;
 
     // Normalize movement direction (avoid diagonal speed boost)
-    if (glm::length(moveDir) > 0.0001f)
+    if (glm::length(moveDir) > 0.0001F)
       moveDir = glm::normalize(moveDir);
 
-    float moveSpeed = cc.m_zoomLevel * (1.0f + state[SDL_SCANCODE_LSHIFT]);
+    float moveSpeed = cc.m_zoomLevel * (1.0F + state[SDL_SCANCODE_LSHIFT]);
     mc.m_velocity = moveDir * moveSpeed;
 
     if (state[SDL_SCANCODE_Q])
@@ -113,7 +113,7 @@ void OrthoCameraScript::onMouseScrolled(const SDL_Event &event)
 {
   Component::OrthoCamera &cc = getComponent<Component::OrthoCamera>();
   cc.m_zoomLevel -= (float)event.wheel.y * m_zoomSpeed;
-  cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25f);
+  cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25F);
   cc.setProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
                    cc.m_aspectRatio * cc.m_zoomLevel, -cc.m_zoomLevel,
                    cc.m_zoomLevel);

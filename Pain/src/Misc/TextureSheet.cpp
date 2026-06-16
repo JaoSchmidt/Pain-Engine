@@ -100,9 +100,9 @@ TextureSheet TextureSheet::createWithDivisions(
 
 TextureSheet::TextureSheet(Texture &texture, float spriteWidth,
                            float spriteHeight,
-                           std::vector<std::array<glm::vec2, 4>> textureIds,
+                           std::vector<std::array<glm::vec2, 4>> texturesIds,
                            size_t size)
     : m_spriteSize({spriteWidth, spriteHeight}), m_size(size),
-      m_texture(texture), m_textureIds(std::move(textureIds)) {};
+      m_texture(texture), m_textureIds(std::move(texturesIds)) {};
 
 } // namespace pain

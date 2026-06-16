@@ -29,7 +29,7 @@ template <typename T> struct LuaVector {
   {
     if (i == data.size() + 1)
       return data.push_back(v);
-    else if (i == 0 || i > data.size())
+    if (i == 0 || i > data.size())
       throw std::out_of_range("index == 0 or index > vector size");
     data[i - 1] = v;
   }
@@ -237,8 +237,8 @@ void luabinder::bindImPlot(sol::state &lua, CustomEditor &editor)
             ImPlot::PlotScatter(label.c_str(), xs.data.data(), ys.data.data(),
                                 static_cast<int>(count), spec);
           }, //
-          [](const std::string &label, sol::table xs_table,
-             sol::table ys_table) {
+          [](const std::string &label, const sol::table &xs_table,
+             const sol::table &ys_table) {
             size_t count = std::min(xs_table.size(), ys_table.size());
 
             std::vector<double> xs(count);

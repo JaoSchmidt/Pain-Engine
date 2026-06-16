@@ -18,7 +18,7 @@ namespace painless
 void CustomEditor::dockerspaceBuild(const std::string &panelName,
                                     PanelInfo &info)
 {
-  if (info.m_initalSplit == 1.f) { // join as tabs in the same container
+  if (info.m_initalSplit == 1.F) { // join as tabs in the same container
     switch (info.m_parentDockerspace) {
     case InterfaceMenu::BOTTOMBAR:
       ImGui::DockBuilderDockWindow(panelName.c_str(), m_dockerIDViewport);
@@ -44,16 +44,16 @@ void CustomEditor::dockerspaceBuild(const std::string &panelName,
   }
 }
 
-void CustomEditor::registerPanel(const std::string name, float split,
+void CustomEditor::registerPanel(const std::string &name, float split,
                                  InterfaceMenu menu)
 {
   // If panel doesn't exist, create it
-  if (m_customPanels.find(name) == m_customPanels.end()) {
+  if (!m_customPanels.contains(name)) {
     const std::string &panel =
         m_customPanels.emplace(name, std::vector<SubPanel>{}).first->first;
     PanelInfo &info = m_panelInfo
-                          .emplace(std::piecewise_construct,
-                                   std::forward_as_tuple(std::move(name)),
+                          .emplace(std::piecewise_construct,    //
+                                   std::forward_as_tuple(name), //
                                    std::forward_as_tuple(split, menu))
                           .first->second;
     if (m_dockspaceInitialized)
@@ -62,7 +62,7 @@ void CustomEditor::registerPanel(const std::string name, float split,
 }
 
 void CustomEditor::addToPanelLua(const std::string &panelName, int identifier,
-                                 sol::protected_function luaFunc,
+                                 const sol::protected_function &luaFunc,
                                  sol::optional<int> optOrder)
 {
   int order = optOrder.value_or(0);
@@ -79,7 +79,7 @@ void CustomEditor::addToPanelLua(const std::string &panelName, int identifier,
 }
 
 void CustomEditor::addToPanel(const std::string &panelName, int identifier,
-                              onRenderFunc callback, int order)
+                              const onRenderFunc &callback, int order)
 {
   auto it = m_customPanels.find(panelName);
   if (it == m_customPanels.end()) {

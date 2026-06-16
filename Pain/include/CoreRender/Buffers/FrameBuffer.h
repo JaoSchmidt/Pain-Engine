@@ -55,10 +55,10 @@ public:
   void resizeFrameBuffer(int32_t width, int32_t height);
 
   /** Binds the framebuffer for rendering. */
-  void bind();
+  void bind() const;
 
   /** Unbinds the currently bound framebuffer. */
-  void unbind();
+  void static unbind();
 
   FrameBuffer(const FrameBufferCreationInfo &spec) : m(spec) {}
   MOVABLE(FrameBuffer);

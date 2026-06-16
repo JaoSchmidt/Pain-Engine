@@ -48,9 +48,9 @@ public:
   double m_currentTPS = 60.0;
 
 private:
-  std::string generateTimestampedFilename(const std::string &prefix,
-                                          const std::string &extension);
-  std::string getNextAvailableFileName(const std::string &baseName);
+  static std::string generateTimestampedFilename(const std::string &prefix,
+                                                 const std::string &extension);
+  static std::string getNextAvailableFileName(const std::string &baseStem);
 
   std::string m_baseProfileName{"update"};
   std::string m_resultFileName{"result.json"};

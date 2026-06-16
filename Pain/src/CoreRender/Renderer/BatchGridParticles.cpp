@@ -58,7 +58,7 @@ void GridParticleBatch::resetAll()
 
 void GridParticleBatch::flush()
 {
-  if (!indexCount)
+  if (indexCount == 0)
     return;
 
   vao.bind();

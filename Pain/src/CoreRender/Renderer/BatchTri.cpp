@@ -52,7 +52,7 @@ void TriBatch::resetPtr()
 }
 void TriBatch::flush()
 {
-  if (!indexCount)
+  if (indexCount == 0)
     return;
 
   vao.bind();
@@ -71,9 +71,9 @@ void TriBatch::flush()
 void TriBatch::allocateTri(const glm::mat4 &transform, const Color &tintColor)
 {
   constexpr glm::vec4 TriVertexPositions[3] = {
-      glm::vec4(0.0f, 0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
+      glm::vec4(0.0F, 0.5F, 0.F, 1.F),
+      glm::vec4(0.5F, -0.5F, 0.F, 1.F),
+      glm::vec4(-0.5F, -0.5F, 0.F, 1.F),
   };
   PROFILE_FUNCTION();
   for (unsigned i = 0; i < 3; i++) {

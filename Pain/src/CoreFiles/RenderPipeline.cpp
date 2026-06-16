@@ -25,9 +25,9 @@ namespace pain
 namespace
 {
 constexpr std::array<glm::vec4, 3> s_colorOptions = {
-    glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), // Pure Black
-    glm::vec4(0.2f, 0.2f, 0.2f, 1.0f), // Dark Grey
-    glm::vec4(1.0f, 0.2f, 0.9f, 1.0f)  // Strong Pink
+    glm::vec4(0.0F, 0.0F, 0.0F, 1.0F), // Pure Black
+    glm::vec4(0.2F, 0.2F, 0.2F, 1.0F), // Dark Grey
+    glm::vec4(1.0F, 0.2F, 0.9F, 1.0F)  // Strong Pink
 };
 constexpr glm::vec4 s_clearColor = s_colorOptions[1];
 } // namespace
@@ -232,7 +232,7 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
   renderers.m_renderContext.clear();
 
   m_frameBuffer.unbind();
-  if (uiScene)
+  if (uiScene != nullptr)
     uiScene->renderSystems(RenderPass::UI, renderers, isMinimized, currentTime);
 }
 

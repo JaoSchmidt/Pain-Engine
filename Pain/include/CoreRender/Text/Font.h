@@ -139,7 +139,7 @@ private:
   Texture generateAtlas(const char *fontFilename, double emSize);
 
   /** Builds the default Latin character set used for glyph loading. */
-  msdf_atlas::Charset getLatinCharset();
+  static msdf_atlas::Charset getLatinCharset();
 
   /**
    * @brief Converts generated MSDF atlas data into a GPU texture.
@@ -151,8 +151,7 @@ private:
             msdf_atlas::GeneratorFunction<S, N> GenFunc>
   Texture
   createAtlasTexture(const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
-                     const int width, const int height,
-                     const char *fontFilename);
+                     int width, int height, const char *fontFilename);
 
   /** Constructs a font and immediately generates its atlas. */
   Font(const char *fontFilename, double emSize);

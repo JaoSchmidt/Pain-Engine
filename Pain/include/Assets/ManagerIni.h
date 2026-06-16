@@ -35,15 +35,16 @@ public:
   /// @brief Returns the current value.
   T get() const;
   /// @brief Returns the default value.
-  const T getDefault() const;
+  T getDefault() const;
   /// @brief Current value loaded from the INI file.
   T value;
   /// @brief INI key name.
   const char *name;
   /// @brief Constructs a configuration entry with a default value and key name.
   Config(T t, const char *name);
-  Config &operator=(Config &&o);
-  Config(Config &&o);
+  Config &operator=(Config &&o) noexcept;
+  Config(Config &&o) noexcept;
+  ~Config() = default;
   NONCOPYABLE(Config);
   /// @brief Initializes the value from an INI structure.
   void initValue(mINI::INIStructure &ini, const std::string &settingsName);
@@ -67,13 +68,13 @@ struct InternalConfig {
 
 // # define INTERNAL_INI_CONFIGS X(type, variable, default,name)
 #define INTERNAL_INI_CONFIGS                                                   \
-  X(float, zoomLevel, 2.f, "initial_zoom");                                    \
-  X(float, gridSize, 0.5f, "debug_grid_size");                                 \
+  X(float, zoomLevel, 2.F, "initial_zoom");                                    \
+  X(float, gridSize, 0.5F, "debug_grid_size");                                 \
   X(bool, swapChainTarget, true, "swap_chain_target");                         \
   X(std::string, title, "Unnamed Game", "game_title");
 
 #define X(type, variable, default, name)                                       \
-  Config<type> variable { default, name }
+  Config<type>(variable) { default, name }
   INTERNAL_INI_CONFIGS
 #undef X
 
@@ -101,7 +102,7 @@ struct IniConfig {
   // clang-format on
 
 #define X(type, variable, default, name)                                       \
-  Config<type> variable { default, name }
+  Config<type>(variable) { default, name }
   INI_CONFIGS
 #undef X
 

@@ -28,7 +28,7 @@ void Shader::bind() const
 #endif
 }
 
-void Shader::unbind() const
+void Shader::unbind()
 {
   backend::unbindShader();
 #ifndef NDEBUG

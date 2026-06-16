@@ -143,7 +143,7 @@ size_t insertEndPoint(reg::Entity entity, std::vector<EndPoint> &vecX,
           bottomLeft = center - shape1.halfSize;
           topRight = center + shape1.halfSize;
         } else if constexpr (std::is_same_v<T1, CircleShape>) {
-          const float diameter = 2.f * shape1.radius;
+          const float diameter = 2.F * shape1.radius;
           bottomLeft = center - glm::vec2(diameter);
           topRight = center + glm::vec2(diameter);
         } else {
@@ -264,7 +264,7 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
               bottomLeft = center - shape.halfSize;
               topRight = center + shape.halfSize;
             } else if constexpr (std::is_same_v<T, CircleShape>) {
-              float d = 2.f * shape.radius;
+              float d = 2.F * shape.radius;
               bottomLeft = center - glm::vec2(d);
               topRight = center + glm::vec2(d);
             } else {

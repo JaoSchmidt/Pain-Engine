@@ -12,7 +12,7 @@ SAPCollider SAPCollider::createAABB(const glm::vec2 &size, bool isTrigger,
                                     const glm::vec2 &offset)
 {
   return SAPCollider{.m_offset = offset,
-                     .m_shape = AABBShape{size * 0.5f},
+                     .m_shape = AABBShape{size * 0.5F},
                      .m_isTrigger = isTrigger};
 }
 
@@ -35,7 +35,7 @@ SAPCollider SAPCollider::createStaticAABB(Systems::SweepAndPruneSys &sys,
                                           const glm::vec2 &offset)
 {
   SAPCollider sc{.m_offset = offset,
-                 .m_shape = AABBShape{size * 0.5f},
+                 .m_shape = AABBShape{size * 0.5F},
                  .m_isTrigger = isTrigger};
 
   sys.insertColliderDirectly(entity, tc, sc);

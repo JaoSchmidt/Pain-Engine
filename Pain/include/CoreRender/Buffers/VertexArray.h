@@ -17,7 +17,7 @@ class VertexArray
 {
 public:
   NONCOPYABLE(VertexArray);
-  VertexArray(VertexArray &&o);
+  VertexArray(VertexArray &&o) noexcept;
 
   // ============================================================= //
   // **Creation**
@@ -41,7 +41,7 @@ public:
   void bind() const;
 
   /** Unbinds the currently bound vertex array. */
-  void unbind() const;
+  void static unbind();
 
   // ============================================================= //
   // **Access**

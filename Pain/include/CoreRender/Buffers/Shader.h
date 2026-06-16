@@ -56,7 +56,7 @@ public:
   void bind() const;
 
   /** Unbinds the currently active shader. */
-  void unbind() const;
+  void static unbind();
 
   /** Returns the shader debug name. */
   inline const std::string &getName() const { return m_name; }

@@ -50,16 +50,16 @@ parseSpriteShape(sol::object obj)
   const std::string type = t["type"].get_or(std::string("quad"));
 
   if (type == "quad") {
-    float side = t["side"].get_or(0.125f);
+    float side = t["side"].get_or(0.125F);
     return QuadShape{side};
   } else if (type == "rect") {
-    glm::vec2 size{0.125f, 0.25f};
+    glm::vec2 size{0.125F, 0.25F};
     if (auto v = t["size"]; v.valid())
       size = v.get<glm::vec2>();
     return RectShape{size};
   } else if (type == "triangle") {
-    float base = t["base"].get_or(0.125f);
-    float height = t["height"].get_or(0.125f);
+    float base = t["base"].get_or(0.125F);
+    float height = t["height"].get_or(0.125F);
     return TriangleShape{base, height};
   }
 
@@ -310,7 +310,7 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
         });
   }
 
-  worldTbl["create_entity"] = [&](sol::table components) {
+  worldTbl["create_entity"] = [&](const sol::table &components) {
     reg::Bitmask archetype{};
 
     for (const auto &kv : components) {

@@ -98,10 +98,10 @@ void RectBatch::allocateRect(const glm::mat4 &transform, const Color &tintColor,
 {
   PROFILE_FUNCTION();
   constexpr glm::vec4 RectVertexPositions[4] = {
-      glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, 0.5f, 0.f, 1.f),
-      glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
+      glm::vec4(-0.5F, -0.5F, 0.F, 1.F),
+      glm::vec4(0.5F, -0.5F, 0.F, 1.F),
+      glm::vec4(0.5F, 0.5F, 0.F, 1.F),
+      glm::vec4(-0.5F, 0.5F, 0.F, 1.F),
   };
   for (unsigned i = 0; i < 4; i++) {
     ptr->position = transform * RectVertexPositions[i];

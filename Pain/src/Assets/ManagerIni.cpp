@@ -96,14 +96,14 @@ inline double getDouble(mINI::INIStructure &ini, const std::string &section,
 // --------------------- Config ---------------------
 template <typename T> T Config<T>::get() const { return value; }
 
-template <typename T> const T Config<T>::getDefault() const
+template <typename T> T Config<T>::getDefault() const
 {
   return std::as_const(m_def);
 }
 template <typename T>
 Config<T>::Config(T t, const char *name)
-    : m_def(std::move(t)), value(m_def), name(name){};
-template <typename T> Config<T> &Config<T>::operator=(Config &&o)
+    : m_def(std::move(t)), value(m_def), name(name) {};
+template <typename T> Config<T> &Config<T>::operator=(Config &&o) noexcept
 {
   if (this != &o) {
     m_def = std::move(o.m_def);
@@ -113,8 +113,8 @@ template <typename T> Config<T> &Config<T>::operator=(Config &&o)
   return *this;
 }
 template <typename T>
-Config<T>::Config(Config &&o)
-    : m_def(std::move(o.m_def)), value(std::move(o.value)), name(o.name){};
+Config<T>::Config(Config &&o) noexcept
+    : m_def(std::move(o.m_def)), value(std::move(o.value)), name(o.name) {};
 
 template <typename T>
 void Config<T>::initValue(mINI::INIStructure &ini,

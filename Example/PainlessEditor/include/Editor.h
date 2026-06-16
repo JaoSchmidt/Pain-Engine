@@ -39,11 +39,11 @@ private:
       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
       ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-  ImVec2 m_avail = {200.f, 200.f};
+  ImVec2 m_avail = {200.F, 200.F};
   bool m_dockspaceOpen = true;
   pain::Application &m_app;
   painless::ImGuiDebugMenu::Script m_imGuiDebugMenu;
-  float m_splitRatio = 0.7f;
+  float m_splitRatio = 0.7F;
   // TEMP BOTTOM BA
 };
 } // namespace painless

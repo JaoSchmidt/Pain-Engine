@@ -127,8 +127,11 @@ public:
   Stats getSphereStatistics();
 
 private:
-  float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
-  void flush();
+  float static constexpr smallSpacingOrder(short order)
+  {
+    return static_cast<float>(order) / 1024.F;
+  };
+  void flush() const;
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                            DeltaTime globalTime, const glm::ivec2 &resolution,
                            const glm::vec3 &cameraPos);

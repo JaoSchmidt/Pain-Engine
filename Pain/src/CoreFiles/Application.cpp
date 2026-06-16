@@ -101,9 +101,8 @@ Application *Application::createApplication(AppInit &&initConfig,
   // =========================================================================//
   // config.ini file
   // =========================================================================//
-
-  Application *app = new Application(std::move(window), std::move(sdlContext),
-                                     std::move(fbci), initConfig);
+  Application *app = new Application(window, sdlContext, std::move(fbci),
+                                     std::move(initConfig));
   if (app != nullptr) {
     // NOTE: lua binding...
     // Before the loop, any object can be created. Therefore we bind stuff now
@@ -133,9 +132,10 @@ EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
       luaState(luabinder::createLuaState()), //
       eventDispatcher(luaState),             //
       renderers(Renderers::create()),        //
-      renderPipeline(fbci.swapChainTarget
-                         ? RenderPipeline::create(eventDispatcher)
-                         : RenderPipeline::create(fbci, eventDispatcher)), //
+      renderPipeline(
+          fbci.swapChainTarget
+              ? RenderPipeline::create(eventDispatcher)
+              : RenderPipeline::create(std::move(fbci), eventDispatcher)), //
       window(window),                                                      //
       sdlContext(sdlContext)                                               //
 {};
@@ -156,7 +156,7 @@ EndGameFlags Application::run()
 {
   backend::InitRenderer();
   // creates a dummy ui scene
-  if (m_runtime.uiScene.get() == nullptr)
+  if (m_runtime.uiScene == nullptr)
     createUIScene();
 
   // With all scenes created, we can now properly use it

@@ -67,9 +67,12 @@ public:
    * @return Pointer to the created Application.
    */
   static Application *
-  createApplication(AppInit &&context,
+  createApplication(AppInit &&initConfig,
                     FrameBufferCreationInfo &&frameBufferCreationInfo = {
                         .swapChainTarget = false});
+
+  NONCOPYABLE(Application);
+  NONMOVABLE(Application);
 
   /** Destroys the application and releases all owned resources. */
   ~Application();
@@ -94,7 +97,7 @@ public:
   void setTimeMultiplier(double time = 1.) { m_config.timeMultiplier = time; }
   /** get the game velocity. Id est, the buff to the game update loop time
    * accumulator */
-  double getTimeMultiplier() { return m_config.timeMultiplier; }
+  double getTimeMultiplier() const { return m_config.timeMultiplier; }
 
   /** Toggle simulation */
   void inline toggleSimulation()
@@ -107,7 +110,7 @@ public:
     m_config.isFocusedOrHovered = isFocusedOrHovered;
   }
   /** Returns a pointer to the simulation flag. */
-  bool inline isSimulation() { return m_config.isSimulation; }
+  bool inline isSimulation() const { return m_config.isSimulation; }
 
   /** Returns the Lua state used by the application. */
   sol::state &getLuaState() { return m_ctx.luaState; };
@@ -116,8 +119,8 @@ public:
   Renderers &getRenderers() { return m_ctx.renderers; }
 
   /** Returns the 2D renderer instance. */
-  void *getRenderContext() { return m_ctx.sdlContext; }
-  SDL_Window *getRenderWindow() { return m_ctx.window; }
+  void *getRenderContext() const { return m_ctx.sdlContext; }
+  SDL_Window *getRenderWindow() const { return m_ctx.window; }
 
   /** Returns the framebuffer specification used by the render pipeline. */
   const FrameBufferCreationInfo &getFrameInfo() const
@@ -141,7 +144,7 @@ public:
                            int height = 0)
   {
     m_ctx.renderers.m_renderer2d.changeCamera(cameraEntity);
-    if (!(width == 0 && height == 0)) {
+    if (width != 0 || height != 0) {
       m_ctx.renderers.setViewPort(0, 0, width, height);
     }
   }
@@ -150,7 +153,7 @@ public:
                            int height = 0)
   {
     m_ctx.renderers.m_renderer3d.changeCamera(cameraEntity);
-    if (!(width == 0 && height == 0))
+    if (width != 0 || height != 0)
       m_ctx.renderers.setViewPort(0, 0, width, height);
   }
 
@@ -170,7 +173,7 @@ public:
 
 private:
   Application(SDL_Window *window, void *sdlContext,
-              FrameBufferCreationInfo &&fbci, AppInit context);
+              FrameBufferCreationInfo &&fbci, AppInit initConfig);
 
   void ensureCamera();
 

@@ -50,8 +50,8 @@ struct SweepAndPruneSys;
 struct ColliderComponent {
   using tag = tag::Collider;
 
-  glm::vec2 m_offset{0.0f,
-                     0.0f}; /**< Local offset from the entity transform. */
+  glm::vec2 m_offset{0.0F,
+                     0.0F}; /**< Local offset from the entity transform. */
   std::variant<CircleShape, AABBShape, CapsuleShape> m_shape{
       AABBShape{}};        /**< Collision shape. */
   bool m_isTrigger{false}; /**< If true, collider generates events but does not
@@ -64,8 +64,8 @@ struct ColliderComponent {
    * @param offset Local offset from the transform.
    * @param isTrigger Whether the collider acts as a trigger.
    */
-  static ColliderComponent createAABB(const glm::vec2 &size = {0.1f, 0.1f},
-                                      const glm::vec2 &offset = {0.0f, 0.0f},
+  static ColliderComponent createAABB(const glm::vec2 &size = {0.1F, 0.1F},
+                                      const glm::vec2 &offset = {0.0F, 0.0F},
                                       bool isTrigger = false);
 
   /**
@@ -76,7 +76,7 @@ struct ColliderComponent {
    * @param isTrigger Whether the collider acts as a trigger.
    */
   static ColliderComponent createCircle(float radius,
-                                        const glm::vec2 &offset = {0.0f, 0.0f},
+                                        const glm::vec2 &offset = {0.0F, 0.0F},
                                         bool isTrigger = false);
 
   /**
@@ -89,7 +89,7 @@ struct ColliderComponent {
    */
   static ColliderComponent createCapsule(float capsuleHeight,
                                          float capsuleSemiCircleRadius,
-                                         const glm::vec2 &offset = {0.0f, 0.0f},
+                                         const glm::vec2 &offset = {0.0F, 0.0F},
                                          bool isTrigger = false);
 };
 
@@ -105,8 +105,8 @@ struct ColliderComponent {
 struct SAPCollider {
   using tag = tag::SAPCollider;
 
-  glm::vec2 m_offset{0.0f,
-                     0.0f}; /**< Local offset from the entity transform. */
+  glm::vec2 m_offset{0.0F,
+                     0.0F}; /**< Local offset from the entity transform. */
   std::variant<CircleShape, AABBShape, CapsuleShape> m_shape{
       AABBShape{}};        /**< Collision shape. */
   bool m_isTrigger{false}; /**< If true, collider generates events but does not
@@ -127,9 +127,9 @@ struct SAPCollider {
    * @param isTrigger Whether the collider acts as a trigger.
    * @param offset Local offset from the transform.
    */
-  static SAPCollider createAABB(const glm::vec2 &size = {0.1f, 0.1f},
+  static SAPCollider createAABB(const glm::vec2 &size = {0.1F, 0.1F},
                                 bool isTrigger = false,
-                                const glm::vec2 &offset = {0.0f, 0.0f});
+                                const glm::vec2 &offset = {0.0F, 0.0F});
 
   /**
    * @brief Creates a circular SAP collider without registering it in the
@@ -143,7 +143,7 @@ struct SAPCollider {
    * @param offset Local offset from the transform.
    */
   static SAPCollider createCircle(float radius, bool isTrigger = false,
-                                  const glm::vec2 &offset = {0.0f, 0.0f});
+                                  const glm::vec2 &offset = {0.0F, 0.0F});
 
   // ------------------------------------------------------------
   // Immediate insertion into Sweep-And-Prune
@@ -165,9 +165,9 @@ struct SAPCollider {
   static SAPCollider createStaticAABB(Systems::SweepAndPruneSys &sys,
                                       reg::Entity entity,
                                       Transform2dComponent &tc,
-                                      const glm::vec2 &size = {0.1f, 0.1f},
+                                      const glm::vec2 &size = {0.1F, 0.1F},
                                       bool isTrigger = false,
-                                      const glm::vec2 &offset = {0.0f, 0.0f});
+                                      const glm::vec2 &offset = {0.0F, 0.0F});
 
   /**
    * @brief Creates and registers a static circular collider into the system.
@@ -186,7 +186,7 @@ struct SAPCollider {
                                         reg::Entity entity,
                                         Transform2dComponent &tc, float radius,
                                         bool isTrigger = false,
-                                        const glm::vec2 &offset = {0.0f, 0.0f});
+                                        const glm::vec2 &offset = {0.0F, 0.0F});
 };
 
 } // namespace pain

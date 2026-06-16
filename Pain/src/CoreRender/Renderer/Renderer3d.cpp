@@ -147,7 +147,7 @@ void beforeFlush3d(const MaterialKey &mat)
   }
 }
 
-void Renderer3d::flush()
+void Renderer3d::flush() const
 {
   PROFILE_FUNCTION();
 
@@ -261,8 +261,8 @@ glm::mat4 Renderer3d::getUniformScaleTransform(const glm::vec3 &position,
                                                float size)
 {
   PROFILE_FUNCTION();
-  return glm::translate(glm::mat4(1.0f), position) *
-         glm::scale(glm::mat4(1.0f), glm::vec3(size));
+  return glm::translate(glm::mat4(1.0F), position) *
+         glm::scale(glm::mat4(1.0F), glm::vec3(size));
 }
 
 /// @brief Build a transform matrix with rotation.
@@ -271,13 +271,13 @@ glm::mat4 Renderer3d::getUniformScaleTransform(const glm::vec3 &position,
                                                const glm::vec3 &rotation)
 {
   PROFILE_FUNCTION();
-  glm::mat4 transform = glm::mat4(1.0f);
+  glm::mat4 transform = glm::mat4(1.0F);
   transform = glm::translate(transform, position);
 
   // yaw -> pitch -> roll in order
-  transform = glm::rotate(transform, rotation.y, {0.0f, 1.0f, 0.0f});
-  transform = glm::rotate(transform, rotation.x, {1.0f, 0.0f, 0.0f});
-  transform = glm::rotate(transform, rotation.z, {0.0f, 0.0f, 1.0f});
+  transform = glm::rotate(transform, rotation.y, {0.0F, 1.0F, 0.0F});
+  transform = glm::rotate(transform, rotation.x, {1.0F, 0.0F, 0.0F});
+  transform = glm::rotate(transform, rotation.z, {0.0F, 0.0F, 1.0F});
 
   return glm::scale(transform, glm::vec3(size));
 }
@@ -308,7 +308,7 @@ void Renderer3d::bindTextures()
 float Renderer3d::allocateTextures(Texture &texture)
 {
   PROFILE_FUNCTION();
-  float textureIndex = 0.0f;
+  float textureIndex = 0.0F;
   // use it to allocate new texture
   if (texture.m_slot == 0) {
     textureIndex = (float)m.textureSlotIndex;
@@ -320,7 +320,7 @@ float Renderer3d::allocateTextures(Texture &texture)
   }
   // TODO: check if m_textureSlotIndex is bigger than 32, then flush
 
-  P_ASSERT_W(textureIndex != 0.0f,
+  P_ASSERT_W(textureIndex != 0.0F,
              "Missing texture inside a submitQuad that requires textures");
   return textureIndex;
 }

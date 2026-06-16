@@ -11,7 +11,7 @@
 
 namespace pain
 {
-constexpr float percent = 0.5f; // correction strength (50%)
+constexpr float percent = 0.5F; // correction strength (50%)
 // constexpr float slop = 0.01f;   // small tolerance
 
 void basicImpulse(glm::vec2 &center1, //
@@ -21,15 +21,15 @@ void basicImpulse(glm::vec2 &center1, //
                   glm::vec2 &vel2,    //
                   float mass2,        //
                   const glm::vec2 normal, float penetration,
-                  float restitution = 1.f)
+                  float restitution = 1.F)
 {
-  const float invMass1 = 1.f / mass1;
-  const float invMass2 = 1.f / mass2;
+  const float invMass1 = 1.F / mass1;
+  const float invMass2 = 1.F / mass2;
   // -------------------------------------------------
   // 1. POSITIONAL CORRECTION (using penetration)
   // -------------------------------------------------
   float correctionMag =
-      std::max(penetration, 0.0f) / (invMass1 + invMass2) * percent;
+      std::max(penetration, 0.0F) / (invMass1 + invMass2) * percent;
 
   // fix normal direction to be center1 -> center2 direction
   const glm::vec2 correctNormal =
@@ -47,11 +47,11 @@ void basicImpulse(glm::vec2 &center1, //
 
   // If the objects are already moving away, cancel
   const float relNormVel = glm::dot(relVel, correctNormal);
-  if (relNormVel > 0.f)
+  if (relNormVel > 0.F)
     return;
 
   // NOTE: restitution ∈ [0,1]
-  float j = -(1.f + restitution) * relNormVel;
+  float j = -(1.F + restitution) * relNormVel;
   j /= (invMass1 + invMass2);
 
   const glm::vec2 impulse = j * correctNormal;
@@ -66,7 +66,7 @@ void basicImpulseStatic(glm::vec2 &center1, glm ::vec2 &vel1,
   // -------------------------------------------------
   // 1. POSITIONAL CORRECTION (using penetration)
   // -------------------------------------------------
-  float correctionMag = std::max(penetration, 0.0f) * percent;
+  float correctionMag = std::max(penetration, 0.0F) * percent;
 
   // fix normal direction to be center1 -> center2 direction
   const glm::vec2 correctNormal =
@@ -84,12 +84,12 @@ void basicImpulseStatic(glm::vec2 &center1, glm ::vec2 &vel1,
   // If the dynamic object is already moving away, cancel
 
   const float relNormVel = glm::dot(relVel, correctNormal);
-  if (relNormVel > 0.f) {
+  if (relNormVel > 0.F) {
     return;
   }
 
   // NOTE: restitution ∈ [0,1]
-  float j = -(1.f + restitution) * relNormVel;
+  float j = -(1.F + restitution) * relNormVel;
 
   // Apply impulse to velocity
   const glm::vec2 impulse = j * correctNormal;

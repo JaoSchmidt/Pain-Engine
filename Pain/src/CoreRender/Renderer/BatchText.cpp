@@ -6,8 +6,8 @@
 
 // QuadBatch.cpp
 #include "CoreRender/Renderer/BatchText.h"
-#include "platform/ContextBackend.h"
 #include "Debugging/Profiling.h"
+#include "platform/ContextBackend.h"
 
 namespace pain
 {
@@ -59,7 +59,7 @@ void TextBatch::resetAll()
 
 void TextBatch::flush()
 {
-  if (!indexCount || !fontAtlas) {
+  if ((indexCount == 0) || (fontAtlas == nullptr)) {
     return;
   }
 

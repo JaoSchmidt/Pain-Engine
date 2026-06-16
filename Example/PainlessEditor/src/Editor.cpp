@@ -21,7 +21,7 @@
 
 void showStats(const Stats &s)
 {
-  ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "%s instances: %d", s.name,
+  ImGui::TextColored(ImVec4(1.0F, 0.6F, 0.2F, 1.0F), "%s instances: %d", s.name,
                      s.count);
 
   // Small indented box for extra stats
@@ -58,8 +58,8 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
     // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will
     // render our background and handle the pass-thru hole, so we ask Begin()
     // to not render a background.
@@ -73,7 +73,7 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     // docking relationship between an active window and an inactive docking,
     // otherwise any change of dockspace/settings would lead to windows being
     // stuck in limbo and never being visible.
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0F, 0.0F));
     ImGui::Begin("DockSpace Demo", &m_dockspaceOpen, m_windowFlags);
     ImGui::PopStyleVar();
 
@@ -83,7 +83,7 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     ImGuiIO &io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
       ImGuiID dockspaceID = ImGui::GetID("MyDockSpace");
-      ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
+      ImGui::DockSpace(dockspaceID, ImVec2(0.0F, 0.0F), dockspaceFlags);
       if (!m_dockspaceInitialized) {
         m_dockspaceInitialized = true;
         ImGui::DockBuilderRemoveNode(dockspaceID);
@@ -91,7 +91,7 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
         ImGui::DockBuilderSetNodeSize(dockspaceID, viewport->Size);
 
         // Splits
-        ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25f,
+        ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25F,
                                     &m_dockerIDSidebar, &m_dockerIDViewport);
 
         // Windows
@@ -161,7 +161,7 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
       if (avail.x > 0 && avail.y > 0 &&
           (avail.x != m_avail.x || avail.y != m_avail.y)) {
         m_avail = avail;
-        renderers.setViewPort(0, 0, avail.x, avail.y);
+        pain::Renderers::setViewPort(0, 0, avail.x, avail.y);
         getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
             {glm::vec2(avail.x, avail.y)});
       }

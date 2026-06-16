@@ -30,7 +30,7 @@ std::optional<Texture> Texture::createTexture(const char *name, uint32_t width,
   backend::TextureCreateInfo info{name, width, height, format};
 
   uint32_t id = backend::createTexture(info);
-  if (!id)
+  if (id == 0)
     return std::nullopt;
 
   return Texture(name, width, height, format, id);
@@ -45,7 +45,7 @@ std::optional<Texture> Texture::createTexture(const char *path, bool clamp,
 
   info.pixels = stbi_load(path, &info.width, &info.height, &info.channels, 0);
 
-  if (!info.pixels) {
+  if (info.pixels == 0) {
     if (isError)
       PLOG_E("Failed to load texture {} : {}", path, stbi_failure_reason());
     return std::nullopt;
@@ -62,7 +62,7 @@ std::optional<Texture> Texture::createTexture(const char *path, bool clamp,
   }
 
   uint32_t id = backend::createTextureFromFile(info);
-  if (!id)
+  if (id == 0)
     return std::nullopt;
 
   if (!keepOnCPUMemory) {
@@ -99,9 +99,9 @@ void Texture::setData(const void *data, uint32_t size)
 // inside the Renderer. That task should be done elsewhere
 Texture::~Texture()
 {
-  if (m_textureId)
+  if (m_textureId != 0)
     backend::destroyTexture(m_textureId);
-  if (m_pixels)
+  if (m_pixels != nullptr)
     stbi_image_free(m_pixels);
 }
 
@@ -125,9 +125,9 @@ Texture::Texture(const char *path, uint32_t width, uint32_t height,
       m_dataFormat(dataFormat), m_textureId(rendererId) {};
 
 Texture::Texture(Texture &&other) noexcept
-    : m_pixels(other.m_pixels), m_path(other.m_path), m_width(other.m_width),
-      m_height(other.m_height), m_dataFormat(other.m_dataFormat),
-      m_textureId(other.m_textureId)
+    : m_pixels(other.m_pixels), m_path(std::move(other.m_path)),
+      m_width(other.m_width), m_height(other.m_height),
+      m_dataFormat(other.m_dataFormat), m_textureId(other.m_textureId)
 {
   other.m_textureId = 0;    // prevent double delete
   other.m_pixels = nullptr; // prevent double delete

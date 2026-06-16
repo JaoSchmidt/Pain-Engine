@@ -14,13 +14,13 @@ namespace pain
 {
 namespace Dummy3dCamera
 {
-reg::Entity create(pain::Scene &scene, int resolutionHeight,
-                   int resolutionWeigh, float zoomLevel, float yaw,
+reg::Entity create(pain::Scene &scene, int resolutionWidth,
+                   int resolutionHeight, float fieldOfViewDegrees, float yaw,
                    float pitch);
 
-reg::Entity createBasicCamera(pain::Scene &scene, int resolutionHeight,
-                              int resolutionWeigh, float zoomLevel, float yaw,
-                              float pitch);
+reg::Entity createBasicCamera(pain::Scene &scene, int resolutionWidth,
+                              int resolutionHeight, float fieldOfViewDegrees,
+                              float yaw, float pitch);
 } // namespace Dummy3dCamera
 
 class PerspCameraScript : public WorldObject

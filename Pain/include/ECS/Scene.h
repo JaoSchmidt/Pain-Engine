@@ -206,8 +206,7 @@ public:
 
   /// @brief Const version of getComponents().
   template <reg::ECSComponent... Components>
-  const std::tuple<const Components &...>
-  getComponents(reg::Entity entity) const
+  std::tuple<const Components &...> getComponents(reg::Entity entity) const
   {
     return std::as_const(m_registry)
         .template getComponents<Components...>(entity);

@@ -42,11 +42,12 @@ struct CustomEditor {
   bool m_dockspaceInitialized = false;
   ImGuiID m_dockerIDSidebar, m_dockerIDViewport;
 
-  void registerPanel(const std::string name, float split, InterfaceMenu menu);
+  void registerPanel(const std::string &name, float split, InterfaceMenu menu);
   void addToPanel(const std::string &panelName, int identifier,
-                  onRenderFunc callback, int order = 0);
+                  const onRenderFunc &callback, int order = 0);
   void addToPanelLua(const std::string &panelName, int identifier,
-                     sol::protected_function luaFunc, sol::optional<int> order);
+                     const sol::protected_function &luaFunc,
+                     sol::optional<int> order);
   void removeFromPanel(const std::string &panelName, int identifier);
   void buildDockerWindow();
   void renderAll();

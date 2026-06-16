@@ -19,9 +19,10 @@ namespace pain
 {
 
 /** Yaw and Pitch are in degrees*/
-reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionHeight,
-                                  int resolutionWidth, float fieldOfViewDegrees,
-                                  float yaw, float pitch)
+reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionWidth,
+                                  int resolutionHeight,
+                                  float fieldOfViewDegrees, float yaw,
+                                  float pitch)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
@@ -35,24 +36,24 @@ reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionHeight,
   return entity;
 }
 reg::Entity Dummy3dCamera::createBasicCamera(pain::Scene &scene,
+                                             int resolutionWidth,
                                              int resolutionHeight,
-                                             int resolutionWeigh,
                                              float fieldOfViewDegrees,
                                              float yaw, float pitch)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
       entity, pain::Transform3dComponent{},
-      Component::PerspCamera::create(true, resolutionWeigh, resolutionHeight,
+      Component::PerspCamera::create(true, resolutionWidth, resolutionHeight,
                                      fieldOfViewDegrees, entity, yaw, pitch) //
   );
   return entity;
 }
 void PerspCameraScript::onCreate()
 {
-  m_sensitivitySpeed = 0.5f;
-  m_zoomSpeed = 10.0f;
-  m_cameraFront = {0.0f, 0.0f, 1.0f};
+  m_sensitivitySpeed = 0.5F;
+  m_zoomSpeed = 10.0F;
+  m_cameraFront = {0.0F, 0.0F, 1.0F};
 
   auto [tc, mc, pc] = getComponents<Transform3dComponent, Movement3dComponent,
                                     cmp::PerspCamera>();
@@ -88,7 +89,7 @@ void PerspCameraScript::onUpdate(DeltaTime deltaTimeSec)
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   float moveAmount = (float)(deltaTimeSec.getSecondsf() *
                              (1.0 + 10.0 * state[SDL_SCANCODE_LSHIFT]));
-  glm::vec3 moveDir{0.0f};
+  glm::vec3 moveDir{0.0F};
   if (state[SDL_SCANCODE_W])
     moveDir += m_cameraFront * moveAmount;
   if (state[SDL_SCANCODE_S])
@@ -165,10 +166,10 @@ void PerspCameraScript::onMouseMoved(const SDL_Event &e)
   m_yaw += xoffset;
   m_pitch -= yoffset;
 
-  if (m_pitch > 89.0f)
-    m_pitch = 89.0f;
-  if (m_pitch < -89.0f)
-    m_pitch = -89.0f;
+  if (m_pitch > 89.0F)
+    m_pitch = 89.0F;
+  if (m_pitch < -89.0F)
+    m_pitch = -89.0F;
 
   m_cameraFront = glm::vec3(                                 //
       cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch)), //
@@ -186,10 +187,10 @@ void PerspCameraScript::onMouseScrolled(const SDL_Event &event)
   auto cam = getComponent<cmp::PerspCamera>();
 
   cam.m_fieldOfViewDegrees += static_cast<float>(event.wheel.y) * m_zoomSpeed;
-  if (cam.m_fieldOfViewDegrees < 1.0f)
-    cam.m_fieldOfViewDegrees = 1.0f;
-  else if (cam.m_fieldOfViewDegrees > 100.0f)
-    cam.m_fieldOfViewDegrees = 100.0f;
+  if (cam.m_fieldOfViewDegrees < 1.0F)
+    cam.m_fieldOfViewDegrees = 1.0F;
+  else if (cam.m_fieldOfViewDegrees > 100.0F)
+    cam.m_fieldOfViewDegrees = 100.0F;
 
   cam.setProjection(cam.m_aspectRatio, cam.m_fieldOfViewDegrees);
 }

@@ -13,10 +13,10 @@ namespace pain
 DebugGrid DebugGrid::create(float gridSize)
 {
   float vertices[] = {
-      -1.0f, -1.0f, //
-      1.0f,  -1.0f, //
-      1.0f,  1.0f,  //
-      -1.0f, 1.0f,  //
+      -1.0F, -1.0F, //
+      1.0F,  -1.0F, //
+      1.0F,  1.0F,  //
+      -1.0F, 1.0F,  //
   }; //
 
   unsigned int indices[] = {0, 1, 2, 0, 3, 2};
@@ -24,9 +24,9 @@ DebugGrid DebugGrid::create(float gridSize)
   Shader shader =
       *Shader::createFromFile("resources/default/shaders/InfiniteGrid.glsl");
   shader.bind();
-  shader.uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
+  shader.uploadUniformFloat3("u_Color", glm::vec3(0.1F, 0.6F, 0.9F));
   shader.uploadUniformFloat("u_CellSize", gridSize);
-  shader.uploadUniformFloat("u_Thickness", 0.005f);
+  shader.uploadUniformFloat("u_Thickness", 0.005F);
   return DebugGrid(
       *VertexBuffer::createStaticVertexBuffer(
           vertices, sizeof(vertices), {{ShaderDataType::Float2, "a_Position"}}),

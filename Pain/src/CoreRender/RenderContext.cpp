@@ -139,37 +139,37 @@ glm::mat4 RenderContext::getTransform(const glm::vec2 &position,
                                       const glm::vec2 &size,
                                       float rotationAngleRadians)
 {
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::rotate(glm::mat4(1.0f), rotationAngleRadians,
-                     {0.0f, 0.0f, 1.0f}) *
-         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::rotate(glm::mat4(1.0F), rotationAngleRadians,
+                     {0.0F, 0.0F, 1.0F}) *
+         glm::scale(glm::mat4(1.0F), {size.x, size.y, 1.0F});
 }
 glm::mat4 RenderContext::getTransform(const glm::vec2 &position,
                                       const glm::vec2 &size)
 {
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::scale(glm::mat4(1.0F), {size.x, size.y, 1.0F});
 }
 
 glm::mat4 RenderContext::getUniformScaleTransform(const glm::vec2 &position,
                                                   float size,
                                                   float rotationAngleRadians)
 {
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::rotate(glm::mat4(1.0f), rotationAngleRadians,
-                     {0.0f, 0.0f, 1.0f}) *
-         glm::scale(glm::mat4(1.0f), {size, size, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::rotate(glm::mat4(1.0F), rotationAngleRadians,
+                     {0.0F, 0.0F, 1.0F}) *
+         glm::scale(glm::mat4(1.0F), {size, size, 1.0F});
 }
 glm::mat4 RenderContext::getUniformScaleTransform(const glm::vec2 &position,
                                                   float size)
 {
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::scale(glm::mat4(1.0f), {size, size, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::scale(glm::mat4(1.0F), {size, size, 1.0F});
 }
 glm::mat4 RenderContext::getUniformScaleTransform(const glm::vec3 &position,
                                                   float size)
 {
-  glm::mat4 transform = glm::mat4(1.0f);
+  glm::mat4 transform = glm::mat4(1.0F);
   transform = glm::translate(transform, position);
   return glm::scale(transform, glm::vec3(size));
 }
@@ -177,13 +177,13 @@ glm::mat4 RenderContext::getUniformScaleTransform(const glm::vec3 &position,
                                                   float size,
                                                   const glm::vec3 &rotation)
 {
-  glm::mat4 transform = glm::mat4(1.0f);
+  glm::mat4 transform = glm::mat4(1.0F);
   transform = glm::translate(transform, position);
 
   // yaw -> pitch -> roll in order
-  transform = glm::rotate(transform, rotation.y, {0.0f, 1.0f, 0.0f});
-  transform = glm::rotate(transform, rotation.x, {1.0f, 0.0f, 0.0f});
-  transform = glm::rotate(transform, rotation.z, {0.0f, 0.0f, 1.0f});
+  transform = glm::rotate(transform, rotation.y, {0.0F, 1.0F, 0.0F});
+  transform = glm::rotate(transform, rotation.x, {1.0F, 0.0F, 0.0F});
+  transform = glm::rotate(transform, rotation.z, {0.0F, 0.0F, 1.0F});
 
   return glm::scale(transform, glm::vec3(size));
 }

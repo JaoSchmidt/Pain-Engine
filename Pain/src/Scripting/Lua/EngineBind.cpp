@@ -31,7 +31,7 @@ MaterialCreationInfo parseMaterialInfo(sol::table t, pain::MaterialManager &mm)
   if (auto c = t["color"]; c.valid())
     color = c.get<Color>();
 
-  float tiling = t["tiling"].get_or(1.f);
+  float tiling = t["tiling"].get_or(1.F);
 
   Texture *tex = &TextureManager::getDefaultTexture(
       TextureManager::DefaultTexture::Blank, false);
@@ -107,7 +107,7 @@ void luabinder::bindEngineMM(sol::state &lua, MaterialManager &mm)
 
   matTbl["create"] = [&mm](const std::string &name,
                            sol::table t) -> pain::Material & {
-    MaterialCreationInfo info = parseMaterialInfo(t, mm);
+    MaterialCreationInfo info = parseMaterialInfo(std::move(t), mm);
     return mm.createMaterial(name, info);
   };
 

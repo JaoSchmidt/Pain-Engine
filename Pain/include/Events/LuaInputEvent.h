@@ -1,6 +1,6 @@
 #pragma once
 #include "CoreFiles/LogWrapper.h"
-#include "SDL_events.h"
+#include "SDL2/SDL_events.h"
 #include "sol/sol.hpp"
 
 namespace pain

@@ -19,7 +19,7 @@ struct Renderers {
   Renderer3d m_renderer3d;
   RenderContext m_renderContext;
 
-  void setViewPort(int x, int y, int width, int height)
+  static void setViewPort(int x, int y, int width, int height)
   {
     backend::setViewPort(x, y, width, height);
   }

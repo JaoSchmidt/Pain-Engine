@@ -42,7 +42,7 @@ public:
   const glm::mat4 &getViewProjectionMatrix() const;
 
   glm::mat4 m_projection;
-  glm::mat4 m_view = glm::mat4(1.f);
+  glm::mat4 m_view = glm::mat4(1.F);
   glm::mat4 m_viewProjectionCache;
 };
 
@@ -106,7 +106,7 @@ struct CameraResolution {
  */
 struct OrthoCamera : CameraResolution {
   using tag = pain::tag::OrthoCamera;
-  float m_zoomLevel = 1.0f;
+  float m_zoomLevel = 1.0F;
   pain::OrthographicMatrices m_matrices;
 
   /** Returns the cached view-projection matrix. */
@@ -117,7 +117,7 @@ struct OrthoCamera : CameraResolution {
                             float zoomLevel, reg::Entity entity);
 
   /** Recomputes the view matrix from position and rotation. */
-  void recalculateViewMatrix(const glm::vec2 &m_position, const float m_angle);
+  void recalculateViewMatrix(const glm::vec2 &position, float angleRadians);
 
   /** Sets projection explicitly using screen bounds. */
   void setProjection(float left, float right, float bottom, float top);
@@ -146,7 +146,7 @@ private:
  */
 struct PerspCamera : CameraResolution {
   using tag = pain::tag::PerspCamera;
-  float m_fieldOfViewDegrees = 90.0f;
+  float m_fieldOfViewDegrees = 90.0F;
   pain::PerspectiveMatrices m_matrices;
 
   /** Returns the cached view-projection matrix. */
@@ -158,7 +158,7 @@ struct PerspCamera : CameraResolution {
                             float yaw, float pitch);
 
   /** Recomputes the view matrix from camera transform. */
-  void recalculateViewMatrix(glm::vec3 m_position, glm::vec3 m_rotation);
+  void recalculateViewMatrix(glm::vec3 position, glm::vec3 frontCamera);
 
   /** Updates the projection matrix. */
   void setProjection(float aspectRatio, float fieldOfViewDegrees);

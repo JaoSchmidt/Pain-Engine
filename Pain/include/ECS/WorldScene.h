@@ -84,7 +84,7 @@ public:
   {
     NativeScriptComponent &nsc =
         scene.getComponent<NativeScriptComponent>(entity);
-    nsc.bindAndInitiate<N>(std::move(n));
+    nsc.bindAndInitiate<N>(std::forward<N>(n));
     if (nsc.instance && nsc.onCreateFunction)
       nsc.onCreateFunction(nsc.instance);
     return static_cast<N &>(*nsc.instance);

@@ -33,7 +33,7 @@ void PointLightBatch::addLight(const glm::vec3 &position,
     return;
 
   m_positions.emplace_back(position, radius);
-  m_colors.emplace_back(color, 1.0f);
+  m_colors.emplace_back(color, 1.0F);
 }
 
 void PointLightBatch::upload(Shader &shader)

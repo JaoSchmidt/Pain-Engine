@@ -54,7 +54,10 @@ Stats Renderer2d::getSprayStatistics() { return getStatistics(m.sprayBatch); }
 Stats Renderer2d::getTextStatistics() { return getStatistics(m.textBatch); }
 
 // TODO: exclude those 2 as soon as possible
-bool Renderer2d::hasCamera() { return m.orthoCameraEntity != reg::Entity{-1}; }
+bool Renderer2d::hasCamera() const
+{
+  return m.orthoCameraEntity != reg::Entity{-1};
+}
 void Renderer2d::changeCamera(reg::Entity cameraEntity)
 {
   m.orthoCameraEntity = cameraEntity;
@@ -226,8 +229,8 @@ void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
                        texIndex, material.getCoords());
   } else {
     constexpr std::array<glm::vec2, 4> textureCoordinate = {
-        glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-        glm::vec2(0.0f, 1.0f)};
+        glm::vec2(0.0F, 0.0F), glm::vec2(1.0F, 0.0F), glm::vec2(1.0F, 1.0F),
+        glm::vec2(0.0F, 1.0F)};
     const float texIndex = allocateTextures(material.getTexture());
     batch.allocateRect(transform, material.m_color, material.m_tilingFactor,
                        texIndex, textureCoordinate);
@@ -403,29 +406,29 @@ void Renderer2d::submitString(const glm::vec2 &position, const char *string,
       quadMin += glm::vec2(x, y);
       quadMax += glm::vec2(x, y);
       float texelWidth =
-          1.0f / static_cast<float>(m.textBatch.fontAtlas->getWidth());
+          1.0F / static_cast<float>(m.textBatch.fontAtlas->getWidth());
       float texelHeight =
-          1.0f / static_cast<float>(m.textBatch.fontAtlas->getHeight());
+          1.0F / static_cast<float>(m.textBatch.fontAtlas->getHeight());
       texCoordMin *= glm::vec2(texelWidth, texelHeight);
       texCoordMax *= glm::vec2(texelWidth, texelHeight);
 
       m.textBatch.allocateCharacter(
-          glm::translate(glm::mat4(1.f), {position, 0.f}), color,
+          glm::translate(glm::mat4(1.F), {position, 0.F}), color,
           // textureCoordinate
           {texCoordMin, glm::vec2(texCoordMin.x, texCoordMax.y), texCoordMax,
            glm::vec2(texCoordMax.x, texCoordMin.y)},
           // vertex positions
-          {glm::vec4{quadMin, 0.f, 1.f},
-           glm::vec4{quadMin.x, quadMax.y, 0.f, 1.f},
-           glm::vec4{quadMax, 0.f, 1.f},
-           glm::vec4{quadMax.x, quadMin.y, 0.f, 1.f}});
+          {glm::vec4{quadMin, 0.F, 1.F},
+           glm::vec4{quadMin.x, quadMax.y, 0.F, 1.F},
+           glm::vec4{quadMax, 0.F, 1.F},
+           glm::vec4{quadMax.x, quadMin.y, 0.F, 1.F}});
 
       if (*letter != '\0') {
         double advance = glyph->getAdvance();
         unsigned nextCharacter = static_cast<unsigned>(*(letter + 1));
         fontGeometry.getAdvance(advance, static_cast<unsigned>(*letter),
                                 nextCharacter);
-        float kerningOffset = 0.0f;
+        float kerningOffset = 0.0F;
         x += fsScale * advance + kerningOffset;
       }
       break;
@@ -466,7 +469,7 @@ void Renderer2d::bindTextures()
 float Renderer2d::allocateTextures(Texture &texture)
 {
   PROFILE_FUNCTION();
-  float textureIndex = 0.0f;
+  float textureIndex = 0.F;
   // use it to allocate new texture
   if (texture.m_slot == 0) {
     textureIndex = (float)m.textureSlotIndex;
@@ -478,7 +481,7 @@ float Renderer2d::allocateTextures(Texture &texture)
   }
   // TODO: check if m_textureSlotIndex is bigger than 32, then flush
 
-  P_ASSERT_W(textureIndex != 0.0f,
+  P_ASSERT_W(textureIndex != 0.F,
              "Missing texture inside a drawQuad that requires textures");
   return textureIndex;
 }
@@ -498,38 +501,38 @@ void Renderer2d::removeTexture(const Texture &texture)
   m.textureSlotIndex--;
   return;
 }
-const glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
-                                                float scale)
+glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
+                                          float scale)
 {
   PROFILE_FUNCTION();
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::scale(glm::mat4(1.0f), {scale, scale, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::scale(glm::mat4(1.0F), {scale, scale, 1.0F});
 }
-const glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
-                                                float scale,
-                                                const float rotationRadians)
+glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
+                                          float scale,
+                                          const float rotationRadians)
 {
   PROFILE_FUNCTION();
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::rotate(glm::mat4(1.0f), rotationRadians, {0.0f, 0.0f, 1.0f}) *
-         glm::scale(glm::mat4(1.0f), {scale, scale, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::rotate(glm::mat4(1.0F), rotationRadians, {0.0F, 0.0F, 1.0F}) *
+         glm::scale(glm::mat4(1.0F), {scale, scale, 1.0F});
 }
-const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
-                                         const glm::vec2 &size)
+glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
+                                   const glm::vec2 &size)
 {
   PROFILE_FUNCTION();
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::scale(glm::mat4(1.0F), {size.x, size.y, 1.0F});
 }
 
-const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
-                                         const glm::vec2 &size,
-                                         const float rotationRadians)
+glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
+                                   const glm::vec2 &size,
+                                   const float rotationRadians)
 {
   PROFILE_FUNCTION();
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::rotate(glm::mat4(1.0f), rotationRadians, {0.0f, 0.0f, 1.0f}) *
-         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::rotate(glm::mat4(1.0F), rotationRadians, {0.0F, 0.0F, 1.0F}) *
+         glm::scale(glm::mat4(1.0F), {size.x, size.y, 1.0F});
 }
 
 void Renderer2d::setCellGridSize(float cellsize)

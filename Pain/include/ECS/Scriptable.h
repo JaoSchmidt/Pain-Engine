@@ -19,7 +19,6 @@
 
 #include "Core.h"
 #include "ECS/Registry/Entity.h"
-#include "ECS/Scene.h"
 #include "UIScene.h"
 #include "WorldScene.h"
 #include "aliases.h"

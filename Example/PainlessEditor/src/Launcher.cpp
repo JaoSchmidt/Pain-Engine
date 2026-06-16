@@ -61,9 +61,9 @@ public:
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20.0f, 20.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20.0F, 20.0F));
     ImGui::Begin("DockSpace Demo", &m_dockspaceOpen, m_windowFlags);
     ImGui::PopStyleVar();
 
@@ -106,11 +106,11 @@ public:
     }
 
     ImGui::Separator();
-    ImGui::Dummy(ImVec2(0.0f, 10.0f)); // vertical spacing from separator
+    ImGui::Dummy(ImVec2(0.0F, 10.0F)); // vertical spacing from separator
 
-    float buttonWidth = 120.0f;
-    float buttonHeight = 0.0f; // auto height
-    float spacing = 10.0f;     // space between buttons
+    float buttonWidth = 120.0F;
+    float buttonHeight = 0.0F; // auto height
+    float spacing = 10.0F;     // space between buttons
 
     // total width of both buttons + spacing
     float totalWidth = buttonWidth * 2 + spacing;
@@ -124,7 +124,7 @@ public:
       m_app->stopLoop();
     }
 
-    ImGui::SameLine(0.0f, spacing);
+    ImGui::SameLine(0.0F, spacing);
 
     if (ImGui::Button("Play", ImVec2(buttonWidth, buttonHeight))) {
       m_init.write(pain::AppInit::configIniFile);
@@ -162,7 +162,7 @@ pain::Application *createLauncher()
   // assert later. This makes no difference in release
   scene.createComponents(                              //
       scene.getEntity(), pain::Transform2dComponent{}, //
-      Component::OrthoCamera::create(true, width, height, 5.f,
+      Component::OrthoCamera::create(true, width, height, 5.F,
                                      scene.getEntity()) //
   );
   pain::UIScene &uiscene = settingsApp->createUIScene();

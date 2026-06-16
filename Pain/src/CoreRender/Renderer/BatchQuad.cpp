@@ -18,16 +18,16 @@ QuadBatch QuadBatch::create()
 {
   constexpr unsigned int indices[] = {0, 1, 2, 2, 3, 0};
   constexpr glm::vec3 VertexPositions[4] = {
-      glm::vec3(-0.5f, -0.5f, 0.f),
-      glm::vec3(0.5f, -0.5f, 0.f),
-      glm::vec3(0.5f, 0.5f, 0.f),
-      glm::vec3(-0.5f, 0.5f, 0.f),
+      glm::vec3(-0.5F, -0.5F, 0.F),
+      glm::vec3(0.5F, -0.5F, 0.F),
+      glm::vec3(0.5F, 0.5F, 0.F),
+      glm::vec3(-0.5F, 0.5F, 0.F),
   };
   constexpr glm::vec2 FaceUVs[4] = {
-      {0.0f, 0.0f}, // bottom-left
-      {1.0f, 0.0f}, // bottom-right
-      {1.0f, 1.0f}, // top-right
-      {0.0f, 1.0f}, // top-left
+      {0.0F, 0.0F}, // bottom-left
+      {1.0F, 0.0F}, // bottom-right
+      {1.0F, 1.0F}, // top-right
+      {0.0F, 1.0F}, // top-left
   };
 
   std::unique_ptr<BatchVertex[]> vertices =
@@ -83,7 +83,7 @@ void QuadBatch::resetAll()
 
 void QuadBatch::flush(Texture **textures, uint32_t textureCount)
 {
-  if (!m_count)
+  if (m_count == 0)
     return;
   // sortByDrawOrder();
   vao.bind();

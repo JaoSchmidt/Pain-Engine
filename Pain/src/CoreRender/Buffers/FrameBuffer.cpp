@@ -22,11 +22,11 @@ FrameBuffer::create(const FrameBufferCreationInfo &info)
 
   uint32_t frameBufferId = backend::createFrameBuffer(fb);
 
-  if (frameBufferId) {
+  if (frameBufferId == 0) {
     fb.bufferId = frameBufferId;
     return FrameBuffer{fb};
-  } else
-    return std::nullopt;
+  }
+  return std::nullopt;
 }
 
 void FrameBuffer::resizeFrameBuffer(int32_t width, int32_t height)
@@ -35,7 +35,7 @@ void FrameBuffer::resizeFrameBuffer(int32_t width, int32_t height)
   m.height = height;
   pain::backend::resizeFrameBuffer(m);
 }
-void FrameBuffer::bind() { pain::backend::bindFrameBuffer(m.bufferId); }
+void FrameBuffer::bind() const { pain::backend::bindFrameBuffer(m.bufferId); }
 void FrameBuffer::unbind() { pain::backend::unbindFrameBuffer(); }
 
 } // namespace pain

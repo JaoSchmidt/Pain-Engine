@@ -20,7 +20,7 @@ float inline fdiv(uint32_t divided, uint32_t divisor)
 SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
                                 std::string name)
 {
-  constexpr float radius = 0.5f;
+  constexpr float radius = 0.5F;
   const uint32_t verticePerSphere = (stacks - 2) * slices +     // Slices
                                     2 * slices;                 // Poles
   const uint32_t indicesPerSphere = slices * 3 +                // top cap
@@ -82,21 +82,21 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
       std::make_unique<Vertex[]>(verticePerSphere);
   Vertex *pVertex = vertices.get();
 
-  // pVertex->position = {0.f, radius, 0.f};
-  // pVertex->texCoord = {0.5f, 1.f};
+  // pVertex->position = {0.F, radius, 0.F};
+  // pVertex->texCoord = {0.5F, 1.F};
   // ++pVertex;
 
   for (uint32_t slice = 0; slice < slices; ++slice) {
     float u = fdiv(slice, slices);
 
-    pVertex->position = {0.f, radius, 0.f};
-    pVertex->texCoord = {1.f - u, 1.f};
+    pVertex->position = {0.F, radius, 0.F};
+    pVertex->texCoord = {1.F - u, 1.F};
     ++pVertex;
   }
 
   for (uint32_t stack = 1; stack < stacks - 1; ++stack) {
     const float v = fdiv(stack, stacks);
-    const float flippedV = 1.0f - v;
+    const float flippedV = 1.0F - v;
     const float phi = glm::pi<float>() * v;
 
     const float y = radius * cos(phi);
@@ -109,8 +109,8 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
       const float x = rTimesSin * cos(theta);
       const float z = rTimesSin * sin(theta);
 
-      const glm::vec4 pos{x, y, z, 1.f};
-      const glm::vec2 uv{1.f - u, flippedV};
+      const glm::vec4 pos{x, y, z, 1.F};
+      const glm::vec2 uv{1.F - u, flippedV};
 
       pVertex->position = pos;
       pVertex->texCoord = uv;
@@ -121,12 +121,12 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
   for (uint32_t slice = 0; slice < slices; ++slice) {
     float u = fdiv(slice, slices);
 
-    pVertex->position = {0.f, -radius, 0.f};
-    pVertex->texCoord = {1.f - u, 0.f};
+    pVertex->position = {0.F, -radius, 0.F};
+    pVertex->texCoord = {1.F - u, 0.F};
     ++pVertex;
   }
-  // pVertex->position = {0.0f, -radius, 0.0f};
-  // pVertex->texCoord = {0.5f, 0.0f};
+  // pVertex->position = {0.0F, -radius, 0.0F};
+  // pVertex->texCoord = {0.5F, 0.0F};
 
   return SphereBatch(
       *VertexBuffer::createStaticVertexBuffer(
@@ -145,7 +145,7 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
               {ShaderDataType::Mat4, "a_Transform", false, true},
           }),
       *IndexBuffer::createIndexBuffer(indices.get(), indicesPerSphere),
-      indicesPerSphere, verticePerSphere, name);
+      indicesPerSphere, verticePerSphere, std::move(name));
 }
 
 SphereBatch::SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
@@ -159,7 +159,7 @@ SphereBatch::SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
       ptrInit(std::make_unique<SphereInstanceVertex[]>(MaxPolyhedrons)), //
       ptr(ptrInit.get()),                                                //
       m_indicesPerSphere(indicesPerSphere),
-      m_verticesPerSphere(verticesPerSphere), m_name(name) {};
+      m_verticesPerSphere(verticesPerSphere), m_name(std::move(name)) {};
 
 void SphereBatch::resetPtr()
 {
@@ -178,7 +178,7 @@ void SphereBatch::resetAll()
 
 void SphereBatch::flush(Texture **textures, uint32_t textureCount)
 {
-  if (!m_count)
+  if (m_count == 0)
     return;
   vao.bind();
   vbo.bind();

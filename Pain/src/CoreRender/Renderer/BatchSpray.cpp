@@ -25,10 +25,10 @@ SprayBatch SprayBatch::create()
   //     -0.5f, 0.5f,  // 0 top left
   // };
   constexpr glm::vec2 SprayVertexPositions[4] = {
-      glm::vec2(-0.5f, -0.5f),
-      glm::vec2(0.5f, -0.5f),
-      glm::vec2(0.5f, 0.5f),
-      glm::vec2(-0.5f, 0.5f),
+      glm::vec2(-0.5F, -0.5F),
+      glm::vec2(0.5F, -0.5F),
+      glm::vec2(0.5F, 0.5F),
+      glm::vec2(-0.5F, 0.5F),
   };
 
   std::unique_ptr<ParticleVertex[]> vertices =
@@ -84,7 +84,7 @@ void SprayBatch::resetAll()
 
 void SprayBatch::flush()
 {
-  if (!instanceCount)
+  if (instanceCount == 0)
     return;
 
   vao.bind();

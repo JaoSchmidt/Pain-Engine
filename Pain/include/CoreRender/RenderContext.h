@@ -54,38 +54,41 @@ public:
   /** @bried Submit a rotated textured quad.
    * @param rotationRadians Rotation angle in radians. */
   void submitRect(const glm::vec2 &position, const glm::vec2 &size,
-                  const float rotationRadians, RenderLayer layer,
+                  float rotationRadians, RenderLayer layer,
                   const Material &material);
   /// @bried Submit an axis-aligned textured quad.
   void submitQuad(const glm::vec2 &position, float size, RenderLayer layer,
                   const Material &material);
   /** @bried Submit a rotated textured quad.
    * @param rotationRadians Rotation angle in radians. */
-  void submitQuad(const glm::vec2 &position, float size,
-                  const float rotationRadians, RenderLayer layer,
-                  const Material &material);
+  void submitQuad(const glm::vec2 &position, float size, float rotationRadians,
+                  RenderLayer layer, const Material &material);
   /// @bried Submit a colored triangle primitive.
   void submitTri(const glm::vec2 &position, float size, RenderLayer layer,
                  const Material &material);
   /// @bried Submit a rotated triangle primitive.
-  void submitTri(const glm::vec2 &position, float size,
-                 const float rotationRadians, RenderLayer layer,
-                 const Material &material);
+  void submitTri(const glm::vec2 &position, float size, float rotationRadians,
+                 RenderLayer layer, const Material &material);
 
   MaterialManager &m_materialManager;
 
 private:
-  glm::mat4 getUniformScaleTransform(const glm::vec2 &position, float size);
-  glm::mat4 getUniformScaleTransform(const glm::vec2 &position, float size,
-                                     float rotation);
-  glm::mat4 getUniformScaleTransform(const glm::vec3 &position, float size);
-  glm::mat4 getUniformScaleTransform(const glm::vec3 &position, float size,
-                                     const glm::vec3 &rotation);
-  glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size,
-                         float rotationAngleRadians);
-  glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size);
+  static glm::mat4 getUniformScaleTransform(const glm::vec2 &position,
+                                            float size);
+  static glm::mat4 getUniformScaleTransform(const glm::vec2 &position,
+                                            float size, float rotation);
+  static glm::mat4 getUniformScaleTransform(const glm::vec3 &position,
+                                            float size);
+  static glm::mat4 getUniformScaleTransform(const glm::vec3 &position,
+                                            float size,
+                                            const glm::vec3 &rotation);
+  static glm::mat4 getTransform(const glm::vec2 &position,
+                                const glm::vec2 &size,
+                                float rotationAngleRadians);
+  static glm::mat4 getTransform(const glm::vec2 &position,
+                                const glm::vec2 &size);
   RenderContext(MaterialManager &materialManager);
-  std::vector<RenderCommand> m_commands = {};
+  std::vector<RenderCommand> m_commands;
 };
 
 } // namespace pain

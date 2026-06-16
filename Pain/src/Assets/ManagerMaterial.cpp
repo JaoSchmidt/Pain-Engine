@@ -46,17 +46,15 @@ MaterialManager::MaterialManager(
           ,
       }
 {
-  int *samplers = new int[backend::getTMU()];
-  for (int i = 0; i < backend::getTMUi(); i++)
+  auto samplers = std::make_unique<int[]>(backend::getTMU());
+  for (int i = 0; i < backend::getTMUi(); ++i)
     samplers[i] = i;
-
-  for (uint8_t i = 0; i < static_cast<uint8_t>(DefaultShader::Count); i++) {
+  for (uint8_t i = 0; i < static_cast<uint8_t>(DefaultShader::Count); ++i) {
     m_defaultShaders[i].bind();
     if (m_defaultShaders[i].getUniformLocation("u_Textures", false) != -1)
-      m_defaultShaders[i].uploadUniformIntArray("u_Textures", samplers,
+      m_defaultShaders[i].uploadUniformIntArray("u_Textures", samplers.get(),
                                                 backend::getTMU());
   }
-  delete[] samplers;
 };
 
 // ============================================================= //
@@ -139,7 +137,7 @@ Material &MaterialManager::getMaterial(const std::string &name)
   auto it = m_materials.find(name);
   if (it == m_materials.end()) {
     PLOG_W("Material {} not found, using ", name);
-    return m_materials[0]; // Simple phong lighting
+    return m_materials[0]; // Always will be simple phong lighting
   }
 
   return it->second;

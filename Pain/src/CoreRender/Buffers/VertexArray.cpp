@@ -23,7 +23,7 @@ VertexArray::createVertexArray(VertexBuffer &vertexBuffer,
 
 std::optional<VertexArray>
 VertexArray::createVertexArray(VertexBuffer &vertexBuffer,
-                               VertexBuffer &vertexBufferInstance,
+                               VertexBuffer &instanceVertexBuffer,
                                IndexBuffer &indexBuffer)
 {
   uint32_t index = 0;
@@ -31,14 +31,14 @@ VertexArray::createVertexArray(VertexBuffer &vertexBuffer,
 
   addVertexBuffer(vertexBuffer, rendererId, index);
   setIndexBuffer(indexBuffer, rendererId);
-  addVertexBuffer(vertexBufferInstance, rendererId, index);
+  addVertexBuffer(instanceVertexBuffer, rendererId, index);
   return VertexArray(vertexBuffer, indexBuffer, rendererId);
 }
 VertexArray::VertexArray(VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer,
                          uint32_t rendererId)
     : m_vertexBuffer(vertexBuffer), m_indexBuffer(indexBuffer),
       m_rendererId(rendererId) {};
-VertexArray::VertexArray(VertexArray &&o)
+VertexArray::VertexArray(VertexArray &&o) noexcept
     : m_vertexBuffer(o.m_vertexBuffer), m_indexBuffer(o.m_indexBuffer),
       m_rendererId(o.m_rendererId)
 {
@@ -47,12 +47,12 @@ VertexArray::VertexArray(VertexArray &&o)
 
 VertexArray::~VertexArray()
 {
-  if (m_rendererId)
+  if (m_rendererId != 0)
     backend::destroyVertexArray(m_rendererId);
   // buffers will be deleted later from here, which is the correct order
 }
 void VertexArray::bind() const { backend::bindVertexArray(m_rendererId); }
-void VertexArray::unbind() const { backend::unbindVertexArray(); }
+void VertexArray::unbind() { backend::unbindVertexArray(); }
 void VertexArray::addVertexBuffer(const VertexBuffer &vertexBuffer,
                                   uint32_t rendererId, uint32_t &index)
 {

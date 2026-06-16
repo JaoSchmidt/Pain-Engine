@@ -32,7 +32,7 @@ public:
    * @param nanoSeconds Duration in nanoseconds.
    */
   DeltaTime(uint64_t nanoSeconds = 0) : m_time(nanoSeconds) {}
-  static DeltaTime createSeconds(float seconds = 0.f)
+  static DeltaTime createSeconds(float seconds = 0.F)
   {
     auto time =
         static_cast<uint64_t>(seconds * static_cast<float>(oneSecond()));
@@ -142,9 +142,9 @@ private:
   static constexpr double milsec_d = 1.0 / 1'000'000.0;
   static constexpr double microsec_d = 1.0 / 1'000.0;
 
-  static constexpr float sec_f = 1.f / 1'000'000'000.f;
-  static constexpr float milsec_f = 1.f / 1'000'000.f;
-  static constexpr float microsec_f = 1.f / 1'000.f;
+  static constexpr float sec_f = 1.F / 1'000'000'000.F;
+  static constexpr float milsec_f = 1.F / 1'000'000.F;
+  static constexpr float microsec_f = 1.F / 1'000.F;
 };
 
 /** @brief Subtracts a DeltaTime from a raw nanosecond value. */

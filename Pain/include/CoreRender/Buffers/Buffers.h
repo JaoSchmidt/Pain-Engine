@@ -59,8 +59,8 @@ public:
   createStaticVertexBuffer(const void *vertices, uint32_t size,
                            BufferLayout &&layout);
 
-  VertexBuffer(VertexBuffer &&o);
-  VertexBuffer &operator=(VertexBuffer &&o);
+  VertexBuffer(VertexBuffer &&o) noexcept;
+  VertexBuffer &operator=(VertexBuffer &&o) noexcept;
   NONCOPYABLE(VertexBuffer)
   ~VertexBuffer();
 
@@ -68,7 +68,7 @@ public:
   void bind() const;
 
   /** Unbinds the currently bound vertex buffer. */
-  void unbind() const;
+  void static unbind();
 
   /** Returns the backend (OpenGL/Vulkan/Directx/etc) buffer identifier. */
   uint32_t getId() const { return m_bufferId; }
@@ -86,7 +86,7 @@ public:
    * @param data Pointer to source data.
    * @param size Size in bytes.
    */
-  void setData(const void *data, uint32_t size);
+  void setData(const void *data, uint32_t size) const;
 
 private:
   VertexBuffer(uint32_t bufferId, BufferLayout &&layout);
@@ -124,8 +124,8 @@ public:
    */
   static std::optional<IndexBuffer> createIndexBuffer(uint32_t maxIndexCount);
 
-  IndexBuffer(IndexBuffer &&o);
-  IndexBuffer &operator=(IndexBuffer &&o);
+  IndexBuffer(IndexBuffer &&o) noexcept;
+  IndexBuffer &operator=(IndexBuffer &&o) noexcept;
   NONCOPYABLE(IndexBuffer);
   ~IndexBuffer();
 
@@ -133,7 +133,7 @@ public:
   void bind() const;
 
   /** Unbinds the currently bound index buffer. */
-  void unbind() const;
+  void static unbind();
 
   /** Returns the number of indices stored in the buffer. */
   uint32_t getCount() const { return m_count; };

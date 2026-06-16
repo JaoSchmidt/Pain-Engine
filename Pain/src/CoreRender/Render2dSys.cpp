@@ -43,9 +43,9 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
     auto chunks = queryConst<Transform2dComponent, SpriteComponent,
                              RotationComponent, MaterialComponent>();
     for (auto &chunk : chunks) {
-      auto *t = std::get<0>(chunk.arrays);
-      auto *s = std::get<1>(chunk.arrays);
-      auto *r = std::get<2>(chunk.arrays);
+      const auto *t = std::get<0>(chunk.arrays);
+      const auto *s = std::get<1>(chunk.arrays);
+      const auto *r = std::get<2>(chunk.arrays);
       const MaterialComponent *m = std::get<3>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         std::visit(
@@ -75,8 +75,8 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
         queryConst<Transform2dComponent, SpriteComponent, MaterialComponent>(
             exclude<RotationComponent>);
     for (auto &chunk : chunks) {
-      auto *t = std::get<0>(chunk.arrays);
-      auto *s = std::get<1>(chunk.arrays);
+      const auto *t = std::get<0>(chunk.arrays);
+      const auto *s = std::get<1>(chunk.arrays);
       const MaterialComponent *m = std::get<2>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         std::visit(
@@ -100,7 +100,7 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - scripts");
-    auto &commands = renderer.m_renderContext.getCommands();
+    const auto &commands = renderer.m_renderContext.getCommands();
 
     for (const auto &cmd : commands) {
       switch (cmd.m_type) {

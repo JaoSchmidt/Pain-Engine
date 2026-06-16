@@ -69,7 +69,7 @@ void addRendererForDeletingTextures(Renderers &renderers);
  * @param spriteWidth       Width of a single sprite in pixels.
  * @param spriteHeight      Height of a single sprite in pixels.
  * @param coords            List of sprite coordinates to extract.
- * @param keepInCPUMemory   Whether the texture data should remain in CPU
+ * @param keepOnRAM   Whether the texture data should remain in CPU
  * memory.
  * @param padding           Optional UV padding to avoid texture bleeding.
  *
@@ -79,7 +79,7 @@ TextureSheet &
 createWithDimensions(const char *name, const char *texturePath,
                      float spriteWidth, float spriteHeight,
                      std::initializer_list<std::pair<int, int>> coords,
-                     bool keepInCPUMemory = false, float padding = 0.5f);
+                     bool keepOnRAM = false, float padding = 0.5F);
 
 /**
  * @brief Creates or retrieves a TextureSheet using grid divisions.
@@ -92,7 +92,7 @@ createWithDimensions(const char *name, const char *texturePath,
  * @param nlinesX           Number of horizontal divisions.
  * @param ncolumnsY         Number of vertical divisions.
  * @param coords            List of sprite coordinates to extract.
- * @param keepInCPUMemory   Whether the texture data should remain in CPU
+ * @param keepOnRAM         Whether the texture data should remain inside RAM
  * memory.
  * @param padding           Optional UV padding to avoid texture bleeding.
  *
@@ -102,7 +102,7 @@ TextureSheet &
 createWithDivisions(const char *name, const char *texturePath, unsigned nlinesX,
                     unsigned ncolumnsY,
                     std::initializer_list<std::pair<int, int>> coords,
-                    bool keepInCPUMemory = false, float padding = 0.5f);
+                    bool keepOnRAM = false, float padding = 0.5F);
 
 /**
  * @brief Retrieves a texture sheet by name.
@@ -145,7 +145,7 @@ Texture &createTexture(const char *path, bool clamp = false, bool isPath = true,
  *
  * @return Reference to the texture or a default texture.
  */
-Texture &getTexture(const char *filepath, bool isPath = true,
+Texture &getTexture(const char *pathOrName, bool isPath = true,
                     bool isError = true);
 
 /**
@@ -213,7 +213,7 @@ void clearTextures();
  *
  * @return True if the texture was deleted successfully, false otherwise.
  */
-bool deleteTexture(const std::string &key, bool isPath = true);
+bool deleteTexture(const std::string &pathOrName, bool isPath = true);
 
 } // namespace TextureManager
 } // namespace pain

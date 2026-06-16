@@ -36,14 +36,14 @@ ImGuiSys::ImGuiSys(reg::ArcheRegistry<UIComponents> &archetype,
 
   ImGuiStyle &style = ::ImGui::GetStyle();
   if (m_io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-    style.WindowRounding = 0.0f;
-    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    style.WindowRounding = 0.0F;
+    style.Colors[ImGuiCol_WindowBg].w = 1.0F;
   }
   ImGui_ImplSDL2_InitForOpenGL(window, context);
   ImGui_ImplOpenGL3_Init("#version 430"); // OpenGL 3.0 and above
 
   m_showAnotherWindow = false;
-  m_clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  m_clearColor = ImVec4(0.45F, 0.55F, 0.60F, 1.00F);
 }
 
 void ImGuiSys::onEvent(const SDL_Event &event)

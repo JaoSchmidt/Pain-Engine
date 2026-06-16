@@ -42,12 +42,12 @@ OrthographicMatrices::OrthographicMatrices(glm::mat4 projectionMatrix,
 
 } // namespace pain
 void ::cmp::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
-                                               const float rotation)
+                                               float angleRadians)
 {
   // PLOG_E("Radians = {}, angle = {}", glm::radians(rotation), rotation);
   glm::mat4 transform =
-      glm::translate(glm::mat4(1.0f), glm::vec3(position, 0)) *
-      glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0, 0, 1));
+      glm::translate(glm::mat4(1.0F), glm::vec3(position, 0)) *
+      glm::rotate(glm::mat4(1.0F), angleRadians, glm::vec3(0, 0, 1));
 
   m_matrices.m_view = glm::inverse(transform);
   m_matrices.m_viewProjectionCache =
@@ -76,7 +76,7 @@ void ::cmp::OrthoCamera::setProjection(float aspectRatio, float zoomLevel)
 void ::cmp::OrthoCamera::setProjection(float left, float right, float bottom,
                                        float top)
 {
-  m_matrices.m_projection = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+  m_matrices.m_projection = glm::ortho(left, right, bottom, top, -1.0F, 1.0F);
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
 }
@@ -95,7 +95,7 @@ void Component::PerspCamera::recalculateViewMatrix(glm::vec3 position,
                                                    glm::vec3 frontCamera)
 {
   glm::vec3 frontUnit = glm::normalize(frontCamera);
-  const glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+  const glm::vec3 up = glm::vec3(0.0F, 1.0F, 0.0F);
   m_matrices.m_view = glm::lookAt(position, position + frontUnit, up);
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
@@ -113,7 +113,7 @@ void Component::PerspCamera::setProjection(float aspectRatio,
                                            float fieldOfViewDegrees)
 {
   m_matrices.m_projection = glm::perspective(glm::radians(fieldOfViewDegrees),
-                                             aspectRatio, 0.01f, 100.0f);
+                                             aspectRatio, 0.01F, 100.0F);
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
 }
@@ -159,8 +159,8 @@ Component::OrthoCamera Component::OrthoCamera::create(bool active, int resWidth,
       zoomLevel,
       pain::OrthographicMatrices( //
           glm::ortho(-aspectRatio * zoomLevel, aspectRatio * zoomLevel,
-                     -zoomLevel, zoomLevel, -1.0f, 1.0f),
-          glm::mat4(1.f)),
+                     -zoomLevel, zoomLevel, -1.0F, 1.0F),
+          glm::mat4(1.F)),
       aspectRatio,
       resWidth,
       resHeight,
@@ -188,14 +188,14 @@ Component::PerspCamera Component::PerspCamera::create(bool active, int resWidth,
   const float aspectRatio =
       static_cast<float>(resWidth) / static_cast<float>(resHeight);
   glm::mat4 perspectiveMatrix = glm::perspective(
-      glm::radians(fieldOfViewDegrees), aspectRatio, 0.01f, 100.0f);
+      glm::radians(fieldOfViewDegrees), aspectRatio, 0.01F, 100.0F);
   // calculate camera direction
   const glm::vec3 cameraFront = glm::normalize(glm::vec3( //
       cos(glm::radians(yaw)) * cos(glm::radians(pitch)),  //
       sin(glm::radians(pitch)),                           //
       sin(glm::radians(yaw)) * cos(glm::radians(pitch))   //
       ));
-  const glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+  const glm::vec3 up = glm::vec3(0.0F, 1.0F, 0.0F);
   glm::mat4 viewMatrix = glm::lookAt(glm::vec3{0}, cameraFront, up);
   return Component::PerspCamera{
       active,      pain::PerspectiveMatrices(perspectiveMatrix, viewMatrix),

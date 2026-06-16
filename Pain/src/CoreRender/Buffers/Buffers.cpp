@@ -28,7 +28,7 @@ IndexBuffer::createIndexBuffer(uint32_t maxIndexCount)
 std::optional<IndexBuffer>
 IndexBuffer::createIndexBuffer(const uint32_t *indexes, uint32_t count)
 {
-  if (!indexes || count == 0) {
+  if ((indexes == nullptr) || count == 0) {
     PLOG_W("IndexBuffer creation failed: invalid data");
     return std::nullopt;
   }
@@ -44,7 +44,7 @@ IndexBuffer::createIndexBuffer(const uint32_t *indexes, uint32_t count)
 
 void IndexBuffer::bind() const { backend::bindIndexBuffer(m_bufferId); }
 
-void IndexBuffer::unbind() const { backend::unbindIndexBuffer(); }
+void IndexBuffer::unbind() { backend::unbindIndexBuffer(); }
 
 void IndexBuffer::updateIndexBuffer(const uint32_t *indices, uint64_t count)
 {
@@ -54,19 +54,19 @@ void IndexBuffer::updateIndexBuffer(const uint32_t *indices, uint64_t count)
 
 IndexBuffer::~IndexBuffer()
 {
-  if (m_bufferId)
+  if (m_bufferId != 0U)
     backend::destroyIndexBuffer(m_bufferId);
 }
 
 IndexBuffer::IndexBuffer(uint32_t bufferId, uint32_t count)
     : m_bufferId(bufferId), m_count(count) {};
 
-IndexBuffer::IndexBuffer(IndexBuffer &&o)
+IndexBuffer::IndexBuffer(IndexBuffer &&o) noexcept
     : m_bufferId(o.m_bufferId), m_count(o.m_count)
 {
   o.m_bufferId = 0;
 }
-IndexBuffer &IndexBuffer::operator=(IndexBuffer &&o)
+IndexBuffer &IndexBuffer::operator=(IndexBuffer &&o) noexcept
 {
   if (this != &o) {
     if (m_bufferId != 0)
@@ -82,12 +82,12 @@ IndexBuffer &IndexBuffer::operator=(IndexBuffer &&o)
 // VertexBuffer
 // ======================================================================== //
 
-VertexBuffer::VertexBuffer(VertexBuffer &&o)
+VertexBuffer::VertexBuffer(VertexBuffer &&o) noexcept
     : m_bufferId(o.m_bufferId), m_layout(std::move(o.m_layout))
 {
   o.m_bufferId = 0;
 };
-VertexBuffer &VertexBuffer::operator=(VertexBuffer &&o)
+VertexBuffer &VertexBuffer::operator=(VertexBuffer &&o) noexcept
 {
   if (this != &o) {
     m_bufferId = o.m_bufferId;
@@ -108,7 +108,7 @@ VertexBuffer::createStaticVertexBuffer(const void *vertices, uint32_t size,
       .size = size, .data = vertices, .isDynamic = false};
 
   uint32_t id = backend::createVertexBuffer(info);
-  if (!id) {
+  if (id == 0) {
     PLOG_W("Failed to generate vertex buffer");
     return std::nullopt;
   }
@@ -123,7 +123,7 @@ VertexBuffer::createVertexBuffer(uint32_t size, BufferLayout &&layout)
       .size = size, .data = nullptr, .isDynamic = true};
 
   uint32_t id = backend::createVertexBuffer(info);
-  if (!id) {
+  if (id == 0) {
     PLOG_W("Failed to generate vertex buffer");
     return std::nullopt;
   }
@@ -133,16 +133,16 @@ VertexBuffer::createVertexBuffer(uint32_t size, BufferLayout &&layout)
 
 void VertexBuffer::bind() const { backend::bindVertexBuffer(m_bufferId); }
 
-void VertexBuffer::unbind() const { backend::unbindVertexBuffer(); }
+void VertexBuffer::unbind() { backend::unbindVertexBuffer(); }
 
-void VertexBuffer::setData(const void *data, uint32_t size)
+void VertexBuffer::setData(const void *data, uint32_t size) const
 {
   backend::setVertexBufferData(m_bufferId, data, size);
 }
 
 VertexBuffer::~VertexBuffer()
 {
-  if (m_bufferId)
+  if (m_bufferId == 0)
     backend::destroyVertexBuffer(m_bufferId);
 }
 

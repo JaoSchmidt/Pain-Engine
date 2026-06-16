@@ -56,7 +56,7 @@ struct CubeBatch {
   static CubeBatch create(std::string name);
 
   void allocateCube(const glm::mat4 &transform, const Color &tintColor,
-                    const float tilingFactor, const float textureIndex);
+                    float tilingFactor, float textureIndex);
   void resetAll();
   void resetPtr();
   void flush(Texture **textures, uint32_t textureCount);
