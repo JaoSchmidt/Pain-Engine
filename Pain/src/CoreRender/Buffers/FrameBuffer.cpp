@@ -22,7 +22,7 @@ FrameBuffer::create(const FrameBufferCreationInfo &info)
 
   uint32_t frameBufferId = backend::createFrameBuffer(fb);
 
-  if (frameBufferId == 0) {
+  if (frameBufferId) {
     fb.bufferId = frameBufferId;
     return FrameBuffer{fb};
   }

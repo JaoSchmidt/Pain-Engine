@@ -58,7 +58,7 @@ void ImGuiDebugMenu::Script::onRender(pain::Renderers &renderers,
     m_frameCount = m_displayedCount;
     std::string availableResultFileName =
         getNextAvailableFileName(m_resultFileName);
-    PLOG_T("Starting profile on file {} with {} frames",
+    ELOG_T("Starting profile on file {} with {} frames",
            availableResultFileName.c_str(), m_displayedCount);
     PROFILE_OPEN(m_baseProfileName.c_str(), availableResultFileName.c_str());
   }

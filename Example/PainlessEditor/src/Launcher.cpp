@@ -48,7 +48,7 @@ public:
   // void init(Application *app) { m_app = app; }
   void onCreate()
   {
-    PLOG_I("Creating Launcher");
+    ELOG_I("Creating Launcher");
     m_init.readAndUpdate(true);
   }
   void onRender(pain::Renderers &renderer, bool isMinimized,
@@ -147,7 +147,7 @@ private:
 
 pain::Application *createLauncher()
 {
-  PLOG_T("Opening Settings App");
+  ELOG_T("Opening Settings App");
   const char *title = "Settings";
   const int width = 500;
   const int height = 200;

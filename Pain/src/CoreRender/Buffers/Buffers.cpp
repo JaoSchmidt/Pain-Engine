@@ -123,7 +123,7 @@ VertexBuffer::createVertexBuffer(uint32_t size, BufferLayout &&layout)
       .size = size, .data = nullptr, .isDynamic = true};
 
   uint32_t id = backend::createVertexBuffer(info);
-  if (id == 0) {
+  if (!id) {
     PLOG_W("Failed to generate vertex buffer");
     return std::nullopt;
   }
@@ -142,7 +142,7 @@ void VertexBuffer::setData(const void *data, uint32_t size) const
 
 VertexBuffer::~VertexBuffer()
 {
-  if (m_bufferId == 0)
+  if (m_bufferId)
     backend::destroyVertexBuffer(m_bufferId);
 }
 

@@ -20,12 +20,12 @@ namespace painless
 class Editor : public pain::UIObject, public CustomEditor
 {
 public:
+  static Editor &create(pain::UIScene &uiScene, pain::Application &app);
   ~Editor() { m_imGuiDebugMenu.onDestroy(); };
   NONCOPYABLE(Editor);
   NONMOVABLE(Editor);
   // void init(Application *app) { m_app = app; }
 
-  void onUpdate(pain::DeltaTime dt);
   void onRender(pain::Renderers &renderers, bool isMinimized,
                 pain::DeltaTime dt);
   Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app);
@@ -46,4 +46,5 @@ private:
   float m_splitRatio = 0.7F;
   // TEMP BOTTOM BA
 };
+
 } // namespace painless

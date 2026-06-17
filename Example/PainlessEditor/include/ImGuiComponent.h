@@ -25,8 +25,8 @@
  */
 #pragma once
 
-#include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/ComponentManager.h"
+#include "EditorLogs.h"
 #include "Scripting/Native/Concepts.h"
 #include "spdlog/fmt/bundled/format.h"
 #include <SDL2/SDL_events.h>
@@ -101,7 +101,7 @@ public:
     checkImGuiScriptMethods<T>();
     instance = new T(std::move(t));
     destroyInstanceFunction = [](Scriptable *&instance) {
-      PLOG_I("ImGuiComponent instance {}: destructorInstanceFunction "
+      ELOG_I("ImGuiComponent instance {}: destructorInstanceFunction "
              "called",
              fmt::ptr(instance));
       delete static_cast<T *>(instance);
@@ -164,7 +164,7 @@ public:
                   "instead of coding `using Scriptable::Scriptable;`?");
     instance = new T(std::forward<Args>(args)...);
     destroyInstanceFunction = [](Scriptable *&instance) {
-      PLOG_I("ImGuiComponent instance {}: destructorInstanceFunction "
+      ELOG_I("ImGuiComponent instance {}: destructorInstanceFunction "
              "called",
              fmt::ptr(instance));
       delete static_cast<T *>(instance);

@@ -7,6 +7,7 @@
 // CustomPanel.cpp
 #include "CustomPanel.h"
 #include "CoreFiles/LogWrapper.h"
+#include "EditorLogs.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <algorithm> // for std::sort
@@ -61,38 +62,40 @@ void CustomEditor::registerPanel(const std::string &name, float split,
   }
 }
 
-void CustomEditor::addToPanelLua(const std::string &panelName, int identifier,
-                                 const sol::protected_function &luaFunc,
-                                 sol::optional<int> optOrder)
+int CustomEditor::addToPanelLua(const std::string &panelName,
+                                const sol::protected_function &luaFunc,
+                                sol::optional<int> optOrder)
 {
   int order = optOrder.value_or(0);
-  onRenderFunc wrapped = [luaFunc, this]() mutable {
-    sol::protected_function_result result = luaFunc(m_imgui, m_implot);
+  return addToPanel(
+      panelName,
+      [luaFunc, this]() mutable {
+        sol::protected_function_result result = luaFunc(m_imgui, m_implot);
 
-    if (!result.valid()) {
-      sol::error err = result;
-      PLOG_E("Lua callback error: {}", err.what());
-    }
-  };
-
-  addToPanel(panelName, identifier, wrapped, order);
+        if (!result.valid()) {
+          sol::error err = result;
+          ELOG_E("Lua callback error: {}", err.what());
+        }
+      },
+      order);
 }
 
-void CustomEditor::addToPanel(const std::string &panelName, int identifier,
-                              const onRenderFunc &callback, int order)
+int CustomEditor::addToPanel(const std::string &panelName,
+                             onRenderFunc callback, int order)
 {
   auto it = m_customPanels.find(panelName);
   if (it == m_customPanels.end()) {
-    PLOG_E("Error: no panel named {} registered, perhaps you forgot to call "
+    ELOG_E("Error: no panel named {} registered, perhaps you forgot to call "
            "registerPanel()?",
            panelName);
-    return;
+    return -1;
   }
 
   std::vector<SubPanel> &subPanels = it->second;
-  subPanels.emplace_back(callback, order, identifier);
-
-  // std::sort(subPanels.begin(), subPanels.end());
+  int identifier = m_count++;
+  subPanels.emplace_back(std::move(callback), order, identifier);
+  std::sort(subPanels.begin(), subPanels.end());
+  return identifier;
 }
 
 void CustomEditor::buildDockerWindow()
@@ -101,7 +104,8 @@ void CustomEditor::buildDockerWindow()
     dockerspaceBuild(panel.first, m_panelInfo[panel.first]);
 }
 
-void CustomEditor::removeFromPanel(const std::string &panelName, int identifier)
+void CustomEditor::removeFromPanel(const std::string &panelName,
+                                   int &identifier)
 {
   const auto pos = m_customPanels.find(panelName);
   if (pos == m_customPanels.end())
@@ -111,8 +115,12 @@ void CustomEditor::removeFromPanel(const std::string &panelName, int identifier)
   auto it = std::find_if(
       subPanels.begin(), subPanels.end(),
       [&](const SubPanel &panel) { return panel.m_identifier == identifier; });
-  if (it != subPanels.end())
+  if (it != subPanels.end()) {
     subPanels.erase(it);
+    identifier = -1;
+  } else {
+    ELOG_E("Could not remove subpanel with id = {}", identifier);
+  }
 }
 
 void CustomEditor::renderAll()

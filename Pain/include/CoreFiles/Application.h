@@ -36,7 +36,7 @@ struct EngineContext {
   SDL_Window *window = nullptr;
   SDL_GLContext sdlContext = nullptr;
   EngineContext(SDL_Window *window, void *sdlContext,
-                FrameBufferCreationInfo &&fbci);
+                const FrameBufferCreationInfo &fbci);
 };
 
 /**
@@ -68,7 +68,7 @@ public:
    */
   static Application *
   createApplication(AppInit &&initConfig,
-                    FrameBufferCreationInfo &&frameBufferCreationInfo = {
+                    const FrameBufferCreationInfo &frameBufferCreationInfo = {
                         .swapChainTarget = false});
 
   NONCOPYABLE(Application);
@@ -99,15 +99,15 @@ public:
    * accumulator */
   double getTimeMultiplier() const { return m_config.timeMultiplier; }
 
-  /** Toggle simulation */
-  void inline toggleSimulation()
-  {
-    m_config.isSimulation = !(m_config.isSimulation);
-  }
   /** Disable viewport events */
   void inline setFocusedOrHovered(bool isFocusedOrHovered)
   {
     m_config.isFocusedOrHovered = isFocusedOrHovered;
+  }
+  /** Toggle simulation */
+  void inline toggleSimulation()
+  {
+    m_config.isSimulation = !(m_config.isSimulation);
   }
   /** Returns a pointer to the simulation flag. */
   bool inline isSimulation() const { return m_config.isSimulation; }
@@ -173,7 +173,7 @@ public:
 
 private:
   Application(SDL_Window *window, void *sdlContext,
-              FrameBufferCreationInfo &&fbci, AppInit initConfig);
+              const FrameBufferCreationInfo &fbci, AppInit initConfig);
 
   void ensureCamera();
 

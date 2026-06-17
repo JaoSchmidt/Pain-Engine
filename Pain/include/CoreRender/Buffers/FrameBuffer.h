@@ -63,6 +63,7 @@ public:
   FrameBuffer(const FrameBufferCreationInfo &spec) : m(spec) {}
   MOVABLE(FrameBuffer);
   NONCOPYABLE(FrameBuffer);
+  ~FrameBuffer() = default;
 
   /** Returns the framebuffer creation specification. */
   const FrameBufferCreationInfo &getSpecification() const { return m; }

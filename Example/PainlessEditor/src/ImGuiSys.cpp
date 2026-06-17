@@ -93,7 +93,7 @@ void ImGuiSys::onRender(Renderers &renderer, bool isMinimized,
 
 Systems::ImGuiSys::~ImGuiSys()
 {
-  PLOG_T("Shut ImGui System");
+  ELOG_T("Shut ImGui System");
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplSDL2_Shutdown();
   ImPlot::DestroyContext();

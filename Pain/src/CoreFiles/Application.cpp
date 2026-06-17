@@ -37,7 +37,7 @@ void luabinder_bindEngineVelocity(sol::table &engine, Application &app)
 }
 
 Application *Application::createApplication(AppInit &&initConfig,
-                                            FrameBufferCreationInfo &&fbci)
+                                            const FrameBufferCreationInfo &fbci)
 {
   // =========================================================================//
   // SDL Initial setup
@@ -101,8 +101,8 @@ Application *Application::createApplication(AppInit &&initConfig,
   // =========================================================================//
   // config.ini file
   // =========================================================================//
-  Application *app = new Application(window, sdlContext, std::move(fbci),
-                                     std::move(initConfig));
+  Application *app =
+      new Application(window, sdlContext, fbci, std::move(initConfig));
   if (app != nullptr) {
     // NOTE: lua binding...
     // Before the loop, any object can be created. Therefore we bind stuff now
@@ -126,16 +126,15 @@ Application *Application::createApplication(AppInit &&initConfig,
   return app;
 }
 EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
-                             FrameBufferCreationInfo &&fbci)
+                             const FrameBufferCreationInfo &fbci)
     :                                        //
       threadPool(ThreadPool{}),              //
       luaState(luabinder::createLuaState()), //
       eventDispatcher(luaState),             //
       renderers(Renderers::create()),        //
-      renderPipeline(
-          fbci.swapChainTarget
-              ? RenderPipeline::create(eventDispatcher)
-              : RenderPipeline::create(std::move(fbci), eventDispatcher)), //
+      renderPipeline(fbci.swapChainTarget
+                         ? RenderPipeline::create(eventDispatcher)
+                         : RenderPipeline::create(fbci, eventDispatcher)), //
       window(window),                                                      //
       sdlContext(sdlContext)                                               //
 {};
@@ -146,7 +145,8 @@ EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
  * m_runtime for the world scene, which needs the engine context working
  */
 Application::Application(SDL_Window *window, void *sdlContext,
-                         FrameBufferCreationInfo &&fbci, AppInit initConfig)
+                         const FrameBufferCreationInfo &fbci,
+                         AppInit initConfig)
     : m_config{.init = initConfig}, m_ctx(window, sdlContext, std::move(fbci)),
       m_runtime{.worldScene = Scene::create(m_ctx.eventDispatcher,
                                             m_ctx.luaState, m_ctx.threadPool)},
