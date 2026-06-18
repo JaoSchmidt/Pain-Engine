@@ -147,6 +147,7 @@ private:
 
 pain::Application *createLauncher()
 {
+  logWrapper::s_initEditorLogger();
   ELOG_T("Opening Settings App");
   const char *title = "Settings";
   const int width = 500;
