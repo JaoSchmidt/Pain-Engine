@@ -128,23 +128,23 @@ public:
     renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
                                  {230, 230, 51, 255},
                                  glm::pi<float>() * -currentTime.getSeconds(),
-                                 pain::RenderLayer::Default, simple);
+                                 pain::RenderLayer::D, simple);
     renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
-                                 {230, 230, 51, 255},
-                                 pain::RenderLayer::Default, simple);
+                                 {230, 230, 51, 255}, pain::RenderLayer::D,
+                                 simple);
     renderer.renderer2d.drawQuad({-0.5f, 0.5f}, {0.25f, 0.25f},
-                                 {255, 255, 255, 255},
-                                 pain::RenderLayer::Default, simple);
+                                 {255, 255, 255, 255}, pain::RenderLayer::D,
+                                 simple);
     renderer.renderer2d.drawQuad({0.2f, -0.2f}, {0.25f, 0.25f},
                                  {204, 51, 26, 128},
                                  glm::pi<float>() * currentTime.getSeconds(),
-                                 pain::RenderLayer::MuchCloser, simple);
+                                 pain::RenderLayer::E, simple);
     renderer.renderer2d.drawQuad({0.2f, 0.2f}, {0.25f, 0.25f},
-                                 {230, 230, 51, 255},
-                                 pain::RenderLayer::MuchCloser, simple);
+                                 {230, 230, 51, 255}, pain::RenderLayer::E,
+                                 simple);
     renderer.renderer2d.drawQuad({-0.2f, 0.2f}, {0.25f, 0.25f},
-                                 {255, 255, 255, 255},
-                                 pain::RenderLayer::MuchCloser, simple);
+                                 {255, 255, 255, 255}, pain::RenderLayer::E,
+                                 simple);
     renderer.renderer2d.drawCircle({0.5f, 0.5f}, 0.25f, {51, 75, 230, 255});
     renderer.renderer2d.drawTri({-0.5f, -0.5f}, {0.25f, 0.25f},
                                 {0.2f, 0.3f, 0.9f, 1.f});

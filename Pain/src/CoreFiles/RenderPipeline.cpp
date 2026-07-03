@@ -226,7 +226,7 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
                                       wrap2d->second);
     worldScene.renderSystems(RenderPass::Dim2d, renderers, isMinimized,
                              currentTime);
-    renderers.m_renderer2d.endScene();
+    renderers.m_renderer2d.endScene(currentTime, wrap2d->first, wrap2d->second);
   }
 
   renderers.m_renderContext.clear();

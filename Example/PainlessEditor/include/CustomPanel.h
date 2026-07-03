@@ -71,28 +71,23 @@ struct PanelInfo {
   ImGuiID m_id = 0;
 };
 
-struct CustomEditor {
-  int m_count = 0;
-  std::map<std::string, std::vector<SubPanel>> m_customPanels;
-  std::map<std::string, PanelInfo> m_panelInfo;
-  bool m_dockspaceInitialized = false;
-  ImGuiID m_dockerIDSidebar, m_dockerIDViewport;
+namespace customPanel
+{
+void registerPanel(const std::string &name, float split, InterfaceMenu menu);
+int updateSubPanel(const std::string &panelName, int identifier,
+                   onRenderFunc callback);
 
-  void registerPanel(const std::string &name, float split, InterfaceMenu menu);
-  int addToPanel(const std::string &panelName, onRenderFunc callback,
-                 int order = 0);
-  int addToPanelLua(const std::string &panelName,
-                    const sol::protected_function &luaFunc,
-                    sol::optional<int> order);
-  void removeFromPanel(const std::string &panelName, int &identifier);
-  void buildDockerWindow();
-  void renderAll();
-
-  sol::table m_imgui;
-  sol::table m_implot;
-
-private:
-  void dockerspaceBuild(const std::string &panelName, PanelInfo &info);
-};
+int addToPanel(const std::string &panelName, onRenderFunc callback,
+               int order = 0);
+int addToPanelLua(const std::string &panelName,
+                  const sol::protected_function &luaFunc,
+                  sol::optional<int> order);
+void removeFromPanel(const std::string &panelName, int &identifier);
+void buildDockerWindow(ImGuiID sidebarId, ImGuiID viewportId);
+void renderAll();
+void deleteAll();
+sol::table &getImGuiTable();
+sol::table &getImPlotTable();
+} // namespace customPanel
 
 } // namespace painless

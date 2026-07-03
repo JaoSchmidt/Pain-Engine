@@ -81,11 +81,10 @@ void QuadBatch::resetAll()
 #endif
 }
 
-void QuadBatch::flush(Texture **textures, uint32_t textureCount)
+void QuadBatch::flush(Texture **textures, uint32_t textureCount, Shader *shader)
 {
   if (m_count == 0)
     return;
-  // sortByDrawOrder();
   vao.bind();
   vbo.bind();
 
@@ -95,6 +94,7 @@ void QuadBatch::flush(Texture **textures, uint32_t textureCount)
   for (uint32_t i = 0; i < textureCount; i++)
     textures[i]->bindToSlot(i);
 
+  shader->bind();
   ib.bind();
   backend::drawIndexedInstanced(vao, 6, m_count);
 #ifndef NDEBUG
@@ -106,12 +106,16 @@ void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
                              const float tilingFactor, const float textureIndex)
 {
   PROFILE_FUNCTION();
-  *ptr = {
-      tintColor.value, //
-      textureIndex,    //
-      tilingFactor,    //
-      transform,       //
-  };
+  // *ptr = {
+  //     tintColor.value, //
+  //     textureIndex,    //
+  //     tilingFactor,    //
+  //     transform,       //
+  // };
+  ptr->color = tintColor.value;
+  ptr->texIndex = textureIndex;
+  ptr->tilingFactor = tilingFactor;
+  ptr->transform = transform;
   ptr++;
 
   // drawOrder[indexCount] = order;

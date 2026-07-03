@@ -63,6 +63,9 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
                 renderer2d.submitTri(t[i].m_position,
                                      {shape.base, shape.height},
                                      r[i].m_rotationRadians, s[i].layer, *m[i]);
+              } else if constexpr (std::is_same_v<T, LineShape>) {
+                renderer2d.submitLine(t[i].m_position, shape.destination,
+                                      shape.thickness, s[i].layer, *m[i]);
               }
             },
             s[i].m_shape);
@@ -92,6 +95,9 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
                 renderer2d.submitTri(t[i].m_position,
                                      {shape.base, shape.height}, s[i].layer,
                                      *m[i]);
+              } else if constexpr (std::is_same_v<T, LineShape>) {
+                renderer2d.submitLine(t[i].m_position, shape.destination,
+                                      shape.thickness, s[i].layer, *m[i]);
               }
             },
             s[i].m_shape);
@@ -120,6 +126,14 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
         renderer2d.submitRect(           //
             cmd.m_data.sprite.transform, //
             cmd.m_data.sprite.layer,     //
+            *cmd.m_data.sprite.material);
+        break;
+      case RenderCommandType::Line:
+        renderer2d.submitLine(           //
+            cmd.m_data.line.origin,      //
+            cmd.m_data.line.destination, //
+            cmd.m_data.line.thickness,   //
+            cmd.m_data.line.layer,       //
             *cmd.m_data.sprite.material);
         break;
 

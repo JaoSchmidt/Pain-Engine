@@ -249,7 +249,8 @@ public:
   /**
    * @brief Attaches and initializes a Lua script component on an entity.
    *
-   * Only available when the LuaScriptComponent is registered by the manager.
+   * Only available when the LuaScriptComponent is registered by the
+   * manager.
    *
    * @param entity Target entity.
    * @param scriptPath Path to the script file.

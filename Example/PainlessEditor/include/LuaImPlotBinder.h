@@ -2,5 +2,6 @@
 #include <sol/sol.hpp>
 namespace painless::luabinder
 {
-void bindImPlot(sol::state &lua, CustomEditor &editor);
+void bindImPlot(sol::state &lua);
+void unbindImPlot(sol::state &lua);
 } // namespace painless::luabinder

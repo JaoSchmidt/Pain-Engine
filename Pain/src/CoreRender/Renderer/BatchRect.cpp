@@ -75,7 +75,6 @@ void RectBatch::flush(Texture **textures, uint32_t textureCount)
 {
   if (!indexCount)
     return;
-  // sortByDrawOrder();
   vao.bind();
   vbo.bind();
 

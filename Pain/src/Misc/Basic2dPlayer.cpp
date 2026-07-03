@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "Misc/BasicOrthoCamera.h"
+#include "Misc/Basic2dPlayer.h"
 #include "CoreRender/CameraComponent.h"
 #include "ECS/Components/NativeScript.h"
 #include "Physics/Movement3dComponent.h"
@@ -14,12 +14,14 @@
 namespace pain
 {
 reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionWidth,
-                                  int resolutionHeight, float zoomLevel)
+                                  int resolutionHeight, float zoomLevel,
+                                  glm::vec2 center)
 {
   reg::Entity entity = scene.createEntity();
-  scene.createComponents(entity, pain::Transform2dComponent{}, //
-                         pain::RotationComponent{},            //
-                         pain::Movement2dComponent{},          //
+  scene.createComponents(entity,                             //
+                         pain::Transform2dComponent{center}, //
+                         pain::RotationComponent{},          //
+                         pain::Movement2dComponent{},        //
                          Component::OrthoCamera::create(true, resolutionWidth,
                                                         resolutionHeight,
                                                         zoomLevel, entity), //
@@ -30,11 +32,11 @@ reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionWidth,
 reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
                                              int resolutionWidth,
                                              int resolutionHeight,
-                                             float zoomLevel)
+                                             float zoomLevel, glm::vec2 center)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
-      entity, pain::Transform2dComponent{},
+      entity, pain::Transform2dComponent{center},
       Component::OrthoCamera::create(true, resolutionWidth, resolutionHeight,
                                      zoomLevel, entity) //
   );
@@ -55,6 +57,7 @@ void OrthoCameraScript::onMouseButtonUp(const SDL_Event &event)
     PLOG_I("resolution = ({},{})", TP_VEC2(cc.m_resolution));
   }
 }
+
 void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
 {
   if (hasAnyComponents<Movement2dComponent, Transform2dComponent>()) {

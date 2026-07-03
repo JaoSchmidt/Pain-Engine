@@ -9,6 +9,8 @@
 
 #include "Core.h"
 #include "ECS/Components/ComponentManager.h"
+#include "Physics/MovementComponent.h"
+#include "Physics/RotationComponent.h"
 #include "pch.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -131,6 +133,12 @@ struct OrthoCamera : CameraResolution {
   /** Adds to zoom level. */
   void addZoom(float zoom);
   OrthoCamera() = delete;
+  glm::vec2 screenToWorld(int mouseX, int mouseY,
+                          const pain::Transform2dComponent &camTC,
+                          const pain::RotationComponent &camRC);
+
+  glm::vec2 screenToWorld(int mouseX, int mouseY,
+                          const pain::Transform2dComponent &camTC);
 
 private:
   OrthoCamera(bool active, float zoomLevel, pain::OrthographicMatrices oc,

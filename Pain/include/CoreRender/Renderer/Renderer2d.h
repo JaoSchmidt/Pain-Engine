@@ -45,10 +45,14 @@ struct Transform2dComponent;
  *  - Call endScene().
  */
 struct Renderer2d {
+  ~Renderer2d();
+  NONCOPYABLE(Renderer2d);
+  NONMOVABLE(Renderer2d);
   /// @brief Factory function to create a renderer instance.
   static Renderer2d createRenderer2d(MaterialManager &materialManager);
 
-  Renderer2d &operator=(Renderer2d &&o) noexcept;
+  // Renderer2d(Renderer2d &&o) noexcept;
+  // Renderer2d &operator=(Renderer2d &&o) noexcept;
   /// @brief Change the active camera entity used for rendering.
   void changeCamera(reg::Entity camera);
   /// @brief Returns true if a valid camera is currently bound.
@@ -72,7 +76,8 @@ struct Renderer2d {
                   const Transform2dComponent &tc);
 
   // @brief Flush all batches and finalize the scene.
-  void endScene();
+  void endScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+                const Transform2dComponent &tc);
 
   /// @brief Clears all renderer state and internal caches.
   void clearEntireRenderer();
@@ -118,6 +123,14 @@ struct Renderer2d {
   /// @brief Submit an axis-aligned textured rect.
   void submitRect(const glm::mat4 &transform, RenderLayer layer,
                   const Material &material);
+
+  // ================================================================= //
+  // Submit Line
+  // ================================================================= //
+
+  /// @brief Submit a colored triangle primitive.
+  void submitLine(const glm::vec2 &origin, const glm::vec2 &destination,
+                  float thickness, RenderLayer layer, const Material &material);
 
   // ================================================================= //
   // Submit Triangles
@@ -226,7 +239,7 @@ private:
   float allocateTextures(Texture &texture);
 
   struct M {
-    MaterialManager &materialManager;
+    std::reference_wrapper<MaterialManager> materialManager;
     SprayBatch sprayBatch;
     TextBatch textBatch;
     DebugGrid debugGrid;
@@ -239,7 +252,6 @@ private:
 
     reg::Entity orthoCameraEntity = reg::Entity{-1};
     // replaced by m_textBatch.fontAtlas
-    // const Texture *m_fontAtlasTexture = nullptr;
   };
 
   M m;

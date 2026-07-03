@@ -15,6 +15,7 @@ Checks: >
   -readability-implicit-bool-conversion,
   -readability-redundant-member-init,
   -readability-static-accessed-through-instance,
+  -readability-uppercase-literal-suffix,
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,

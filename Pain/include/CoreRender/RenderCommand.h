@@ -28,6 +28,13 @@ struct RenderCommand {
     struct {
       glm::vec3 a;
       glm::vec3 b;
+    } line3d;
+    struct {
+      const Material *material;
+      glm::vec2 origin;
+      glm::vec2 destination;
+      float thickness;
+      RenderLayer layer;
     } line;
     struct LightPoint {
       glm::vec3 position;

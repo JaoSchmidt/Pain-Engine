@@ -130,6 +130,17 @@ void RenderContext::submitTri(const glm::vec2 &position, float size,
       } //
   );
 }
+void RenderContext::submitLine(const glm::vec2 &origin,
+                               const glm::vec2 &destination, float thickness,
+                               RenderLayer layer, const Material &material)
+{
+  m_commands.emplace_back(
+      RenderCommandType::Line,
+      RenderCommand::Data{
+          .line{&material, origin, destination, thickness, layer} //
+      } //
+  );
+}
 
 // =================================================================== //
 // Private Transforms

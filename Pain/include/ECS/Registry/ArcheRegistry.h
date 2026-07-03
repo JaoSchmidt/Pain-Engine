@@ -341,7 +341,7 @@ public:
                                                        targetColumn};
   }
   template <ECSComponent... ObjectComponents>
-  void removeBatch(std::span<const Entity> entities)
+  void removeBatch(std::span<Entity> entities)
   {
     // useful
     struct RecordHash {
@@ -364,8 +364,8 @@ public:
     std::unordered_set<Record, RecordHash, RecordEq> replacedMap;
     replacedMap.reserve(entities.size());
 
-    // remove NOTE: for high remove batches, it may be faster to cache
-    // archetypes
+    // remove archetypes
+    // NOTE: for high remove batches, it may be faster to cache
     for (auto &target : entities) {
       Bitmask &bitmask = m_records[target].bitmask;
       Column &column = m_records[target].column;

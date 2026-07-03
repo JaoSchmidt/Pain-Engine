@@ -70,6 +70,10 @@ public:
   void submitTri(const glm::vec2 &position, float size, float rotationRadians,
                  RenderLayer layer, const Material &material);
 
+  /// @bried Submit a simple line
+  void submitLine(const glm::vec2 &origin, const glm::vec2 &destination,
+                  float thickness, RenderLayer layer, const Material &material);
+
   MaterialManager &m_materialManager;
 
 private:

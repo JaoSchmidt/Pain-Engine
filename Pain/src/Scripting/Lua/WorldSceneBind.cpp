@@ -38,9 +38,19 @@ void onComponentAdded(Scene &scene, reg::Entity entity)
   }
 }
 
-inline std::variant<QuadShape, RectShape, TriangleShape>
-parseSpriteShape(sol::object obj)
+inline ShapeVariant parseSpriteShape(sol::object obj)
 {
+
+  static constexpr std::array parsers{
+      "quad",
+      "rect",
+      "triangle",
+      "line",
+  };
+  static_assert(
+      parsers.size() == std::variant_size_v<ShapeVariant>,
+      "Hey idiot, you added a sprite shape alternative but forgot a parser");
+
   if (!obj.valid() || obj.get_type() != sol::type::table)
     return QuadShape{}; // default
 
@@ -57,6 +67,14 @@ parseSpriteShape(sol::object obj)
     if (auto v = t["size"]; v.valid())
       size = v.get<glm::vec2>();
     return RectShape{size};
+  } else if (type == "line") {
+    glm::vec2 destination{0, 0};
+    float thickness = 1.f;
+    if (auto v = t["dest"]; v.valid())
+      destination = v.get<glm::vec2>();
+    if (auto v = t["thickness"]; v.valid())
+      thickness = v.get<float>();
+    return LineShape{destination, thickness};
   } else if (type == "triangle") {
     float base = t["base"].get_or(0.125F);
     float height = t["height"].get_or(0.125F);

@@ -151,9 +151,10 @@ class BufferLayout
 {
 public:
   BufferLayout() {}
+  ~BufferLayout() = default;
   NONCOPYABLE(BufferLayout);
   BufferLayout(BufferLayout &&o)
-      : m_Elements(o.m_Elements), m_Stride(o.m_Stride) {};
+      : m_Elements(std::move(o.m_Elements)), m_Stride(o.m_Stride) {};
   BufferLayout &operator=(BufferLayout &&o)
   {
     if (this != &o) {

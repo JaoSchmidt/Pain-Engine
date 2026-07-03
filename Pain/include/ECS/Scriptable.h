@@ -207,6 +207,15 @@ public:
   // Queries
   // ------------------------------------------------------------
 
+  /** @brief Checks whether another entity owns any of the given components.
+   */
+  template <typename... Ts>
+    requires(SceneType::template allRegistered<Ts...>())
+  bool hasAnyComponents(reg::Entity entity) const
+  {
+    return m_scene.get().template hasAnyComponents<Ts...>(entity);
+  }
+
   /** @brief Checks whether the wrapped entity owns any of the given components.
    */
   template <typename... Ts>
@@ -216,6 +225,14 @@ public:
     return m_scene.get().template hasAnyComponents<Ts...>(m_entity);
   }
 
+  /** @brief Checks whether another entity owns all of the given components.
+   */
+  template <typename... Ts>
+    requires(SceneType::template allRegistered<Ts...>())
+  bool hasAllComponents(reg::Entity entity) const
+  {
+    return m_scene.get().template hasAllComponents<Ts...>(entity);
+  }
   /** @brief Checks whether the wrapped entity owns all of the given components.
    */
   template <typename... Ts>

@@ -86,7 +86,7 @@ public:
         scene.getComponent<NativeScriptComponent>(entity);
     nsc.bindAndInitiate<N>(std::forward<N>(n));
     if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
+      nsc.onCreateFunction(nsc.instance.get());
     return static_cast<N &>(*nsc.instance);
   }
 
@@ -113,7 +113,7 @@ public:
         scene.getComponent<NativeScriptComponent>(entity);
     nsc.bindAndEmplace<N>(entity, scene, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
+      nsc.onCreateFunction(nsc.instance.get());
     return static_cast<N &>(*nsc.instance);
   }
 

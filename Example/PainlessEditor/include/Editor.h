@@ -11,17 +11,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "CustomPanel.h"
 #include "DebuggingMenu.h"
 #include "imgui_internal.h"
 namespace painless
 {
 
-class Editor : public pain::UIObject, public CustomEditor
+class Editor : public pain::UIObject
 {
 public:
   static Editor &create(pain::UIScene &uiScene, pain::Application &app);
-  ~Editor() { m_imGuiDebugMenu.onDestroy(); };
+  ~Editor();
   NONCOPYABLE(Editor);
   NONMOVABLE(Editor);
   // void init(Application *app) { m_app = app; }
@@ -31,6 +30,7 @@ public:
   Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app);
 
   bool m_wasFocused = false;
+  bool m_dockspaceInitialized = false;
 
 private:
   ImGuiWindowFlags m_windowFlags =

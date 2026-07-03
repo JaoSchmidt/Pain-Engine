@@ -55,7 +55,7 @@ struct QuadBatch {
                     const float tilingFactor, const float textureIndex);
   void resetAll();
   void resetPtr();
-  void flush(Texture **textures, uint32_t textureCount);
+  void flush(Texture **textures, uint32_t textureCount, Shader *shader);
 
 private:
   QuadBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,

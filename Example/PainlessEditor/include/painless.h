@@ -7,8 +7,8 @@
 // System
 #include "ImGuiSys.h"
 // Misc
+#include "CustomPanel.h"
 #include "Editor.h"
 #include "ImGuiComponent.h"
 #include "ImGuiEmplacer.h"
-#include "ImGuiRegistry.h"
 #include "Launcher.h"

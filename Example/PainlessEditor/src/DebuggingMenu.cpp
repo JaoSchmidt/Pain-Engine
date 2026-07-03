@@ -9,7 +9,6 @@
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "ImGuiComponent.h"
-#include "ImGuiRegistry.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 #include <string>
@@ -75,7 +74,6 @@ void ImGuiDebugMenu::Script::onRender(pain::Renderers &renderers,
 
   ImGui::Separator();
 #endif
-  ImGuiDebugRegistry::renderAll(InterfaceMenu::SIDEBAR);
 }
 
 std::string ImGuiDebugMenu::Script::generateTimestampedFilename(
@@ -104,6 +102,6 @@ ImGuiDebugMenu::Script::getNextAvailableFileName(const std::string &baseStem)
 
   return name;
 }
-void ImGuiDebugMenu::Script::onDestroy() { ImGuiDebugRegistry::clear(); }
+void ImGuiDebugMenu::Script::onDestroy() {}
 
 } // namespace painless

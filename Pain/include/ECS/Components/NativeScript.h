@@ -72,7 +72,8 @@ public:
    * Lifetime is owned by the component. The instance is destroyed automatically
    * when the component is destroyed or reassigned.
    */
-  Scriptable *instance = nullptr;
+  std::unique_ptr<Scriptable, void (*)(Scriptable *)> instance = {nullptr,
+                                                                  nullptr};
   /**
    * @name Script lifecycle function pointers
    * @brief Generated wrappers for optional script callbacks.
@@ -81,7 +82,6 @@ public:
    * callbacks the script type implements.
    */
   ///@{
-  void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
   void (*onRenderFunction)(Scriptable *, RenderContext &, bool,
@@ -108,11 +108,10 @@ public:
   {
     checkScriptMethods<T>();
 
-    instance = new T(std::move(t));
-    destroyInstanceFunction = [](Scriptable *&instance) {
-      delete static_cast<T *>(instance);
-      instance = nullptr;
-    };
+    instance = {new T(std::move(t)),
+                [](Scriptable *&instance) { //
+                  delete static_cast<T *>(instance);
+                }};
 
     if constexpr (hasOnCreateMethod<T>) {
       onCreateFunction = [](Scriptable *instance) {
@@ -178,11 +177,10 @@ public:
                   "implement constructor: (Scene&, Entity, "
                   "Args...). Pherhaps you are using the default constructor "
                   "instead of coding `using Scriptable::SceneObject;`?");
-    instance = new T(std::forward<Args>(args)...);
-    destroyInstanceFunction = [](Scriptable *&instance) {
-      delete static_cast<T *>(instance);
-      instance = nullptr;
-    };
+    instance = {new T(std::forward<Args>(args)...),
+                [](Scriptable *instance) { //
+                  delete static_cast<T *>(instance);
+                }};
 
     if constexpr (hasOnCreateMethod<T>) {
       onCreateFunction = [](Scriptable *instance) {
@@ -233,12 +231,7 @@ public:
   NativeScriptComponent(const NativeScriptComponent &) = delete;
   NativeScriptComponent &operator=(const NativeScriptComponent &) = delete;
   /// @brief Destroys the bound script instance if present.
-  ~NativeScriptComponent()
-  {
-    if (instance != nullptr) {
-      destroyInstanceFunction(instance);
-    } // else means this component is unbinded
-  }
+  ~NativeScriptComponent() = default;
 
   /**
    * @brief Move assignment operator.
@@ -250,11 +243,7 @@ public:
   {
     if (this != &other) {
       // Clean up current instance if needed
-      if (instance && destroyInstanceFunction)
-        destroyInstanceFunction(instance);
-
-      instance = other.instance;
-      destroyInstanceFunction = other.destroyInstanceFunction;
+      instance = std::move(other.instance);
       onCreateFunction = other.onCreateFunction;
       onDestroyFunction = other.onDestroyFunction;
       onRenderFunction = other.onRenderFunction;
@@ -263,7 +252,6 @@ public:
 
       // Clear the other's instance
       other.instance = nullptr;
-      other.destroyInstanceFunction = nullptr;
       other.onCreateFunction = nullptr;
       other.onDestroyFunction = nullptr;
       other.onRenderFunction = nullptr;
@@ -280,8 +268,7 @@ public:
    * deletion.
    */
   NativeScriptComponent(NativeScriptComponent &&other) noexcept
-      : instance(other.instance),
-        destroyInstanceFunction(other.destroyInstanceFunction),
+      : instance(std::move(other.instance)),
         onCreateFunction(other.onCreateFunction),
         onDestroyFunction(other.onDestroyFunction),
         onRenderFunction(other.onRenderFunction),
@@ -290,7 +277,6 @@ public:
   {
     // Clear the other's instance to avoid double delete
     other.instance = nullptr;
-    other.destroyInstanceFunction = nullptr;
     other.onCreateFunction = nullptr;
     other.onDestroyFunction = nullptr;
     other.onRenderFunction = nullptr;

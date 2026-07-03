@@ -16,10 +16,10 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
   scene.createComponents(                             //
       entity, pain::Transform2dComponent{initialPos}, //
       pain::SpriteComponent::create(
-          {.m_size = size, .layer = pain::RenderLayer::Closer}, tex), //
-      pain::SpritelessComponent::createQuad(size),                    //
-      pain::RotationComponent{},                                      //
-      pain::Movement2dComponent{},                                    //
+          {.m_size = size, .layer = pain::RenderLayer::E}, tex), //
+      pain::SpritelessComponent::createQuad(size),               //
+      pain::RotationComponent{},                                 //
+      pain::Movement2dComponent{},                               //
       pain::SAPCollider::createAABB(size, true),
       pain::ParticleSprayComponent::create({
           .randAngleFactor = 20.f,

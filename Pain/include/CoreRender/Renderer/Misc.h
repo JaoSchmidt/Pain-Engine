@@ -38,13 +38,6 @@ struct Color {
   /** Creates a default color (all channels set to zero). */
   constexpr Color() = default;
 
-  /**
-   * @brief Creates a color from a packed RGBA integer.
-   *
-   * @param rgba Packed 32-bit color value.
-   */
-  constexpr explicit Color(uint32_t rgba) : value(rgba) {}
-
   // clang-format off
 
   /**
@@ -73,54 +66,64 @@ struct Color {
   }
 };
 
+static constexpr Color fromRGB(uint32_t rgb)
+{
+  return Color((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF, 255);
+}
+static constexpr Color fromRGBA(uint32_t rgba)
+{
+  return Color((rgba >> 24) & 0xFF, (rgba >> 16) & 0xFF, (rgba >> 8) & 0xFF,
+               rgba & 0xFF);
+}
+
 namespace Colors
 {
 // Neutrals
-static constexpr Color LightGrey{204, 204, 204, 255};
-static constexpr Color Grey{128, 128, 128, 255};
-static constexpr Color DarkerGrey{32, 32, 32, 255};
-static constexpr Color OffWhite{245, 245, 245, 255};
-static constexpr Color FullWhite{255, 255, 255, 255};
+static constexpr Color LightGrey = fromRGB(0xCCCCCC);  //
+static constexpr Color Grey = fromRGB(0x808080);       //
+static constexpr Color DarkerGrey = fromRGB(0x202020); //
+static constexpr Color OffWhite = fromRGB(0xF5F5F5);   //
+static constexpr Color FullWhite = fromRGB(0xFFFFFF);  //
 
 // Reds / Pinks
-static constexpr Color Red{255, 0, 0, 255};
-static constexpr Color DarkRed{139, 0, 0, 255};
-static constexpr Color SoftPink{255, 182, 193, 255};
-static constexpr Color StrongPink{0xD40B95};
-static constexpr Color Magenta{255, 0, 255, 255};
+static constexpr Color Red = fromRGB(0xFF0000);        //
+static constexpr Color DarkRed = fromRGB(0x8B0000);    //
+static constexpr Color SoftPink = fromRGB(0xFFB6C1);   //
+static constexpr Color StrongPink = fromRGB(0xD40B95); //
+static constexpr Color Magenta = fromRGB(0xFF00FF);    //
 
 // Oranges / Yellows
-static constexpr Color Orange{255, 165, 0, 255};
-static constexpr Color DarkOrange{255, 140, 0, 255};
-static constexpr Color Gold{255, 215, 0, 255};
-static constexpr Color Yellow{255, 255, 0, 255};
+static constexpr Color Orange = fromRGB(0xFFA500);     //
+static constexpr Color DarkOrange = fromRGB(0xFF8C00); //
+static constexpr Color Gold = fromRGB(0xFFD700);       //
+static constexpr Color Yellow = fromRGB(0xFFFF00);     //
 
 // Greens
-static constexpr Color Green{0, 255, 0, 255};
-static constexpr Color DarkGreen{0, 100, 0, 255};
-static constexpr Color Lime{50, 205, 50, 255};
-static constexpr Color Olive{128, 128, 0, 255};
-
+static constexpr Color Green = fromRGB(0x00FF00);     //
+static constexpr Color DarkGreen = fromRGB(0x006400); //
+static constexpr Color Lime = fromRGB(0x32CD32);      //
+static constexpr Color Olive = fromRGB(0x808000);     //
+//
 // Blues
-static constexpr Color Blue{0, 0, 255, 255};
-static constexpr Color SkyBlue{135, 206, 235, 255};
-static constexpr Color DodgerBlue{30, 144, 255, 255};
-static constexpr Color Navy{0, 0, 128, 255};
+static constexpr Color Blue = fromRGB(0x0000FF);       //
+static constexpr Color SkyBlue = fromRGB(0x87CEEB);    //
+static constexpr Color DodgerBlue = fromRGB(0x1E90FF); //
+static constexpr Color Navy = fromRGB(0x000080);       //
 
 // Purples
-static constexpr Color Purple{128, 0, 128, 255};
-static constexpr Color Violet{238, 130, 238, 255};
-static constexpr Color Indigo{75, 0, 130, 255};
+static constexpr Color Purple = fromRGB(0x800080); //
+static constexpr Color Violet = fromRGB(0xEE82EE); //
+static constexpr Color Indigo = fromRGB(0x4B0082); //
 
 // Browns
-static constexpr Color Brown{139, 69, 19, 255};
-static constexpr Color SaddleBrown{160, 82, 45, 255};
+static constexpr Color Brown = fromRGB(0x8B4513);       //
+static constexpr Color SaddleBrown = fromRGB(0xA0522D); //
 
 // Special / Utility
-static constexpr Color Cyan{0, 255, 255, 255};
-static constexpr Color Teal{0, 128, 128, 255};
-static constexpr Color TransparentWhite{255, 255, 255, 128};
-static constexpr Color TransparentBlack{0, 0, 0, 128};
+static constexpr Color Cyan = fromRGB(0x00FFFF);                //
+static constexpr Color Teal = fromRGB(0x008080);                //
+static constexpr Color TransparentWhite = fromRGBA(0xFFFFFF80); //
+static constexpr Color TransparentBlack = fromRGBA(0x00000080);
 } // namespace Colors
 
 /**
@@ -136,13 +139,13 @@ enum class RenderPass : uint8_t {
 };
 
 #define RENDER_LAYER_ENUM(X)                                                   \
-  X(Distant)                                                                   \
-  X(FurtherBack)                                                               \
-  X(Background)                                                                \
-  X(Default)                                                                   \
-  X(Closer)                                                                    \
-  X(MuchCloser)                                                                \
-  X(TouchingCamera)
+  X(A) /* Very distant */                                                      \
+  X(B) /* Distant */                                                           \
+  X(C) /* Background */                                                        \
+  X(D) /* Default */                                                           \
+  X(E) /* Foreground */                                                        \
+  X(F) /* Close */                                                             \
+  X(G) /* Very Close */
 
 /**
  * @enum RenderLayer
@@ -188,6 +191,7 @@ enum class RenderCommandType : uint8_t {
   Cube,
   Quad,
   Rect,
+  Line,
   Circle,
   Triangle,
   DebugLine,

@@ -192,9 +192,8 @@ sol::state createLuaState()
 
   lua.new_usertype<Color>( //
       "Color",
-      sol::constructors<   //
-          Color(),         //
-          Color(uint32_t), //
+      sol::constructors< //
+          Color(),       //
           Color(int, int, int, int)>());
 
   // ------------------------------------------------------------

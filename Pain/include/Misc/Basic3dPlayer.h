@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// BasicPerspCamera.h
+// Basic3dPlayer.h
 #pragma once
 #include "Core.h"
 #include "CoreRender/CameraComponent.h"

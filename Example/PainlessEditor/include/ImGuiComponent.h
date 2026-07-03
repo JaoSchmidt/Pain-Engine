@@ -53,7 +53,7 @@ namespace painless
  *
  * The component owns the lifetime of the script instance and guarantees proper
  * destruction when the component is destroyed or moved.
- *
+
  * Example usage:
  * @code
  * entity.addComponent<ImGuiComponent>()
@@ -72,13 +72,13 @@ public:
    *
    * The component owns this instance and destroys it automatically.
    */
-  Scriptable *instance = nullptr;
+  std::unique_ptr<Scriptable, void (*)(Scriptable *)> instance = {nullptr,
+                                                                  nullptr};
   /**
    * @name Script lifecycle function pointers
    * @brief Generated wrappers for optional script callbacks.
    */
   ///@{
-  void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
   void (*onRenderFunction)(Scriptable *, pain::Renderers &, bool,
@@ -99,14 +99,9 @@ public:
   template <typename T> void bindAndInitiate(T &&t)
   {
     checkImGuiScriptMethods<T>();
-    instance = new T(std::move(t));
-    destroyInstanceFunction = [](Scriptable *&instance) {
-      ELOG_I("ImGuiComponent instance {}: destructorInstanceFunction "
-             "called",
-             fmt::ptr(instance));
-      delete static_cast<T *>(instance);
-      instance = nullptr;
-    };
+    instance = {new T(std::move(t)), [](Scriptable *instance) {
+                  delete static_cast<T *>(instance);
+                }};
 
     if constexpr (hasOnCreateMethod<T>) {
       onCreateFunction = [](Scriptable *instance) {
@@ -162,14 +157,10 @@ public:
                   "implement Scriptable constructor: (Scene&, Entity, "
                   "Bitmask). Pherhaps you are using the default constructor "
                   "instead of coding `using Scriptable::Scriptable;`?");
-    instance = new T(std::forward<Args>(args)...);
-    destroyInstanceFunction = [](Scriptable *&instance) {
-      ELOG_I("ImGuiComponent instance {}: destructorInstanceFunction "
-             "called",
-             fmt::ptr(instance));
-      delete static_cast<T *>(instance);
-      instance = nullptr;
-    };
+    instance = {new T(std::forward<Args>(args)...),
+                [](Scriptable *instance) { //
+                  delete static_cast<T *>(instance);
+                }};
 
     if constexpr (hasOnCreateMethod<T>) {
       onCreateFunction = [](Scriptable *instance) {
@@ -210,12 +201,7 @@ public:
   ImGuiComponent(const ImGuiComponent &) = delete;
   ImGuiComponent &operator=(const ImGuiComponent &) = delete;
   ///  @brief Destroys the bound script instance if present.
-  ~ImGuiComponent()
-  {
-    if (instance != nullptr) {
-      destroyInstanceFunction(instance);
-    } // else means this component is unbinded
-  }
+  ~ImGuiComponent() = default;
 
   /**
    * @brief Move assignment operator.
@@ -227,11 +213,7 @@ public:
   {
     if (this != &other) {
       // Clean up current instance if needed
-      if (instance && destroyInstanceFunction)
-        destroyInstanceFunction(instance);
-
-      instance = other.instance;
-      destroyInstanceFunction = other.destroyInstanceFunction;
+      instance = std::move(other.instance);
       onCreateFunction = other.onCreateFunction;
       onDestroyFunction = other.onDestroyFunction;
       onRenderFunction = other.onRenderFunction;
@@ -239,7 +221,6 @@ public:
 
       // Clear the other's instance
       other.instance = nullptr;
-      other.destroyInstanceFunction = nullptr;
       other.onCreateFunction = nullptr;
       other.onDestroyFunction = nullptr;
       other.onRenderFunction = nullptr;
@@ -255,17 +236,14 @@ public:
    * deletion.
    */
   ImGuiComponent(ImGuiComponent &&other) noexcept
+      : instance(std::move(other.instance)),
+        onCreateFunction(other.onCreateFunction),
+        onDestroyFunction(other.onDestroyFunction),
+        onRenderFunction(other.onRenderFunction),
+        onEventFunction(other.onEventFunction)
   {
-    instance = other.instance;
-    destroyInstanceFunction = other.destroyInstanceFunction;
-    onCreateFunction = other.onCreateFunction;
-    onDestroyFunction = other.onDestroyFunction;
-    onRenderFunction = other.onRenderFunction;
-    onEventFunction = other.onEventFunction;
-
     // Clear the other's instance to avoid double delete
     other.instance = nullptr;
-    other.destroyInstanceFunction = nullptr;
     other.onCreateFunction = nullptr;
     other.onDestroyFunction = nullptr;
     other.onRenderFunction = nullptr;

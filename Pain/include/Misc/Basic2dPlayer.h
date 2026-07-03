@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-// BasicOrthoCamera.h
+// Basic2dPlayer.h
 #pragma once
 
 #include "Core.h"
@@ -18,10 +18,12 @@ namespace pain
 namespace Dummy2dCamera
 {
 reg::Entity create(pain::Scene &scene, int resolutionWidth,
-                   int resolutionHeight, float zoomLevel);
+                   int resolutionHeight, float zoomLevel,
+                   glm::vec2 center = {0, 0});
 
 reg::Entity createBasicCamera(pain::Scene &scene, int resolutionWidth,
-                              int resolutionHeight, float zoomLevel);
+                              int resolutionHeight, float zoomLevel,
+                              glm::vec2 center = {0, 0});
 } // namespace Dummy2dCamera
 
 class OrthoCameraScript : public WorldObject
@@ -30,6 +32,10 @@ public:
   using WorldObject::WorldObject;
   void onUpdate(DeltaTime deltaTimeSec);
   void onEvent(const SDL_Event &e);
+
+  glm::vec2 screenToWorld(int mouseX, int mouseY,
+                          const Transform2dComponent &camTC,
+                          const RotationComponent &camRC);
 
 protected:
   float m_zoomSpeed = 0.25f;

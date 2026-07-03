@@ -14,6 +14,7 @@
 
 #include "CoreFiles/Application.h"
 #include "CoreRender/Buffers/FrameBuffer.h"
+#include "CustomPanel.h"
 #include "ImGuiEmplacer.h"
 #include "LuaImGuiBinder.h"
 #include "LuaImPlotBinder.h"
@@ -92,13 +93,14 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
         ImGui::DockBuilderSetNodeSize(dockspaceID, viewport->Size);
 
         // Splits
+        ImGuiID dockerIDSidebar, dockerIDViewport;
         ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25F,
-                                    &m_dockerIDSidebar, &m_dockerIDViewport);
+                                    &dockerIDSidebar, &dockerIDViewport);
 
         // Windows
-        ImGui::DockBuilderDockWindow("Stats", m_dockerIDSidebar);
-        ImGui::DockBuilderDockWindow("Viewport", m_dockerIDViewport);
-        buildDockerWindow();
+        ImGui::DockBuilderDockWindow("Stats", dockerIDSidebar);
+        ImGui::DockBuilderDockWindow("Viewport", dockerIDViewport);
+        customPanel::buildDockerWindow(dockerIDSidebar, dockerIDViewport);
         ImGui::DockBuilderFinish(dockspaceID);
       }
     }
@@ -170,7 +172,7 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
     }
     ImGui::End(); // "Viewport"
 
-    renderAll();
+    customPanel::renderAll();
 
     ImGui::End();
   }
@@ -187,8 +189,16 @@ Editor &Editor::create(pain::UIScene &uiScene, pain::Application &app)
 Editor::Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app)
     : pain::UIObject(entity, scene), m_app(app), m_imGuiDebugMenu()
 {
-  luabinder::bindImGui(m_app.getLuaState(), *this);
-  luabinder::bindImPlot(m_app.getLuaState(), *this);
+  luabinder::bindImGui(m_app.getLuaState());
+  // luabinder::bindImPlot(m_app.getLuaState());
+}
+
+Editor::~Editor()
+{
+  m_imGuiDebugMenu.onDestroy();
+  luabinder::unbindImGui(m_app.getLuaState());
+  // luabinder::unbindImPlot(m_app.getLuaState());
+  painless::customPanel::deleteAll();
 }
 
 } // namespace painless

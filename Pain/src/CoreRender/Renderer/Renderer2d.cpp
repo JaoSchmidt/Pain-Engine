@@ -17,13 +17,12 @@
 namespace pain
 {
 
-extern const Texture *m_fontAtlasTexture;
 struct MaterialKey {
   Shader *shader;
   std::variant<ParamPBR, ParamPhong, ParamSimplest> params;
   uint32_t flags; // Transparent, DoubleSided, etc.
   RenderLayer layer;
-  auto operator<=>(const MaterialKey &) const = default;
+  auto operator<(const MaterialKey &o) const { return layer < o.layer; }
 };
 std::map<MaterialKey, QuadBatch> m_quadBatchCache;
 std::map<MaterialKey, TriBatch> m_triBatchCache;
@@ -67,10 +66,6 @@ void Renderer2d::beginScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
                             const Transform2dComponent &tc)
 {
   PROFILE_FUNCTION();
-
-  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime,
-                      cc.getResolution(), tc.m_position, cc.m_zoomLevel);
-
   for (auto it = m_triBatchCache.begin(); it != m_triBatchCache.end(); it++) {
     it->second.resetAll();
   }
@@ -156,27 +151,41 @@ void Renderer2d::flush()
   // MUST be from here, if the batch has a shader inside, then you must send to
   // the shader inside, not to the material. (Tho this method is obsolete)
   PROFILE_FUNCTION();
-  for (auto it = m_triBatchCache.begin(); it != m_triBatchCache.end(); it++) {
-    beforeFlush2d(it->first);
-    it->second.flush();
+  auto triIt = m_triBatchCache.begin();
+  auto quadIt = m_quadBatchCache.begin();
+  auto rectIt = m_rectBatchCache.begin();
+  for (RenderLayer layer = RenderLayer::A; layer <= RenderLayer::G;
+       layer = RenderLayer(static_cast<uint8_t>(layer) + 1)) {
+    while (triIt != m_triBatchCache.end() && triIt->first.layer == layer) {
+      beforeFlush2d(triIt->first);
+      triIt->second.flush();
+      ++triIt;
+    }
+    while (quadIt != m_quadBatchCache.end() && quadIt->first.layer == layer) {
+      beforeFlush2d(quadIt->first);
+      quadIt->second.flush(m.textureSlots, m.textureSlotIndex,
+                           quadIt->first.shader);
+      ++quadIt;
+    }
+    while (rectIt != m_rectBatchCache.end() && rectIt->first.layer == layer) {
+      beforeFlush2d(rectIt->first);
+      rectIt->second.flush(m.textureSlots, m.textureSlotIndex);
+      ++rectIt;
+    }
   }
-  for (auto it = m_quadBatchCache.begin(); it != m_quadBatchCache.end(); it++) {
-    beforeFlush2d(it->first);
-    it->second.flush(m.textureSlots, m.textureSlotIndex);
-  }
-  for (auto it = m_rectBatchCache.begin(); it != m_rectBatchCache.end(); it++) {
-    beforeFlush2d(it->first);
-    it->second.flush(m.textureSlots, m.textureSlotIndex);
-  }
+
   m.sprayBatch.flush();
   m.textBatch.flush();
   m.debugGrid.flush();
 }
 
-void Renderer2d::endScene()
+void Renderer2d::endScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+                          const Transform2dComponent &tc)
 {
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
   // otherwise flush() wouldn't need to be a function
+  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime,
+                      cc.getResolution(), tc.m_position, cc.m_zoomLevel);
   flush();
 }
 
@@ -212,8 +221,10 @@ void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
     auto [newIt, inserted] =
         m_rectBatchCache.emplace(std::move(key), RectBatch::create());
     it = newIt;
-    if (inserted)
+    if (inserted) {
+
       newIt->second.resetAll();
+    }
   }
   RectBatch &batch = it->second;
 
@@ -245,7 +256,7 @@ void Renderer2d::submitQuad(const glm::vec2 &position, float size,
                             RenderLayer layer, const Material &material)
 {
   const glm::mat4 transform = getUniformTransform(position, size);
-  submitQuad(transform, layer, material);
+  submitQuad(std::move(transform), layer, material);
 }
 
 void Renderer2d::submitQuad(const glm::vec2 &position, float size,
@@ -255,7 +266,7 @@ void Renderer2d::submitQuad(const glm::vec2 &position, float size,
   PROFILE_FUNCTION();
   const glm::mat4 transform =
       getUniformTransform(position, size, rotationRadians);
-  submitQuad(transform, layer, material);
+  submitQuad(std::move(transform), layer, material);
 }
 void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
                             const Material &material)
@@ -274,7 +285,7 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
   QuadBatch &batch = it->second;
 
   if (batch.m_count >= QuadBatch::MaxIndices) {
-    batch.flush(m.textureSlots, m.textureSlotIndex);
+    batch.flush(m.textureSlots, m.textureSlotIndex, material.m_shader);
     batch.resetPtr();
   }
 
@@ -288,6 +299,25 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
     batch.allocateQuad(transform, material.m_color, material.m_tilingFactor,
                        texIndex);
   }
+}
+
+// ================================================================= //
+// Submit Line
+// ================================================================= //
+
+/// @brief Submit a colored triangle primitive.
+void Renderer2d::submitLine(const glm::vec2 &origin,
+                            const glm::vec2 &destination, float thickness,
+                            RenderLayer layer, const Material &material)
+{
+  glm::vec2 delta = destination - origin;
+  float length = glm::length(delta);
+  glm::vec2 center = (origin + destination) * 0.5f;
+  float angle = std::atan2(delta.y, delta.x);
+  // PLOG_I("position = ({},{})", TP_VEC2(center));
+  // PLOG_I("size = ({},{})", length, thickness);
+  // PLOG_I("rot = {}", angle);
+  submitRect(center, {length, thickness}, angle, layer, material);
 }
 
 // ================================================================= //
@@ -557,6 +587,15 @@ void Renderer2d::beginSprayParticle(const ParticleSprayComponent &psc)
   m.sprayBatch.shader.uploadUniformFloat("u_ParticleVelocity", psc.velocity);
   m.sprayBatch.shader.uploadUniformFloat("u_LifeTime",
                                          psc.lifeTime.getSecondsf());
+}
+
+Renderer2d::~Renderer2d()
+{
+  delete[] m.textureSlots;
+
+  m_triBatchCache.clear();
+  m_quadBatchCache.clear();
+  m_rectBatchCache.clear();
 }
 
 } // namespace pain

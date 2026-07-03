@@ -50,7 +50,7 @@ N &emplaceImGuiScript(reg::Entity entity, pain::UIScene &scene, N &&n)
   ImGuiComponent &nsc = scene.getComponent<ImGuiComponent>(entity);
   nsc.bindAndInitiate<N>(std::move(n));
   if (nsc.instance && nsc.onCreateFunction)
-    nsc.onCreateFunction(nsc.instance);
+    nsc.onCreateFunction(nsc.instance.get());
   return static_cast<N &>(*nsc.instance);
 }
 
@@ -76,7 +76,7 @@ T &emplaceImGuiScript(reg::Entity entity, pain::UIScene &scene, Args &&...args)
   ImGuiComponent &nsc = scene.getComponent<ImGuiComponent>(entity);
   nsc.bindAndEmplace<T>(entity, scene, std::forward<Args>(args)...);
   if (nsc.instance && nsc.onCreateFunction)
-    nsc.onCreateFunction(nsc.instance);
+    nsc.onCreateFunction(nsc.instance.get());
   return static_cast<T &>(*nsc.instance);
 }
 

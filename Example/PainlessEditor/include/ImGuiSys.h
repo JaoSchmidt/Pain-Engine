@@ -83,6 +83,10 @@ struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
           | ImGuiConfigFlags_DockingEnable    // Enable Docking
           | ImGuiConfigFlags_ViewportsEnable // Enable Multi-Viewport / Platform
   );
+  ImGuiSys(ImGuiSys &) = delete;
+  ImGuiSys(ImGuiSys &&) = default;
+  ImGuiSys &operator=(ImGuiSys &&) = delete;
+  ImGuiSys &operator=(ImGuiSys &) = delete;
 
   /// @brief Destroy the ImGui system and release the ImGui context.
   ~ImGuiSys();

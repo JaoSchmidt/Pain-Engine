@@ -18,7 +18,7 @@
 #include "Core.h"
 
 #include "CoreRender/Buffers/VertexArray.h"
-#include "Misc/BasicPerspCamera.h"
+#include "Misc/Basic3dPlayer.h"
 
 namespace pain
 {

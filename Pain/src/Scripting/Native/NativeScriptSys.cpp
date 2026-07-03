@@ -27,7 +27,7 @@ void NativeScript::onUpdate(DeltaTime deltaTime)
       auto &nsc = scripts[i];
 
       if (nsc.instance && nsc.onUpdateFunction) {
-        nsc.onUpdateFunction(nsc.instance, deltaTime);
+        nsc.onUpdateFunction(nsc.instance.get(), deltaTime);
       }
     }
   }
@@ -44,7 +44,7 @@ void NativeScript::onEvent(const SDL_Event &e)
       NativeScriptComponent &nsc = scripts[i];
 
       if (nsc.instance && nsc.onEventFunction) {
-        nsc.onEventFunction(nsc.instance, e);
+        nsc.onEventFunction(nsc.instance.get(), e);
       }
     }
   }
@@ -65,7 +65,7 @@ void NativeScript::onRender(Renderers &renderers, bool isMinimized,
       auto &nsc = scripts[i];
 
       if (nsc.instance && nsc.onRenderFunction) {
-        nsc.onRenderFunction(nsc.instance, renderers.m_renderContext,
+        nsc.onRenderFunction(nsc.instance.get(), renderers.m_renderContext,
                              isMinimized, currentTime);
       }
     }

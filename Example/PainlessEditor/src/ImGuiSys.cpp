@@ -8,7 +8,6 @@
 
 #include "CoreFiles/LogWrapper.h"
 #include "ImGuiComponent.h"
-#include "SDL_video.h"
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
@@ -54,7 +53,7 @@ void ImGuiSys::onEvent(const SDL_Event &event)
     auto *__restrict nsc = std::get<0>(chunk.arrays);
     for (size_t i = 0; i < chunk.count; ++i) {
       if (nsc[i].instance && nsc[i].onEventFunction)
-        nsc[i].onEventFunction(nsc[i].instance, event);
+        nsc[i].onEventFunction(nsc[i].instance.get(), event);
     }
   }
 }
@@ -74,7 +73,7 @@ void ImGuiSys::onRender(Renderers &renderer, bool isMinimized,
       for (size_t i = 0; i < chunk.count; ++i) {
         auto &nsc = nscs[i];
         if (nsc.instance && nsc.onRenderFunction)
-          nsc.onRenderFunction(nsc.instance, renderer, isMinimized,
+          nsc.onRenderFunction(nsc.instance.get(), renderer, isMinimized,
                                currentTime);
       }
     }

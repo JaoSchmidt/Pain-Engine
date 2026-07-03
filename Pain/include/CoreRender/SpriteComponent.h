@@ -19,8 +19,8 @@
 #pragma once
 
 #include "CoreRender/Renderer/Misc.h"
+#include "CoreRender/Shapes.h"
 #include "ECS/Components/ComponentManager.h"
-#include "Misc/BasicShape.h"
 
 #include <variant>
 
@@ -39,8 +39,8 @@ namespace pain
  *  - layer defines the order in which the sprite will be draw
  */
 struct SpriteCreationInfo {
-  RenderLayer layer = RenderLayer::Default; /**< Rendering order layer. */
-  std::variant<QuadShape, RectShape, TriangleShape> shape = QuadShape{};
+  RenderLayer layer = RenderLayer::D; /**< Rendering order layer. */
+  ShapeVariant shape = QuadShape{};
 };
 
 /**
@@ -58,13 +58,10 @@ struct SpriteCreationInfo {
  */
 struct SpriteComponent {
   using tag = tag::Sprite;
-  static_assert(std::is_copy_constructible_v<
-                std::variant<QuadShape, RectShape, TriangleShape>>);
-  static_assert(std::is_copy_assignable_v<
-                std::variant<QuadShape, RectShape, TriangleShape>>);
-  RenderLayer layer = RenderLayer::Default; /**< Rendering order layer. */
-  std::variant<QuadShape, RectShape, TriangleShape> m_shape =
-      QuadShape{}; /**< Shape geometry. */
+  static_assert(std::is_copy_constructible_v<ShapeVariant>);
+  static_assert(std::is_copy_assignable_v<ShapeVariant>);
+  RenderLayer layer = RenderLayer::D; /**< Rendering order layer. */
+  ShapeVariant m_shape = RectShape{}; /**< Shape geometry. */
 
   // ------------------------------------------------------------
   // Factory functions

@@ -22,8 +22,8 @@
 
 #pragma once
 
+#include "CoreRender/Shapes.h"
 #include "ECS/Registry/Entity.h"
-#include "Misc/BasicShape.h"
 #include "Physics/MovementComponent.h"
 #include <variant>
 

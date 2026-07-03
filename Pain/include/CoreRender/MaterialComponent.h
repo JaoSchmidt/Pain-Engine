@@ -28,13 +28,12 @@ struct MaterialComponent {
     return MaterialComponent(mm);
   }
   static MaterialComponent create(Material &m) { return MaterialComponent(m); }
-  Material *operator->() { return m_material; };
   const Material *operator->() const { return std::as_const(m_material); };
 
-  Material &operator*() { return *m_material; }
   const Material &operator*() const { return *m_material; }
 
-  MaterialComponent(MaterialComponent &&o) : m_material(o.m_material) {};
+  MaterialComponent(MaterialComponent &&o) noexcept
+      : m_material(o.m_material) {};
   MaterialComponent &operator=(MaterialComponent &&o) noexcept
   {
     if (this != &o) {
@@ -43,12 +42,15 @@ struct MaterialComponent {
     }
     return *this;
   }
+  MaterialComponent(MaterialComponent &o) : m_material(o.m_material) {}
+  MaterialComponent &operator=(const MaterialComponent &o) = delete;
+  ~MaterialComponent() = default;
 
 private:
   MaterialComponent(Material &m) : m_material(&m) {};
   MaterialComponent(MaterialManager &mm)
       : m_material(&mm.getDefaultMaterial()) {};
-  Material *m_material;
+  const Material *m_material;
 };
 
 } // namespace pain

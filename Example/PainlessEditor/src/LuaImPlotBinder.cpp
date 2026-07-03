@@ -1,5 +1,6 @@
 #include "LuaImPlotBinder.h"
 #include "CoreRender/Renderer/Misc.h"
+#include "CustomPanel.h"
 #include "imgui.h"
 #include "implot.h"
 
@@ -142,7 +143,15 @@ template <typename T> void bindVector(sol::state &sol, const std::string &name)
 // Constant Enums
 // -------------------------------------------------------------
 
-void luabinder::bindImPlot(sol::state &lua, CustomEditor &editor)
+void luabinder::unbindImPlot(sol::state &lua)
+{
+  lua["ImPlot"] = sol::nil;
+  lua["ImAxis"] = sol::nil;
+  lua["ImPlotScale"] = sol::nil;
+  lua["ImPlotCond"] = sol::nil;
+}
+
+void luabinder::bindImPlot(sol::state &lua)
 {
   lua.new_enum(       //
       "ImAxis",       //
@@ -156,42 +165,44 @@ void luabinder::bindImPlot(sol::state &lua, CustomEditor &editor)
       "Log10", ImPlotScale_::ImPlotScale_Log10,   //
       "SymLog", ImPlotScale_::ImPlotScale_SymLog  //
   );
-  editor.m_implot = lua.create_named_table("ImPlot");
-  editor.m_implot.set_function(
+  customPanel::getImPlotTable() = lua.create_named_table("ImPlot");
+  customPanel::getImPlotTable().set_function(
       "BeginPlot", [](const std::string &title, float width, float height) {
         return ImPlot::BeginPlot(title.c_str(), ImVec2(width, height));
       });
-  editor.m_implot.set_function("EndPlot", []() { ImPlot::EndPlot(); });
+  customPanel::getImPlotTable().set_function("EndPlot",
+                                             []() { ImPlot::EndPlot(); });
   lua.new_enum(                    //
       "ImPlotCond",                //
       "Always", ImPlotCond_Always, //
       "Once", ImPlotCond_Once,     //
       "None", ImPlotCond_None      //
   );
-  editor.m_implot.set_function("SetupAxes",
-                               [](const std::string &x, const std::string &y) {
-                                 ImPlot::SetupAxes(x.c_str(), y.c_str());
-                               });
+  customPanel::getImPlotTable().set_function(
+      "SetupAxes", [](const std::string &x, const std::string &y) {
+        ImPlot::SetupAxes(x.c_str(), y.c_str());
+      });
 
-  editor.m_implot.set_function(
+  customPanel::getImPlotTable().set_function(
       "SetupAxesLimits", [](double x_min, double x_max, double y_min,
                             double y_max, sol::optional<ImPlotCond> c) {
         ImPlot::SetupAxesLimits(x_min, x_max, y_min, y_max,
                                 c.value_or(ImPlotCond_None));
       });
-  editor.m_implot.set_function(
+  customPanel::getImPlotTable().set_function(
       "SetNextAxesLimits", [](double x_min, double x_max, double y_min,
                               double y_max, sol::optional<ImPlotCond> c) {
         ImPlot::SetNextAxesLimits(x_min, x_max, y_min, y_max,
                                   c.value_or(ImPlotCond_None));
       });
-  editor.m_implot.set_function("PushStyleColor", [](pain::Color c) {
-    ImPlot::PushStyleColor(ImPlotCol_InlayText, c.value);
-  });
-  editor.m_implot.set_function("PopStyleColor",
-                               []() { ImPlot::PopStyleColor(); });
+  customPanel::getImPlotTable().set_function(
+      "PushStyleColor", [](pain::Color c) {
+        ImPlot::PushStyleColor(ImPlotCol_InlayText, c.value);
+      });
+  customPanel::getImPlotTable().set_function("PopStyleColor",
+                                             []() { ImPlot::PopStyleColor(); });
 
-  editor.m_implot.set_function(
+  customPanel::getImPlotTable().set_function(
       "PlotLine",
       // sol::overload(
       [](const std::string &label, const LuaVector<double> &xs,
@@ -221,12 +232,12 @@ void luabinder::bindImPlot(sol::state &lua, CustomEditor &editor)
         // } //
         // )
   );
-  editor.m_implot.set_function( //
-      "SetupAxesScale",         //
+  customPanel::getImPlotTable().set_function( //
+      "SetupAxesScale",                       //
       [](const ImAxis &a, const ImPlotScale_ &s) {
         ImPlot::SetupAxisScale(a, s);
       });
-  editor.m_implot.set_function(
+  customPanel::getImPlotTable().set_function(
       "PlotScatter",
       sol::overload(
           [](const std::string &label, const LuaVector<double> &xs,

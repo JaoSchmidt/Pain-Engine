@@ -48,7 +48,7 @@ MaterialManager::MaterialManager(
 {
   auto samplers = std::make_unique<int[]>(backend::getTMU());
   for (int i = 0; i < backend::getTMUi(); ++i)
-    samplers[i] = i;
+    samplers[static_cast<size_t>(i)] = i;
   for (uint8_t i = 0; i < static_cast<uint8_t>(DefaultShader::Count); ++i) {
     m_defaultShaders[i].bind();
     if (m_defaultShaders[i].getUniformLocation("u_Textures", false) != -1)
@@ -122,9 +122,13 @@ Material &
 MaterialManager::createMaterial(const std::string &name,
                                 const pain::MaterialCreationInfo &createInfo)
 {
-  if (m_materials.contains(name))
+  if (m_materials.contains(name)) {
+    PLOG_W(
+        "Attention: You are re-creating the material {} which already exists "
+        "inside the material manager, perhaps you meant to use getMaterial()?",
+        name);
     return m_materials.at(name);
-
+  }
   Material material = Material::create(createInfo);
 
   auto [it, inserted] = m_materials.emplace(name, std::move(material));

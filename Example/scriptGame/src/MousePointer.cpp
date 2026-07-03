@@ -7,7 +7,7 @@
 #include "MousePointer.h"
 #include "ECS/Scriptable.h"
 #include "GUI/ImGuiDebugRegistry.h"
-#include "Misc/BasicOrthoCamera.h"
+#include "Misc/Basic2dPlayer.h"
 #include "SDL_events.h"
 #include "imgui.h"
 #include <pain.h>

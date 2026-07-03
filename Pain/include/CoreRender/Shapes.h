@@ -1,22 +1,8 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
-/**
- * @file BasicShape.h
- * @brief Lightweight geometric shape definitions used by collision systems.
- *
- * Defines simple POD shape structures used for collision detection,
- * spatial queries, and debug visualization. These types are typically
- * embedded in collider components or physics systems.
- */
-
 #pragma once
 
 #include "Core.h"
-#include "glm/ext/vector_float2.hpp"
+#include <glm/glm.hpp>
+#include <variant>
 
 namespace pain
 {
@@ -59,7 +45,7 @@ struct RectShape {
  * strict collision math.
  */
 struct QuadShape {
-  float side; /**< Full size of the quad. */
+  float side = 0.125f; /**< Full size of the quad. */
 };
 
 /**
@@ -84,12 +70,26 @@ struct CapsuleShape {
 };
 
 /**
+ * @brief Circular collision shape.
+ *
+ * Represents a circle centered at an entity's transform position,
+ * optionally offset by a collider component.
+ */
+struct LineShape {
+  glm::vec2 destination = {0, 0}; /**< Radius of the circle in world units. */
+  float thickness = 1.f;
+};
+
+/**
  * @brief Polygon collision shape (not implemented).
  *
  * Placeholder for future polygon collision support.
  */
-struct PolygonShape {
-  // TODO: not implemented yet
-};
+// struct PolygonShape {
+// TODO: not implemented yet
+// };
+
+using ShapeVariant =
+    std::variant<QuadShape, RectShape, TriangleShape, LineShape>;
 
 } // namespace pain

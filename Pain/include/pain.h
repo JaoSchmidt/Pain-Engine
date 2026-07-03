@@ -18,10 +18,9 @@
 #include "Debugging/Profiling.h"
 
 // Misc
+#include "Misc/Basic2dPlayer.h"
+#include "Misc/Basic3dPlayer.h"
 #include "Misc/BasicMainScene.h"
-#include "Misc/BasicOrthoCamera.h"
-#include "Misc/BasicPerspCamera.h"
-#include "Misc/BasicShape.h"
 #include "Misc/Events.h"
 // Renderer
 #include "CoreRender/Buffers/BufferLayout.h"
@@ -39,6 +38,7 @@
 #include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/Renderer3d.h"
+#include "CoreRender/Shapes.h"
 #include "CoreRender/SpriteComponent.h"
 #include "CoreRender/Text/Font.h"
 // ECS
