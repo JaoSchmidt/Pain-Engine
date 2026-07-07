@@ -17,13 +17,13 @@ namespace pain
 
 namespace Dummy2dCamera
 {
-reg::Entity create(pain::Scene &scene, int resolutionWidth,
-                   int resolutionHeight, float zoomLevel,
-                   glm::vec2 center = {0, 0});
+reg::Entity createMovingCamera(pain::Scene &scene, int resolutionWidth,
+                               int resolutionHeight, float zoomLevel,
+                               glm::vec2 center = {0, 0});
 
-reg::Entity createBasicCamera(pain::Scene &scene, int resolutionWidth,
-                              int resolutionHeight, float zoomLevel,
-                              glm::vec2 center = {0, 0});
+reg::Entity createStaticCamera(pain::Scene &scene, int resolutionWidth,
+                               int resolutionHeight, float zoomLevel,
+                               glm::vec2 center = {0, 0});
 } // namespace Dummy2dCamera
 
 class OrthoCameraScript : public WorldObject

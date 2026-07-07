@@ -128,6 +128,9 @@ public:
     return m_ctx.renderPipeline.m_frameBuffer.getSpecification();
   }
 
+  /** Returns the current config */
+  const AppInit &getCurrentConfig() const { return m_config.init; }
+
   // =============================================================== //
   // ECS / Scene Control
   // =============================================================== //

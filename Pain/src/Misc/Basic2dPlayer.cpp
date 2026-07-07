@@ -13,9 +13,10 @@
 #include "glm/fwd.hpp"
 namespace pain
 {
-reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionWidth,
-                                  int resolutionHeight, float zoomLevel,
-                                  glm::vec2 center)
+reg::Entity Dummy2dCamera::createMovingCamera(pain::Scene &scene,
+                                              int resolutionWidth,
+                                              int resolutionHeight,
+                                              float zoomLevel, glm::vec2 center)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(entity,                             //
@@ -29,10 +30,10 @@ reg::Entity Dummy2dCamera::create(pain::Scene &scene, int resolutionWidth,
   pain::Scene::emplaceScript<OrthoCameraScript>(entity, scene);
   return entity;
 }
-reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
-                                             int resolutionWidth,
-                                             int resolutionHeight,
-                                             float zoomLevel, glm::vec2 center)
+reg::Entity Dummy2dCamera::createStaticCamera(pain::Scene &scene,
+                                              int resolutionWidth,
+                                              int resolutionHeight,
+                                              float zoomLevel, glm::vec2 center)
 {
   reg::Entity entity = scene.createEntity();
   scene.createComponents(
@@ -44,9 +45,9 @@ reg::Entity Dummy2dCamera::createBasicCamera(pain::Scene &scene,
 }
 void OrthoCameraScript::onMouseButtonUp(const SDL_Event &event)
 {
-  auto [tc, mc, cc] = getComponents<Transform2dComponent, Movement2dComponent,
-                                    cmp::OrthoCamera>();
   if (event.button.button == SDL_BUTTON_LEFT) {
+    auto [tc, mc, cc] = getComponents<Transform2dComponent, Movement2dComponent,
+                                      cmp::OrthoCamera>();
     PLOG_I("position = ({},{})", TP_VEC2(tc.m_position));
     PLOG_I("velocity = ({},{})", TP_VEC2(mc.m_velocity));
     PLOG_I("rotationSpeed = {}", mc.m_rotationSpeed);
