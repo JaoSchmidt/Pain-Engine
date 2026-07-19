@@ -32,10 +32,10 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render2d::onRender(RenderApi &renderer, bool isMinimized,
+void Render2d::onRender(RenderApi &renderer, 
                         DeltaTime currentTime)
 {
-  UNUSED(isMinimized)
+  
   UNUSED(currentTime)
   PROFILE_FUNCTION();
   Renderer2d &renderer2d = renderer.m_renderer2d;

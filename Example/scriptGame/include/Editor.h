@@ -23,10 +23,10 @@ public:
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::RenderApi &renderers, bool isMinimized,
+  void onRender(pain::RenderApi &renderers, 
                 pain::DeltaTime dt)
   {
-    UNUSED(isMinimized)
+    
 
     if (!m_app.getFrameInfo().swapChainTarget) {
       static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -106,11 +106,11 @@ public:
       showStats(renderers.renderer2d.getStatistics<pain::TextBatch>());
       showStats(renderers.renderer2d.getStatistics<pain::SprayBatch>());
       showStats(renderers.renderer2d.getStatistics<pain::TriBatch>());
-      m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
+      m_imGuiDebugMenu.onRender(renderers,  dt);
 
       ImGui::Text("Renderer3D Stats:");
       showStats(renderers.renderer3d.getCubeStatistics());
-      m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
+      m_imGuiDebugMenu.onRender(renderers,  dt);
       ImGui::End();
 
       ImGui::Begin("Viewport");

@@ -16,7 +16,7 @@
  * Script types may optionally implement the following callbacks:
  *  - onCreate()
  *  - onDestroy()
- *  - onRender(RenderContext&, bool, DeltaTime)
+ *  - onRender(RenderContext&, DeltaTime)
  *  - onUpdate(DeltaTime)
  *  - onEvent(const SDL_Event&)
  *
@@ -84,8 +84,7 @@ public:
   ///@{
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
-  void (*onRenderFunction)(Scriptable *, RenderContext &, bool,
-                           DeltaTime) = nullptr;
+  void (*onRenderFunction)(Scriptable *, RenderContext &, DeltaTime) = nullptr;
   void (*onUpdateFunction)(Scriptable *, DeltaTime) = nullptr;
   void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
   ///@}
@@ -131,9 +130,8 @@ public:
 
     if constexpr (hasOnRenderMethod<T>) {
       onRenderFunction = [](Scriptable *instance, RenderContext &renderContext,
-                            bool isMinimized, DeltaTime realTime) {
-        static_cast<T *>(instance)->onRender(renderContext, isMinimized,
-                                             realTime);
+                            DeltaTime realTime) {
+        static_cast<T *>(instance)->onRender(renderContext, realTime);
       };
     } else {
       onRenderFunction = nullptr;
@@ -200,9 +198,8 @@ public:
 
     if constexpr (hasOnRenderMethod<T>) {
       onRenderFunction = [](Scriptable *instance, RenderContext &renderContext,
-                            bool isMinimized, DeltaTime realTime) {
-        static_cast<T *>(instance)->onRender(renderContext, isMinimized,
-                                             realTime);
+                            DeltaTime realTime) {
+        static_cast<T *>(instance)->onRender(renderContext, realTime);
       };
     } else {
       onRenderFunction = nullptr;

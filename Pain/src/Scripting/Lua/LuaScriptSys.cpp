@@ -70,7 +70,7 @@ void LuaScript::onEvent(const SDL_Event &e)
   }
 }
 
-void LuaScript::onRender(RenderApi &renderer, bool isMinimized,
+void LuaScript::onRender(RenderApi &renderer, 
                          DeltaTime currentTime)
 {
   PROFILE_SCOPE("onRender - LuaScripts");
@@ -85,7 +85,7 @@ void LuaScript::onRender(RenderApi &renderer, bool isMinimized,
 
       if (lsc.m_onRenderFunction) {
         sol::protected_function_result result = (*lsc.m_onRenderFunction)(
-            lsc.m_scriptTable, renderer, isMinimized, currentTime);
+            lsc.m_scriptTable, renderer,  currentTime);
 
         if (!result.valid()) {
           PLOG_E("Lua error (m_onRenderFunction): {}",

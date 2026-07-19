@@ -32,20 +32,20 @@ concept hasOnCreateMethod = requires(T &&t) {
   { t.onCreate() };
 };
 
-/** Detects whether a type exposes a public onRender(RenderApi&, bool,
+/** Detects whether a type exposes a public onRender(RenderApi&,
  * DeltaTime) method. */
 template <typename T>
 concept hasOnRenderMethod =
-    requires(T &&t, pain::RenderContext &r, bool m, pain::DeltaTime d) {
-      { t.onRender(r, m, d) };
+    requires(T &&t, pain::RenderContext &r, pain::DeltaTime d) {
+      { t.onRender(r, d) };
     };
 
-/** Detects whether a type exposes a public onRender(RenderApi&, bool,
+/** Detects whether a type exposes a public onRender(RenderApi&,
  * DeltaTime) method. */
 template <typename T>
 concept hasOnSystemRenderMethod =
-    requires(T &&t, pain::RenderApi &r, bool m, pain::DeltaTime d) {
-      { t.onRender(r, m, d) };
+    requires(T &&t, pain::RenderApi &r, pain::DeltaTime d) {
+      { t.onRender(r, d) };
     };
 
 /** Detects whether a type exposes a public onUpdate(DeltaTime) method. */
@@ -140,7 +140,7 @@ template <typename T> void checkScriptMethods()
   // Check for wrong signatures
   if constexpr (hasAnyCallableOnRender<T> && !hasOnRenderMethod<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
-                         "onRender(RenderContext&, bool, DeltaTime).");
+                         "onRender(RenderContext&, DeltaTime).");
   }
   if constexpr (hasAnyCallableOnUpdate<T> && !hasOnUpdateMethod<T>) {
     static_assert(false, "Error: onUpdate() has wrong signature! Should be "
@@ -189,7 +189,7 @@ template <typename T> void checkImGuiScriptMethods()
   // Check for wrong signatures
   if constexpr (hasAnyCallableOnRender<T> && !hasOnSystemRenderMethod<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
-                         "onRender(RenderApi&, bool, DeltaTime).");
+                         "onRender(RenderApi&, DeltaTime).");
   }
   if constexpr (hasAnyCallableOnEvent<T> && !hasOnEventMethod<T>) {
     static_assert(false, "Error: onEvent() has wrong signature! Should be "

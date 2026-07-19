@@ -20,10 +20,10 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void LightSys::onRender(RenderApi &renderer, bool isMinimized,
+void LightSys::onRender(RenderApi &renderer, 
                         DeltaTime currentTime)
 {
-  UNUSED(isMinimized)
+  
   UNUSED(currentTime)
   PROFILE_FUNCTION();
   {

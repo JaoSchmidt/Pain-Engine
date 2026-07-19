@@ -98,11 +98,9 @@ struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
    * instances, and finalizes rendering for the current frame.
    *
    * @param renderer Active renderer.
-   * @param isMinimized Indicates whether the application window is minimized.
    * @param currentTime Current frame time.
    */
-  void onRender(RenderApi &renderers, bool isMinimized,
-                DeltaTime currentTime) override;
+  void onRender(RenderApi &renderers, DeltaTime currentTime) override;
 
   /**
    * @brief Event callback invoked for every incoming platform event.

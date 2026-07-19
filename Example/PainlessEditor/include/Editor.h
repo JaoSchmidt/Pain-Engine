@@ -25,7 +25,7 @@ public:
   NONMOVABLE(Editor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::RenderApi &renderers, bool isMinimized,
+  void onRender(pain::RenderApi &renderers, 
                 pain::DeltaTime dt);
   Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app);
 

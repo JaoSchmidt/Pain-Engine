@@ -81,7 +81,7 @@ public:
   ///@{
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
-  void (*onRenderFunction)(Scriptable *, pain::RenderApi &, bool,
+  void (*onRenderFunction)(Scriptable *, pain::RenderApi &,
                            pain::DeltaTime dt) = nullptr;
   void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
   ///@}
@@ -121,9 +121,8 @@ public:
 
     if constexpr (hasOnSystemRenderMethod<T>) {
       onRenderFunction = [](Scriptable *instance, pain::RenderApi &renderer,
-                            bool isMinimized, pain::DeltaTime currentTime) {
-        static_cast<T *>(instance)->onRender(renderer, isMinimized,
-                                             currentTime);
+                            pain::DeltaTime currentTime) {
+        static_cast<T *>(instance)->onRender(renderer, currentTime);
       };
     } else {
       onRenderFunction = nullptr;
@@ -180,9 +179,8 @@ public:
 
     if constexpr (hasOnSystemRenderMethod<T>) {
       onRenderFunction = [](Scriptable *instance, pain::RenderApi &renderer,
-                            bool isMinimized, pain::DeltaTime currentTime) {
-        static_cast<T *>(instance)->onRender(renderer, isMinimized,
-                                             currentTime);
+                            pain::DeltaTime currentTime) {
+        static_cast<T *>(instance)->onRender(renderer, currentTime);
       };
     } else {
       onRenderFunction = nullptr;

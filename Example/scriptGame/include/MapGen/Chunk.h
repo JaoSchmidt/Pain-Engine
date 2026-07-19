@@ -23,7 +23,7 @@ public:
          int chunkSize, MainMap &mainMap, const char *filename);
   // void onCreate();
   // void onUpdate(pain::DeltaTime deltaTime);
-  // void onRender(pain::Renderer2d &renderer2d, bool isMinimized,
+  // void onRender(pain::Renderer2d &renderer2d, 
   //               pain::DeltaTime currentTime);
   bool isOutsideRadius(glm::ivec2 &chunkAt, int radius);
   // TODO: Implement chunk file saving

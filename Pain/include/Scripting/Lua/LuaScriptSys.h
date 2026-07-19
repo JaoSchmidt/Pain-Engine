@@ -108,14 +108,12 @@ struct LuaScript : public System<WorldComponents>,
    * have been resolved.
    *
    * @param renderer Allow indirect commands to the renderers.
-   * @param isMinimized Indicates whether the application window is minimized.
    * @param currentTime Current frame time or delta time reference.
    *
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void onRender(RenderApi &renderers, bool isMinimized,
-                DeltaTime currentTime) override;
+  void onRender(RenderApi &renderers, DeltaTime currentTime) override;
   RenderPass getRenderPass() const override { return RenderPass::Script; }
 };
 

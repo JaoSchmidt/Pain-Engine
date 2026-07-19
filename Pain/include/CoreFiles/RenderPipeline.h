@@ -70,12 +70,11 @@ public:
    * - UI scene rendering
    *
    * @param renderer Active renderer instance.
-   * @param isMinimized Indicates whether the window is minimized.
    * @param currentTime Current frame delta time.
    * @param worldScene Scene containing world entities and systems.
    * @param uiScene Scene containing UI entities and systems.
    */
-  void pipeline(RenderApi &renderers, bool isMinimized, DeltaTime currentTime,
+  void pipeline(RenderApi &renderers, bool isRenderingEnabled, DeltaTime currentTime,
                 Scene &worldScene, UIScene *uiScene);
 
   /** @brief Framebuffer owned by the render pipeline. */

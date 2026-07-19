@@ -38,7 +38,11 @@ public:
    * - Mean = 0.0
    * - Standard deviation = 1.0
    */
-  RNG() : m_seed(std::random_device{}()), generator(m_seed), m_mean(0.0), m_stddev(1.0) {}
+  RNG()
+      : m_seed(std::random_device{}()), generator(m_seed), m_mean(0.0),
+        m_stddev(1.0)
+  {
+  }
 
   /**
    * @brief Constructs the RNG with a random seed and custom Gaussian
@@ -48,7 +52,8 @@ public:
    * @param stddev  Standard deviation of the Gaussian distribution.
    */
   RNG(double mean, double stddev)
-      : m_seed(std::random_device{}()), generator(m_seed), m_mean(mean), m_stddev(stddev) {};
+      : m_seed(std::random_device{}()), generator(m_seed), m_mean(mean),
+        m_stddev(stddev) {};
 
   /**
    * @brief Constructs the RNG with an explicit seed and custom Gaussian
@@ -60,6 +65,15 @@ public:
    */
   RNG(SeedType seed, double mean, double stddev)
       : m_seed(seed), generator(m_seed), m_mean(mean), m_stddev(stddev) {};
+
+  /**
+   * @brief Constructs the RNG with an explicit seed and default Gaussian
+   * parameters.
+   *
+   * @param seed    Seed for the generator.
+   */
+  RNG(SeedType seed)
+      : m_seed(seed), generator(m_seed), m_mean(0.0), m_stddev(1.0) {};
 
   /**
    * @brief Returns the seed used to initialize the generator.

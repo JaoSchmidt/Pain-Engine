@@ -46,10 +46,10 @@ void showStats(const Stats &s)
 
 namespace painless
 {
-void Editor::onRender(pain::RenderApi &renderers, bool isMinimized,
+void Editor::onRender(pain::RenderApi &renderers, 
                       pain::DeltaTime dt)
 {
-  UNUSED(isMinimized)
+  
   if (!m_app.getFrameInfo().swapChainTarget) {
     static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
 
@@ -143,7 +143,7 @@ void Editor::onRender(pain::RenderApi &renderers, bool isMinimized,
       showStats(renderers.m_renderer3d.getSphereStatistics());
       ImGui::TreePop();
     }
-    m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
+    m_imGuiDebugMenu.onRender(renderers,  dt);
     ImGui::End();
 
     ImGui::Begin("Viewport");

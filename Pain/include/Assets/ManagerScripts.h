@@ -16,7 +16,7 @@ class DefaultNativeScript : public WorldObject
 {
   void onUpdate(DeltaTime deltaTimeSec);
   void onEvent(const SDL_Event &e);
-  void onRender(RenderContext &renderContext, bool isMinimized,
+  void onRender(RenderContext &renderContext, 
                 DeltaTime currentTime);
   void onDestroy();
 };

@@ -197,39 +197,36 @@ void RenderPipeline::temp()
   // PLOG_I("IsInside = {}",);
 }
 
-void RenderPipeline::pipeline(RenderApi &renderers, bool isMinimized,
+void RenderPipeline::pipeline(RenderApi &renderers, bool isRenderingEnabled,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene *uiScene)
 {
   PROFILE_FUNCTION();
   m_frameBuffer.bind();
   backend::clear();
-  // TODO: putting isMinimized here means there is no need for passing it
+  // TODO: putting isRenderingEnabled here means there is no need for passing it
   // through every single onRender function like we are doing now. Removing
   // should be a task eventually
-  if (!isMinimized) {
+  if (!isRenderingEnabled) {
     auto wrap2d = retrieve2dCamera(worldScene);
     auto wrap3d = retrieve3dCamera(worldScene);
 
     // Scripts don't actually use renderers, they fill the render context
-    worldScene.renderSystems(RenderPass::Script, renderers, isMinimized,
-                             currentTime);
+    worldScene.renderSystems(RenderPass::Script, renderers, currentTime);
 
     P_ASSERT_W(wrap3d || wrap2d, "No active default camera");
     if (wrap3d) {
       backend::enable3d();
       renderers.m_renderer3d.beginScene(currentTime, wrap3d->first,
                                         wrap3d->second);
-      worldScene.renderSystems(RenderPass::Dim3d, renderers, isMinimized,
-                               currentTime);
+      worldScene.renderSystems(RenderPass::Dim3d, renderers, currentTime);
       renderers.m_renderer3d.endScene(worldScene);
     }
     if (wrap2d) {
       backend::disable3d();
       renderers.m_renderer2d.beginScene(currentTime, wrap2d->first,
                                         wrap2d->second);
-      worldScene.renderSystems(RenderPass::Dim2d, renderers, isMinimized,
-                               currentTime);
+      worldScene.renderSystems(RenderPass::Dim2d, renderers, currentTime);
       renderers.m_renderer2d.endScene(currentTime, wrap2d->first,
                                       wrap2d->second);
     }
@@ -237,7 +234,7 @@ void RenderPipeline::pipeline(RenderApi &renderers, bool isMinimized,
   }
   m_frameBuffer.unbind();
   if (uiScene != nullptr)
-    uiScene->renderSystems(RenderPass::UI, renderers, isMinimized, currentTime);
+    uiScene->renderSystems(RenderPass::UI, renderers, currentTime);
 }
 
 } // namespace pain

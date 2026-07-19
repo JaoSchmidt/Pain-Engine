@@ -30,11 +30,11 @@ ImGuiDebugMenu::Script::Script()
 }
 
 void ImGuiDebugMenu::Script::onRender(pain::RenderApi &renderers,
-                                      bool isMinimized,
+                                      
                                       pain::DeltaTime currentTime)
 {
   UNUSED(renderers)
-  UNUSED(isMinimized)
+  
   UNUSED(currentTime)
 
 #ifdef PROFILING

@@ -50,7 +50,7 @@ void NativeScript::onEvent(const SDL_Event &e)
   }
 }
 
-void NativeScript::onRender(RenderApi &renderers, bool isMinimized,
+void NativeScript::onRender(RenderApi &renderers, 
                             DeltaTime currentTime)
 {
   UNUSED(renderers);
@@ -66,7 +66,7 @@ void NativeScript::onRender(RenderApi &renderers, bool isMinimized,
 
       if (nsc.instance && nsc.onRenderFunction) {
         nsc.onRenderFunction(nsc.instance.get(), renderers.m_renderContext,
-                             isMinimized, currentTime);
+                              currentTime);
       }
     }
   }

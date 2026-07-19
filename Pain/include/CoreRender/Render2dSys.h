@@ -109,14 +109,12 @@ struct Render2d : public System<WorldComponents>, IOnRender {
    * once per frame during the render phase of the engine pipeline.
    *
    * @param renderer     Active renderer instance used for issuing draw calls.
-   * @param isMinimized  Indicates whether the application window is minimized.
    * @param currentTime  Current frame time.
    *
    * @note This method is invoked only because the system inherits from
    * IOnSystemRender.
    */
-  void onRender(RenderApi &renderer, bool isMinimized,
-                DeltaTime currentTime) override;
+  void onRender(RenderApi &renderer, DeltaTime currentTime) override;
   RenderPass getRenderPass() const override { return RenderPass::Dim2d; }
 };
 

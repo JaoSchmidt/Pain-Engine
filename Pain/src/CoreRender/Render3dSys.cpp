@@ -32,10 +32,10 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render3d::onRender(RenderApi &renderer, bool isMinimized,
+void Render3d::onRender(RenderApi &renderer, 
                         DeltaTime currentTime)
 {
-  UNUSED(isMinimized)
+  
   UNUSED(currentTime)
   PROFILE_FUNCTION();
   Renderer3d &renderer3d = renderer.m_renderer3d;

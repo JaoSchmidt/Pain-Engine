@@ -18,7 +18,7 @@ reg::Entity create(pain::Scene &scene, pain::Texture &tex, glm::vec2 initialPos,
 class Script : public pain::OrthoCameraScript
 {
 public:
-  void onRender(pain::RenderApi &renderer, bool isMinimized,
+  void onRender(pain::RenderApi &renderer, 
                 pain::DeltaTime currentTime);
   void onCreate();
   using OrthoCameraScript::onEvent;

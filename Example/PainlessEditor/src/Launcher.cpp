@@ -51,12 +51,12 @@ public:
     ELOG_I("Creating Launcher");
     m_init.readAndUpdate(true);
   }
-  void onRender(pain::RenderApi &renderer, bool isMinimized,
+  void onRender(pain::RenderApi &renderer, 
                 pain::DeltaTime deltaTime)
   {
     UNUSED(renderer)
     UNUSED(deltaTime)
-    UNUSED(isMinimized)
+    
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);

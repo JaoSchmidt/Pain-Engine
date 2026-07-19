@@ -287,7 +287,7 @@ public:
   void updateSystems(const SDL_Event &event);
 
   /** @brief Executes render callbacks on systems implementing IOnRender. */
-  void renderSystems(RenderPass pass, RenderApi &renderers, bool isMinimized,
+  void renderSystems(RenderPass pass, RenderApi &renderers, 
                      DeltaTime currentTime);
 
   /**

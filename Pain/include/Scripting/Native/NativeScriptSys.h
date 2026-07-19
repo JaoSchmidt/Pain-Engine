@@ -106,14 +106,12 @@ struct NativeScript : public System<WorldComponents>,
    * Called during the render phase after renderer state has been resolved.
    *
    * @param renderer Active 2D renderer.
-   * @param isMinimized Indicates whether the application window is minimized.
    * @param currentTime Current frame time or delta time reference.
    *
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void onRender(RenderApi &renderers, bool isMinimized,
-                DeltaTime currentTime) override;
+  void onRender(RenderApi &renderers, DeltaTime currentTime) override;
   RenderPass getRenderPass() const override { return RenderPass::Script; }
 };
 

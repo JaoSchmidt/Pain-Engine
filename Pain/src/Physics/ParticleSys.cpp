@@ -51,10 +51,10 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
   }
 }
 
-void Systems::ParticleSys::onRender(RenderApi &renderer, bool isMinimized,
+void Systems::ParticleSys::onRender(RenderApi &renderer, 
                                     DeltaTime currentTime)
 {
-  UNUSED(isMinimized)
+  
   PROFILE_FUNCTION();
   // =============================================================== //
   // Update Rotation Components

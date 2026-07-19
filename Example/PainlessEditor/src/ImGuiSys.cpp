@@ -57,25 +57,21 @@ void ImGuiSys::onEvent(const SDL_Event &event)
     }
   }
 }
-void ImGuiSys::onRender(RenderApi &renderer, bool isMinimized,
-                        DeltaTime currentTime)
+void ImGuiSys::onRender(RenderApi &renderer, DeltaTime currentTime)
 {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   ::ImGui::NewFrame();
 
-  if (!isMinimized) {
-    // ::ImGui::ShowDemoWindow();
-    // ::ImPlot::ShowDemoWindow();
-    auto chunks = query<painless::ImGuiComponent>();
-    for (auto &chunk : chunks) {
-      auto *__restrict nscs = std::get<0>(chunk.arrays);
-      for (size_t i = 0; i < chunk.count; ++i) {
-        auto &nsc = nscs[i];
-        if (nsc.instance && nsc.onRenderFunction)
-          nsc.onRenderFunction(nsc.instance.get(), renderer, isMinimized,
-                               currentTime);
-      }
+  // ::ImGui::ShowDemoWindow();
+  // ::ImPlot::ShowDemoWindow();
+  auto chunks = query<painless::ImGuiComponent>();
+  for (auto &chunk : chunks) {
+    auto *__restrict nscs = std::get<0>(chunk.arrays);
+    for (size_t i = 0; i < chunk.count; ++i) {
+      auto &nsc = nscs[i];
+      if (nsc.instance && nsc.onRenderFunction)
+        nsc.onRenderFunction(nsc.instance.get(), renderer, currentTime);
     }
   }
 
