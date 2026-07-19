@@ -8,7 +8,7 @@
 // RenderSys.cpp
 #include "CoreRender/LightSys.h"
 #include "CoreRender/LightComponent.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "Debugging/Profiling.h"
 #include "Physics/Movement3dComponent.h"
 
@@ -20,7 +20,7 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void LightSys::onRender(Renderers &renderer, bool isMinimized,
+void LightSys::onRender(RenderApi &renderer, bool isMinimized,
                         DeltaTime currentTime)
 {
   UNUSED(isMinimized)

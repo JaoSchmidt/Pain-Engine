@@ -14,8 +14,8 @@
 namespace pain
 {
 
-struct Renderers {
-  static Renderers create();
+struct RenderApi {
+  static RenderApi create();
   ShaderManager m_shaderManager;
   MaterialManager m_materialManager;
   FontManager m_fontManager;
@@ -29,7 +29,7 @@ struct Renderers {
   }
 
 private:
-  Renderers();
+  RenderApi();
 };
 
 } // namespace pain

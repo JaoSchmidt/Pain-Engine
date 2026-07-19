@@ -4,13 +4,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "CoreRender/Renderer/Renderer3d.h"
 
 namespace pain
 {
-Renderers Renderers::create() { return Renderers(); }
-Renderers::Renderers()
+RenderApi RenderApi::create() { return RenderApi(); }
+RenderApi::RenderApi()
     : m_shaderManager(ShaderManager::create()),
       m_materialManager(MaterialManager::create(m_shaderManager)),
       m_fontManager(FontManager::create()),

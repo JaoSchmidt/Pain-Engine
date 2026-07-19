@@ -11,7 +11,7 @@
 
 namespace pain
 {
-struct Renderers;
+struct RenderApi;
 class RenderContext;
 } // namespace pain
 
@@ -32,7 +32,7 @@ concept hasOnCreateMethod = requires(T &&t) {
   { t.onCreate() };
 };
 
-/** Detects whether a type exposes a public onRender(Renderers&, bool,
+/** Detects whether a type exposes a public onRender(RenderApi&, bool,
  * DeltaTime) method. */
 template <typename T>
 concept hasOnRenderMethod =
@@ -40,11 +40,11 @@ concept hasOnRenderMethod =
       { t.onRender(r, m, d) };
     };
 
-/** Detects whether a type exposes a public onRender(Renderers&, bool,
+/** Detects whether a type exposes a public onRender(RenderApi&, bool,
  * DeltaTime) method. */
 template <typename T>
 concept hasOnSystemRenderMethod =
-    requires(T &&t, pain::Renderers &r, bool m, pain::DeltaTime d) {
+    requires(T &&t, pain::RenderApi &r, bool m, pain::DeltaTime d) {
       { t.onRender(r, m, d) };
     };
 
@@ -189,7 +189,7 @@ template <typename T> void checkImGuiScriptMethods()
   // Check for wrong signatures
   if constexpr (hasAnyCallableOnRender<T> && !hasOnSystemRenderMethod<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
-                         "onRender(Renderers&, bool, DeltaTime).");
+                         "onRender(RenderApi&, bool, DeltaTime).");
   }
   if constexpr (hasAnyCallableOnEvent<T> && !hasOnEventMethod<T>) {
     static_assert(false, "Error: onEvent() has wrong signature! Should be "

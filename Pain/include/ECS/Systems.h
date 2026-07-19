@@ -26,7 +26,7 @@
 namespace pain
 {
 class DeltaTime;
-struct Renderers;
+struct RenderApi;
 class RenderContext;
 
 /**
@@ -81,7 +81,7 @@ struct IOnRender {
    * @param debug Whether debug rendering is enabled.
    * @param dt Frame delta time.
    */
-  virtual void onRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
+  virtual void onRender(RenderApi &renderers, bool debug, DeltaTime dt) = 0;
   virtual RenderPass getRenderPass() const = 0;
 };
 

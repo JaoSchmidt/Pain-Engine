@@ -112,7 +112,7 @@ struct NativeScript : public System<WorldComponents>,
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void onRender(Renderers &renderers, bool isMinimized,
+  void onRender(RenderApi &renderers, bool isMinimized,
                 DeltaTime currentTime) override;
   RenderPass getRenderPass() const override { return RenderPass::Script; }
 };

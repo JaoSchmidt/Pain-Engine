@@ -29,7 +29,7 @@ ImGuiDebugMenu::Script::Script()
   m_resultFileName = generateTimestampedFilename("profile-", ".json");
 }
 
-void ImGuiDebugMenu::Script::onRender(pain::Renderers &renderers,
+void ImGuiDebugMenu::Script::onRender(pain::RenderApi &renderers,
                                       bool isMinimized,
                                       pain::DeltaTime currentTime)
 {

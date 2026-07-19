@@ -13,7 +13,7 @@
 
 namespace pain
 {
-struct Renderers;
+struct RenderApi;
 
 /**
  * @namespace TextureManager
@@ -52,7 +52,7 @@ enum DefaultTexture {
  *
  * @param renderer Pointer to the Renderer2d instance.
  */
-void addRendererForDeletingTextures(Renderers &renderers);
+void addRendererForDeletingTextures(RenderApi &renderers);
 
 // ---------------------------------------------------------- //
 // TextureSheet

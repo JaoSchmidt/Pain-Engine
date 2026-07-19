@@ -8,7 +8,7 @@
 #include "Debugging/Profiling.h"
 #include "Events/LuaInputEvent.h"
 #include "Scripting/Lua/LuaScriptComponent.h"
-#include <CoreRender/Renderer/Renderers.h>
+#include <CoreRender/Renderer/RenderApi.h>
 #include <sol/error.hpp>
 #include <sol/protected_function_result.hpp>
 
@@ -70,7 +70,7 @@ void LuaScript::onEvent(const SDL_Event &e)
   }
 }
 
-void LuaScript::onRender(Renderers &renderer, bool isMinimized,
+void LuaScript::onRender(RenderApi &renderer, bool isMinimized,
                          DeltaTime currentTime)
 {
   PROFILE_SCOPE("onRender - LuaScripts");

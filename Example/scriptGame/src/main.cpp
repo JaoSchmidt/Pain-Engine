@@ -37,7 +37,7 @@ public:
     reg::Entity lightSource = DumbObject::create(scene);
     // app->set3dRendererCamera(playerCam, cameraWidth, cameraHeight);
     app->set2dRendererCamera(playerCam, cameraWidth, cameraHeight);
-    // app->getRenderers().renderer3d.changeLight(lightSource);
+    // app->getRenderApi().renderer3d.changeLight(lightSource);
     // add objects to collision System
     // scene.getSys<pain::Systems::SweepAndPruneSys>().insertColliders(walls);
     // ASETROID SPAWNER
@@ -68,7 +68,7 @@ public:
   //   m_mainMap.updateSurroundingChunks(
   //       getComponent<pain::Transform2dComponent>(m_player), getScene());
   // }
-  void onRender(pain::Renderers &renderer, bool isMinimazed,
+  void onRender(pain::RenderApi &renderer, bool isMinimazed,
                 pain::DeltaTime currentTime)
   {
     pain::Texture &blank = pain::TextureManager::getDefaultTexture(

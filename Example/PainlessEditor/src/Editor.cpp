@@ -46,7 +46,7 @@ void showStats(const Stats &s)
 
 namespace painless
 {
-void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
+void Editor::onRender(pain::RenderApi &renderers, bool isMinimized,
                       pain::DeltaTime dt)
 {
   UNUSED(isMinimized)
@@ -164,7 +164,7 @@ void Editor::onRender(pain::Renderers &renderers, bool isMinimized,
       if (avail.x > 0 && avail.y > 0 &&
           (avail.x != m_avail.x || avail.y != m_avail.y)) {
         m_avail = avail;
-        pain::Renderers::setViewPort(0, 0, avail.x, avail.y);
+        pain::RenderApi::setViewPort(0, 0, avail.x, avail.y);
         getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
             {glm::vec2(avail.x, avail.y)});
       }

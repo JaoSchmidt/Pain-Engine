@@ -9,7 +9,7 @@
 #include "CoreRender/ColorIndexComponent.h"
 #include "CoreRender/MaterialComponent.h"
 #include "CoreRender/RenderContext.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "CoreRender/SpriteComponent.h"
 #include "Debugging/Profiling.h"
 #include "Physics/MovementComponent.h"
@@ -32,7 +32,7 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render2d::onRender(Renderers &renderer, bool isMinimized,
+void Render2d::onRender(RenderApi &renderer, bool isMinimized,
                         DeltaTime currentTime)
 {
   UNUSED(isMinimized)

@@ -51,7 +51,7 @@ public:
     ELOG_I("Creating Launcher");
     m_init.readAndUpdate(true);
   }
-  void onRender(pain::Renderers &renderer, bool isMinimized,
+  void onRender(pain::RenderApi &renderer, bool isMinimized,
                 pain::DeltaTime deltaTime)
   {
     UNUSED(renderer)
@@ -157,7 +157,7 @@ pain::Application *createLauncher()
       {.title = title, .defaultWidth = width, .defaultHeight = height},
       {.swapChainTarget = true});
   pain::Scene &scene = settingsApp->getWorldScene();
-  settingsApp->getRenderers().m_renderer2d.setCellGridSize(0);
+  settingsApp->getRenderApi().m_renderer2d.setCellGridSize(0);
   settingsApp->setFocusedOrHovered(false);
   // creates a simple and dumb camera to avoid any
   // assert later. This makes no difference in release

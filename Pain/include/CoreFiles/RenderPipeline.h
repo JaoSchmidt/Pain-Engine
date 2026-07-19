@@ -8,7 +8,7 @@
 #pragma once
 
 #include "CoreRender/Buffers/FrameBuffer.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "ECS/Scene.h"
 
 namespace pain
@@ -57,7 +57,7 @@ public:
    * @param renderer Active renderer instance.
    * @param scene Scene containing camera components.
    */
-  void onWindowResized(const SDL_Event &event, Renderers &renderers,
+  void onWindowResized(const SDL_Event &event, RenderApi &renderers,
                        Scene &scene);
 
   /**
@@ -75,7 +75,7 @@ public:
    * @param worldScene Scene containing world entities and systems.
    * @param uiScene Scene containing UI entities and systems.
    */
-  void pipeline(Renderers &renderers, bool isMinimized, DeltaTime currentTime,
+  void pipeline(RenderApi &renderers, bool isMinimized, DeltaTime currentTime,
                 Scene &worldScene, UIScene *uiScene);
 
   /** @brief Framebuffer owned by the render pipeline. */
@@ -92,7 +92,7 @@ public:
    *
    * @param scene Scene containing camera components.
    */
-  void subscribeToEvents(Scene &scene, Renderers &renderers);
+  void subscribeToEvents(Scene &scene, RenderApi &renderers);
 
 private:
   /**

@@ -9,7 +9,7 @@
 #include "CoreRender/MaterialComponent.h"
 #include "CoreRender/MeshComponent.h"
 #include "CoreRender/RenderContext.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "CoreRender/SpriteComponent.h"
 #include "Debugging/Profiling.h"
 #include "Physics/Movement3dComponent.h"
@@ -32,7 +32,7 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render3d::onRender(Renderers &renderer, bool isMinimized,
+void Render3d::onRender(RenderApi &renderer, bool isMinimized,
                         DeltaTime currentTime)
 {
   UNUSED(isMinimized)

@@ -23,7 +23,7 @@ public:
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::Renderers &renderers, bool isMinimized,
+  void onRender(pain::RenderApi &renderers, bool isMinimized,
                 pain::DeltaTime dt)
   {
     UNUSED(isMinimized)

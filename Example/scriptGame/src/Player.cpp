@@ -34,7 +34,7 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
   return entity;
 }
 
-void Player::Script::onRender(pain::Renderers &renderer, bool isMinimized,
+void Player::Script::onRender(pain::RenderApi &renderer, bool isMinimized,
                               pain::DeltaTime currentTime)
 {
   auto &camCC = getComponent<Component::OrthoCamera>();

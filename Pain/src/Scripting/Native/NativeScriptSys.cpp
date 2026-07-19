@@ -5,7 +5,7 @@
  */
 
 #include "Scripting/Native/NativeScriptSys.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "Debugging/Profiling.h"
 #include "ECS/Components/NativeScript.h"
 
@@ -50,7 +50,7 @@ void NativeScript::onEvent(const SDL_Event &e)
   }
 }
 
-void NativeScript::onRender(Renderers &renderers, bool isMinimized,
+void NativeScript::onRender(RenderApi &renderers, bool isMinimized,
                             DeltaTime currentTime)
 {
   UNUSED(renderers);

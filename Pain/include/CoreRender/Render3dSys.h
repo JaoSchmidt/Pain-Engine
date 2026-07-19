@@ -113,7 +113,7 @@ struct Render3d : public System<WorldComponents>, IOnRender {
    * @note This method is invoked only because the system inherits from
    * IOnSystemRender.
    */
-  void onRender(Renderers &renderer, bool isMinimized,
+  void onRender(RenderApi &renderer, bool isMinimized,
                 DeltaTime currentTime) override;
   RenderPass getRenderPass() const override { return RenderPass::Dim3d; }
 };

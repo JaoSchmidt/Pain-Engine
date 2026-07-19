@@ -8,7 +8,7 @@
 #pragma once
 #include "CoreFiles/AppInitConfig.h"
 #include "CoreFiles/RenderPipeline.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "pch.h"
@@ -29,7 +29,7 @@ struct EngineContext {
   /// Event bus manager
   reg::EventDispatcher eventDispatcher;
   /// Default owner of render passes and material/shader systems
-  Renderers renderers;
+  RenderApi renderers;
   /// Mostly render Pipeline for the "renderers" behaviour
   RenderPipeline renderPipeline;
   /// Refers to the game window.
@@ -118,7 +118,7 @@ public:
   sol::state &getLuaState() { return m_ctx.luaState; };
 
   /** Returns the 2D renderer instance. */
-  Renderers &getRenderers() { return m_ctx.renderers; }
+  RenderApi &getRenderApi() { return m_ctx.renderers; }
 
   /** Returns the 2D renderer instance. */
   void *getRenderContext() const { return m_ctx.sdlContext; }

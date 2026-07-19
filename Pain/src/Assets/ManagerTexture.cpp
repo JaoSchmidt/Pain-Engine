@@ -8,7 +8,7 @@
 #include "Assets/ManagerTexture.h"
 #include "Assets/ManagerFile.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "Misc/TextureSheet.h"
 
 #include <exception>
@@ -32,14 +32,14 @@ Renderer2d *s_renderer2d;
 Renderer3d *s_renderer3d;
 } // namespace
 
-void TextureManager::addRendererForDeletingTextures(Renderers &renderers)
+void TextureManager::addRendererForDeletingTextures(RenderApi &renderers)
 {
   s_renderer2d = &renderers.m_renderer2d;
   s_renderer3d = &renderers.m_renderer3d;
 }
 
 // ---------------------------------------------------------- //
-// Renderers
+// RenderApi
 // ---------------------------------------------------------- //
 
 std::string getFullPath(const char *relativeOrAbsolute)

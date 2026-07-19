@@ -148,7 +148,7 @@ void AbstractScene<Manager>::updateSystems(const SDL_Event &event)
 }
 template <reg::CompileTimeBitMaskType Manager>
 void AbstractScene<Manager>::renderSystems(RenderPass pass,
-                                           Renderers &renderers,
+                                           RenderApi &renderers,
                                            bool isMinimized,
                                            DeltaTime currentTime)
 {

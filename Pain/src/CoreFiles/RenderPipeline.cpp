@@ -6,7 +6,7 @@
 
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/CameraComponent.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "Debugging/Profiling.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
@@ -49,7 +49,7 @@ RenderPipeline::RenderPipeline(FrameBuffer frameBuffer,
     : m_frameBuffer(std::move(frameBuffer)),
       m_eventDispatcher(eventDispatcher) {};
 
-void RenderPipeline::subscribeToEvents(Scene &scene, Renderers &renderers)
+void RenderPipeline::subscribeToEvents(Scene &scene, RenderApi &renderers)
 {
   m_eventDispatcher.subscribe<ImGuiViewportChangeEvent>(
       [&](const ImGuiViewportChangeEvent &e) {
@@ -110,7 +110,7 @@ template <typename Camera>
   requires std::same_as<Camera, cmp::PerspCamera> ||
            std::same_as<Camera, cmp::OrthoCamera>
 void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
-                  Renderers &renderers)
+                  RenderApi &renderers)
 {
   if (fb.getSpecification().swapChainTarget) {
     renderers.setViewPort(0, 0, event.window.data1, event.window.data2);
@@ -123,7 +123,7 @@ void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
 }
 
 void RenderPipeline::onWindowResized(const SDL_Event &event,
-                                     Renderers &renderer, Scene &scene)
+                                     RenderApi &renderer, Scene &scene)
 {
   {
     auto chunks = scene.query<cmp::OrthoCamera>();
@@ -197,7 +197,7 @@ void RenderPipeline::temp()
   // PLOG_I("IsInside = {}",);
 }
 
-void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
+void RenderPipeline::pipeline(RenderApi &renderers, bool isMinimized,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene *uiScene)
 {

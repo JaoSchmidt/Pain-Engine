@@ -5,7 +5,7 @@
  */
 
 #include "Physics/Particles/ParticleSys.h"
-#include "CoreRender/Renderer/Renderers.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "Debugging/Profiling.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/Particles/TrailCmp.h"
@@ -51,7 +51,7 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
   }
 }
 
-void Systems::ParticleSys::onRender(Renderers &renderer, bool isMinimized,
+void Systems::ParticleSys::onRender(RenderApi &renderer, bool isMinimized,
                                     DeltaTime currentTime)
 {
   UNUSED(isMinimized)
