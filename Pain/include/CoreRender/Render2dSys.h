@@ -49,6 +49,7 @@ struct Transform2dComponent;
 struct RotationComponent;
 struct SpriteComponent;
 struct MaterialComponent;
+struct ColorIndexComponent;
 
 namespace Systems
 {
@@ -94,7 +95,8 @@ struct Render2d : public System<WorldComponents>, IOnRender {
                         RotationComponent,    //
                         Transform3dComponent, //
                         MeshComponent,        //
-                        MaterialComponent>;
+                        MaterialComponent,    //
+                        ColorIndexComponent>;
 
   /** @brief Inherit base System constructors. */
   using System::System;

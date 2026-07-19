@@ -128,13 +128,12 @@ TextureSheet &getTextureSheet(const char *filepath);
  * @param clamp             Whether texture sampling should be clamped.
  * @param isPath            If true, pathOrName is treated as a filesystem path.
  * @param keepOnCPUMemory   Whether texture data should remain in CPU memory.
- * @param isError           Whether errors should be logged and default fallback
  * used.
  *
  * @return Reference to the created or cached Texture.
  */
 Texture &createTexture(const char *path, bool clamp = false, bool isPath = true,
-                       bool keepOnCPUMemory = false, bool isError = true);
+                       bool keepOnCPUMemory = false);
 
 /**
  * @brief Retrieves a texture if it exists, otherwise returns a default texture.
@@ -145,8 +144,7 @@ Texture &createTexture(const char *path, bool clamp = false, bool isPath = true,
  *
  * @return Reference to the texture or a default texture.
  */
-Texture &getTexture(const char *pathOrName, bool isPath = true,
-                    bool isError = true);
+Texture &getTexture(const char *pathOrName, bool isPath = true);
 
 /**
  * @brief Retrieves a const reference to a texture.
@@ -159,8 +157,7 @@ Texture &getTexture(const char *pathOrName, bool isPath = true,
  *
  * @return Const reference to the texture.
  */
-const Texture &getConstTexture(const char *pathOrName, bool isPath = true,
-                               bool isError = true);
+const Texture &getConstTexture(const char *pathOrName, bool isPath = true);
 
 /**
  * @brief Retrieves one of the built-in default textures.
@@ -170,7 +167,7 @@ const Texture &getConstTexture(const char *pathOrName, bool isPath = true,
  *
  * @return Reference to the requested default texture.
  */
-Texture &getDefaultTexture(DefaultTexture defTex, bool isError = true);
+Texture &getDefaultTexture(DefaultTexture defTex, bool isError = false);
 
 /**
  * @brief Creates a blank texture with explicit dimensions.
@@ -186,8 +183,7 @@ Texture &getDefaultTexture(DefaultTexture defTex, bool isError = true);
  * @return Reference to the created or cached Texture.
  */
 Texture &createDumpTexture(const char *name, uint32_t width, uint32_t height,
-                           ImageFormat imf = ImageFormat::RGBA8,
-                           bool isError = true);
+                           ImageFormat imf = ImageFormat::RGBA8);
 
 /**
  * @brief Initializes all built-in default textures.

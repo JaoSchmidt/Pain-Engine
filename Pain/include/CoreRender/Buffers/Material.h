@@ -21,6 +21,7 @@
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Buffers/Shader.h"
 #include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Renderer/Colors.h"
 #include "platform/ContextBackend.h"
 
 #include <variant>
@@ -51,10 +52,6 @@ struct ParamPhong {       /// Phong only parameters
   float diffuse = 0.3f;   ///< 1 = Shadow
   auto operator<=>(const ParamPhong &) const = default;
 };
-struct ParamSimplest { /// Super simple. To work with Texture.glsl
-  int id = 0;
-  auto operator<=>(const ParamSimplest &) const = default;
-};
 
 /**
  * @brief Configuration used when creating a MaterialComponent.
@@ -65,7 +62,7 @@ struct ParamSimplest { /// Super simple. To work with Texture.glsl
 struct MaterialCreationInfo {
   Color color = {255, 255, 255, 255}; ///< Tint color.
   float tilingFactor = 1.f;           ///< Texture tiling multiplier.
-  std::variant<ParamPBR, ParamPhong, ParamSimplest> params = ParamPBR{};
+  std::variant<ParamPBR, ParamPhong, std::monostate> params = std::monostate{};
   Shader &shader;
   Texture &texture =
       TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
@@ -84,8 +81,8 @@ struct MaterialCreationInfo {
  */
 struct Material {
   using TextureVariant = std::variant<Texture *, SheetStruct>;
-  std::variant<ParamPBR, ParamPhong, ParamSimplest> m_params =
-      ParamPBR{};                     ///< Shader specific parameters
+  std::variant<ParamPBR, ParamPhong, std::monostate>
+      m_params;                       ///< Shader specific parameters
   Color m_color = Colors::StrongPink; ///< Tint color.
   float m_tilingFactor = 1.f;         ///< Texture tiling multiplier.
   Shader *m_shader = nullptr;         ///< Instanciated Shader

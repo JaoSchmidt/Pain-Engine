@@ -69,25 +69,34 @@ void InitLogger();
 /** Tell points from vec2 */
 #define TP_VEC2(vec) (vec).x, (vec).y
 
+static constexpr uint32_t REVERSE(uint32_t value)
+{
+  uint32_t reversed =
+      ((value & 0x000000FF) << 24) | ((value & 0x0000FF00) << 8) |
+      ((value & 0x00FF0000) >> 8) | ((value & 0xFF000000) >> 24);
+  return reversed;
+}
+#define HEXADECIMAL(...) std::format("0x{:08X}", __VA_ARGS__)
+
 /** Core trace log macro */
-#define PLOG_T(...) ::pain::logWrapper::GetCoreLogger()->trace(__VA_ARGS__)
+#define PLOG_T(...) ::pain::logWrapper::GetCoreLogger()->trace(__VA_ARGS__);
 /** Core info log macro */
-#define PLOG_I(...) ::pain::logWrapper::GetCoreLogger()->info(__VA_ARGS__)
+#define PLOG_I(...) ::pain::logWrapper::GetCoreLogger()->info(__VA_ARGS__);
 /** Core warning log macro */
-#define PLOG_W(...) ::pain::logWrapper::GetCoreLogger()->warn(__VA_ARGS__)
+#define PLOG_W(...) ::pain::logWrapper::GetCoreLogger()->warn(__VA_ARGS__);
 /** Core error log macro */
-#define PLOG_E(...) ::pain::logWrapper::GetCoreLogger()->error(__VA_ARGS__)
+#define PLOG_E(...) ::pain::logWrapper::GetCoreLogger()->error(__VA_ARGS__);
 /** Core fatal / critical log macro */
-#define PLOG_F(...) ::pain::logWrapper::GetCoreLogger()->critical(__VA_ARGS__)
+#define PLOG_F(...) ::pain::logWrapper::GetCoreLogger()->critical(__VA_ARGS__);
 
 // clang-format off
 /** Lua trace log macro */
-#define LUA_LOG_T(...) ::pain::logWrapper::GetLuaLogger()->trace(__VA_ARGS__)
+#define LUA_LOG_T(...) ::pain::logWrapper::GetLuaLogger()->trace(__VA_ARGS__);
 /** Lua info log macro */
-#define LUA_LOG_I(...) ::pain::logWrapper::GetLuaLogger()->info(__VA_ARGS__)
+#define LUA_LOG_I(...) ::pain::logWrapper::GetLuaLogger()->info(__VA_ARGS__);
 /** Lua warning log macro */
-#define LUA_LOG_W(...) ::pain::logWrapper::GetLuaLogger()->warn(__VA_ARGS__)
+#define LUA_LOG_W(...) ::pain::logWrapper::GetLuaLogger()->warn(__VA_ARGS__);
 /** Lua error log macro */
-#define LUA_LOG_E(...) ::pain::logWrapper::GetLuaLogger()->error(__VA_ARGS__)
+#define LUA_LOG_E(...) ::pain::logWrapper::GetLuaLogger()->error(__VA_ARGS__);
 /** Lua fatal / critical log macro */
-#define LUA_LOG_F(...) ::pain::logWrapper::GetLuaLogger()->critical(__VA_ARGS__)
+#define LUA_LOG_F(...) ::pain::logWrapper::GetLuaLogger()->critical(__VA_ARGS__);

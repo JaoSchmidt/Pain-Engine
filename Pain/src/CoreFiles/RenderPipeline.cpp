@@ -204,33 +204,37 @@ void RenderPipeline::pipeline(Renderers &renderers, bool isMinimized,
   PROFILE_FUNCTION();
   m_frameBuffer.bind();
   backend::clear();
-  auto wrap2d = retrieve2dCamera(worldScene);
-  auto wrap3d = retrieve3dCamera(worldScene);
+  // TODO: putting isMinimized here means there is no need for passing it
+  // through every single onRender function like we are doing now. Removing
+  // should be a task eventually
+  if (!isMinimized) {
+    auto wrap2d = retrieve2dCamera(worldScene);
+    auto wrap3d = retrieve3dCamera(worldScene);
 
-  // Scripts don't actually use renderers, they fill the render context
-  worldScene.renderSystems(RenderPass::Script, renderers, isMinimized,
-                           currentTime);
-
-  P_ASSERT_W(wrap3d || wrap2d, "No active default camera");
-  if (wrap3d) {
-    backend::enable3d();
-    renderers.m_renderer3d.beginScene(currentTime, wrap3d->first,
-                                      wrap3d->second);
-    worldScene.renderSystems(RenderPass::Dim3d, renderers, isMinimized,
+    // Scripts don't actually use renderers, they fill the render context
+    worldScene.renderSystems(RenderPass::Script, renderers, isMinimized,
                              currentTime);
-    renderers.m_renderer3d.endScene(worldScene);
-  }
-  if (wrap2d) {
-    backend::disable3d();
-    renderers.m_renderer2d.beginScene(currentTime, wrap2d->first,
+
+    P_ASSERT_W(wrap3d || wrap2d, "No active default camera");
+    if (wrap3d) {
+      backend::enable3d();
+      renderers.m_renderer3d.beginScene(currentTime, wrap3d->first,
+                                        wrap3d->second);
+      worldScene.renderSystems(RenderPass::Dim3d, renderers, isMinimized,
+                               currentTime);
+      renderers.m_renderer3d.endScene(worldScene);
+    }
+    if (wrap2d) {
+      backend::disable3d();
+      renderers.m_renderer2d.beginScene(currentTime, wrap2d->first,
+                                        wrap2d->second);
+      worldScene.renderSystems(RenderPass::Dim2d, renderers, isMinimized,
+                               currentTime);
+      renderers.m_renderer2d.endScene(currentTime, wrap2d->first,
                                       wrap2d->second);
-    worldScene.renderSystems(RenderPass::Dim2d, renderers, isMinimized,
-                             currentTime);
-    renderers.m_renderer2d.endScene(currentTime, wrap2d->first, wrap2d->second);
+    }
+    renderers.m_renderContext.clear();
   }
-
-  renderers.m_renderContext.clear();
-
   m_frameBuffer.unbind();
   if (uiScene != nullptr)
     uiScene->renderSystems(RenderPass::UI, renderers, isMinimized, currentTime);

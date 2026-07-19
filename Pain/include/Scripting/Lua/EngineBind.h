@@ -6,11 +6,12 @@
 
 #pragma once
 #include "Assets/ManagerMaterial.h"
+#include "Assets/ManagerShader.h"
 #include <sol/state.hpp>
 namespace pain::luabinder
 {
 
-void bindEngineMM(sol::state &lua, MaterialManager &mm);
+void bindEngineMM(sol::state &lua, ShaderManager &sm, MaterialManager &mm);
 void bindMaterial(sol::state &lua);
 sol::table bindEngine(sol::state &lua);
 

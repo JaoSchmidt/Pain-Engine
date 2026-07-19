@@ -5,7 +5,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
-set(MACRO_DEFINITIONS "PAIN_RENDERER_OPENGL")
+# NOTE: OPENGL is the only alternative atm
+set(RENDERER_FRAMEWORK "PAIN_RENDERER_OPENGL")
 project(${PROJECT_NAME} VERSION 0.1.0)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
@@ -206,10 +207,16 @@ endif()
 # msdf-atlas-gen
 set(MSDF_ATLAS_USE_VCPKG
     OFF
-    CACHE BOOL "" FORCE)
+    CACHE BOOL "Vcpkg is deactivated for MSDF Lib" FORCE)
 set(MSDF_ATLAS_USE_SKIA
     OFF
-    CACHE BOOL "" FORCE)
+    CACHE BOOL "Vcpkg is deactivated for MSDF Lib" FORCE)
+set(MSDFGEN_USE_SKIA
+    OFF
+    CACHE BOOL "Vcpkg is deactivated for MSDF Lib" FORCE)
+set(MSDFGEN_USE_VCPKG
+    OFF
+    CACHE BOOL "Vcpkg is deactivated for MSDF Lib" FORCE)
 if(NOT EXISTS
    "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/msdf-atlas-gen/CMakeLists.txt")
   message("Fetching msdf-atlas-gen")
@@ -297,7 +304,7 @@ add_subdirectory(Example/PainlessEditor)
 
 # =========== Resources/Assets Managment ==================================
 
-add_compile_definitions(${MACRO_DEFINITIONS})
+add_compile_definitions(${RENDERER_FRAMEWORK})
 
 # Sync Resources
 if(UNIX OR APPLE)

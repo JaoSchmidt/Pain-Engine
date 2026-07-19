@@ -1,5 +1,4 @@
 #pragma once
-#include "Assets/ManagerMaterial.h"
 #include "CoreRender/RenderCommand.h"
 
 namespace pain
@@ -8,7 +7,7 @@ namespace pain
 class RenderContext
 {
 public:
-  static RenderContext create(MaterialManager &materialManager);
+  static RenderContext create();
   void submit(pain::RenderCommand cmd)
   {
     m_commands.emplace_back(std::move(cmd));
@@ -74,7 +73,8 @@ public:
   void submitLine(const glm::vec2 &origin, const glm::vec2 &destination,
                   float thickness, RenderLayer layer, const Material &material);
 
-  MaterialManager &m_materialManager;
+  void submitString(const glm::vec2 &position, float scale, const char *string,
+                    const Font &font, const Color &color);
 
 private:
   static glm::mat4 getUniformScaleTransform(const glm::vec2 &position,
@@ -91,7 +91,6 @@ private:
                                 float rotationAngleRadians);
   static glm::mat4 getTransform(const glm::vec2 &position,
                                 const glm::vec2 &size);
-  RenderContext(MaterialManager &materialManager);
   std::vector<RenderCommand> m_commands;
 };
 

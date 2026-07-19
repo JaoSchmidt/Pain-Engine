@@ -11,6 +11,7 @@
 /// For use specifically for games built with Pain.
 #include "Assets/ManagerIni.h"
 #include "Assets/ManagerMaterial.h"
+#include "Assets/ManagerShader.h"
 #include "Assets/ManagerTexture.h"
 #include "Assets/RandNumberGenerator.h"
 #include "CoreFiles/Application.h"
@@ -29,6 +30,7 @@
 #include "CoreRender/Buffers/Texture.h"
 #include "CoreRender/Buffers/VertexArray.h"
 #include "CoreRender/CameraComponent.h"
+#include "CoreRender/ColorIndexComponent.h"
 #include "CoreRender/LightComponent.h"
 #include "CoreRender/LightSys.h"
 #include "CoreRender/MaterialComponent.h"
@@ -41,6 +43,8 @@
 #include "CoreRender/Shapes.h"
 #include "CoreRender/SpriteComponent.h"
 #include "CoreRender/Text/Font.h"
+#include "CoreRender/Text/ManagerFont.h"
+#include "CoreRender/Text/TextComponent.h"
 // ECS
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Scene.h"

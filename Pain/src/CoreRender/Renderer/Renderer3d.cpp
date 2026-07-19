@@ -22,7 +22,7 @@ namespace pain
 {
 struct MaterialKey {
   Shader *shader;
-  std::variant<ParamPBR, ParamPhong, ParamSimplest> params;
+  std::variant<ParamPBR, ParamPhong, std::monostate> params;
   uint32_t flags; // Transparent, DoubleSided, etc.
   auto operator<=>(const MaterialKey &) const = default;
 };

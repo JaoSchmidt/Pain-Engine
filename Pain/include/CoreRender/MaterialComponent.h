@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include "Assets/ManagerMaterial.h"
 #include "CoreRender/Buffers/Material.h"
 #include "ECS/Components/ComponentManager.h"
 
@@ -23,10 +22,6 @@ namespace pain
  */
 struct MaterialComponent {
   using tag = tag::Material;
-  static MaterialComponent create(MaterialManager &mm)
-  {
-    return MaterialComponent(mm);
-  }
   static MaterialComponent create(Material &m) { return MaterialComponent(m); }
   const Material *operator->() const { return std::as_const(m_material); };
 
@@ -46,10 +41,7 @@ struct MaterialComponent {
   MaterialComponent &operator=(const MaterialComponent &o) = delete;
   ~MaterialComponent() = default;
 
-private:
   MaterialComponent(Material &m) : m_material(&m) {};
-  MaterialComponent(MaterialManager &mm)
-      : m_material(&mm.getDefaultMaterial()) {};
   const Material *m_material;
 };
 

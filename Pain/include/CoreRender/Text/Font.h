@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include "Core.h"
 #include "CoreRender/Buffers/Texture.h"
+#include <memory>
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <vector>
 
@@ -15,27 +17,27 @@ namespace pain
 
 /**
  * @class Font
- * @brief GPU-ready font asset backed by an MSDF atlas texture.
+ * @brief GPU-ready font asset to render text
  *
  * The Font class loads a font file using **FreeType + msdf-atlas-gen**,
  * generates a multi-channel signed distance field (MSDF) atlas,
- * and uploads the result into a GPU Texture for fast text rendering.
+ * and uploads the result into a GPU Texture for fast text rendering. The MSDF
+ * allow to create fonts with any size possible, using only one atlas, as
+ * opposed to a bunch of different atlas, each for a font sizes
  *
  * ---
- * ### ✨ Responsibilities
- * - Load font files from disk.
- * - Generate glyph geometry and layout.
- * - Build MSDF atlas textures.
- * - Expose glyph metrics and atlas texture to the renderer.
+ * ### Responsibilities
+ * - Load font files from disk (*.ttf or *.otf).
+ * - Internally fenerate glyph geometry, layout, and build MSDF atlas textures.
+ * - Require to Render text in the renderers (Renderer2d.h and Renderer3d.h)
  *
  * ---
- * ### ⚠️ Ownership
- * - Instances are heap-allocated via `create()`.
- * - Callers own the returned pointer.
- * - `getDefault()` returns a static fallback instance (do not delete).
+ * ### Ownership
+ * - You deal with it, all returns are rvalue
+ * - OR you use ManagerFont.h (recommended)
  *
  * ---
- * ### 🚀 Performance Notes
+ * ### Performance Notes
  * - Atlas generation is expensive and should be done during load time,
  *   not during gameplay or hot paths.
  * - Texture data is uploaded once and reused for rendering.
@@ -76,43 +78,28 @@ public:
     return m_fontGeometry;
   }
 
-  /** Returns the generated glyph geometry array. */
-  const inline std::vector<msdf_atlas::GlyphGeometry> &getGlyphGemoetry() const
-  {
-    return m_glyphs;
-  }
-
-  /**
-   * @brief Returns the engine default font.
-   *
-   * The default font is lazily initialized and persists for the lifetime
-   * of the application.
-   *
-   * @return Pointer to the default Font instance.
-   */
-  static Font *getDefault();
+  Font(Font &&) noexcept = default;
+  Font &operator=(Font &&) noexcept = default;
+  Font &operator=(Font &) = delete;
+  Font(Font &) = delete;
 
 private:
   // ---------------------------------------------------------------------------
   // Data
   // ---------------------------------------------------------------------------
 
+  /* Geometry information for each glyph in the atlas.
+   * WARN: DO NOT USE, for dispose only inside the custom destructor */
+  std::unique_ptr<std::vector<msdf_atlas::GlyphGeometry>> m_glyphs;
   /** Font metrics and glyph layout data. */
   msdf_atlas::FontGeometry m_fontGeometry;
-  /** Geometry information for each glyph in the atlas. */
-  std::vector<msdf_atlas::GlyphGeometry> m_glyphs;
   /** GPU texture storing the MSDF atlas. */
   Texture m_atlasTexture;
-
-  /** Global fallback font instance. */
-  static Font *m_defaultFont;
 
   // ---------------------------------------------------------------------------
   // Constants
   // ---------------------------------------------------------------------------
 
-  /** Texture cache key used internally. */
-  const char *textureKey = "fontAltas";
   /** Distance field pixel range used during atlas generation. */
   static constexpr double pixelRange = 2.0;
   /** Glyph scaling factor. */

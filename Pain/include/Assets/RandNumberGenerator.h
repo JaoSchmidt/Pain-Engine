@@ -29,6 +29,7 @@ namespace pain
 class RNG
 {
 public:
+  using SeedType = std::mt19937::result_type;
   /**
    * @brief Constructs the RNG with a random seed and default Gaussian
    * parameters.
@@ -37,7 +38,7 @@ public:
    * - Mean = 0.0
    * - Standard deviation = 1.0
    */
-  RNG() : generator(std::random_device{}()), m_mean(0.0), m_stddev(1.0) {}
+  RNG() : m_seed(std::random_device{}()), generator(m_seed), m_mean(0.0), m_stddev(1.0) {}
 
   /**
    * @brief Constructs the RNG with a random seed and custom Gaussian
@@ -47,7 +48,25 @@ public:
    * @param stddev  Standard deviation of the Gaussian distribution.
    */
   RNG(double mean, double stddev)
-      : generator(std::random_device{}()), m_mean(mean), m_stddev(stddev) {};
+      : m_seed(std::random_device{}()), generator(m_seed), m_mean(mean), m_stddev(stddev) {};
+
+  /**
+   * @brief Constructs the RNG with an explicit seed and custom Gaussian
+   * parameters.
+   *
+   * @param seed    Seed for the generator.
+   * @param mean    Mean of the Gaussian distribution.
+   * @param stddev  Standard deviation of the Gaussian distribution.
+   */
+  RNG(SeedType seed, double mean, double stddev)
+      : m_seed(seed), generator(m_seed), m_mean(mean), m_stddev(stddev) {};
+
+  /**
+   * @brief Returns the seed used to initialize the generator.
+   *
+   * @return The stored seed value.
+   */
+  SeedType seed() const { return m_seed; }
 
   /**
    * @brief Generates a random number using the internally configured Gaussian
@@ -127,6 +146,8 @@ public:
   }
 
 private:
+  /** Seed, for when you want specific, predictable, behaviour */
+  SeedType m_seed;
   /** Mersenne Twister random number generator engine. */
   mutable std::mt19937 generator;
   /** Mean of the Gaussian distribution. */

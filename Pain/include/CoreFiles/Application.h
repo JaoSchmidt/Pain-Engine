@@ -80,8 +80,18 @@ public:
   /** Enables or disables infinite simulation speed (ignores frame limiting). */
   void setInfiniteSimulation(bool isSimulation)
   {
-    m_config.isSimulation = isSimulation;
+    if (isSimulation) {
+      m_config.isRendering = false;
+      m_config.isAccumulatorUnlocked = true;
+    } else {
+      m_config.isRendering = true;
+      m_config.isAccumulatorUnlocked = false;
+    }
   };
+  bool isSimulation() const
+  {
+    return m_config.isAccumulatorUnlocked && !m_config.isRendering;
+  }
 
   /** Enable or disable the rendering. For example, if you are doing a
    * simulation or some other calculation, you might want to ingore the render
@@ -104,14 +114,6 @@ public:
   {
     m_config.isFocusedOrHovered = isFocusedOrHovered;
   }
-  /** Toggle simulation */
-  void inline toggleSimulation()
-  {
-    m_config.isSimulation = !(m_config.isSimulation);
-  }
-  /** Returns a pointer to the simulation flag. */
-  bool inline isSimulation() const { return m_config.isSimulation; }
-
   /** Returns the Lua state used by the application. */
   sol::state &getLuaState() { return m_ctx.luaState; };
 
@@ -186,9 +188,9 @@ private:
   struct DefaultApplicationValues {
     bool isGameRunning = true;
     bool isRendering = true;
-    bool isMinimized = false;
-    bool isSimulation = false;
     bool isFocusedOrHovered = true;
+    bool isAccumulatorUnlocked = false;
+
     constexpr static double fixedUpdateTime = 1.0 / 60.0;
     constexpr static double fixedFPS = 1.0 / 60.0;
     double timeMultiplier = 1.0;

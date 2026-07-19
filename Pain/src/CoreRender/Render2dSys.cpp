@@ -6,6 +6,7 @@
 
 // RenderSys.cpp
 #include "CoreRender/Render2dSys.h"
+#include "CoreRender/ColorIndexComponent.h"
 #include "CoreRender/MaterialComponent.h"
 #include "CoreRender/RenderContext.h"
 #include "CoreRender/Renderer/Renderers.h"
@@ -13,6 +14,7 @@
 #include "Debugging/Profiling.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/RotationComponent.h"
+#include "TextComponent.h"
 
 namespace pain
 {
@@ -40,8 +42,9 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
   {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");
 
-    auto chunks = queryConst<Transform2dComponent, SpriteComponent,
-                             RotationComponent, MaterialComponent>();
+    auto chunks =
+        queryConst<Transform2dComponent, SpriteComponent, RotationComponent,
+                   MaterialComponent>(exclude<ColorIndexComponent>);
     for (auto &chunk : chunks) {
       const auto *t = std::get<0>(chunk.arrays);
       const auto *s = std::get<1>(chunk.arrays);
@@ -76,7 +79,7 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
     PROFILE_SCOPE("Scene::renderSystems - texture quads");
     auto chunks =
         queryConst<Transform2dComponent, SpriteComponent, MaterialComponent>(
-            exclude<RotationComponent>);
+            exclude<RotationComponent, ColorIndexComponent>);
     for (auto &chunk : chunks) {
       const auto *t = std::get<0>(chunk.arrays);
       const auto *s = std::get<1>(chunk.arrays);
@@ -105,9 +108,51 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
     }
   }
   {
+    PROFILE_SCOPE("Scene::renderSystems - colored primitives");
+    auto chunks =
+        queryConst<Transform2dComponent, SpriteComponent, ColorIndexComponent,
+                   MaterialComponent>(exclude<RotationComponent>);
+    for (auto &chunk : chunks) {
+      const auto *t = std::get<0>(chunk.arrays);
+      const auto *s = std::get<1>(chunk.arrays);
+      const auto *c = std::get<2>(chunk.arrays);
+      const auto *m = std::get<3>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        std::visit(
+            [&](auto &shape) {
+              using T = std::decay_t<decltype(shape)>;
+              if constexpr (std::is_same_v<T, QuadShape>) {
+                renderer2d.submitQuad(t[i].m_position, shape.side, s[i].layer,
+                                      *m[i], c[i].color);
+              } else if constexpr (std::is_same_v<T, RectShape>) {
+                renderer2d.submitRect(t[i].m_position, shape.size, s[i].layer,
+                                      *m[i], c[i].color);
+              } else if constexpr (std::is_same_v<T, LineShape>) {
+                renderer2d.submitLine(t[i].m_position, shape.destination,
+                                      shape.thickness, s[i].layer, *m[i],
+                                      c[i].color);
+              }
+            },
+            s[i].m_shape);
+      }
+    }
+  }
+  {
+    PROFILE_SCOPE("Scene::renderSystems - colored primitives");
+    auto chunks = queryConst<Transform2dComponent, TextComponent>(
+        exclude<RotationComponent>);
+    for (auto &chunk : chunks) {
+      const auto *p = std::get<0>(chunk.arrays);
+      const auto *t = std::get<1>(chunk.arrays);
+      for (size_t i = 0; i < chunk.count; ++i) {
+        renderer2d.submitString(p[i].m_position, t[i].scale, t[i].text,
+                                t[i].font, t[i].color, t[i].align);
+      }
+    }
+  }
+  {
     PROFILE_SCOPE("Scene::renderSystems - scripts");
     const auto &commands = renderer.m_renderContext.getCommands();
-
     for (const auto &cmd : commands) {
       switch (cmd.m_type) {
       case RenderCommandType::Quad:
@@ -121,6 +166,14 @@ void Render2d::onRender(Renderers &renderer, bool isMinimized,
             cmd.m_data.sprite.transform, //
             cmd.m_data.sprite.layer,     //
             *cmd.m_data.sprite.material);
+        break;
+      case RenderCommandType::Text:
+        renderer2d.submitString(      //
+            cmd.m_data.text.position, //
+            cmd.m_data.text.scale,    //
+            cmd.m_data.text.string,   //
+            *cmd.m_data.text.font,    //
+            cmd.m_data.text.color);
         break;
       case RenderCommandType::Rect:
         renderer2d.submitRect(           //

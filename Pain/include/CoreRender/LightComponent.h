@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CoreRender/Renderer/Misc.h"
+#include "CoreRender/Renderer/Colors.h"
 #include "ECS/Components/ComponentManager.h"
 
 namespace pain

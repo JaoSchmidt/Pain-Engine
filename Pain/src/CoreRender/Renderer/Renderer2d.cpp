@@ -6,20 +6,27 @@
 
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Assets/ManagerTexture.h"
+#include "Core.h"
 #include "CoreRender/Renderer/BatchRect.h"
 #include "Debugging/Profiling.h"
 
 #include "CoreRender/CameraComponent.h"
 #include "ECS/WorldScene.h"
 #include "Physics/MovementComponent.h"
+#include "TextComponent.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "platform/ContextBackend.h"
 namespace pain
 {
 
+// TODO: Eventually it would be nice to think about some features:
+// - allow the developer to create custom batches
+// - allow the developer to send any uniform it would like (maybe with a
+// feedback fnc before flush?)
+
 struct MaterialKey {
   Shader *shader;
-  std::variant<ParamPBR, ParamPhong, ParamSimplest> params;
+  std::variant<ParamPBR, ParamPhong, std::monostate> params;
   uint32_t flags; // Transparent, DoubleSided, etc.
   RenderLayer layer;
   auto operator<(const MaterialKey &o) const { return layer < o.layer; }
@@ -194,22 +201,24 @@ void Renderer2d::endScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
 // ================================================================= //
 
 void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
-                            RenderLayer layer, const Material &material)
+                            RenderLayer layer, const Material &material,
+                            Color overrideColor)
 {
   const glm::mat4 transform = getTransform(position, size);
-  submitRect(transform, layer, material);
+  submitRect(transform, layer, material, overrideColor);
 }
 
 void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
                             const float rotationRadians, RenderLayer layer,
-                            const Material &material)
+                            const Material &material, Color overrideColor)
 {
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
-  submitRect(transform, layer, material);
+  submitRect(transform, layer, material, overrideColor);
 }
+
 void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
-                            const Material &material)
+                            const Material &material, Color overrideColor)
 {
   PROFILE_FUNCTION();
   MaterialKey key = {.shader = material.m_shader,
@@ -221,10 +230,8 @@ void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
     auto [newIt, inserted] =
         m_rectBatchCache.emplace(std::move(key), RectBatch::create());
     it = newIt;
-    if (inserted) {
-
+    if (inserted)
       newIt->second.resetAll();
-    }
   }
   RectBatch &batch = it->second;
 
@@ -236,16 +243,34 @@ void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
   if (material.isTextureSheet()) {
     const float texIndex =
         allocateTextures(material.getTextureFromTextureSheet());
-    batch.allocateRect(transform, material.m_color, material.m_tilingFactor,
+    batch.allocateRect(transform, overrideColor, material.m_tilingFactor,
                        texIndex, material.getCoords());
   } else {
     constexpr std::array<glm::vec2, 4> textureCoordinate = {
         glm::vec2(0.0F, 0.0F), glm::vec2(1.0F, 0.0F), glm::vec2(1.0F, 1.0F),
         glm::vec2(0.0F, 1.0F)};
     const float texIndex = allocateTextures(material.getTexture());
-    batch.allocateRect(transform, material.m_color, material.m_tilingFactor,
+    batch.allocateRect(transform, overrideColor, material.m_tilingFactor,
                        texIndex, textureCoordinate);
   }
+}
+// Color override versions
+void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
+                            const Material &material)
+{
+  submitRect(transform, layer, material, material.m_color);
+}
+void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                            RenderLayer layer, const Material &material)
+{
+  submitRect(position, size, layer, material, material.m_color);
+}
+void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                            const float rotationRadians, RenderLayer layer,
+                            const Material &material)
+{
+  submitRect(position, size, rotationRadians, layer, material,
+             material.m_color);
 }
 
 // ================================================================= //
@@ -255,21 +280,43 @@ void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
 void Renderer2d::submitQuad(const glm::vec2 &position, float size,
                             RenderLayer layer, const Material &material)
 {
+  submitQuad(position, size, layer, material, material.m_color);
+}
+
+void Renderer2d::submitQuad(const glm::vec2 &position, float size,
+                            RenderLayer layer, const Material &material,
+                            Color overrideColor)
+{
   const glm::mat4 transform = getUniformTransform(position, size);
-  submitQuad(std::move(transform), layer, material);
+  submitQuad(std::move(transform), layer, material, overrideColor);
 }
 
 void Renderer2d::submitQuad(const glm::vec2 &position, float size,
                             const float rotationRadians, RenderLayer layer,
                             const Material &material)
 {
+  submitQuad(position, size, rotationRadians, layer, material,
+             material.m_color);
+}
+
+void Renderer2d::submitQuad(const glm::vec2 &position, float size,
+                            const float rotationRadians, RenderLayer layer,
+                            const Material &material, Color overrideColor)
+{
   PROFILE_FUNCTION();
   const glm::mat4 transform =
       getUniformTransform(position, size, rotationRadians);
-  submitQuad(std::move(transform), layer, material);
+  submitQuad(std::move(transform), layer, material, overrideColor);
 }
+
 void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
                             const Material &material)
+{
+  submitQuad(transform, layer, material, material.m_color);
+}
+
+void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
+                            const Material &material, Color overrideColor)
 {
   PROFILE_FUNCTION();
   MaterialKey key = {.shader = material.m_shader,
@@ -292,11 +339,11 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
   if (material.isTextureSheet()) {
     const float texIndex =
         allocateTextures(material.getTextureFromTextureSheet());
-    batch.allocateQuad(transform, material.m_color, material.m_tilingFactor,
+    batch.allocateQuad(transform, overrideColor, material.m_tilingFactor,
                        texIndex);
   } else {
     const float texIndex = allocateTextures(material.getTexture());
-    batch.allocateQuad(transform, material.m_color, material.m_tilingFactor,
+    batch.allocateQuad(transform, overrideColor, material.m_tilingFactor,
                        texIndex);
   }
 }
@@ -305,19 +352,26 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
 // Submit Line
 // ================================================================= //
 
-/// @brief Submit a colored triangle primitive.
+/// @brief Submit a line with specific material
 void Renderer2d::submitLine(const glm::vec2 &origin,
                             const glm::vec2 &destination, float thickness,
                             RenderLayer layer, const Material &material)
+{
+  submitLine(origin, destination, thickness, layer, material, material.m_color);
+}
+
+/// @brief Submit a line with specific material. Override color
+void Renderer2d::submitLine(const glm::vec2 &origin,
+                            const glm::vec2 &destination, float thickness,
+                            RenderLayer layer, const Material &material,
+                            Color overrideColor)
 {
   glm::vec2 delta = destination - origin;
   float length = glm::length(delta);
   glm::vec2 center = (origin + destination) * 0.5f;
   float angle = std::atan2(delta.y, delta.x);
-  // PLOG_I("position = ({},{})", TP_VEC2(center));
-  // PLOG_I("size = ({},{})", length, thickness);
-  // PLOG_I("rot = {}", angle);
-  submitRect(center, {length, thickness}, angle, layer, material);
+  submitRect(center, {length, thickness}, angle, layer, material,
+             overrideColor);
 }
 
 // ================================================================= //
@@ -327,21 +381,43 @@ void Renderer2d::submitLine(const glm::vec2 &origin,
 void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
                            RenderLayer layer, const Material &material)
 {
+  submitTri(position, size, layer, material, material.m_color);
+}
+
+void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                           RenderLayer layer, const Material &material,
+                           Color overrideColor)
+{
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size);
-  submitTri(transform, layer, material);
+  submitTri(transform, layer, material, overrideColor);
 }
+
 void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
                            const float rotationRadians, RenderLayer layer,
                            const Material &material)
 {
+  submitTri(position, size, rotationRadians, layer, material, material.m_color);
+}
+
+void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                           const float rotationRadians, RenderLayer layer,
+                           const Material &material, Color overrideColor)
+{
 
   PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
-  submitTri(transform, layer, material);
+  submitTri(transform, layer, material, overrideColor);
 }
+
 void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
                            const Material &material)
+{
+  submitTri(transform, layer, material, material.m_color);
+}
+
+void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
+                           const Material &material, Color overrideColor)
 {
   PROFILE_FUNCTION();
   MaterialKey key = MaterialKey{.shader = material.m_shader,
@@ -362,7 +438,7 @@ void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
     batch.flush();
     batch.resetPtr();
   }
-  batch.allocateTri(transform, material.m_color);
+  batch.allocateTri(transform, overrideColor);
 }
 
 // ================================================================= //
@@ -381,8 +457,39 @@ void Renderer2d::submitSprayParticle(const SprayParticle &p)
 // ================================================================= //
 // Submit Text
 // ================================================================= //
-void Renderer2d::submitString(const glm::vec2 &position, const char *string,
-                              const Font &font, const glm::vec4 &color)
+
+double measureLine(const std::string_view &line, const Font &font)
+{
+  const auto &fg = font.getFontGeometry();
+  const auto &metrics = fg.getMetrics();
+  double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
+
+  double width = 0.0;
+  for (size_t i = 0; i < line.size(); ++i) {
+    const auto *glyph = fg.getGlyph((unsigned char)line[i]);
+    if (!glyph)
+      continue;
+
+    double advance = glyph->getAdvance();
+    if (i + 1 < line.size())
+      fg.getAdvance(advance, (unsigned char)line[i],
+                    (unsigned char)line[i + 1]);
+
+    width += fsScale * advance;
+  }
+  return width;
+}
+
+void Renderer2d::submitString(const glm::vec2 &position, float scale,
+                              const std::string_view &text, const Font &font,
+                              Color color, TextAlign align)
+{
+  glm::mat4 transform = getUniformTransform(position, scale / 40.f);
+  submitString(transform, text, font, color, align);
+}
+void Renderer2d::submitString(const glm::mat4 &transform,
+                              const std::string_view &text, const Font &font,
+                              Color color, TextAlign align)
 {
   PROFILE_FUNCTION();
   const auto &fontGeometry = font.getFontGeometry();
@@ -396,17 +503,18 @@ void Renderer2d::submitString(const glm::vec2 &position, const char *string,
 
   m.textBatch.fontAtlas = &font.getAtlasTexture();
 
-  double x = 0.0;
+  double x = align == TextAlign::Right ? -measureLine(text, font) : 0;
   double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
   double y = 0.0;
   float lineHeightOffset = 0.0f;
-  for (const char *letter = string; *letter != '\0'; letter++) {
-    switch (*letter) {
+  for (size_t i = 0; i < text.size(); i++) {
+    char letter = text[i];
+    switch (letter) {
     case '\r':
       continue;
       break;
     case '\n':
-      x = 0;
+      x = align == TextAlign::Right ? -measureLine(text, font) : 0;
       y -= fsScale * metrics.lineHeight + lineHeightOffset;
       continue;
       break;
@@ -415,9 +523,10 @@ void Renderer2d::submitString(const glm::vec2 &position, const char *string,
       x += 4.0f * (fsScale * spaceGlyphAdvance);
       break;
     default:
-      auto glyph = fontGeometry.getGlyph(static_cast<unsigned>(*letter));
+      const msdf_atlas::GlyphGeometry *glyph =
+          fontGeometry.getGlyph(static_cast<unsigned>(letter));
       if (!glyph) {
-        PLOG_E("Glyph '{}' not available on font family", *letter);
+        PLOG_E("Glyph '{}' not available on font family", letter);
       }
 
       double atlasLeft, atlasBottom, atlasRight, atlasTop;
@@ -443,7 +552,7 @@ void Renderer2d::submitString(const glm::vec2 &position, const char *string,
       texCoordMax *= glm::vec2(texelWidth, texelHeight);
 
       m.textBatch.allocateCharacter(
-          glm::translate(glm::mat4(1.F), {position, 0.F}), color,
+          transform, color,
           // textureCoordinate
           {texCoordMin, glm::vec2(texCoordMin.x, texCoordMax.y), texCoordMax,
            glm::vec2(texCoordMax.x, texCoordMin.y)},
@@ -453,10 +562,10 @@ void Renderer2d::submitString(const glm::vec2 &position, const char *string,
            glm::vec4{quadMax, 0.F, 1.F},
            glm::vec4{quadMax.x, quadMin.y, 0.F, 1.F}});
 
-      if (*letter != '\0') {
+      if (i < text.size() - 1) {
         double advance = glyph->getAdvance();
-        unsigned nextCharacter = static_cast<unsigned>(*(letter + 1));
-        fontGeometry.getAdvance(advance, static_cast<unsigned>(*letter),
+        unsigned nextCharacter = static_cast<unsigned char>(text[i + 1]);
+        fontGeometry.getAdvance(advance, static_cast<unsigned>(letter),
                                 nextCharacter);
         float kerningOffset = 0.0F;
         x += fsScale * advance + kerningOffset;

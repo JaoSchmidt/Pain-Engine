@@ -178,15 +178,16 @@ glm::vec2
 Component::OrthoCamera::screenToWorld(int mouseX, int mouseY,
                                       const pain::Transform2dComponent &camTC)
 {
-  // 1. Convert screen -> NDC space from -1 to 1
-  const float ndcX = (2.f * mouseX) / getResolution().x - 1.f;
-  const float ndcY = 1.f - (2.f * mouseY) / getResolution().y;
+  const float ndcX = (2.f * static_cast<float>(mouseX)) /
+                         static_cast<float>(getResolution().x) -
+                     1.f;
+  const float ndcY =
+      1.f -
+      (2.f * static_cast<float>(mouseY)) / static_cast<float>(getResolution().y);
 
-  // 2. Convert NDC -> camera local coordinates
   const glm::vec2 localCoord =
       glm::vec2(ndcX * m_zoomLevel * m_aspectRatio, ndcY * m_zoomLevel);
 
-  // 3. Convert camera local -> world coordinates using rotation
   return glm::vec2(camTC.m_position.x, camTC.m_position.y) + localCoord;
 }
 
@@ -195,18 +196,19 @@ Component::OrthoCamera::screenToWorld(int mouseX, int mouseY,
                                       const pain::Transform2dComponent &camTC,
                                       const pain::RotationComponent &camRC)
 {
-  // 1. Convert screen -> NDC space from -1 to 1
-  const float ndcX = (2.f * mouseX) / getResolution().x - 1.f;
-  const float ndcY = 1.f - (2.f * mouseY) / getResolution().y;
+  const float ndcX = (2.f * static_cast<float>(mouseX)) /
+                         static_cast<float>(getResolution().x) -
+                     1.f;
+  const float ndcY =
+      1.f -
+      (2.f * static_cast<float>(mouseY)) / static_cast<float>(getResolution().y);
 
-  // 2. Convert NDC -> camera local coordinates
   const glm::vec2 localCoord =
       glm::vec2(ndcX * m_zoomLevel * m_aspectRatio, ndcY * m_zoomLevel);
 
-  // 3. Convert camera local -> world coordinates using rotation
   const float angle = camRC.m_rotationRadians;
-  glm::mat2 rotation = glm::mat2(std::cos(angle), -std::sin(angle),
-                                 std::sin(angle), std::cos(angle));
+  glm::mat2 rotation = glm::mat2(std::cosf(angle), -std::sinf(angle),
+                                 std::sinf(angle), std::cosf(angle));
   return glm::vec2(camTC.m_position.x, camTC.m_position.y) +
          rotation * localCoord;
 }

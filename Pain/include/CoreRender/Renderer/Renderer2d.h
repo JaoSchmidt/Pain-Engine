@@ -22,6 +22,9 @@
 #include "CoreRender/Text/Font.h"
 #include "ECS/Registry/Entity.h"
 #include "Physics/Particles/SprayCmp.h"
+#include "TextComponent.h"
+#include <array>
+#include <string_view>
 
 namespace pain
 {
@@ -90,6 +93,10 @@ struct Renderer2d {
   void submitQuad(const glm::vec2 &position, float size, RenderLayer layer,
                   const Material &material);
 
+  /// @brief Submit an axis-aligned textured quad. Override color
+  void submitQuad(const glm::vec2 &position, float size, RenderLayer layer,
+                  const Material &material, Color overrideColor);
+
   /**
    * @brief Submit a rotated textured quad. Quads, compared to rect are
    * instanced. Meaning they are faster
@@ -99,9 +106,17 @@ struct Renderer2d {
   void submitQuad(const glm::vec2 &position, float size, float rotationRadians,
                   RenderLayer layer, const Material &material);
 
+  void submitQuad(const glm::vec2 &position, float size, float rotationRadians,
+                  RenderLayer layer, const Material &material,
+                  Color overrideColor);
+
   /// @brief Submit an axis-aligned textured quad.
   void submitQuad(const glm::mat4 &transform, RenderLayer layer,
                   const Material &material);
+
+  /// @brief Submit an axis-aligned textured quad. Override color
+  void submitQuad(const glm::mat4 &transform, RenderLayer layer,
+                  const Material &material, Color overrideColor);
 
   // ================================================================= //
   // Submit Rect
@@ -111,8 +126,13 @@ struct Renderer2d {
   void submitRect(const glm::vec2 &position, const glm::vec2 &size,
                   RenderLayer layer, const Material &material);
 
+  /// @brief Submit an axis-aligned textured rect. Override color
+  void submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                  RenderLayer layer, const Material &material,
+                  Color overrideColor);
+
   /**
-   * @brief Submit a rotated textured rect.
+   * @brief Submit a rotated textured rect. With color override
    *
    * @param rotationRadians Rotation angle in radians.
    */
@@ -120,17 +140,32 @@ struct Renderer2d {
                   float rotationRadians, RenderLayer layer,
                   const Material &material);
 
+  void submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                  float rotationRadians, RenderLayer layer,
+                  const Material &material, Color overrideColor);
+
   /// @brief Submit an axis-aligned textured rect.
   void submitRect(const glm::mat4 &transform, RenderLayer layer,
                   const Material &material);
+
+  /// @brief Submit an axis-aligned textured rect. Override color
+  void submitRect(const glm::mat4 &transform, RenderLayer layer,
+                  const Material &material, Color overrideColor);
+
+  // ================================================================= //
 
   // ================================================================= //
   // Submit Line
   // ================================================================= //
 
-  /// @brief Submit a colored triangle primitive.
+  /// @brief Submit a line with specific material
   void submitLine(const glm::vec2 &origin, const glm::vec2 &destination,
                   float thickness, RenderLayer layer, const Material &material);
+
+  /// @brief Submit a line with specific material. Override color
+  void submitLine(const glm::vec2 &origin, const glm::vec2 &destination,
+                  float thickness, RenderLayer layer, const Material &material,
+                  Color overrideColor);
 
   // ================================================================= //
   // Submit Triangles
@@ -140,13 +175,27 @@ struct Renderer2d {
   void submitTri(const glm::vec2 &position, const glm::vec2 &size,
                  RenderLayer layer, const Material &material);
 
+  /// @brief Submit a colored triangle primitive. Override color
+  void submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                 RenderLayer layer, const Material &material,
+                 Color overrideColor);
+
   /// @brief Submit a rotated triangle primitive.
   void submitTri(const glm::vec2 &position, const glm::vec2 &size,
                  float rotationRadians, RenderLayer layer,
                  const Material &material);
 
+  /// @brief Submit a rotated triangle primitive. Override color
+  void submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                 float rotationRadians, RenderLayer layer,
+                 const Material &material, Color overrideColor);
+
   void submitTri(const glm::mat4 &transform, RenderLayer layer,
                  const Material &material);
+
+  /// @brief Submit a triangle from transform. Override color
+  void submitTri(const glm::mat4 &transform, RenderLayer layer,
+                 const Material &material, Color overrideColor);
   // ================================================================= //
   // Particles
   // ================================================================= //
@@ -162,8 +211,11 @@ struct Renderer2d {
   // ================================================================= //
 
   /// @brief Draw a UTF-8 string using a font atlas.
-  void submitString(const glm::vec2 &position, const char *string,
-                    const Font &font, const glm::vec4 &color);
+  void submitString(const glm::vec2 &position, float scale,
+                    const std::string_view &text, const Font &font, Color color,
+                    TextAlign = TextAlign::Left);
+  void submitString(const glm::mat4 &transform, const std::string_view &text,
+                    const Font &font, Color color, TextAlign = TextAlign::Left);
 
   // ================================================================= //
   // Transforms
@@ -249,7 +301,6 @@ private:
     Texture *whiteTexture = nullptr;
     Texture **textureSlots;
     uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
-
     reg::Entity orthoCameraEntity = reg::Entity{-1};
     // replaced by m_textBatch.fontAtlas
   };

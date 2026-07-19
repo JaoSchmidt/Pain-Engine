@@ -11,9 +11,11 @@ namespace pain
 {
 Renderers Renderers::create() { return Renderers(); }
 Renderers::Renderers()
-    : m_materialManager(MaterialManager::create()),
+    : m_shaderManager(ShaderManager::create()),
+      m_materialManager(MaterialManager::create(m_shaderManager)),
+      m_fontManager(FontManager::create()),
       m_renderer2d(Renderer2d::createRenderer2d(m_materialManager)),
       m_renderer3d(Renderer3d::createRenderer3d(m_materialManager)),
-      m_renderContext(RenderContext::create(m_materialManager)) {};
+      m_renderContext() {};
 
 } // namespace pain

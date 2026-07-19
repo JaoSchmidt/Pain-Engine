@@ -4,130 +4,40 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-/** ManagerMaterial.cpp */
 #include "Assets/ManagerMaterial.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Buffers/Shader.h"
 
 namespace pain
 {
 
-MaterialManager MaterialManager::create()
+MaterialManager MaterialManager::create(ShaderManager &shaderManager)
 {
-  return MaterialManager( // This assumes the default shaders exist
-      {
-          *Shader::createFromFile( //
-              "Texture", "resources/default/shaders/Texture.glsl"),
-          *Shader::createFromFile( //
-              "Instancing", "resources/default/shaders/TextureInstancing.glsl"),
-          *Shader::createFromFile( //
-              "TexturePhong", "resources/default/shaders/TexturePhong.glsl"),
-          *Shader::createFromFile( //
-              "Circles", "resources/default/shaders/Circles.glsl"),
-          *Shader::createFromFile( //
-              "Grid", "resources/default/shaders/GridParticles.glsl"),
-          *Shader::createFromFile( //
-              "Text", "resources/default/shaders/Renderer2dText.glsl"),
-          *Shader::createFromFile( //
-              "SimpleTriangles", "resources/default/shaders/Triangles.glsl"),
-      });
+  return MaterialManager(shaderManager);
 }
 
-MaterialManager::MaterialManager(
-    std::array<Shader, static_cast<size_t>(DefaultShader::Count)> shaders)
-    : m_defaultShaders(std::move(shaders)),
-      m_defaultMaterial{
+MaterialManager::MaterialManager(ShaderManager &shaderManager)
+    : m_defaultMaterial{
           Material::create(MaterialCreationInfo{
               .color = Colors::Red,
-              .params = ParamSimplest(),
-              .shader =
-                  m_defaultShaders[static_cast<size_t>(DefaultShader::Texture)],
+              .shader = shaderManager.getDefaultShader(DefaultShader::Texture),
           }) //
-          ,
-      }
-{
-  auto samplers = std::make_unique<int[]>(backend::getTMU());
-  for (int i = 0; i < backend::getTMUi(); ++i)
-    samplers[static_cast<size_t>(i)] = i;
-  for (uint8_t i = 0; i < static_cast<uint8_t>(DefaultShader::Count); ++i) {
-    m_defaultShaders[i].bind();
-    if (m_defaultShaders[i].getUniformLocation("u_Textures", false) != -1)
-      m_defaultShaders[i].uploadUniformIntArray("u_Textures", samplers.get(),
-                                                backend::getTMU());
-  }
-};
-
-// ============================================================= //
-// **Shader API**
-// ============================================================= //
-
-Shader &MaterialManager::getDefaultShader(DefaultShader type)
-{
-  const size_t index = static_cast<size_t>(type);
-  return m_defaultShaders[index];
-}
-
-Shader &MaterialManager::loadShaderFromFile(const std::string &name,
-                                            const char *filepath)
-{
-  if (m_shaders.contains(name))
-    return m_shaders.at(name);
-
-  auto shaderOpt = Shader::createFromFile(name, filepath);
-  if (!shaderOpt) {
-    PLOG_W("Failed to load shader {} — falling back to default Texture", name);
-    return getDefaultShader(DefaultShader::Texture);
-  }
-
-  auto [it, inserted] = m_shaders.emplace(name, std::move(*shaderOpt));
-
-  return it->second;
-}
-
-Shader &MaterialManager::loadShaderFromStrings(const std::string &name,
-                                               const std::string &vertex,
-                                               const std::string &fragment)
-{
-  if (m_shaders.contains(name))
-    return m_shaders.at(name);
-
-  auto shaderOpt = Shader::createFromStrings(name, vertex, fragment);
-  if (!shaderOpt) {
-    PLOG_W("Failed to create shader {} — falling back to default Texture",
-           name);
-    return getDefaultShader(DefaultShader::Texture);
-  }
-
-  auto [it, inserted] = m_shaders.emplace(name, std::move(*shaderOpt));
-
-  return it->second;
-}
-
-Shader &MaterialManager::getShader(const std::string &name)
-{
-  auto it = m_shaders.find(name);
-  if (it == m_shaders.end()) {
-    PLOG_W("Shader {} not found — returning default Texture", name);
-    return getDefaultShader(DefaultShader::Texture);
-  }
-
-  return it->second;
-}
+      } {};
 
 // ============================================================= //
 // **Material API**
 // ============================================================= //
 
 Material &
-MaterialManager::createMaterial(const std::string &name,
+MaterialManager::createMaterial(const std::string_view &name,
                                 const pain::MaterialCreationInfo &createInfo)
 {
-  if (m_materials.contains(name)) {
+  if (auto it = m_materials.find(name); it != m_materials.end()) {
     PLOG_W(
         "Attention: You are re-creating the material {} which already exists "
-        "inside the material manager, perhaps you meant to use getMaterial()?",
-        name);
-    return m_materials.at(name);
+        "inside the material manager, perhaps you meant to use "
+        "getMaterial(\"{}\")?",
+        name, name);
+    return it->second;
   }
   Material material = Material::create(createInfo);
 
@@ -135,13 +45,22 @@ MaterialManager::createMaterial(const std::string &name,
 
   return it->second;
 }
-
-Material &MaterialManager::getMaterial(const std::string &name)
+const Material &MaterialManager::getMaterial(const std::string_view &name) const
 {
   auto it = m_materials.find(name);
   if (it == m_materials.end()) {
     PLOG_W("Material {} not found, using ", name);
-    return m_materials[0]; // Always will be simple phong lighting
+    return m_defaultMaterial;
+  }
+
+  return it->second;
+}
+Material &MaterialManager::getMaterial(const std::string_view &name)
+{
+  auto it = m_materials.find(name);
+  if (it == m_materials.end()) {
+    PLOG_W("Material {} not found, using ", name);
+    return m_defaultMaterial;
   }
 
   return it->second;

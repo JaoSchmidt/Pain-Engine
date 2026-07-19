@@ -30,7 +30,7 @@ TextBatch TextBatch::create()
           MaxVertices * sizeof(TextQuadVertex),
           {
               {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::Float4, "a_Color"},
+              {ShaderDataType::UByte4, "a_Color", true},
               {ShaderDataType::Float2, "a_TexCoord"},
           }),
       *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
@@ -82,14 +82,14 @@ void TextBatch::flush()
 }
 
 void TextBatch::allocateCharacter(
-    const glm::mat4 &transform, const glm::vec4 &tintColor,
+    const glm::mat4 &transform, const Color &tintColor,
     const std::array<glm::vec2, 4> &textureCoordinate,
     const std::array<glm::vec4, 4> &textVertexPositions)
 {
   PROFILE_FUNCTION();
   for (unsigned i = 0; i < 4; i++) {
     ptr->position = transform * textVertexPositions[i];
-    ptr->color = tintColor;
+    ptr->color = tintColor.value;
     ptr->texCoord = textureCoordinate[i];
     ptr++;
   }

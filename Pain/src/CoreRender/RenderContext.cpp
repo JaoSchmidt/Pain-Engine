@@ -142,6 +142,17 @@ void RenderContext::submitLine(const glm::vec2 &origin,
   );
 }
 
+void RenderContext::submitString(const glm::vec2 &position, float scale,
+                                 const char *string, const Font &font,
+                                 const Color &color)
+{
+  m_commands.emplace_back(RenderCommandType::Text,
+                          RenderCommand::Data{
+                              .text{position, scale, string, &font, color} //
+                          } //
+  );
+}
+
 // =================================================================== //
 // Private Transforms
 // =================================================================== //
@@ -199,11 +210,6 @@ glm::mat4 RenderContext::getUniformScaleTransform(const glm::vec3 &position,
   return glm::scale(transform, glm::vec3(size));
 }
 
-RenderContext RenderContext::create(MaterialManager &materialManager)
-{
-  return RenderContext(materialManager);
-}
-RenderContext::RenderContext(MaterialManager &materialManager)
-    : m_materialManager(materialManager) {};
+RenderContext RenderContext::create() { return RenderContext(); }
 
 } // namespace pain

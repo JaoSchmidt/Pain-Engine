@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreRender/Buffers/Material.h"
 #include "CoreRender/Renderer/Misc.h"
+#include "Font.h"
 
 class RenderContext;
 
@@ -36,6 +37,14 @@ struct RenderCommand {
       float thickness;
       RenderLayer layer;
     } line;
+    struct {
+      glm::vec2 position;
+      float scale;
+      const char *string;
+      const Font *font;
+      Color color;
+    } text;
+
     struct LightPoint {
       glm::vec3 position;
       Color color;

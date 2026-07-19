@@ -105,7 +105,9 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
               return LuaComponentDesc{
                   scene.getSingleBitmask<MaterialComponent>(),
                   [&scene, &mm](reg::Entity e, reg::Bitmask b) {
-                    scene.manualPush(e, b, MaterialComponent::create(mm));
+                    scene.manualPush(
+                        e, b,
+                        MaterialComponent::create(mm.getDefaultMaterial()));
                   }};
             },
 

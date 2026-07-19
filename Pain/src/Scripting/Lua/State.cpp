@@ -8,6 +8,7 @@
 #include "Scripting/Lua/State.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/CameraComponent.h"
+#include "CoreRender/Renderer/Colors.h"
 #include "CoreRender/SpriteComponent.h"
 #include "Misc/Schedule/SchedulerComponent.h"
 #include "Physics/MovementComponent.h"

@@ -113,6 +113,7 @@ Application *Application::createApplication(AppInit &&initConfig,
     luabinder_bindEngineVelocity(engine, *app);
     luabinder::bindMaterial(app->m_ctx.luaState);
     luabinder::bindEngineMM(app->m_ctx.luaState,
+                            app->m_ctx.renderers.m_shaderManager,
                             app->m_ctx.renderers.m_materialManager);
     luabinder::bindWorldComponents(app->m_runtime.worldScene,              //
                                    app->m_ctx.luaState,                    //
@@ -195,8 +196,11 @@ EndGameFlags Application::run()
     // =============================================================== //
     // Handle Updates
     // =============================================================== //
-    {
-      PROFILE_SCOPE("Application::run - Handle Updates");
+    if (m_config.isAccumulatorUnlocked) {
+      while (!SDL_HasEvents(SDL_FIRSTEVENT, SDL_LASTEVENT)) {
+        m_runtime.worldScene.updateSystems(m_config.fixedFrameRate);
+      }
+    } else {
       DeltaTime deltaSeconds = deltaTime * m_config.timeMultiplier;
       accumulator += deltaSeconds;
 
@@ -222,9 +226,9 @@ EndGameFlags Application::run()
               event.window.windowID == SDL_GetWindowID(m_ctx.window))
             stopLoop();
           else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-            m_config.isMinimized = true;
+            m_config.isRendering = false;
           else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
-            m_config.isMinimized = false;
+            m_config.isRendering = true;
           else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
             m_ctx.renderPipeline.onWindowResized(event, m_ctx.renderers,
                                                  m_runtime.worldScene);
@@ -244,7 +248,7 @@ EndGameFlags Application::run()
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Rendering");
-      m_ctx.renderPipeline.pipeline(m_ctx.renderers, m_config.isMinimized,
+      m_ctx.renderPipeline.pipeline(m_ctx.renderers, !m_config.isRendering,
                                     elapsedTime, m_runtime.worldScene,
                                     m_runtime.uiScene.get());
       P_ASSERT(m_ctx.window != nullptr, "m_window is nullptr")

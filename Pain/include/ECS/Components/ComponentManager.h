@@ -54,10 +54,12 @@ struct Sprite;
 struct Mesh;
 struct Material;
 struct Light;
+struct ColorIndex;
 struct NativeScript;
 struct ImGuiScript;
 struct Collider;
 struct SAPCollider;
+struct TextComponent;
 } // namespace tag
 
 /**
@@ -88,7 +90,10 @@ using WorldComponents = reg::CompileTimeBitMask< //
     tag::Mesh,                                   // 14
     tag::Material,                               // 15
     tag::Light,                                  // 16
-    tag::ParticleTrail                           // 17
+    tag::ParticleTrail,                          // 17
+    tag::TextComponent,                          // 18
+    tag::ColorIndex // 19 NOTE: this can be replaced inside the material
+                    // component later
     >;
 
 /**

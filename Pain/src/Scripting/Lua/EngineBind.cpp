@@ -6,11 +6,13 @@
 
 #include "Scripting/Lua/EngineBind.h"
 #include "Assets/ManagerMaterial.h"
+#include "Assets/ManagerShader.h"
 #include "Assets/ManagerTexture.h"
 
 namespace pain
 {
-MaterialCreationInfo parseMaterialInfo(sol::table t, pain::MaterialManager &mm)
+MaterialCreationInfo parseMaterialInfo(sol::table t, pain::ShaderManager &sm,
+                                       pain::MaterialManager &mm)
 {
   Shader *shader = nullptr;
 
@@ -18,11 +20,11 @@ MaterialCreationInfo parseMaterialInfo(sol::table t, pain::MaterialManager &mm)
 
   if (!shaderObj.valid()) {
     PLOG_E("Material requires a shader!");
-    shader = &mm.getDefaultShader(DefaultShader::Texture);
+    shader = &sm.getDefaultShader(DefaultShader::Texture);
   } else if (shaderObj.is<DefaultShader>()) {
-    shader = &mm.getDefaultShader(shaderObj.as<DefaultShader>());
+    shader = &sm.getDefaultShader(shaderObj.as<DefaultShader>());
   } else if (shaderObj.is<std::string>()) {
-    shader = &mm.getShader(shaderObj.as<std::string>());
+    shader = &sm.getShader(shaderObj.as<std::string>());
   }
 
   // --- defaults ---
@@ -46,7 +48,7 @@ MaterialCreationInfo parseMaterialInfo(sol::table t, pain::MaterialManager &mm)
   }
 
   // --- params (optional, simplified for now) ---
-  std::variant<ParamPBR, ParamPhong, ParamSimplest> params = ParamSimplest{};
+  std::variant<ParamPBR, ParamPhong, std::monostate> params;
 
   return MaterialCreationInfo{
       .color = color,
@@ -64,7 +66,8 @@ sol::table luabinder::bindEngine(sol::state &lua)
   return engineTbl;
 }
 
-void luabinder::bindEngineMM(sol::state &lua, MaterialManager &mm)
+void luabinder::bindEngineMM(sol::state &lua, ShaderManager &sm,
+                              MaterialManager &mm)
 {
   // ------------------------------------------------------------
   // Engine table (reuse if exists)
@@ -81,33 +84,33 @@ void luabinder::bindEngineMM(sol::state &lua, MaterialManager &mm)
   // ============================================================
 
   matTbl["load_shader_file"] =
-      [&mm](const std::string &name,
+      [&sm](const std::string &name,
             const std::string &path) -> pain::Shader & {
-    return mm.loadShaderFromFile(name, path.c_str());
+    return sm.loadShaderFromFile(name, path.c_str());
   };
 
   matTbl["load_shader_source"] =
-      [&mm](const std::string &name, const std::string &vert,
+      [&sm](const std::string &name, const std::string &vert,
             const std::string &frag) -> pain::Shader & {
-    return mm.loadShaderFromStrings(name, vert, frag);
+    return sm.loadShaderFromStrings(name, vert, frag);
   };
 
-  matTbl["get_shader"] = [&mm](const std::string &name) -> pain::Shader & {
-    return mm.getShader(name);
+  matTbl["get_shader"] = [&sm](const std::string &name) -> pain::Shader & {
+    return sm.getShader(name);
   };
 
   matTbl["get_default_shader"] =
-      [&mm](pain::DefaultShader type) -> pain::Shader & {
-    return mm.getDefaultShader(type);
+      [&sm](pain::DefaultShader type) -> pain::Shader & {
+    return sm.getDefaultShader(type);
   };
 
   // ============================================================
   // Material API
   // ============================================================
 
-  matTbl["create"] = [&mm](const std::string &name,
-                           sol::table t) -> pain::Material & {
-    MaterialCreationInfo info = parseMaterialInfo(std::move(t), mm);
+  matTbl["create"] = [&sm, &mm](const std::string &name,
+                                sol::table t) -> pain::Material & {
+    MaterialCreationInfo info = parseMaterialInfo(std::move(t), sm, mm);
     return mm.createMaterial(name, info);
   };
 
