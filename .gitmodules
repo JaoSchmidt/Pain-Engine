@@ -40,3 +40,6 @@
 [submodule "Pain/external/yaml-cpp"]
 	path = Pain/external/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "Pain/external/ECS-Experiment"]
+	path = Pain/external/ECS-Experiment
+	url = https://github.com/JaoSchmidt/ECS-Experiment.git

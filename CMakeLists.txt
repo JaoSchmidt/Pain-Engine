@@ -257,6 +257,20 @@ else()
   add_subdirectory("Pain/external/sol2")
 endif()
 
+# ECS-Experiment
+if(NOT EXISTS
+   "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/ECS-Experiment/CMakeLists.txt")
+  message("Fetching ECS-Experiment")
+  FetchContent_Declare(
+    ECSExperiment
+    GIT_REPOSITORY https://github.com/JaoSchmidt/ECS-Experiment.git
+    GIT_TAG master)
+  FetchContent_MakeAvailable(ECSExperiment)
+else()
+  message("Using submodule for ECS-Experiment")
+  add_subdirectory("Pain/external/ECS-Experiment")
+endif()
+
 # cpp-yaml
 if(NOT EXISTS
    "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/yaml-cpp/CMakeLists.txt")
@@ -294,7 +308,8 @@ target_link_libraries(
          glm::glm
          spdlog::spdlog_header_only
          msdf-atlas-gen
-         sol2::sol2)
+         sol2::sol2
+         ECSExperiment)
 
 target_precompile_headers(${LIBRARY_NAME} PRIVATE
                           ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h)
