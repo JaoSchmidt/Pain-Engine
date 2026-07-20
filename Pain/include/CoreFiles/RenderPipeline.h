@@ -57,7 +57,7 @@ public:
    * @param renderer Active renderer instance.
    * @param scene Scene containing camera components.
    */
-  void onWindowResized(const SDL_Event &event, RenderApi &renderers,
+  void onWindowResized(const SDL_Event &event, RenderApi &renderAPI,
                        Scene &scene);
 
   /**
@@ -74,7 +74,7 @@ public:
    * @param worldScene Scene containing world entities and systems.
    * @param uiScene Scene containing UI entities and systems.
    */
-  void pipeline(RenderApi &renderers, bool isRenderingEnabled, DeltaTime currentTime,
+  void pipeline(RenderApi &renderAPI, bool isRenderingEnabled, DeltaTime currentTime,
                 Scene &worldScene, UIScene *uiScene);
 
   /** @brief Framebuffer owned by the render pipeline. */
@@ -91,7 +91,7 @@ public:
    *
    * @param scene Scene containing camera components.
    */
-  void subscribeToEvents(Scene &scene, RenderApi &renderers);
+  void subscribeToEvents(Scene &scene, RenderApi &renderAPI);
 
 private:
   /**

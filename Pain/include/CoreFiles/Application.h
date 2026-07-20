@@ -29,8 +29,8 @@ struct EngineContext {
   /// Event bus manager
   reg::EventDispatcher eventDispatcher;
   /// Default owner of render passes and material/shader systems
-  RenderApi renderers;
-  /// Mostly render Pipeline for the "renderers" behaviour
+  RenderApi renderAPI;
+  /// Mostly render Pipeline for the "renderAPI" behaviour
   RenderPipeline renderPipeline;
   /// Refers to the game window.
   SDL_Window *window = nullptr;
@@ -118,7 +118,7 @@ public:
   sol::state &getLuaState() { return m_ctx.luaState; };
 
   /** Returns the 2D renderer instance. */
-  RenderApi &getRenderApi() { return m_ctx.renderers; }
+  RenderApi &getRenderApi() { return m_ctx.renderAPI; }
 
   /** Returns the 2D renderer instance. */
   void *getRenderContext() const { return m_ctx.sdlContext; }
@@ -148,18 +148,18 @@ public:
   void set2dRendererCamera(const reg::Entity cameraEntity, int width = 0,
                            int height = 0)
   {
-    m_ctx.renderers.m_renderer2d.changeCamera(cameraEntity);
+    m_ctx.renderAPI.m_renderer2d.changeCamera(cameraEntity);
     if (width != 0 || height != 0) {
-      m_ctx.renderers.setViewPort(0, 0, width, height);
+      m_ctx.renderAPI.setViewPort(0, 0, width, height);
     }
   }
   /// @brief Assigns the renderer camera and viewport dimensions.
   void set3dRendererCamera(const reg::Entity cameraEntity, int width = 0,
                            int height = 0)
   {
-    m_ctx.renderers.m_renderer3d.changeCamera(cameraEntity);
+    m_ctx.renderAPI.m_renderer3d.changeCamera(cameraEntity);
     if (width != 0 || height != 0)
-      m_ctx.renderers.setViewPort(0, 0, width, height);
+      m_ctx.renderAPI.setViewPort(0, 0, width, height);
   }
 
   /**

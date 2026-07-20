@@ -23,7 +23,7 @@ public:
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::RenderApi &renderers, 
+  void onRender(pain::RenderApi &renderAPI, 
                 pain::DeltaTime dt)
   {
     
@@ -101,16 +101,16 @@ public:
       // -------------------------------------------------- //
 
       ImGui::Text("Renderer2D Stats:");
-      showStats(renderers.renderer2d.getStatistics<pain::QuadBatch>());
-      showStats(renderers.renderer2d.getStatistics<pain::CircleBatch>());
-      showStats(renderers.renderer2d.getStatistics<pain::TextBatch>());
-      showStats(renderers.renderer2d.getStatistics<pain::SprayBatch>());
-      showStats(renderers.renderer2d.getStatistics<pain::TriBatch>());
-      m_imGuiDebugMenu.onRender(renderers,  dt);
+      showStats(renderAPI.renderer2d.getStatistics<pain::QuadBatch>());
+      showStats(renderAPI.renderer2d.getStatistics<pain::CircleBatch>());
+      showStats(renderAPI.renderer2d.getStatistics<pain::TextBatch>());
+      showStats(renderAPI.renderer2d.getStatistics<pain::SprayBatch>());
+      showStats(renderAPI.renderer2d.getStatistics<pain::TriBatch>());
+      m_imGuiDebugMenu.onRender(renderAPI,  dt);
 
       ImGui::Text("Renderer3D Stats:");
-      showStats(renderers.renderer3d.getCubeStatistics());
-      m_imGuiDebugMenu.onRender(renderers,  dt);
+      showStats(renderAPI.renderer3d.getCubeStatistics());
+      m_imGuiDebugMenu.onRender(renderAPI,  dt);
       ImGui::End();
 
       ImGui::Begin("Viewport");
@@ -119,7 +119,7 @@ public:
         ImVec2 avail = ImGui::GetContentRegionAvail();
         if (avail.x != m_avail.x || avail.y != m_avail.y) {
           m_avail = avail;
-          renderers.setViewPort(0, 0, avail.x, avail.y);
+          renderAPI.setViewPort(0, 0, avail.x, avail.y);
           getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
               {glm::vec2(avail.x, avail.y)});
         }

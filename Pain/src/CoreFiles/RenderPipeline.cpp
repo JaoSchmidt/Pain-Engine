@@ -49,7 +49,7 @@ RenderPipeline::RenderPipeline(FrameBuffer frameBuffer,
     : m_frameBuffer(std::move(frameBuffer)),
       m_eventDispatcher(eventDispatcher) {};
 
-void RenderPipeline::subscribeToEvents(Scene &scene, RenderApi &renderers)
+void RenderPipeline::subscribeToEvents(Scene &scene, RenderApi &renderAPI)
 {
   m_eventDispatcher.subscribe<ImGuiViewportChangeEvent>(
       [&](const ImGuiViewportChangeEvent &e) {
@@ -80,7 +80,7 @@ void RenderPipeline::subscribeToEvents(Scene &scene, RenderApi &renderers)
             for (size_t i = 0; i < chunk.count; ++i)
               c[i].m_active = false;
           }
-          renderers.setViewPort(cam.m_screenPosition.x, cam.m_screenPosition.y,
+          renderAPI.setViewPort(cam.m_screenPosition.x, cam.m_screenPosition.y,
                                 cam.m_resolution.x, cam.m_resolution.y);
         }
       });
@@ -110,10 +110,10 @@ template <typename Camera>
   requires std::same_as<Camera, cmp::PerspCamera> ||
            std::same_as<Camera, cmp::OrthoCamera>
 void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
-                  RenderApi &renderers)
+                  RenderApi &renderAPI)
 {
   if (fb.getSpecification().swapChainTarget) {
-    renderers.setViewPort(0, 0, event.window.data1, event.window.data2);
+    renderAPI.setViewPort(0, 0, event.window.data1, event.window.data2);
     c.setProjection(event.window.data1, event.window.data2);
   } else {
     // TODO: for minimaps/split screens bc (0,0,w,h) viewport won't work
@@ -197,7 +197,7 @@ void RenderPipeline::temp()
   // PLOG_I("IsInside = {}",);
 }
 
-void RenderPipeline::pipeline(RenderApi &renderers, bool isRenderingEnabled,
+void RenderPipeline::pipeline(RenderApi &renderAPI, bool isRenderingEnabled,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene *uiScene)
 {
@@ -211,30 +211,30 @@ void RenderPipeline::pipeline(RenderApi &renderers, bool isRenderingEnabled,
     auto wrap2d = retrieve2dCamera(worldScene);
     auto wrap3d = retrieve3dCamera(worldScene);
 
-    // Scripts don't actually use renderers, they fill the render context
-    worldScene.renderSystems(RenderPass::Script, renderers, currentTime);
+    // Scripts don't actually use renderAPI, they fill the render context
+    worldScene.renderSystems(RenderPass::Script, renderAPI, currentTime);
 
     P_ASSERT_W(wrap3d || wrap2d, "No active default camera");
     if (wrap3d) {
       backend::enable3d();
-      renderers.m_renderer3d.beginScene(currentTime, wrap3d->first,
+      renderAPI.m_renderer3d.beginScene(currentTime, wrap3d->first,
                                         wrap3d->second);
-      worldScene.renderSystems(RenderPass::Dim3d, renderers, currentTime);
-      renderers.m_renderer3d.endScene(worldScene);
+      worldScene.renderSystems(RenderPass::Dim3d, renderAPI, currentTime);
+      renderAPI.m_renderer3d.endScene(worldScene);
     }
     if (wrap2d) {
       backend::disable3d();
-      renderers.m_renderer2d.beginScene(currentTime, wrap2d->first,
+      renderAPI.m_renderer2d.beginScene(currentTime, wrap2d->first,
                                         wrap2d->second);
-      worldScene.renderSystems(RenderPass::Dim2d, renderers, currentTime);
-      renderers.m_renderer2d.endScene(currentTime, wrap2d->first,
+      worldScene.renderSystems(RenderPass::Dim2d, renderAPI, currentTime);
+      renderAPI.m_renderer2d.endScene(currentTime, wrap2d->first,
                                       wrap2d->second);
     }
-    renderers.m_renderContext.clear();
+    renderAPI.m_renderContext.clear();
   }
   m_frameBuffer.unbind();
   if (uiScene != nullptr)
-    uiScene->renderSystems(RenderPass::UI, renderers, currentTime);
+    uiScene->renderSystems(RenderPass::UI, renderAPI, currentTime);
 }
 
 } // namespace pain

@@ -107,13 +107,13 @@ struct LuaScript : public System<WorldComponents>,
    * Called during the render phase after visibility and renderer state
    * have been resolved.
    *
-   * @param renderer Allow indirect commands to the renderers.
+   * @param renderer Allow indirect commands to the renderAPI.
    * @param currentTime Current frame time or delta time reference.
    *
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void onRender(RenderApi &renderers, DeltaTime currentTime) override;
+  void onRender(RenderApi &renderAPI, DeltaTime currentTime) override;
   RenderPass getRenderPass() const override { return RenderPass::Script; }
 };
 

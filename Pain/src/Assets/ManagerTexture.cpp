@@ -32,10 +32,10 @@ Renderer2d *s_renderer2d;
 Renderer3d *s_renderer3d;
 } // namespace
 
-void TextureManager::addRendererForDeletingTextures(RenderApi &renderers)
+void TextureManager::addRendererForDeletingTextures(RenderApi &renderAPI)
 {
-  s_renderer2d = &renderers.m_renderer2d;
-  s_renderer3d = &renderers.m_renderer3d;
+  s_renderer2d = &renderAPI.m_renderer2d;
+  s_renderer3d = &renderAPI.m_renderer3d;
 }
 
 // ---------------------------------------------------------- //

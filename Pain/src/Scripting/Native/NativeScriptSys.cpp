@@ -50,10 +50,10 @@ void NativeScript::onEvent(const SDL_Event &e)
   }
 }
 
-void NativeScript::onRender(RenderApi &renderers, 
+void NativeScript::onRender(RenderApi &renderAPI, 
                             DeltaTime currentTime)
 {
-  UNUSED(renderers);
+  UNUSED(renderAPI);
   PROFILE_SCOPE("Scene::renderSystems - NativeScripts");
 
   auto chunks = query<NativeScriptComponent>();
@@ -65,7 +65,7 @@ void NativeScript::onRender(RenderApi &renderers,
       auto &nsc = scripts[i];
 
       if (nsc.instance && nsc.onRenderFunction) {
-        nsc.onRenderFunction(nsc.instance.get(), renderers.m_renderContext,
+        nsc.onRenderFunction(nsc.instance.get(), renderAPI.m_renderContext,
                               currentTime);
       }
     }

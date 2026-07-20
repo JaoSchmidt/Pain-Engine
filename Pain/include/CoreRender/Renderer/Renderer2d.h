@@ -37,7 +37,7 @@ struct Transform2dComponent;
 /**
  * @brief 2D renderer facade built on top of batched OpenGL rendering.
  *
- * Renderer2d owns and coordinates multiple batch renderers (quads, circles,
+ * Renderer2d owns and coordinates multiple batch renderAPI (quads, circles,
  * triangles, text, particles, debug grid) and provides a simple API for
  * drawing primitives inside a scene.
  *

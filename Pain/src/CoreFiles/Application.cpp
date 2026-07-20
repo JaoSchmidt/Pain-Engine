@@ -113,16 +113,16 @@ Application *Application::createApplication(AppInit &&initConfig,
     luabinder_bindEngineVelocity(engine, *app);
     luabinder::bindMaterial(app->m_ctx.luaState);
     luabinder::bindEngineMM(app->m_ctx.luaState,
-                            app->m_ctx.renderers.m_shaderManager,
-                            app->m_ctx.renderers.m_materialManager);
+                            app->m_ctx.renderAPI.m_shaderManager,
+                            app->m_ctx.renderAPI.m_materialManager);
     luabinder::bindWorldComponents(app->m_runtime.worldScene,              //
                                    app->m_ctx.luaState,                    //
-                                   app->m_ctx.renderers.m_materialManager, //
+                                   app->m_ctx.renderAPI.m_materialManager, //
                                    initConfig);
     luabinder::bindAppInitConfig(app->m_ctx.luaState, initConfig);
     luabinder::LuaInputEvent::bindInputEvents(app->m_ctx.luaState);
     // other stuff unrelated to lua
-    TextureManager::addRendererForDeletingTextures(app->m_ctx.renderers);
+    TextureManager::addRendererForDeletingTextures(app->m_ctx.renderAPI);
   }
   return app;
 }
@@ -132,7 +132,7 @@ EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
       threadPool(ThreadPool{}),              //
       luaState(luabinder::createLuaState()), //
       eventDispatcher(luaState),             //
-      renderers(RenderApi::create()),        //
+      renderAPI(RenderApi::create()),        //
       renderPipeline(fbci.swapChainTarget
                          ? RenderPipeline::create(eventDispatcher)
                          : RenderPipeline::create(fbci, eventDispatcher)), //
@@ -161,7 +161,7 @@ EndGameFlags Application::run()
     createUIScene();
 
   // With all scenes created, we can now properly use it
-  m_ctx.renderPipeline.subscribeToEvents(m_runtime.worldScene, m_ctx.renderers);
+  m_ctx.renderPipeline.subscribeToEvents(m_runtime.worldScene, m_ctx.renderAPI);
 
   HighResolutionTimer frameTimer;
   DeltaTime accumulator = 0.0;
@@ -230,7 +230,7 @@ EndGameFlags Application::run()
           else if (event.window.event == SDL_WINDOWEVENT_RESTORED)
             m_config.isRendering = true;
           else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-            m_ctx.renderPipeline.onWindowResized(event, m_ctx.renderers,
+            m_ctx.renderPipeline.onWindowResized(event, m_ctx.renderAPI,
                                                  m_runtime.worldScene);
           break;
         default:
@@ -248,7 +248,7 @@ EndGameFlags Application::run()
     // =============================================================== //
     {
       PROFILE_SCOPE("Application::run - Handle Rendering");
-      m_ctx.renderPipeline.pipeline(m_ctx.renderers, !m_config.isRendering,
+      m_ctx.renderPipeline.pipeline(m_ctx.renderAPI, !m_config.isRendering,
                                     elapsedTime, m_runtime.worldScene,
                                     m_runtime.uiScene.get());
       P_ASSERT(m_ctx.window != nullptr, "m_window is nullptr")

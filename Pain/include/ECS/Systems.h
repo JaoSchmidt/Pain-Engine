@@ -77,11 +77,11 @@ struct IOnRender {
    * specific order
    *
    * @param renderContext Allow script render commands to be stored for later
-   * @param renderer Owns active renderers.
+   * @param renderer Owns active renderAPI.
    * @param debug Whether debug rendering is enabled.
    * @param dt Frame delta time.
    */
-  virtual void onRender(RenderApi &renderers, DeltaTime dt) = 0;
+  virtual void onRender(RenderApi &renderAPI, DeltaTime dt) = 0;
   virtual RenderPass getRenderPass() const = 0;
 };
 

@@ -148,13 +148,13 @@ void AbstractScene<Manager>::updateSystems(const SDL_Event &event)
 }
 template <reg::CompileTimeBitMaskType Manager>
 void AbstractScene<Manager>::renderSystems(RenderPass pass,
-                                           RenderApi &renderers,
+                                           RenderApi &renderAPI,
                                            
                                            DeltaTime currentTime)
 {
   PROFILE_SCOPE("Scene::renderSystems - rendering native scripts");
   for (auto *sys : m_renderSystems[static_cast<uint8_t>(pass)])
-    static_cast<IOnRender *>(sys)->onRender(renderers, 
+    static_cast<IOnRender *>(sys)->onRender(renderAPI, 
                                             currentTime);
 }
 

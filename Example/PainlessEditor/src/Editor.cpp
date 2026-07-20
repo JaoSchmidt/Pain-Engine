@@ -46,7 +46,7 @@ void showStats(const Stats &s)
 
 namespace painless
 {
-void Editor::onRender(pain::RenderApi &renderers, 
+void Editor::onRender(pain::RenderApi &renderAPI, 
                       pain::DeltaTime dt)
 {
   
@@ -128,10 +128,10 @@ void Editor::onRender(pain::RenderApi &renderers,
                           ImGuiTreeNodeFlags_Framed |
                               ImGuiTreeNodeFlags_SpanAvailWidth,
                           "Renderer2D Stats:")) {
-      showStats(renderers.m_renderer2d.getQuadStatistics());
-      showStats(renderers.m_renderer2d.getTextStatistics());
-      showStats(renderers.m_renderer2d.getSprayStatistics());
-      showStats(renderers.m_renderer2d.getTriStatistics());
+      showStats(renderAPI.m_renderer2d.getQuadStatistics());
+      showStats(renderAPI.m_renderer2d.getTextStatistics());
+      showStats(renderAPI.m_renderer2d.getSprayStatistics());
+      showStats(renderAPI.m_renderer2d.getTriStatistics());
       ImGui::TreePop();
     }
 
@@ -139,11 +139,11 @@ void Editor::onRender(pain::RenderApi &renderers,
                           ImGuiTreeNodeFlags_Framed |
                               ImGuiTreeNodeFlags_SpanAvailWidth,
                           "Renderer3D Stats:")) {
-      showStats(renderers.m_renderer3d.getCubeStatistics());
-      showStats(renderers.m_renderer3d.getSphereStatistics());
+      showStats(renderAPI.m_renderer3d.getCubeStatistics());
+      showStats(renderAPI.m_renderer3d.getSphereStatistics());
       ImGui::TreePop();
     }
-    m_imGuiDebugMenu.onRender(renderers,  dt);
+    m_imGuiDebugMenu.onRender(renderAPI,  dt);
     ImGui::End();
 
     ImGui::Begin("Viewport");

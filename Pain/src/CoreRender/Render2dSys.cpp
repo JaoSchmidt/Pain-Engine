@@ -21,7 +21,7 @@ namespace pain
 namespace Systems
 {
 // NOTE: pay attention that the systems are communicating directly with the
-// renderers, meaning the state of the API (opengl, vulkan, directx) NEEDS to be
+// renderAPI, meaning the state of the API (opengl, vulkan, directx) NEEDS to be
 // programmed to render the batch at any moment, including the transparency,
 // depth, dual face, etc
 // This means you probl. need to call like backend::enableXX() from here

@@ -45,14 +45,14 @@ enum DefaultTexture {
 };
 
 /**
- * @brief Registers the 2D and 3D renderers for texture deletion callbacks.
+ * @brief Registers the 2D and 3D renderAPI for texture deletion callbacks.
  *
  * When a texture is deleted from the manager, the renderer will be notified
  * so that GPU-side references can be released.
  *
  * @param renderer Pointer to the Renderer2d instance.
  */
-void addRendererForDeletingTextures(RenderApi &renderers);
+void addRendererForDeletingTextures(RenderApi &renderAPI);
 
 // ---------------------------------------------------------- //
 // TextureSheet
@@ -202,7 +202,7 @@ void clearTextures();
 /**
  * @brief Deletes a texture from the manager.
  *
- * The registered renderers will be notified so GPU resources can be released.
+ * The registered renderAPI will be notified so GPU resources can be released.
  *
  * @param key      File path or name of the texture.
  * @param isPath   If true, key is treated as a filesystem path.

@@ -30,7 +30,7 @@ struct ResolvedMaterial;
 /**
  * @brief 3D renderer facade built on top of batched OpenGL rendering.
  *
- * Renderer3d owns and coordinates multiple batch renderers like Cube and UV
+ * Renderer3d owns and coordinates multiple batch renderAPI like Cube and UV
  * Sphere and provides a simple API for drawing primitives inside a scene.
  *
  * Typical usage:

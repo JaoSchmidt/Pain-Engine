@@ -29,7 +29,7 @@ namespace pain
  * ### Responsibilities
  * - Load font files from disk (*.ttf or *.otf).
  * - Internally fenerate glyph geometry, layout, and build MSDF atlas textures.
- * - Require to Render text in the renderers (Renderer2d.h and Renderer3d.h)
+ * - Require to Render text in the renderAPI (Renderer2d.h and Renderer3d.h)
  *
  * ---
  * ### Ownership

@@ -111,7 +111,7 @@ struct NativeScript : public System<WorldComponents>,
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void onRender(RenderApi &renderers, DeltaTime currentTime) override;
+  void onRender(RenderApi &renderAPI, DeltaTime currentTime) override;
   RenderPass getRenderPass() const override { return RenderPass::Script; }
 };
 

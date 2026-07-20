@@ -38,7 +38,7 @@ public:
   Script &operator=(Script &&) = delete;
 
   /** Renders the debug menu and executes registered debug callbacks. */
-  void onRender(pain::RenderApi &renderers, 
+  void onRender(pain::RenderApi &renderAPI, 
                 pain::DeltaTime currentTime);
 
   /** Cleans up debug registry state when destroyed. */

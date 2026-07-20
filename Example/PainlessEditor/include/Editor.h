@@ -25,7 +25,7 @@ public:
   NONMOVABLE(Editor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::RenderApi &renderers, 
+  void onRender(pain::RenderApi &renderAPI, 
                 pain::DeltaTime dt);
   Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app);
 

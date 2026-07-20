@@ -100,7 +100,7 @@ struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
    * @param renderer Active renderer.
    * @param currentTime Current frame time.
    */
-  void onRender(RenderApi &renderers, DeltaTime currentTime) override;
+  void onRender(RenderApi &renderAPI, DeltaTime currentTime) override;
 
   /**
    * @brief Event callback invoked for every incoming platform event.
