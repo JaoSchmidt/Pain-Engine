@@ -181,9 +181,8 @@ Component::OrthoCamera::screenToWorld(int mouseX, int mouseY,
   const float ndcX = (2.f * static_cast<float>(mouseX)) /
                          static_cast<float>(getResolution().x) -
                      1.f;
-  const float ndcY =
-      1.f -
-      (2.f * static_cast<float>(mouseY)) / static_cast<float>(getResolution().y);
+  const float ndcY = 1.f - (2.f * static_cast<float>(mouseY)) /
+                               static_cast<float>(getResolution().y);
 
   const glm::vec2 localCoord =
       glm::vec2(ndcX * m_zoomLevel * m_aspectRatio, ndcY * m_zoomLevel);
@@ -199,16 +198,15 @@ Component::OrthoCamera::screenToWorld(int mouseX, int mouseY,
   const float ndcX = (2.f * static_cast<float>(mouseX)) /
                          static_cast<float>(getResolution().x) -
                      1.f;
-  const float ndcY =
-      1.f -
-      (2.f * static_cast<float>(mouseY)) / static_cast<float>(getResolution().y);
+  const float ndcY = 1.f - (2.f * static_cast<float>(mouseY)) /
+                               static_cast<float>(getResolution().y);
 
   const glm::vec2 localCoord =
       glm::vec2(ndcX * m_zoomLevel * m_aspectRatio, ndcY * m_zoomLevel);
 
   const float angle = camRC.m_rotationRadians;
-  glm::mat2 rotation = glm::mat2(std::cosf(angle), -std::sinf(angle),
-                                 std::sinf(angle), std::cosf(angle));
+  glm::mat2 rotation = glm::mat2(std::cos(angle), -std::sin(angle),
+                                 std::sin(angle), std::cos(angle));
   return glm::vec2(camTC.m_position.x, camTC.m_position.y) +
          rotation * localCoord;
 }
