@@ -6,11 +6,6 @@
 
 #include "Player.h"
 #include "GUI/ImGuiDebugRegistry.h"
-#include "Misc/Events.h"
-#include "Physics/Collision/Collider.h"
-#include "Physics/Particles/SprayCmp.h"
-#include "Scripting/LuaScriptComponent.h"
-#include <pain.h>
 
 reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
                            glm::vec2 initialPos, glm::vec2 size,
@@ -21,10 +16,10 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
   scene.createComponents(                             //
       entity, pain::Transform2dComponent{initialPos}, //
       pain::SpriteComponent::create(
-          {.m_size = size, .layer = pain::RenderLayer::Closer}, tex), //
-      pain::SpritelessComponent::createQuad(size),                    //
-      pain::RotationComponent{},                                      //
-      pain::Movement2dComponent{},                                    //
+          {.m_size = size, .layer = pain::RenderLayer::E}, tex), //
+      pain::SpritelessComponent::createQuad(size),               //
+      pain::RotationComponent{},                                 //
+      pain::Movement2dComponent{},                               //
       pain::SAPCollider::createAABB(size, true),
       pain::ParticleSprayComponent::create({
           .randAngleFactor = 20.f,
@@ -39,7 +34,7 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
   return entity;
 }
 
-void Player::Script::onRender(pain::Renderers &renderer, bool isMinimized,
+void Player::Script::onRender(pain::RenderApi &renderer, 
                               pain::DeltaTime currentTime)
 {
   auto &camCC = getComponent<Component::OrthoCamera>();

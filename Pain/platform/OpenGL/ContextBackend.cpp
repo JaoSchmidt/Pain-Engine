@@ -22,6 +22,7 @@ int s_fragmentUnits;
 
 void Init()
 {
+
   int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
   if (version == 0) {
     PLOG_E("Error: Failed to initialize glad");
@@ -44,34 +45,60 @@ void Init()
   glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
   PLOG_T("GPU Texture Mapping Units: {}", maxTextureUnits);
   s_fragmentUnits = maxTextureUnits;
+
 #ifndef NDEBUG
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(Debug::glErrorHandler, 0);
 #endif
 }
-void InitRenderer(bool is3d)
+/** Initiate the render. Assumes 3d is being used */
+void InitRenderer()
 {
+
   // =============================================================== //
   // Create Renderer
   // =============================================================== //
 
-  // NOTE: This enable 3d and can be changed later in case we need some camera
+  // NOTE: This enable 3d but can be changed later in case we need some camera
   // mechanic
   // Also, to enable GL_DEPTH, you must also enable those:
   // GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
-  if (is3d) {
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glDepthMask(GL_TRUE);
-  } else {
-    // allow transparency
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  }
+
+  // glEnable(GL_DEPTH_TEST);
+  // glDepthFunc(GL_LEQUAL);
+  // glDepthMask(GL_TRUE);
+  // glDisable(GL_BLEND);
+
+  // allow transparency
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   // HACK: allow textures with 3 channels to align properly, e.g. font textures.
   // No idea why it works tho, perhaps I will find a proper doc later
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
+
+void enable3d()
+{
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
+  glDepthMask(GL_TRUE);
+  glDisable(GL_BLEND);
+}
+void disable3d()
+{
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+void clear()
+{
+  if (glIsEnabled(GL_DEPTH_TEST))
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  else
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 void setViewPort(int x, int y, int width, int height)
 {
   glViewport(x, y, width, height);
@@ -80,12 +107,17 @@ void setClearColor(const glm::vec4 &color)
 {
   glClearColor(color.r, color.g, color.b, color.a);
 }
-void clear()
+void drawIndexedInstanced(const VertexArray &vertexArray, uint32_t indexCount,
+                          uint32_t instanceCount)
 {
-  if (glIsEnabled(GL_DEPTH_TEST))
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  else
-    glClear(GL_COLOR_BUFFER_BIT);
+  uint32_t count =
+      indexCount ? indexCount : vertexArray.getIndexBuffer().getCount();
+
+  glDrawElementsInstanced(GL_TRIANGLES, static_cast<int32_t>(count),
+                          GL_UNSIGNED_INT, nullptr,
+                          static_cast<int32_t>(instanceCount));
+
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 void drawInstanced(uint32_t indiceCount, uint32_t instanceCount)
 {

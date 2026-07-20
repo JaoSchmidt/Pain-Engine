@@ -19,6 +19,14 @@ namespace pain
 {
 
 /**
+ * @brief Descriptor used to construct a RotationComponent.
+ */
+struct RotationCreationInfo {
+  float rotationRadians{0.0f}; /**< Rotation angle, typically in radians. */
+  glm::vec3 rotation{0.0f, 1.0f, 0.0f}; /**< Rotation axis vector. */
+};
+
+/**
  * @brief Stores rotation parameters for an entity.
  *
  * Defines the rotation angle and axis used by rendering or transformation
@@ -27,8 +35,12 @@ namespace pain
 struct RotationComponent {
   using tag = tag::Rotation;
 
-  float m_rotationAngle{0.0f}; /**< Rotation angle, typically in radians. */
+  float m_rotationRadians{0.0f}; /**< Rotation angle, typically in radians. */
   glm::vec3 m_rotation{0.0f, 1.0f, 0.0f}; /**< Rotation axis vector. */
+  static RotationComponent create(const RotationCreationInfo &info)
+  {
+    return RotationComponent{info.rotationRadians, info.rotation};
+  }
 };
 
 } // namespace pain

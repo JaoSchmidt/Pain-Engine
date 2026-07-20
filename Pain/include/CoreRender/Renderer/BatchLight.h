@@ -6,7 +6,7 @@
 
 // PointLightBatch.cpp
 #pragma once
-#include "CoreRender/Shader.h"
+#include "CoreRender/Buffers/Shader.h"
 #include <vector>
 
 namespace pain

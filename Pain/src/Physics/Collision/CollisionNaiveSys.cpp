@@ -7,7 +7,6 @@
 #include "Physics/Collision/CollisionNaiveSys.h"
 
 #include "Debugging/Profiling.h"
-#include "GUI/ImGuiDebugRegistry.h"
 #include "Misc/Events.h"
 #include "Physics/Collision/ColDetection.h"
 #include "Physics/Collision/ColReaction.h"

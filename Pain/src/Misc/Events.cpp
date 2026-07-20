@@ -6,7 +6,7 @@
 
 // Events.cpp
 #include "Misc/Events.h"
-#include "ECS/EventDispatcher.h"
+#include "Events/EventDispatcher.h"
 namespace pain
 {
 enum class EventType : size_t {
@@ -38,12 +38,12 @@ sol::state &createLuaEventMap(sol::state &lua, reg::EventDispatcher &ed)
   };
   lua["Event"]["subscribeCustom"] = [&](const size_t customEventId,
                                         sol::function fn) {
-    ed.subscribe(customEventId, fn);
+    ed.subscribe(customEventId, std::move(fn));
   };
 
   lua["Event"]["enqueueCustom"] = [&](const size_t customEventId,
                                       const sol::table event) {
-    ed.enqueue(customEventId, event);
+    ed.enqueue(customEventId, std::move(event));
   };
   lua.new_enum<EventType>("EventType",
                           {

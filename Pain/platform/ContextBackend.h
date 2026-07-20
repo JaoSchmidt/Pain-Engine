@@ -7,15 +7,19 @@
 // ContextBackend.h
 #pragma once
 
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Buffers/VertexArray.h"
 namespace pain::backend
 {
 
 void Init();
-void InitRenderer(bool is3d);
+void InitRenderer();
 void setViewPort(int x, int y, int width, int height);
 void setClearColor(const glm::vec4 &color);
+void enable3d();
+void disable3d();
 void clear();
+void drawIndexedInstanced(const VertexArray &vertexArray, uint32_t indexCount,
+                          uint32_t instanceCount);
 void drawIndexed(const VertexArray &vertexArray, uint32_t indexCount = 0);
 void drawInstanced(uint32_t indiceCount = 0, uint32_t instanceCount = 0);
 unsigned getTMU();

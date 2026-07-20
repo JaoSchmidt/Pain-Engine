@@ -7,123 +7,176 @@
 
 // BatchSphere.cpp
 #include "CoreRender/Renderer/BatchSphere.h"
-#include "platform/ContextBackend.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "glm/gtc/constants.hpp"
+#include "platform/ContextBackend.h"
 
 namespace pain
 {
-SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks)
+float inline fdiv(uint32_t divided, uint32_t divisor)
 {
-  const uint32_t verticePerSphere = 2 + (slices - 2) * stacks;
+  return static_cast<float>(divided) / static_cast<float>(divisor);
+}
+SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
+                                std::string name, const Shader *shader)
+{
+  constexpr float radius = 0.5F;
+  const uint32_t verticePerSphere = (stacks - 2) * slices +     // Slices
+                                    2 * slices;                 // Poles
   const uint32_t indicesPerSphere = slices * 3 +                // top cap
                                     (stacks - 3) * slices * 6 + // middle
                                     slices * 3;                 // bottom cap
-  const uint32_t maxVertices = verticePerSphere * MaxPolyhedrons;
-  const uint32_t maxIndices = indicesPerSphere * MaxPolyhedrons;
 
+  BufferLayout staticLayout = {
+      {ShaderDataType::Float3, "a_Position"},
+      {ShaderDataType::Float2, "a_TexCoord"},
+  };
+  BufferLayout instanceLayout = {
+      {ShaderDataType::UByte4, "a_Color", true, true},
+      {ShaderDataType::Float, "a_TexIndex", false, true},
+      {ShaderDataType::Float, "a_TilingFactor", false, true},
+      {ShaderDataType::Mat4, "a_Transform", false, true},
+  };
+
+  if (shader) {
+    std::vector<BufferElement> combined;
+    combined.insert(combined.end(), staticLayout.getElements().begin(),
+                    staticLayout.getElements().end());
+    combined.insert(combined.end(), instanceLayout.getElements().begin(),
+                    instanceLayout.getElements().end());
+    P_ASSERT(shader->verifyVertexLayout(BufferLayout(std::move(combined))),
+             "SphereBatch layout doesn't match shader '{}'", shader->getName());
+  }
   // -------- BUILD STATIC INDICES --------
-  std::vector<uint32_t> indices;
-  indices.reserve(maxIndices);
+  std::unique_ptr<uint32_t[]> indices =
+      std::make_unique<uint32_t[]>(indicesPerSphere);
 
-  const uint32_t northPole = 0;
-  const uint32_t southPole = 1 + (stacks - 2) * slices;
+  const uint32_t northPoleStart = 0;
+  const uint32_t firstRingStart = slices;
+  const uint32_t southPoleStart = slices + (stacks - 2) * slices;
+  uint32_t i = 0; // indice only
   // Top cap
-  for (uint32_t sphere = 0; sphere < MaxPolyhedrons; ++sphere) {
-    uint32_t baseVertex = sphere * verticePerSphere;
+  for (uint32_t slice = 0; slice < slices; ++slice) {
+    uint32_t next = (slice + 1) % slices;
+    indices[i] = northPoleStart + slice;
+    indices[i + 1] = firstRingStart + next;
+    indices[i + 2] = firstRingStart + slice;
+    i += 3;
+  }
+
+  // Middle Indices
+  for (uint32_t stack = 0; stack < stacks - 3; ++stack) {
+    uint32_t ringStart = firstRingStart + stack * slices;
+    uint32_t nextRingStart = ringStart + slices;
+
     for (uint32_t slice = 0; slice < slices; ++slice) {
       uint32_t next = (slice + 1) % slices;
-      indices.push_back(baseVertex + northPole);
-      indices.push_back(baseVertex + 1 + next);
-      indices.push_back(baseVertex + 1 + slice);
-    }
 
-    // Middle
-    for (uint32_t stack = 0; stack < stacks - 3; ++stack) {
-      uint32_t ringStart = 1 + stack * slices;
-      uint32_t nextRingStart = ringStart + slices;
+      uint32_t v0 = ringStart + slice;
+      uint32_t v1 = nextRingStart + slice;
+      uint32_t v2 = nextRingStart + next;
+      uint32_t v3 = ringStart + next;
 
-      for (uint32_t slice = 0; slice < slices; ++slice) {
-        uint32_t next = (slice + 1) % slices;
+      indices[i] = v0;
+      indices[i + 1] = v1;
+      indices[i + 2] = v2;
 
-        uint32_t v0 = ringStart + slice;
-        uint32_t v1 = nextRingStart + slice;
-        uint32_t v2 = nextRingStart + next;
-        uint32_t v3 = ringStart + next;
-
-        indices.push_back(baseVertex + v0);
-        indices.push_back(baseVertex + v1);
-        indices.push_back(baseVertex + v2);
-
-        indices.push_back(baseVertex + v2);
-        indices.push_back(baseVertex + v3);
-        indices.push_back(baseVertex + v0);
-      }
-    }
-
-    // Bottom cap
-    uint32_t lastRing = southPole - slices;
-    for (uint32_t slice = 0; slice < slices; ++slice) {
-      uint32_t next = (slice + 1) % slices;
-      indices.push_back(baseVertex + lastRing + slice);
-      indices.push_back(baseVertex + lastRing + next);
-      indices.push_back(baseVertex + southPole);
+      indices[i + 3] = v2;
+      indices[i + 4] = v3;
+      indices[i + 5] = v0;
+      i += 6;
     }
   }
-  // -------- SHADER --------
-  Shader shader =
-      *Shader::createFromFile("resources/default/shaders/TextureLight.glsl");
 
-  int *samplers = new int[backend::getTMU()];
-  for (int i = 0; i < backend::getTMUi(); ++i)
-    samplers[i] = i;
+  // Bottom cap
+  uint32_t lastRingStart = firstRingStart + (stacks - 3) * slices;
+  for (uint32_t slice = 0; slice < slices; ++slice) {
+    uint32_t next = (slice + 1) % slices;
+    indices[i] = lastRingStart + slice;
+    indices[i + 1] = lastRingStart + next;
+    indices[i + 2] = southPoleStart + slice;
+    i += 3;
+  }
 
-  shader.bind();
-  shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
-  delete[] samplers;
+  // -------- BUILD STATIC VERTICES --------
+  std::unique_ptr<Vertex[]> vertices =
+      std::make_unique<Vertex[]>(verticePerSphere);
+  Vertex *pVertex = vertices.get();
 
-  // -------- BUFFERS --------
-  auto vbo = VertexBuffer::createVertexBuffer(
-      maxVertices * sizeof(Vertex),
-      {
-          {ShaderDataType::Float3, "a_Position"},
-          {ShaderDataType::UByte4, "a_Color", true},
-          {ShaderDataType::Float2, "a_TexCoord"},
-          {ShaderDataType::Float, "a_TexIndex"},
-          {ShaderDataType::Float, "a_TilingFactor"},
-          {ShaderDataType::Float3, "a_Normal"},
-      });
+  // pVertex->position = {0.F, radius, 0.F};
+  // pVertex->texCoord = {0.5F, 1.F};
+  // ++pVertex;
 
-  auto ibo = IndexBuffer::createIndexBuffer(
-      indices.data(), static_cast<uint32_t>(indices.size()));
+  for (uint32_t slice = 0; slice < slices; ++slice) {
+    float u = fdiv(slice, slices);
 
-  return SphereBatch{std::move(*vbo), std::move(*ibo),  std::move(shader),
-                     maxVertices,     maxIndices,       slices,
-                     stacks,          indicesPerSphere, verticePerSphere};
+    pVertex->position = {0.F, radius, 0.F};
+    pVertex->texCoord = {1.F - u, 1.F};
+    ++pVertex;
+  }
+
+  for (uint32_t stack = 1; stack < stacks - 1; ++stack) {
+    const float v = fdiv(stack, stacks);
+    const float flippedV = 1.0F - v;
+    const float phi = glm::pi<float>() * v;
+
+    const float y = radius * cos(phi);
+    const float rTimesSin = radius * sin(phi);
+
+    for (uint32_t slice = 0; slice < slices; ++slice) {
+      const float u = fdiv(slice, slices - 1);
+      const float theta = glm::two_pi<float>() * u;
+
+      const float x = rTimesSin * cos(theta);
+      const float z = rTimesSin * sin(theta);
+
+      const glm::vec4 pos{x, y, z, 1.F};
+      const glm::vec2 uv{1.F - u, flippedV};
+
+      pVertex->position = pos;
+      pVertex->texCoord = uv;
+      ++pVertex;
+    }
+  }
+
+  for (uint32_t slice = 0; slice < slices; ++slice) {
+    float u = fdiv(slice, slices);
+
+    pVertex->position = {0.F, -radius, 0.F};
+    pVertex->texCoord = {1.F - u, 0.F};
+    ++pVertex;
+  }
+  // pVertex->position = {0.0F, -radius, 0.0F};
+  // pVertex->texCoord = {0.5F, 0.0F};
+
+  return SphereBatch(
+      *VertexBuffer::createStaticVertexBuffer(vertices.get(),
+                                              verticePerSphere * sizeof(Vertex),
+                                              std::move(staticLayout)),
+      *VertexBuffer::createVertexBuffer(MaxPolyhedrons *
+                                            sizeof(SphereInstanceVertex),
+                                        std::move(instanceLayout)),
+      *IndexBuffer::createIndexBuffer(indices.get(), indicesPerSphere),
+      indicesPerSphere, verticePerSphere, std::move(name));
 }
 
-SphereBatch::SphereBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_,
-                         Shader &&shader_, uint32_t maxVertices,
-                         uint32_t maxIndices, uint32_t slices, uint32_t stack,
-                         uint32_t indicesPerSphere, uint32_t verticesPerShpere)
-    : vbo(std::move(vbo_)),                          //
-      ib(std::move(ib_)),                            //
-      vao(*VertexArray::createVertexArray(vbo, ib)), //
-      shader(std::move(shader_)),
-      ptrInit(std::make_unique<Vertex[]>(maxVertices)), //
-      ptr(ptrInit.get()),                               //
-      m_maxIndices(maxIndices),                         //
-      m_indicesPerSphere(indicesPerSphere),             //
-      m_verticesPerSphere(verticesPerShpere),           //
-      m_slices(slices), m_stacks(stack)                 //
-// drawOrder(std::vector<int>(MaxPolygons)),           //
-// sortBuffer(std::make_unique<Vertex[]>(MaxVertices)) //
-{};
+SphereBatch::SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
+                         IndexBuffer &&ib_, uint32_t indicesPerSphere,
+                         uint32_t verticesPerSphere,
+                         std::string name)
+    : vbo(std::move(vbo_)),                                              //
+      vboInstance(std::move(vboInstance_)),                              //
+      ib(std::move(ib_)),                                                //
+      vao(*VertexArray::createVertexArray(vbo, vboInstance, ib)),        //
+      ptrInit(std::make_unique<SphereInstanceVertex[]>(MaxPolyhedrons)), //
+      ptr(ptrInit.get()),                                                //
+      m_indicesPerSphere(indicesPerSphere),
+      m_verticesPerSphere(verticesPerSphere), m_name(std::move(name)) {};
 
 void SphereBatch::resetPtr()
 {
-  indexCount = 0;
+  m_count = 0;
   ptr = ptrInit.get();
 }
 void SphereBatch::resetAll()
@@ -138,103 +191,36 @@ void SphereBatch::resetAll()
 
 void SphereBatch::flush(Texture **textures, uint32_t textureCount)
 {
-  if (!indexCount)
+  if (m_count == 0)
     return;
   vao.bind();
   vbo.bind();
 
+  vboInstance.bind();
   const uint32_t count = static_cast<uint32_t>(ptr - ptrInit.get());
-  vbo.setData(ptrInit.get(), count * sizeof(Vertex));
+  vboInstance.setData(ptrInit.get(), count * sizeof(SphereInstanceVertex));
 
   for (uint32_t i = 0; i < textureCount; i++)
     textures[i]->bindToSlot(i);
 
-  shader.bind();
   ib.bind();
-  backend::drawIndexed(vao, indexCount * m_indicesPerSphere);
-  // PLOG_T("Being flushed");
+  backend::drawIndexedInstanced(vao, m_indicesPerSphere, m_count);
 #ifndef NDEBUG
   drawCount++;
 #endif
 }
-float inline fdiv(uint32_t divided, uint32_t divisor)
-{
-  return static_cast<float>(divided) / static_cast<float>(divisor);
-}
+
 void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
                                    const Color &tintColor, float tilingFactor,
                                    float textureIndex)
 {
   PROFILE_FUNCTION();
-
-  glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(transform)));
-  const uint32_t color = tintColor.value;
-  constexpr float radius = 0.5f;
-
-  // -----------------------------
-  // North pole
-  // -----------------------------
-  {
-    glm::vec4 pos{0.0f, radius, 0.0f, 1.f};
-    glm::vec2 uv{0.5f, 0.0f};
-
-    ptr->position = glm::vec3(transform * pos);
-    ptr->color = color;
-    ptr->texCoord = uv;
-    ptr->texIndex = textureIndex;
-    ptr->tilingFactor = tilingFactor;
-    ptr->normal = glm::normalize(normalMatrix * glm::normalize(pos));
-    ++ptr;
-  }
-
-  // -----------------------------
-  // Rings (exclude poles)
-  // -----------------------------
-  for (uint32_t stack = 1; stack < m_stacks - 1; ++stack) {
-    float v = fdiv(stack, m_stacks);
-    float phi = glm::pi<float>() * v;
-
-    float y = radius * cos(phi);
-    float rTimesSin = radius * sin(phi);
-
-    for (uint32_t slice = 0; slice < m_slices; ++slice) {
-      float u = fdiv(slice, m_slices - 1);
-      float theta = glm::two_pi<float>() * u;
-
-      float x = rTimesSin * cos(theta);
-      float z = rTimesSin * sin(theta);
-
-      glm::vec4 pos{x, y, z, 1.f};
-      glm::vec2 uv{u, v};
-
-      ptr->position = glm::vec3(transform * pos);
-      ptr->color = color;
-      ptr->texCoord = uv;
-      ptr->texIndex = textureIndex;
-      ptr->tilingFactor = tilingFactor;
-      ptr->normal = glm::normalize(normalMatrix * glm::normalize(pos));
-      ++ptr;
-    }
-  }
-  // -----------------------------
-  // South pole
-  // -----------------------------
-  {
-    glm::vec4 pos{0.0f, -radius, 0.0f, 1.f};
-    glm::vec2 uv{0.5f, 1.0f};
-
-    ptr->position = glm::vec3(transform * pos);
-    ptr->color = color;
-    ptr->texCoord = uv;
-    ptr->texIndex = textureIndex;
-    ptr->tilingFactor = tilingFactor;
-    ptr->normal = glm::normalize(normalMatrix * glm::normalize(pos));
-    ++ptr;
-  }
-
-  // One sphere added
-  indexCount++;
-
+  ptr->color = tintColor.value;
+  ptr->texIndex = textureIndex;
+  ptr->tilingFactor = tilingFactor;
+  ptr->transform = transform;
+  ++ptr;
+  m_count++;
 #ifndef NDEBUG
   statsCount++;
 #endif

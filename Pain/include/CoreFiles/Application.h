@@ -6,8 +6,9 @@
 
 // Application.h
 #pragma once
+#include "CoreFiles/AppInitConfig.h"
 #include "CoreFiles/RenderPipeline.h"
-#include "CoreRender/Renderer/RenderContext.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "ECS/UIScene.h"
 #include "ECS/WorldScene.h"
 #include "pch.h"
@@ -16,32 +17,26 @@
 #include "Core.h"
 #include "CoreFiles/EndGameFlags.h"
 #include "CoreRender/Renderer/Renderer2d.h"
-#include "Debugging/DebuggingImGui.h"
-#include "GUI/ImGuiSys.h"
 #include <sol/state.hpp>
 
 namespace pain
 {
-
-/**
- * @struct AppContext
- * @brief Configuration structure used to initialize the Application.
- *
- * Provides window parameters and configuration file paths used during startup.
- */
-struct AppContext {
-  /** Default external configuration file name. */
-  static constexpr const char *configIniFile = "config.ini";
-  /** Default internal configuration file name. */
-  static constexpr const char *internalConfigFile = "internalConfig.ini";
-  /** Window title displayed in the OS window. */
-  const char *title = "Unnamed Game";
-  /** Initial window width in pixels. */
-  int defaultWidth = 800;
-  /** Initial window height in pixels. */
-  int defaultHeight = 600;
-  /** Small check to enable 3d parameters in the API*/
-  bool is3d;
+struct EngineContext {
+  /// Multi Thread Pool
+  ThreadPool threadPool;
+  /// Owns the lua virtual machine and "sol" stuff
+  sol::state luaState;
+  /// Event bus manager
+  reg::EventDispatcher eventDispatcher;
+  /// Default owner of render passes and material/shader systems
+  RenderApi renderAPI;
+  /// Mostly render Pipeline for the "renderAPI" behaviour
+  RenderPipeline renderPipeline;
+  /// Refers to the game window.
+  SDL_Window *window = nullptr;
+  SDL_GLContext sdlContext = nullptr;
+  EngineContext(SDL_Window *window, void *sdlContext,
+                const FrameBufferCreationInfo &fbci);
 };
 
 /**
@@ -62,7 +57,6 @@ struct AppContext {
 class Application
 {
 public:
-  static Application *s_app;
   /**
    * @brief Creates and initializes a new Application instance.
    *
@@ -73,9 +67,12 @@ public:
    * @return Pointer to the created Application.
    */
   static Application *
-  createApplication(AppContext &&context,
-                    FrameBufferCreationInfo &&frameBufferCreationInfo = {
+  createApplication(AppInit &&initConfig,
+                    const FrameBufferCreationInfo &frameBufferCreationInfo = {
                         .swapChainTarget = false});
+
+  NONCOPYABLE(Application);
+  NONMOVABLE(Application);
 
   /** Destroys the application and releases all owned resources. */
   ~Application();
@@ -83,71 +80,58 @@ public:
   /** Enables or disables infinite simulation speed (ignores frame limiting). */
   void setInfiniteSimulation(bool isSimulation)
   {
-    m.isSimulation = isSimulation;
+    if (isSimulation) {
+      m_config.isRendering = false;
+      m_config.isAccumulatorUnlocked = true;
+    } else {
+      m_config.isRendering = true;
+      m_config.isAccumulatorUnlocked = false;
+    }
   };
+  bool isSimulation() const
+  {
+    return m_config.isAccumulatorUnlocked && !m_config.isRendering;
+  }
 
   /** Enable or disable the rendering. For example, if you are doing a
    * simulation or some other calculation, you might want to ingore the render
    * completly*/
-  static void setRendereing(bool state = true)
-  {
-    P_ASSERT(s_app != nullptr,
-             "`s_app` is nullptr. Did you remember to link your app to s_app?");
-    s_app->m.isRendering = state;
-  }
+  void setRendereing(bool state = true) { m_config.isRendering = state; }
   /** Enable or disable the rendering. For example, if you are doing a
    * simulation or some other calculation, you might want to ingore the render
    * completly*/
-  static void toogleRendereing()
-  {
-    P_ASSERT(s_app != nullptr,
-             "`s_app` is nullptr. Did you remember to link your app to s_app?");
-    s_app->m.isRendering = !(s_app->m.isRendering);
-  }
+  void toogleRendereing() { m_config.isRendering = !(m_config.isRendering); }
 
   /** set the global simulation multiplier. Id est, _technically_ increase the
      frequency of non renderer parts. */
-  static void setTimeMultiplier(double time = 1.)
-  {
-    P_ASSERT(s_app != nullptr,
-             "`s_app` is nullptr. Did you remember to link your app to s_app?");
-    s_app->m.timeMultiplier = time;
-  }
+  void setTimeMultiplier(double time = 1.) { m_config.timeMultiplier = time; }
   /** get the game velocity. Id est, the buff to the game update loop time
    * accumulator */
-  static double getTimeMultiplier()
-  {
-    P_ASSERT(s_app != nullptr,
-             "`s_app` is nullptr. Did you remember to link your app to s_app?");
-    return s_app->m.timeMultiplier;
-  }
+  double getTimeMultiplier() const { return m_config.timeMultiplier; }
 
-  /** Toggle simulation */
-  static void inline toggleSimulation()
+  /** Disable viewport events */
+  void inline setFocusedOrHovered(bool isFocusedOrHovered)
   {
-    P_ASSERT(s_app != nullptr,
-             "`s_app` is nullptr. Did you remember to link your app to s_app?");
-    s_app->m.isSimulation = !(s_app->m.isSimulation);
+    m_config.isFocusedOrHovered = isFocusedOrHovered;
   }
-  /** Returns a pointer to the simulation flag. */
-  static bool inline isSimulation()
-  {
-    P_ASSERT(s_app != nullptr,
-             "`s_app` is nullptr. Did you remember to link your app to s_app?");
-    return s_app->m.isSimulation;
-  }
-
   /** Returns the Lua state used by the application. */
-  sol::state &getLuaState() { return m_luaState; };
+  sol::state &getLuaState() { return m_ctx.luaState; };
 
   /** Returns the 2D renderer instance. */
-  Renderers &getRenderers() { return m_renderers; }
+  RenderApi &getRenderApi() { return m_ctx.renderAPI; }
+
+  /** Returns the 2D renderer instance. */
+  void *getRenderContext() const { return m_ctx.sdlContext; }
+  SDL_Window *getRenderWindow() const { return m_ctx.window; }
 
   /** Returns the framebuffer specification used by the render pipeline. */
   const FrameBufferCreationInfo &getFrameInfo() const
   {
-    return m_renderPipeline.m_frameBuffer.getSpecification();
+    return m_ctx.renderPipeline.m_frameBuffer.getSpecification();
   }
+
+  /** Returns the current config */
+  const AppInit &getCurrentConfig() const { return m_config.init; }
 
   // =============================================================== //
   // ECS / Scene Control
@@ -164,60 +148,37 @@ public:
   void set2dRendererCamera(const reg::Entity cameraEntity, int width = 0,
                            int height = 0)
   {
-    m_renderers.renderer2d.changeCamera(cameraEntity);
-    if (!(width == 0 && height == 0))
-      m_renderers.renderer2d.setViewport(0, 0, width, height);
+    m_ctx.renderAPI.m_renderer2d.changeCamera(cameraEntity);
+    if (width != 0 || height != 0) {
+      m_ctx.renderAPI.setViewPort(0, 0, width, height);
+    }
   }
   /// @brief Assigns the renderer camera and viewport dimensions.
   void set3dRendererCamera(const reg::Entity cameraEntity, int width = 0,
                            int height = 0)
   {
-    m_renderers.renderer3d.changeCamera(cameraEntity);
-    if (!(width == 0 && height == 0))
-      m_renderers.renderer3d.setViewport(0, 0, width, height);
+    m_ctx.renderAPI.m_renderer3d.changeCamera(cameraEntity);
+    if (width != 0 || height != 0)
+      m_ctx.renderAPI.setViewPort(0, 0, width, height);
   }
 
   /**
-   * @brief Creates the world scene with user-defined component types.
-   *
-   * Automatically configures collision grid size in the renderer.
-   *
-   * @tparam Components Component types to attach.
-   * @param collisionGridSize Grid size used for spatial partitioning.
-   * @param args Component constructor arguments.
-   * @return Reference to the created world Scene.
+   * @brief Reference to the created world Scene.
    */
-  template <typename... Components>
-  Scene &createWorldSceneComponents(float collisionGridSize, Components... args)
-  {
-    m_worldScene.createComponents(m_worldScene.getEntity(),
-                                  std::forward<Components>(args)...);
-    m_renderers.renderer2d.setCellGridSize(collisionGridSize);
-    return m_worldScene;
-  }
+  Scene &getWorldScene() { return m_runtime.worldScene; }
 
   /**
    * @brief Creates the UI scene with user-defined components.
    *
    * Automatically attaches the ImGui system.
    *
-   * @tparam Components Component types to attach.
-   * @param args Component constructor arguments.
    * @return Reference to the created UIScene.
    */
-  template <typename... Components> UIScene &createUIScene(Components... args)
-  {
-    m_uiScene =
-        std::make_unique<UIScene>(m_eventDispatcher, m_luaState, m_threadPool);
-    m_uiScene->createComponents(m_uiScene->getEntity(),
-                                std::forward<Components>(args)...);
-    m_uiScene->addSystem<Systems::ImGuiSys>(m_sdlContext, m_window);
-    return *m_uiScene;
-  }
+  UIScene &createUIScene();
 
 private:
-  Application(sol::state &&luaState, SDL_Window *window, void *sdlContext,
-              FrameBufferCreationInfo &&fbci, AppContext &&context);
+  Application(SDL_Window *window, void *sdlContext,
+              const FrameBufferCreationInfo &fbci, AppInit initConfig);
 
   void ensureCamera();
 
@@ -227,10 +188,11 @@ private:
   struct DefaultApplicationValues {
     bool isGameRunning = true;
     bool isRendering = true;
-    bool isMinimized = false;
-    bool isSimulation = false;
-    const double fixedUpdateTime = 1.0 / 60.0;
-    const double fixedFPS = 1.0 / 60.0;
+    bool isFocusedOrHovered = true;
+    bool isAccumulatorUnlocked = false;
+
+    constexpr static double fixedUpdateTime = 1.0 / 60.0;
+    constexpr static double fixedFPS = 1.0 / 60.0;
     double timeMultiplier = 1.0;
     DeltaTime fixedFrameRate = 16'666'666; /** 1/60 seconds in nanoseconds */
 
@@ -238,29 +200,24 @@ private:
     constexpr static int FPS_SAMPLE_COUNT = 64;
     double fpsSamples[FPS_SAMPLE_COUNT] = {0};
     int currentSample = 1;
-    AppContext context;
-  };
-
-  DefaultApplicationValues m;
+    double currentTPS = 0;
+    AppInit init;
+  } m_config;
 
   // =============================================================== //
   // OWNED OBJECTS
   // =============================================================== //
-  std::unique_ptr<UIScene> m_uiScene = nullptr;
-  Renderers m_renderers;
-  ThreadPool m_threadPool;
-  sol::state m_luaState;
-  reg::EventDispatcher m_eventDispatcher;
-  Scene m_worldScene;
+
+  EngineContext m_ctx;
+
+  struct Runtime {
+    Scene worldScene;
+    // optional scenes
+    std::unique_ptr<UIScene> uiScene = nullptr;
+  } m_runtime;
 
   EndGameFlags run();
   EndGameFlags m_endGameFlags = {};
-
-  /** Refers to the game window. */
-  SDL_Window *m_window = nullptr;
-
-  SDL_GLContext m_sdlContext = nullptr;
-  RenderPipeline m_renderPipeline;
 
   friend struct Pain;
 };

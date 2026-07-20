@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "GUI/ImGuiComponent.h"
 #include "Scene.h"
 namespace pain
 {
@@ -46,85 +45,21 @@ public:
   static UIScene create(reg::EventDispatcher &eventDispatcher,
                         sol::state &solState, ThreadPool &threadPool);
 
-  // =============================================================== //
-  // IMGUI NATIVE SCRIPTING RELATED
-  // =============================================================== //
-
   /**
-   * @brief Retrieves a bound ImGui native script instance from an entity.
+   * @brief Registers a system into the scene with compile-time validation.
+   * System will be executed during game loop IN ORDER they are added
    *
-   * The entity must own an ImGuiComponent and its instance must be of type S.
+   * System must:
+   *  - be constructible
+   *  - inherit the class Systems<UIComponents>
+   *  - have at least one system interface: IOnUpdate, IOnEvent, IOnRender
+   *  - use components registered inside UIComponents
    *
-   * @tparam S Expected script type.
-   * @param entity Target entity.
-   * @return Reference to the script instance.
-   */
-  template <typename S>
-    requires(UIComponents::isRegistered<ImGuiComponent>())
-  S &getImGuiScript(reg::Entity entity)
-  {
-    ImGuiComponent &nsc = getComponent<ImGuiComponent>(entity);
-    return static_cast<S &>(*nsc.instance);
-  }
-
-  /**
-   * @brief Binds and initializes an already constructed ImGui script instance.
-   *
-   * The script object is moved into the ImGuiComponent and its onCreate
-   * callback is executed if available.
-   *
-   * @tparam N Script type.
-   * @param entity Target entity.
-   * @param scene Target UI scene.
-   * @param n Script instance to move.
-   * @return Reference to the bound script instance.
-   */
-  template <typename N>
-    requires(UIComponents::isRegistered<ImGuiComponent>())
-  static N &emplaceImGuiScript(reg::Entity entity, UIScene &scene, N &&n)
-  {
-    ImGuiComponent &nsc = scene.getComponent<ImGuiComponent>(entity);
-    nsc.bindAndInitiate<N>(std::move(n));
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-    return static_cast<N &>(*nsc.instance);
-  }
-
-  /**
-   * @brief Constructs and binds an ImGui script directly inside the component.
-   *
-   * The script is constructed using the provided arguments and immediately
-   * bound to the entity's ImGuiComponent. The onCreate callback is executed
-   * if available.
-   *
-   * @tparam T Script type.
-   * @tparam Args Constructor argument types.
-   * @param entity Target entity.
-   * @param scene Target UI scene.
-   * @param args Arguments forwarded to the script constructor.
-   * @return Reference to the constructed script instance.
-   */
-  template <typename T, typename... Args>
-    requires std::constructible_from<T, reg::Entity, UIScene &, Args...> &&
-             (UIComponents::isRegistered<ImGuiComponent>())
-  static T &emplaceImGuiScript(reg::Entity entity, UIScene &scene,
-                               Args &&...args)
-  {
-    ImGuiComponent &nsc = scene.getComponent<ImGuiComponent>(entity);
-    nsc.bindAndEmplace<T>(entity, scene, std::forward<Args>(args)...);
-    if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
-    return static_cast<T &>(*nsc.instance);
-  }
-
-  /**
-   * @brief Creates and registers a new system instance.
-   *
-   * Systems are automatically registered into the appropriate update,
-   * render and event pipelines based on their interfaces.
+   * If the system already exists, insertion is ignored and a warning is logged.
    *
    * @tparam Sys System type.
-   * @param args Constructor arguments forwarded to the system.
+   * @tparam Args Constructor argument types.
+   * @param args Arguments forwarded to the system constructor.
    */
   template <typename Sys, typename... Args>
     requires std::is_constructible_v<Sys, reg::ArcheRegistry<UIComponents> &,
@@ -147,7 +82,7 @@ public:
     if constexpr (std::derived_from<Sys, IOnEvent>)
       m_eventSystems.emplace_back(s);
     if constexpr (std::derived_from<Sys, IOnRender>)
-      m_renderSystems.emplace_back(s);
+      m_renderSystems[static_cast<size_t>(s->getRenderPass())].emplace_back(s);
     if constexpr (std::derived_from<Sys, IOnUpdate>)
       m_updateSystems.emplace_back(s);
   }

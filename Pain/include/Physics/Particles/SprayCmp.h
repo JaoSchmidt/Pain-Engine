@@ -17,7 +17,7 @@
 
 #include "Assets/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/Misc.h"
+#include "CoreRender/Renderer/Colors.h"
 #include "ECS/Components/ComponentManager.h"
 #include "pch.h"
 
@@ -104,6 +104,15 @@ struct ParticleSprayComponent {
       particles.push_back(SprayParticle{});
     }
   }
+  /**
+   * Get the current particle using `psc.particles[psc.currentParticle]`
+   * Then, use this function the get the next
+   */
+  void next()
+  { //
+    currentParticle = (currentParticle + 1) % maxNumberOfParticles;
+  }
+
   // ------------------------------------------------------------
   // Factory functions
   // ------------------------------------------------------------
@@ -128,6 +137,7 @@ struct ParticleSprayComponent {
     if (args.capacity == 0) {
       c.autoEmit = false;
     } else {
+      c.particles.reserve(args.capacity);
       c.particles.push_back(SprayParticle{.alive = false});
     }
     return c;

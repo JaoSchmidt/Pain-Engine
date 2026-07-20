@@ -8,17 +8,14 @@
 	path = Pain/external/SDL
 	url = https://github.com/libsdl-org/SDL
 [submodule "Pain/external/imgui"]
-	path = Pain/external/imgui
+	path = Example/PainlessEditor/external/imgui
 	url = https://github.com/ocornut/imgui.git
 [submodule "Pain/external/freetype"]
 	path = Pain/external/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
-[submodule "Example/flappybird"]
-	path = Example/flappybird
-	url = git@github.com:JaoSchmidt/NEAT-Flappybird.git
 [submodule "Pain/external/msdf-atlas-gen"]
 	path = Pain/external/msdf-atlas-gen
-	url = https://github.com/JaoSchmidt/msdf-atlas-gen.git
+	url = https://github.com/Chlumsky/msdf-atlas-gen.git
 [submodule "Pain/external/PerlinNoise"]
 	path = Pain/external/PerlinNoise
 	url = https://github.com/Reputeless/PerlinNoise.git
@@ -27,7 +24,7 @@
 	url = https://github.com/walterschell/Lua.git
 [submodule "Pain/external/sol2"]
 	path = Pain/external/sol2
-	url = git@github.com:ThePhD/sol2.git
+	url = https://github.com/ThePhD/sol2.git
 [submodule "Pain/external/inih"]
 	path = Pain/external/inih
 	url = https://github.com/OSSystems/inih.git
@@ -37,3 +34,9 @@
 [submodule "Pain/external/stb"]
 	path = Pain/external/stb
 	url = https://github.com/nothings/stb.git
+[submodule "Pain/external/implot"]
+	path = Example/PainlessEditor/external/implot
+	url = https://github.com/epezent/implot.git
+[submodule "Pain/external/yaml-cpp"]
+	path = Pain/external/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

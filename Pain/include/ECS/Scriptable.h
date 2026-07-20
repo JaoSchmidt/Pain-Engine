@@ -19,7 +19,6 @@
 
 #include "Core.h"
 #include "ECS/Registry/Entity.h"
-#include "ECS/Scene.h"
 #include "UIScene.h"
 #include "WorldScene.h"
 #include "aliases.h"
@@ -197,19 +196,6 @@ public:
     return static_cast<S &>(*nsc.instance);
   }
 
-  /**
-   * @brief Retrieves an ImGui script instance from an entity.
-   *
-   * Only available if ImGuiComponent is registered for the scene type.
-   */
-  template <typename S>
-    requires(SceneType::template isRegistered<ImGuiComponent>())
-  S &getImGuiScript(reg::Entity entity)
-  {
-    ImGuiComponent &nsc = getComponent<ImGuiComponent>(entity);
-    return static_cast<S &>(*nsc.instance);
-  }
-
   // ------------------------------------------------------------
   // Removal
   // ------------------------------------------------------------
@@ -221,6 +207,15 @@ public:
   // Queries
   // ------------------------------------------------------------
 
+  /** @brief Checks whether another entity owns any of the given components.
+   */
+  template <typename... Ts>
+    requires(SceneType::template allRegistered<Ts...>())
+  bool hasAnyComponents(reg::Entity entity) const
+  {
+    return m_scene.get().template hasAnyComponents<Ts...>(entity);
+  }
+
   /** @brief Checks whether the wrapped entity owns any of the given components.
    */
   template <typename... Ts>
@@ -230,6 +225,14 @@ public:
     return m_scene.get().template hasAnyComponents<Ts...>(m_entity);
   }
 
+  /** @brief Checks whether another entity owns all of the given components.
+   */
+  template <typename... Ts>
+    requires(SceneType::template allRegistered<Ts...>())
+  bool hasAllComponents(reg::Entity entity) const
+  {
+    return m_scene.get().template hasAllComponents<Ts...>(entity);
+  }
   /** @brief Checks whether the wrapped entity owns all of the given components.
    */
   template <typename... Ts>

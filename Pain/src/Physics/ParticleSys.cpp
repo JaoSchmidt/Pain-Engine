@@ -5,14 +5,14 @@
  */
 
 #include "Physics/Particles/ParticleSys.h"
-#include "CoreRender/Renderer/RenderContext.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "Debugging/Profiling.h"
 #include "Physics/MovementComponent.h"
+#include "Physics/Particles/TrailCmp.h"
 #include "Physics/RotationComponent.h"
-#include "glm/ext/matrix_transform.hpp"
 
-static constexpr glm::mat3 rotate90{glm::vec3(0, -1, 0), glm::vec3(1, 0, 0),
-                                    glm::vec3(0, 0, 1)};
+// static constexpr glm::mat3 rotate90{glm::vec3(0, -1, 0), glm::vec3(1, 0, 0),
+//                                     glm::vec3(0, 0, 1)};
 namespace pain
 {
 
@@ -27,12 +27,34 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
       pc[i].elapsed += deltaTime;
     }
   }
+  {
+    PROFILE_SCOPE("Scene::updateSystems - trail");
+    auto chunks = query<Transform2dComponent, TrailComponent>();
+
+    for (auto &chunk : chunks) {
+      auto *tc = std::get<0>(chunk.arrays);
+      auto *trail = std::get<1>(chunk.arrays);
+
+      for (size_t i = 0; i < chunk.count; i++) {
+        auto &t = trail[i];
+
+        if (t.coordinates.empty() ||
+            glm::distance(t.coordinates.back(), tc[i].m_position) >
+                t.minDistance) {
+          t.coordinates.push_back(tc[i].m_position);
+
+          if (t.coordinates.size() > t.capacity)
+            t.coordinates.erase(t.coordinates.begin());
+        }
+      }
+    }
+  }
 }
 
-void Systems::ParticleSys::onRender(pain::Renderers &renderer, bool isMinimized,
-                                    pain::DeltaTime currentTime)
+void Systems::ParticleSys::onRender(RenderApi &renderer, 
+                                    DeltaTime currentTime)
 {
-  UNUSED(isMinimized)
+  
   PROFILE_FUNCTION();
   // =============================================================== //
   // Update Rotation Components
@@ -51,10 +73,10 @@ void Systems::ParticleSys::onRender(pain::Renderers &renderer, bool isMinimized,
           static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5f;
       for (size_t i = 0; i < chunk.count; ++i) {
 
+        // creates a single, new particle
         if (psc[i].autoEmit && psc[i].elapsed > psc[i].interval) {
           SprayParticle &p = psc[i].particles[psc[i].currentParticle];
-          psc[i].currentParticle =
-              (psc[i].currentParticle + 1) % psc[i].maxNumberOfParticles;
+          psc[i].next();
 
           const float maxAngleDeg = psc[i].randAngleFactor; // 0..360
           const float maxAngleRad = glm::radians(maxAngleDeg);
@@ -74,11 +96,11 @@ void Systems::ParticleSys::onRender(pain::Renderers &renderer, bool isMinimized,
           psc[i].elapsed = 0;
         }
 
-        renderer.renderer2d.beginSprayParticle(psc[i]);
+        renderer.m_renderer2d.beginSprayParticle(psc[i]);
         for (size_t j = 0; j < psc[i].particles.size(); j++) {
           SprayParticle &pa = psc[i].particles[j];
           if (pa.alive)
-            renderer.renderer2d.drawSprayParticle(pa);
+            renderer.m_renderer2d.submitSprayParticle(pa);
           // Remove dead particles
           if (currentTime - pa.startTime >= psc[i].lifeTime) {
             pa.alive = false;

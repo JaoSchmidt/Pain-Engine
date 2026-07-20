@@ -7,7 +7,7 @@
 // VertexArrayBackend.h
 #pragma once
 
-#include "CoreRender/Buffers.h"
+#include "CoreRender/Buffers/Buffers.h"
 #include <cstdint>
 
 namespace pain::backend

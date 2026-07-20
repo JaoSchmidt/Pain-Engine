@@ -35,9 +35,9 @@ public:
         Player::create(scene, playerTex, playerPos, playerSize, cameraWidth,
                        cameraHeight, 5.f);
     reg::Entity lightSource = DumbObject::create(scene);
-    // app->set2dRendererCamera(playerCam, cameraWidth, cameraHeight);
+    // app->set3dRendererCamera(playerCam, cameraWidth, cameraHeight);
     app->set2dRendererCamera(playerCam, cameraWidth, cameraHeight);
-    // app->getRenderers().renderer3d.changeLight(lightSource);
+    // app->getRenderApi().renderer3d.changeLight(lightSource);
     // add objects to collision System
     // scene.getSys<pain::Systems::SweepAndPruneSys>().insertColliders(walls);
     // ASETROID SPAWNER
@@ -68,7 +68,7 @@ public:
   //   m_mainMap.updateSurroundingChunks(
   //       getComponent<pain::Transform2dComponent>(m_player), getScene());
   // }
-  void onRender(pain::Renderers &renderer, bool isMinimazed,
+  void onRender(pain::RenderApi &renderer, bool isMinimazed,
                 pain::DeltaTime currentTime)
   {
     pain::Texture &blank = pain::TextureManager::getDefaultTexture(
@@ -128,23 +128,23 @@ public:
     renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
                                  {230, 230, 51, 255},
                                  glm::pi<float>() * -currentTime.getSeconds(),
-                                 pain::RenderLayer::Default, simple);
+                                 pain::RenderLayer::D, simple);
     renderer.renderer2d.drawQuad({0.0f, 0.0f}, {0.25f, 0.25f},
-                                 {230, 230, 51, 255},
-                                 pain::RenderLayer::Default, simple);
+                                 {230, 230, 51, 255}, pain::RenderLayer::D,
+                                 simple);
     renderer.renderer2d.drawQuad({-0.5f, 0.5f}, {0.25f, 0.25f},
-                                 {255, 255, 255, 255},
-                                 pain::RenderLayer::Default, simple);
+                                 {255, 255, 255, 255}, pain::RenderLayer::D,
+                                 simple);
     renderer.renderer2d.drawQuad({0.2f, -0.2f}, {0.25f, 0.25f},
                                  {204, 51, 26, 128},
                                  glm::pi<float>() * currentTime.getSeconds(),
-                                 pain::RenderLayer::MuchCloser, simple);
+                                 pain::RenderLayer::E, simple);
     renderer.renderer2d.drawQuad({0.2f, 0.2f}, {0.25f, 0.25f},
-                                 {230, 230, 51, 255},
-                                 pain::RenderLayer::MuchCloser, simple);
+                                 {230, 230, 51, 255}, pain::RenderLayer::E,
+                                 simple);
     renderer.renderer2d.drawQuad({-0.2f, 0.2f}, {0.25f, 0.25f},
-                                 {255, 255, 255, 255},
-                                 pain::RenderLayer::MuchCloser, simple);
+                                 {255, 255, 255, 255}, pain::RenderLayer::E,
+                                 simple);
     renderer.renderer2d.drawCircle({0.5f, 0.5f}, 0.25f, {51, 75, 230, 255});
     renderer.renderer2d.drawTri({-0.5f, -0.5f}, {0.25f, 0.25f},
                                 {0.2f, 0.3f, 0.9f, 1.f});
@@ -165,8 +165,7 @@ pain::Application *pain::createApplication()
   Application *app = Application::createApplication(         //
       {.title = internalIni.title.get().c_str(),             //
        .defaultWidth = ini.defaultWidth.get(),               //
-       .defaultHeight = ini.defaultHeight.get(),             //
-       .is3d = internalIni.is3d.get()},                      //
+       .defaultHeight = ini.defaultHeight.get()},            //
       {.swapChainTarget = internalIni.swapChainTarget.get()} //
   );
 
@@ -174,8 +173,9 @@ pain::Application *pain::createApplication()
   pain::Scene &scene = app->createWorldSceneComponents(
       internalIni.gridSize.get(), pain::NativeScriptComponent{});
 
-  // Individually add each system
+  // Individually add each system, those are executed IN ORDER
   scene.addSystem<Systems::SweepAndPruneSys>();
+  scene.addSystem<Systems::LightSys>();
   scene.addSystem<Systems::Render>();
   scene.addSystem<Systems::NativeScript>();
   scene.addSystem<Systems::LuaScript>();

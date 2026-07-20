@@ -4,12 +4,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // ShaderBackend.h
 #pragma once
+#include "CoreRender/Buffers/BufferLayout.h"
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <string>
+#include <vector>
 
 namespace pain::backend
 {
@@ -23,7 +24,8 @@ void destroyShaderProgram(uint32_t programId);
 void bindShader(uint32_t programId);
 void unbindShader();
 
-int getUniformLocation(uint32_t programId, const std::string &name);
+int getUniformLocation(uint32_t programId, const std::string &name,
+                       bool isError = true);
 
 void uploadUniformInt(int location, int value);
 void uploadUniformInt2(int location, const glm::ivec2 &v);
@@ -36,5 +38,14 @@ void uploadUniformFloat4(int location, const glm::vec4 &v);
 void uploadUniformMat3(int location, const glm::mat3 &m);
 void uploadUniformMat4(int location, const glm::mat4 &m);
 void uploadUniformIntArray(int location, int *values, uint32_t count);
+
+struct ShaderInputInfo {
+  std::string name;
+  ShaderDataType type;
+  int32_t size;
+  int32_t location;
+};
+
+std::vector<ShaderInputInfo> getVertexInputs(uint32_t programId);
 
 } // namespace pain::backend

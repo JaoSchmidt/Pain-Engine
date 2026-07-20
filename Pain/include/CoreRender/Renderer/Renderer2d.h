@@ -6,20 +6,25 @@
 
 #pragma once
 
+#include "Assets/ManagerMaterial.h"
 #include "Core.h"
 
-#include "CoreRender/Renderer/BatchCircles.h"
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
+#include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/BatchQuad.h"
-#include "CoreRender/Renderer/BatchSpray.h"
+#include "CoreRender/Renderer/BatchSprayParticles.h"
 #include "CoreRender/Renderer/BatchText.h"
 #include "CoreRender/Renderer/BatchTri.h"
 #include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/MiscDebugGrid.h"
+#include "CoreRender/Renderer/Stats.h"
 #include "CoreRender/Text/Font.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
 #include "ECS/Registry/Entity.h"
 #include "Physics/Particles/SprayCmp.h"
+#include "TextComponent.h"
+#include <array>
+#include <string_view>
 
 namespace pain
 {
@@ -27,11 +32,12 @@ namespace pain
 // Frwd declare Scene
 class Scene;
 class UIScene;
+struct Transform2dComponent;
 
 /**
  * @brief 2D renderer facade built on top of batched OpenGL rendering.
  *
- * Renderer2d owns and coordinates multiple batch renderers (quads, circles,
+ * Renderer2d owns and coordinates multiple batch renderAPI (quads, circles,
  * triangles, text, particles, debug grid) and provides a simple API for
  * drawing primitives inside a scene.
  *
@@ -42,28 +48,18 @@ class UIScene;
  *  - Call endScene().
  */
 struct Renderer2d {
-  /** @brief Aggregated rendering statistics for a batch type.*/
-  /* Fields:
-   * - count: number of objects
-   * - indices: total index count
-   * - vertices: total vertex count
-   * - draws: draw calls issued
-   * - name: batch name
-   */
-  struct Stats {
-    uint32_t count;
-    uint32_t indices;
-    uint32_t vertices;
-    uint32_t draws;
-    const char *name;
-  };
+  ~Renderer2d();
+  NONCOPYABLE(Renderer2d);
+  NONMOVABLE(Renderer2d);
   /// @brief Factory function to create a renderer instance.
-  static Renderer2d createRenderer2d();
-  Renderer2d &operator=(Renderer2d &&o) noexcept;
+  static Renderer2d createRenderer2d(MaterialManager &materialManager);
+
+  // Renderer2d(Renderer2d &&o) noexcept;
+  // Renderer2d &operator=(Renderer2d &&o) noexcept;
   /// @brief Change the active camera entity used for rendering.
   void changeCamera(reg::Entity camera);
   /// @brief Returns true if a valid camera is currently bound.
-  bool hasCamera();
+  bool hasCamera() const;
 
   // ================================================================= //
   // Renderer basic wrapper around OpenGL
@@ -76,106 +72,169 @@ struct Renderer2d {
    * @brief Begin a new rendering scene.
    *
    * @param globalTime Global engine time.
-   * @param scene      Scene being rendered.
-   * @param transform  Optional root transform applied to all draws.
+   * @param perspCamera Perspecitve camera component
+   * @param position camera position
    */
-  void beginScene(DeltaTime globalTime, const Scene &scene,
-                  const glm::mat4 &transform = glm::mat4(1.0f));
+  void beginScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+                  const Transform2dComponent &tc);
 
   // @brief Flush all batches and finalize the scene.
-  void endScene();
-
-  void setViewport(int x, int y, int width, int height);
-  void setClearColor(const glm::vec4 &color);
-  void clear();
+  void endScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+                const Transform2dComponent &tc);
 
   /// @brief Clears all renderer state and internal caches.
   void clearEntireRenderer();
 
   // ================================================================= //
-  // Draw Circles
+  // Submit Quads
   // ================================================================= //
+
+  /// @brief Submit an axis-aligned textured quad.
+  void submitQuad(const glm::vec2 &position, float size, RenderLayer layer,
+                  const Material &material);
+
+  /// @brief Submit an axis-aligned textured quad. Override color
+  void submitQuad(const glm::vec2 &position, float size, RenderLayer layer,
+                  const Material &material, Color overrideColor);
 
   /**
-   * @brief Draw a 2D circle.
-   *
-   * @param position Circle center in world space.
-   * @param radius   Circle radius.
-   * @param tintColor Color multiplier.
-   * @param textureCoordinate Optional texture coordinates.
-   */
-  void drawCircle(const glm::vec2 &position, const float radius,
-                  const Color &tintColor,
-                  const std::array<glm::vec2, 4> &textureCoordinate = {
-                      glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                      glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-
-  // ================================================================= //
-  // Draw Quads
-  // ================================================================= //
-
-  /// @brief Draw an axis-aligned textured quad.
-  void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                const Color &tintColor, RenderLayer layer, Texture &texture,
-                const float tilingFactor = 1.0f,
-                const std::array<glm::vec2, 4> &textureCoordinate = {
-                    glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                    glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-
-  /**
-   * @brief Draw a rotated textured quad.
+   * @brief Submit a rotated textured quad. Quads, compared to rect are
+   * instanced. Meaning they are faster
    *
    * @param rotationRadians Rotation angle in radians.
    */
-  void drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                const Color &tintColor, const float rotationRadians,
-                RenderLayer layer, Texture &texture,
-                const float tilingFactor = 1.0f,
-                const std::array<glm::vec2, 4> &textureCoordinate = {
-                    glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                    glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
+  void submitQuad(const glm::vec2 &position, float size, float rotationRadians,
+                  RenderLayer layer, const Material &material);
+
+  void submitQuad(const glm::vec2 &position, float size, float rotationRadians,
+                  RenderLayer layer, const Material &material,
+                  Color overrideColor);
+
+  /// @brief Submit an axis-aligned textured quad.
+  void submitQuad(const glm::mat4 &transform, RenderLayer layer,
+                  const Material &material);
+
+  /// @brief Submit an axis-aligned textured quad. Override color
+  void submitQuad(const glm::mat4 &transform, RenderLayer layer,
+                  const Material &material, Color overrideColor);
 
   // ================================================================= //
-  // Draw Triangles
+  // Submit Rect
   // ================================================================= //
 
-  /// @brief Draw a colored triangle primitive.
-  void drawTri(const glm::vec2 &position, const glm::vec2 &size,
-               const glm::vec4 &tintColor);
+  /// @brief Submit an axis-aligned textured rect.
+  void submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                  RenderLayer layer, const Material &material);
 
-  /// @brief Draw a rotated triangle primitive.
-  void drawTri(const glm::vec2 &position, const glm::vec2 &size,
-               const glm::vec4 &tintColor, const float rotationRadians);
+  /// @brief Submit an axis-aligned textured rect. Override color
+  void submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                  RenderLayer layer, const Material &material,
+                  Color overrideColor);
 
+  /**
+   * @brief Submit a rotated textured rect. With color override
+   *
+   * @param rotationRadians Rotation angle in radians.
+   */
+  void submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                  float rotationRadians, RenderLayer layer,
+                  const Material &material);
+
+  void submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                  float rotationRadians, RenderLayer layer,
+                  const Material &material, Color overrideColor);
+
+  /// @brief Submit an axis-aligned textured rect.
+  void submitRect(const glm::mat4 &transform, RenderLayer layer,
+                  const Material &material);
+
+  /// @brief Submit an axis-aligned textured rect. Override color
+  void submitRect(const glm::mat4 &transform, RenderLayer layer,
+                  const Material &material, Color overrideColor);
+
+  // ================================================================= //
+
+  // ================================================================= //
+  // Submit Line
+  // ================================================================= //
+
+  /// @brief Submit a line with specific material
+  void submitLine(const glm::vec2 &origin, const glm::vec2 &destination,
+                  float thickness, RenderLayer layer, const Material &material);
+
+  /// @brief Submit a line with specific material. Override color
+  void submitLine(const glm::vec2 &origin, const glm::vec2 &destination,
+                  float thickness, RenderLayer layer, const Material &material,
+                  Color overrideColor);
+
+  // ================================================================= //
+  // Submit Triangles
+  // ================================================================= //
+
+  /// @brief Submit a colored triangle primitive.
+  void submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                 RenderLayer layer, const Material &material);
+
+  /// @brief Submit a colored triangle primitive. Override color
+  void submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                 RenderLayer layer, const Material &material,
+                 Color overrideColor);
+
+  /// @brief Submit a rotated triangle primitive.
+  void submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                 float rotationRadians, RenderLayer layer,
+                 const Material &material);
+
+  /// @brief Submit a rotated triangle primitive. Override color
+  void submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                 float rotationRadians, RenderLayer layer,
+                 const Material &material, Color overrideColor);
+
+  void submitTri(const glm::mat4 &transform, RenderLayer layer,
+                 const Material &material);
+
+  /// @brief Submit a triangle from transform. Override color
+  void submitTri(const glm::mat4 &transform, RenderLayer layer,
+                 const Material &material, Color overrideColor);
   // ================================================================= //
   // Particles
   // ================================================================= //
 
   /// @brief Begin rendering a particle spray batch.
-  void beginSprayParticle(const ParticleSprayComponent &particleSprayComponent);
+  void beginSprayParticle(const ParticleSprayComponent &psc);
 
   /// @brief Submit a single particle to the current spray batch.
-  void drawSprayParticle(const SprayParticle &p);
+  void submitSprayParticle(const SprayParticle &p);
 
   // ================================================================= //
   // Text
   // ================================================================= //
 
   /// @brief Draw a UTF-8 string using a font atlas.
-  void drawString(const glm::vec2 &position, const char *string,
-                  const Font &font, const glm::vec4 &color);
+  void submitString(const glm::vec2 &position, float scale,
+                    const std::string_view &text, const Font &font, Color color,
+                    TextAlign = TextAlign::Left);
+  void submitString(const glm::mat4 &transform, const std::string_view &text,
+                    const Font &font, Color color, TextAlign = TextAlign::Left);
 
   // ================================================================= //
   // Transforms
   // ================================================================= //
 
   /// @brief Build a transform matrix with rotation.
-  const glm::mat4 getTransform(const glm::vec2 &position, const glm::vec2 &size,
-                               const float rotationRadians);
+  static glm::mat4 getTransform(const glm::vec2 &position,
+                                const glm::vec2 &size, float rotationRadians);
 
   /// @brief Build a transform matrix without rotation.
-  const glm::mat4 getTransform(const glm::vec2 &position,
-                               const glm::vec2 &size);
+  static glm::mat4 getTransform(const glm::vec2 &position,
+                                const glm::vec2 &size);
+
+  /// @brief Build a transform matrix with rotation.
+  static glm::mat4 getUniformTransform(const glm::vec2 &position, float scale,
+                                       float rotationRadians);
+
+  /// @brief Build a transform matrix without rotation.
+  static glm::mat4 getUniformTransform(const glm::vec2 &position, float scale);
 
   // ================================================================= //
   // Resources / Debug
@@ -191,66 +250,58 @@ struct Renderer2d {
    */
   void setCellGridSize(float size);
 
-  /**
-   * @brief Retrieve rendering statistics for a specific batch type.
-   *
-   * Example:
-   * @code
-   * auto stats = renderer.getStatistics<QuadBatch>();
-   * @endcode
-   */
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getQuadStatistics();
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getTriStatistics();
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getSprayStatistics();
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getTextStatistics();
+
+private:
   template <typename Batch>
     requires requires(Batch &b) { b.statsCount; }
-  Stats getStatistics()
+  Stats getStatistics(Batch &b)
   {
     if constexpr (std::is_same_v<Batch, TriBatch>)
-      return {m.triBatch.statsCount, m.triBatch.statsCount * 3,
-              m.triBatch.statsCount * 3, m.triBatch.drawCount, "Triangules"};
+      return {"Triangles", b.statsCount, b.statsCount * 3, b.statsCount * 3,
+              b.drawCount};
     else if constexpr (std::is_same_v<Batch, TextBatch>)
-      return {m.textBatch.statsCount, m.textBatch.statsCount * 6,
-              m.textBatch.statsCount * 4, m.textBatch.drawCount, "Glyphs"};
-    else if constexpr (std::is_same_v<Batch, CircleBatch>)
-      return {m.circleBatch.statsCount, m.circleBatch.statsCount * 6,
-              m.circleBatch.statsCount * 4, m.circleBatch.drawCount, "Circles"};
+      return {"Glyphs", m.textBatch.statsCount, m.textBatch.statsCount * 6,
+              m.textBatch.statsCount * 4, m.textBatch.drawCount};
     else if constexpr (std::is_same_v<Batch, SprayBatch>)
-      return {m.sprayBatch.statsCount, m.sprayBatch.statsCount * 6,
-              m.sprayBatch.statsCount * 4, m.sprayBatch.drawCount, "Sprays"};
+      return {"Sprays", m.sprayBatch.statsCount, m.sprayBatch.statsCount * 6,
+              m.sprayBatch.statsCount * 4, m.sprayBatch.drawCount};
     else if constexpr (std::is_same_v<Batch, QuadBatch>) {
-      uint32_t statsCount = 0;
-      uint32_t drawCount = 0;
-      for (QuadBatch &batch : m.quadBatches) {
-        statsCount += batch.statsCount;
-        drawCount += batch.drawCount;
-      }
-      return {statsCount, statsCount * 6, statsCount * 4, drawCount, "Quads"};
+      return {"Quads", b.statsCount, b.statsCount * 6, b.statsCount * 4,
+              b.drawCount};
     }
   }
 
-private:
-  float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
+  static float constexpr smallSpacingOrder(short order)
+  {
+    return static_cast<float>(order) / 1024.F;
+  };
   void flush();
   void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                           DeltaTime globalTime, const glm::mat4 &transform,
-                           const glm::ivec2 &resolution,
-                           const glm::vec2 &cameraPos, const float zoomLevel);
+                           DeltaTime globalTime, const glm::ivec2 &resolution,
+                           const glm::vec2 &cameraPos, float zoomLevel);
   void bindTextures();
   float allocateTextures(Texture &texture);
 
   struct M {
-    std::array<QuadBatch, NumLayers> quadBatches;
-    TriBatch triBatch;
-    CircleBatch circleBatch;
+    std::reference_wrapper<MaterialManager> materialManager;
     SprayBatch sprayBatch;
     TextBatch textBatch;
     DebugGrid debugGrid;
+
     // texture initializer
     Texture *whiteTexture = nullptr;
     Texture **textureSlots;
     uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
-
     reg::Entity orthoCameraEntity = reg::Entity{-1};
     // replaced by m_textBatch.fontAtlas
-    // const Texture *m_fontAtlasTexture = nullptr;
   };
 
   M m;

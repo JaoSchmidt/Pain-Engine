@@ -7,9 +7,7 @@
 #pragma once
 
 #include "Core.h"
-#include "CoreRender/Texture.h"
-#include "ECS/Scriptable.h"
-#include "Misc/BasicOrthoCamera.h"
+#include <pain.h>
 
 namespace Player
 {
@@ -20,7 +18,7 @@ reg::Entity create(pain::Scene &scene, pain::Texture &tex, glm::vec2 initialPos,
 class Script : public pain::OrthoCameraScript
 {
 public:
-  void onRender(pain::Renderers &renderer, bool isMinimized,
+  void onRender(pain::RenderApi &renderer, 
                 pain::DeltaTime currentTime);
   void onCreate();
   using OrthoCameraScript::onEvent;

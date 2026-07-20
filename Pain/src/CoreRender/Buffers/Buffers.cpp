@@ -1,0 +1,149 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+// Buffers.cpp
+#include "CoreRender/Buffers/Buffers.h"
+#include "CoreFiles/LogWrapper.h"
+#include "platform/BuffersBackend.h"
+namespace pain
+{
+
+// ======================================================================== //
+// IndexBuffer
+// ======================================================================== //
+std::optional<IndexBuffer>
+IndexBuffer::createIndexBuffer(uint32_t maxIndexCount)
+{
+  uint32_t bufferId = backend::createIndexBuffer(maxIndexCount);
+  if (bufferId == 0) {
+    PLOG_W("Failed to create IndexBuffer backend resource");
+    return std::nullopt;
+  }
+
+  return IndexBuffer(bufferId, maxIndexCount);
+}
+std::optional<IndexBuffer>
+IndexBuffer::createIndexBuffer(const uint32_t *indexes, uint32_t count)
+{
+  if ((indexes == nullptr) || count == 0) {
+    PLOG_W("IndexBuffer creation failed: invalid data");
+    return std::nullopt;
+  }
+
+  uint32_t bufferId = backend::createIndexBuffer(indexes, count);
+  if (bufferId == 0) {
+    PLOG_W("Failed to create IndexBuffer backend resource");
+    return std::nullopt;
+  }
+
+  return IndexBuffer(bufferId, count);
+}
+
+void IndexBuffer::bind() const { backend::bindIndexBuffer(m_bufferId); }
+
+void IndexBuffer::unbind() { backend::unbindIndexBuffer(); }
+
+void IndexBuffer::updateIndexBuffer(const uint32_t *indices, uint64_t count)
+{
+  bind();
+  backend::updateIndexBuffer(m_bufferId, indices, static_cast<uint32_t>(count));
+}
+
+IndexBuffer::~IndexBuffer()
+{
+  if (m_bufferId != 0U)
+    backend::destroyIndexBuffer(m_bufferId);
+}
+
+IndexBuffer::IndexBuffer(uint32_t bufferId, uint32_t count)
+    : m_bufferId(bufferId), m_count(count) {};
+
+IndexBuffer::IndexBuffer(IndexBuffer &&o) noexcept
+    : m_bufferId(o.m_bufferId), m_count(o.m_count)
+{
+  o.m_bufferId = 0;
+}
+IndexBuffer &IndexBuffer::operator=(IndexBuffer &&o) noexcept
+{
+  if (this != &o) {
+    if (m_bufferId != 0)
+      backend::destroyIndexBuffer(m_bufferId);
+    m_bufferId = o.m_bufferId;
+    m_count = o.m_count;
+    o.m_bufferId = 0;
+  }
+  return *this;
+}
+
+// ======================================================================== //
+// VertexBuffer
+// ======================================================================== //
+
+VertexBuffer::VertexBuffer(VertexBuffer &&o) noexcept
+    : m_bufferId(o.m_bufferId), m_layout(std::move(o.m_layout))
+{
+  o.m_bufferId = 0;
+};
+VertexBuffer &VertexBuffer::operator=(VertexBuffer &&o) noexcept
+{
+  if (this != &o) {
+    m_bufferId = o.m_bufferId;
+    m_layout = std::move(o.m_layout);
+    o.m_bufferId = 0;
+  }
+  return *this;
+}
+
+VertexBuffer::VertexBuffer(uint32_t bufferId, BufferLayout &&layout)
+    : m_bufferId(bufferId), m_layout(std::move(layout)) {};
+
+std::optional<VertexBuffer>
+VertexBuffer::createStaticVertexBuffer(const void *vertices, uint32_t size,
+                                       BufferLayout &&layout)
+{
+  backend::VertexBufferCreateInfo info{
+      .size = size, .data = vertices, .isDynamic = false};
+
+  uint32_t id = backend::createVertexBuffer(info);
+  if (id == 0) {
+    PLOG_W("Failed to generate vertex buffer");
+    return std::nullopt;
+  }
+
+  return VertexBuffer(id, std::move(layout));
+}
+
+std::optional<VertexBuffer>
+VertexBuffer::createVertexBuffer(uint32_t size, BufferLayout &&layout)
+{
+  backend::VertexBufferCreateInfo info{
+      .size = size, .data = nullptr, .isDynamic = true};
+
+  uint32_t id = backend::createVertexBuffer(info);
+  if (!id) {
+    PLOG_W("Failed to generate vertex buffer");
+    return std::nullopt;
+  }
+
+  return VertexBuffer(id, std::move(layout));
+}
+
+void VertexBuffer::bind() const { backend::bindVertexBuffer(m_bufferId); }
+
+void VertexBuffer::unbind() { backend::unbindVertexBuffer(); }
+
+void VertexBuffer::setData(const void *data, uint32_t size) const
+{
+  backend::setVertexBufferData(m_bufferId, data, size);
+}
+
+VertexBuffer::~VertexBuffer()
+{
+  if (m_bufferId)
+    backend::destroyVertexBuffer(m_bufferId);
+}
+
+} // namespace pain

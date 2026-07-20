@@ -2,7 +2,6 @@
 #version 330 core
 
 layout (location = 0) in vec2 a_Position;  // Position of the quad (particle) in object space
-
 layout (location = 1) in vec2 a_Normal;          // Directional normal of the rocket base
 layout (location = 2) in float a_Time;     // Particle's birth time (for size growth and fading)
 layout (location = 3) in vec2 a_EmitStart;     // Particle's birth time (for size growth and fading)
@@ -15,7 +14,6 @@ uniform float u_ParticleVelocity; // Total velocity of the particles
 
 // Set by the renderer
 uniform mat4 u_ViewProjection;    // Camera view-projection matrix
-uniform mat4 u_Transform;         // Camera transform
 uniform float u_Time;             // Global time
 
 #define M_PI 3.1415926535897932384626433832795
@@ -54,7 +52,7 @@ void main()
     // setting fragment variables
     v_Age = age;
     v_TexCoord = a_Position * 0.5 + 0.5;  // Map [-1, 1] to [0, 1]
-    gl_Position = u_ViewProjection * u_Transform * vec4(finalPos, 0.0, 1.0);
+    gl_Position = u_ViewProjection * vec4(finalPos, 0.0, 1.0);
 }
 
 #shader fragment

@@ -5,6 +5,7 @@
  */
 
 #include "CoreRender/Renderer/MiscDebugGrid.h"
+#include "CoreFiles/LogWrapper.h"
 #include "platform/ContextBackend.h"
 
 namespace pain
@@ -13,26 +14,32 @@ namespace pain
 DebugGrid DebugGrid::create(float gridSize)
 {
   float vertices[] = {
-      -1.0f, -1.0f, //
-      1.0f,  -1.0f, //
-      1.0f,  1.0f,  //
-      -1.0f, 1.0f,  //
+      -1.0F, -1.0F, //
+      1.0F,  -1.0F, //
+      1.0F,  1.0F,  //
+      -1.0F, 1.0F,  //
   }; //
 
-  unsigned int indices[] = {0, 1, 2, 2, 3, 0};
+  unsigned int indices[] = {0, 1, 2, 0, 3, 2};
+
+  BufferLayout layout = {
+      {ShaderDataType::Float2, "a_Position"},
+  };
 
   Shader shader =
       *Shader::createFromFile("resources/default/shaders/InfiniteGrid.glsl");
+  P_ASSERT(shader.verifyVertexLayout(layout),
+           "DebugGrid layout doesn't match shader '{}'", shader.getName());
+
   shader.bind();
-  shader.uploadUniformFloat3("u_Color", glm::vec3(0.1f, 0.6f, 0.9f));
+  shader.uploadUniformFloat3("u_Color", glm::vec3(0.1F, 0.6F, 0.9F));
   shader.uploadUniformFloat("u_CellSize", gridSize);
-  shader.uploadUniformFloat("u_Thickness", 0.005f);
-  return DebugGrid(
-      *VertexBuffer::createStaticVertexBuffer(
-          vertices, sizeof(vertices), {{ShaderDataType::Float2, "a_Position"}}),
-      *IndexBuffer::createIndexBuffer(indices,
-                                      sizeof(indices) / sizeof(indices[0])),
-      std::move(shader));
+  shader.uploadUniformFloat("u_Thickness", 0.005F);
+  return DebugGrid(*VertexBuffer::createStaticVertexBuffer(
+                       vertices, sizeof(vertices), std::move(layout)),
+                   *IndexBuffer::createIndexBuffer(
+                       indices, sizeof(indices) / sizeof(indices[0])),
+                   std::move(shader));
 }
 DebugGrid::DebugGrid(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
     : vbo(std::move(vbo_)), ib(std::move(ib_)),
@@ -47,7 +54,7 @@ void DebugGrid::flush()
   vao.bind();
   vbo.bind();
   shader.bind();
-  // ib.bind();
+  ib.bind();
 
   backend::drawIndexed(vao, 6);
 }

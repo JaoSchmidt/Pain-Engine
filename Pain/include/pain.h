@@ -10,43 +10,54 @@
 
 /// For use specifically for games built with Pain.
 #include "Assets/ManagerIni.h"
+#include "Assets/ManagerMaterial.h"
+#include "Assets/ManagerShader.h"
 #include "Assets/ManagerTexture.h"
 #include "Assets/RandNumberGenerator.h"
 #include "CoreFiles/Application.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
-#include "GUI/ImGuiSys.h"
+
 // Misc
-#include "GUI/Launcher.h"
-#include "Misc/BasicOrthoCamera.h"
-#include "Misc/BasicPerspCamera.h"
-#include "Misc/BasicShape.h"
+#include "Misc/Basic2dPlayer.h"
+#include "Misc/Basic3dPlayer.h"
+#include "Misc/BasicMainScene.h"
 #include "Misc/Events.h"
 // Renderer
-#include "CoreRender/BufferLayout.h"
-#include "CoreRender/Buffers.h"
+#include "CoreRender/Buffers/BufferLayout.h"
+#include "CoreRender/Buffers/Buffers.h"
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
 #include "CoreRender/CameraComponent.h"
-#include "CoreRender/RenderSys.h"
+#include "CoreRender/ColorIndexComponent.h"
+#include "CoreRender/LightComponent.h"
+#include "CoreRender/LightSys.h"
+#include "CoreRender/MaterialComponent.h"
+#include "CoreRender/MeshComponent.h"
+#include "CoreRender/Render2dSys.h"
+#include "CoreRender/Render3dSys.h"
 #include "CoreRender/Renderer/Misc.h"
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "CoreRender/Renderer/Renderer3d.h"
-#include "CoreRender/Shader.h"
+#include "CoreRender/Shapes.h"
+#include "CoreRender/SpriteComponent.h"
 #include "CoreRender/Text/Font.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Text/ManagerFont.h"
+#include "CoreRender/Text/TextComponent.h"
 // ECS
 #include "ECS/Components/NativeScript.h"
-#include "ECS/Components/Sprite.h"
-#include "ECS/EventDispatcher.h"
 #include "ECS/Scene.h"
 #include "ECS/Scriptable.h"
-#include "Physics/MovementComponent.h"
+// Events
+#include "Events/EventDispatcher.h"
 // Scripts
-#include "Scripting/LuaScriptComponent.h"
-#include "Scripting/LuaScriptSys.h"
-#include "Scripting/NativeScriptSys.h"
-#include "Scripting/SchedulerComponent.h"
-#include "Scripting/SchedulerSys.h"
+#include "Misc/Schedule/SchedulerComponent.h"
+#include "Misc/Schedule/SchedulerSys.h"
+#include "Scripting/Lua/LuaScriptComponent.h"
+#include "Scripting/Lua/LuaScriptSys.h"
+#include "Scripting/Lua/WorldSceneBind.h"
+#include "Scripting/Native/NativeScriptSys.h"
 
 #include "Physics/Collision/Collider.h"
 #include "Physics/Collision/SweepAndPruneSys.h"
@@ -55,10 +66,6 @@
 #include "Physics/MovementComponent.h"
 #include "Physics/Particles/ParticleSys.h"
 #include "Physics/RotationComponent.h"
-
-#include <SDL2/SDL_events.h>
-
-#include "imgui.h"
 
 /// @name Logging Macros
 /// @{

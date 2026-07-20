@@ -10,18 +10,19 @@
 #include "Assets/DeltaTime.h"
 #include "Core.h"
 #include "CoreFiles/ThreadPool.h"
-#include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
 #include "ECS/Registry/Bitmask.h"
 #include "ECS/Registry/Entity.h"
 #include "ECS/Systems.h"
+#include "Events/EventDispatcher.h"
 
 #include <sol/sol.hpp>
 #include <utility>
 
 namespace pain
 {
-struct Renderers;
+struct RenderApi;
+class Application;
 
 namespace Systems
 {
@@ -109,6 +110,37 @@ public:
   }
 
   /**
+   * @brief Adds a single component to an existing entity. Force archetype
+   *
+   * @tparam Components ECS component types.
+   * @param entity Target entity.
+   * @param bitmask Target final assumed bitmask
+   * @param components Component instances to add.
+   * @return Tuple of references to the added components.
+   */
+  template <reg::ECSComponent C>
+  void manualPush(reg::Entity entity, reg::Bitmask bitmask, C &&comps)
+  {
+    m_registry.manualPush(entity, bitmask, std::forward<C>(comps));
+  }
+  /**
+   * @brief Emplace a single component to an existing entity. Force archetype
+   * Should be used only outside c++
+   *
+   * @tparam Components ECS component types.
+   * @param entity Target entity.
+   * @param bitmask Target final assumed bitmask
+   * @param components Component instances to add.
+   * @return Tuple of references to the added components.
+   */
+  template <reg::ECSComponent C, typename... Args>
+  void manualEmplace(reg::Entity entity, reg::Bitmask bitmask, Args &&...args)
+  {
+    m_registry.template manualEmplace<C>(entity, bitmask,
+                                         std::forward<Args>(args)...);
+  }
+
+  /**
    * @brief Adds multiple components to an existing entity.
    *
    * @tparam Components ECS component types.
@@ -174,8 +206,7 @@ public:
 
   /// @brief Const version of getComponents().
   template <reg::ECSComponent... Components>
-  const std::tuple<const Components &...>
-  getComponents(reg::Entity entity) const
+  std::tuple<const Components &...> getComponents(reg::Entity entity) const
   {
     return std::as_const(m_registry)
         .template getComponents<Components...>(entity);
@@ -218,24 +249,32 @@ public:
   /**
    * @brief Attaches and initializes a Lua script component on an entity.
    *
+   * Only available when the LuaScriptComponent is registered by the
+   * manager.
+   *
+   * @param entity Target entity.
+   * @param scriptPath Path to the script file.
+   * @param initArgs
+   */
+  static void
+  emplaceLuaScript(reg::Entity entity, AbstractScene<Manager> &scene,
+                   const char *scriptPath, const sol::table &initArgs)
+    requires(Manager::template isRegistered<tag::LuaScript>());
+  /**
+   * @brief Attaches and initializes a Lua script component on an entity.
+   *
    * Only available when the LuaScriptComponent is registered by the manager.
    *
    * @param entity Target entity.
    * @param scriptPath Path to the script file.
    */
-  void emplaceLuaScript(reg::Entity entity, const char *scriptPath)
+  static void emplaceLuaScript(reg::Entity entity,
+                               AbstractScene<Manager> &scene,
+                               const char *scriptPath)
     requires(Manager::template isRegistered<tag::LuaScript>());
 
   /** @brief Returns the shared Lua state used by the scene. */
   sol::state &getSharedLuaState() { return m_luaState; }
-
-  /**
-   * @brief Registers entity creation and component binding helpers in Lua.
-   *
-   * @param sceneName Name exposed to the Lua environment.
-   * @param lua Lua state to bind into.
-   */
-  void addEntityFunctions(const char *sceneName, sol::state &lua);
 
   // =============================================================== //
   // SYSTEMS RELATED
@@ -248,7 +287,7 @@ public:
   void updateSystems(const SDL_Event &event);
 
   /** @brief Executes render callbacks on systems implementing IOnRender. */
-  void renderSystems(Renderers &renderers, bool isMinimized,
+  void renderSystems(RenderPass pass, RenderApi &renderAPI, 
                      DeltaTime currentTime);
 
   /**
@@ -307,6 +346,17 @@ public:
     return m_eventDispatcher;
   }
 
+  /**
+   * @brief Manually creates an entity with specific archetype. Use only if you
+   * have a bitmask ID, which you probably don't have nor need.
+   *
+   * @return Newly created entity identifier.
+   */
+  inline reg::Entity manualEntityCreation(reg::Bitmask bitmask)
+  {
+    return m_registry.createEntity(bitmask);
+  }
+
   // =============================================================== //
   // CONSTRUCTION
   // =============================================================== //
@@ -339,7 +389,8 @@ protected:
   /// Cached system lists for fast iteration.
   std::vector<IOnUpdate *> m_updateSystems;
   std::vector<IOnEvent *> m_eventSystems;
-  std::vector<IOnRender *> m_renderSystems;
+  std::array<std::vector<IOnRender *>, (size_t)RenderPass::Count>
+      m_renderSystems;
 
   /// Thread pool used by the scene.
   ThreadPool &m_threadPool;
@@ -352,6 +403,11 @@ protected:
 
   /// Event dispatcher used by the scene.
   reg::EventDispatcher &m_eventDispatcher;
+
+  /* For making use of the application functionalities. Though it maybe more
+  useful if passed down to a specific object later in your game (e.g. debug
+  menus, speed up time menus, changing windows, etc)*/
+  // Application &m_app;
 };
 
 } // namespace pain

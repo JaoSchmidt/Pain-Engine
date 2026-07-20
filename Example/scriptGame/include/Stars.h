@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Core.h"
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Scriptable.h"
 #include "Physics/MovementComponent.h"

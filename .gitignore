@@ -2,6 +2,9 @@
 # generated ini
 imgui.ini
 config.ini
+notify_wrapper.sh
+resources
+!Pain/resources
 # syncthing stuff
 .stfolder
 .stfolder
@@ -11,10 +14,6 @@ CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
 .cmake/
 ## Debug stuff
-/resources/
-resources/*
-.luarc.json
-lua_types/
 target
 
 ## Doxygen
@@ -93,7 +92,7 @@ Temporary Items
 # build
 .gradle/
 build/
-build*
+build*/
 dkr_build/
 dkr_build*
 

@@ -8,6 +8,11 @@
 
 #include "pch.h"
 
+namespace sol
+{
+class state;
+}
+
 namespace pain
 {
 
@@ -27,7 +32,7 @@ public:
    * @param nanoSeconds Duration in nanoseconds.
    */
   DeltaTime(uint64_t nanoSeconds = 0) : m_time(nanoSeconds) {}
-  static DeltaTime createSeconds(float seconds = 0.f)
+  static DeltaTime createSeconds(float seconds = 0.F)
   {
     auto time =
         static_cast<uint64_t>(seconds * static_cast<float>(oneSecond()));
@@ -41,7 +46,7 @@ public:
   }
 
   /** @return Duration in milliseconds (double precision). */
-  inline double getMiliSeconds() const
+  inline double getMilliSeconds() const
   {
     return static_cast<double>(m_time) * milsec_d;
   }
@@ -62,7 +67,7 @@ public:
   }
 
   /** @return Duration in milliseconds (float precision). */
-  inline float getMiliSecondsf() const
+  inline float getMilliSecondsf() const
   {
     return static_cast<float>(m_time) * milsec_f;
   }
@@ -123,13 +128,13 @@ public:
   /** Raw time value in nanoseconds. */
   uint64_t m_time;
 
-  /** @return Nanoseconds in one second. */
+  /** @return Nanoseconds in one second, i.e. 1'000'000'000 nanoseconds */
   inline static constexpr uint64_t oneSecond() { return 1'000'000'000; }
 
-  /** @return Nanoseconds in one millisecond. */
-  inline static constexpr uint64_t oneMiliSecond() { return 1'000'000; }
+  /** @return Nanoseconds in one millisecond, i.e. 1'000'000 nanoseconds */
+  inline static constexpr uint64_t oneMilliSecond() { return 1'000'000; }
 
-  /** @return Nanoseconds in one microsecond. */
+  /** @return Nanoseconds in one microsecond, i.e. 1'000 nanoseconds */
   inline static constexpr uint64_t oneMicroSecond() { return 1'000; }
 
 private:
@@ -137,9 +142,9 @@ private:
   static constexpr double milsec_d = 1.0 / 1'000'000.0;
   static constexpr double microsec_d = 1.0 / 1'000.0;
 
-  static constexpr float sec_f = 1.f / 1'000'000'000.f;
-  static constexpr float milsec_f = 1.f / 1'000'000.f;
-  static constexpr float microsec_f = 1.f / 1'000.f;
+  static constexpr float sec_f = 1.F / 1'000'000'000.F;
+  static constexpr float milsec_f = 1.F / 1'000'000.F;
+  static constexpr float microsec_f = 1.F / 1'000.F;
 };
 
 /** @brief Subtracts a DeltaTime from a raw nanosecond value. */
@@ -171,5 +176,11 @@ inline DeltaTime operator/(const DeltaTime &dt, double scalar)
 {
   return DeltaTime(static_cast<uint64_t>((double)dt.m_time / scalar));
 }
+
+namespace luabinder
+{
+/// @brief bind DeltaTime class to lua
+void bindDeltaTime(sol::state &lua);
+} // namespace luabinder
 
 } // namespace pain

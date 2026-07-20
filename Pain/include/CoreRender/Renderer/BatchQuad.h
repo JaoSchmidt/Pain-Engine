@@ -7,23 +7,28 @@
 // QuadBatch.h
 #pragma once
 
-#include "CoreRender/Renderer/Misc.h"
-#include "CoreRender/Shader.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
+#include "CoreRender/Renderer/Colors.h"
 namespace pain
 {
 
 struct QuadVertex {
   glm::vec3 position;
-  uint32_t color;
   glm::vec2 texCoord;
+};
+
+struct InstanceQuadVertex {
+  uint32_t color;
   float texIndex;
   float tilingFactor;
+  glm::mat4 transform;
 };
 
 struct QuadBatch {
-  using Vertex = QuadVertex;
+  using BatchVertex = QuadVertex;
+  using InstanceVertex = InstanceQuadVertex;
   static constexpr uint32_t IndiceSize = 6;
   static constexpr uint32_t VerticesPerQuad = 4;
   static constexpr uint32_t MaxPolygons = 5000;
@@ -33,28 +38,28 @@ struct QuadBatch {
   uint32_t drawCount = 0;
 
   VertexBuffer vbo;
+  VertexBuffer instanceVBO;
   IndexBuffer ib;
   VertexArray vao;
-  Shader shader;
 
-  std::unique_ptr<Vertex[]> ptrInit;
-  Vertex *ptr = nullptr;
+  std::unique_ptr<InstanceVertex[]> ptrInit;
+  InstanceVertex *ptr = nullptr;
   // std::vector<int> drawOrder;
-  uint32_t indexCount = 0; // works for both draw order indexes and gpu indices
+  uint32_t m_count = 0; // works for both draw order indexes and gpu indices
 
   // std::unique_ptr<Vertex[]> sortBuffer;
 
-  static QuadBatch create();
+  static QuadBatch create(const Shader *shader);
 
   void allocateQuad(const glm::mat4 &transform, const Color &tintColor,
-                    const float tilingFactor, const float textureIndex,
-                    const std::array<glm::vec2, 4> &textureCoordinate);
+                    const float tilingFactor, const float textureIndex);
   void resetAll();
   void resetPtr();
-  void flush(Texture **textures, uint32_t textureCount);
+  void flush(Texture **textures, uint32_t textureCount, Shader *shader);
 
 private:
-  QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_);
+  QuadBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
+            IndexBuffer &&ib_);
   // void swapQuadVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
   // void sortByDrawOrder();
 };

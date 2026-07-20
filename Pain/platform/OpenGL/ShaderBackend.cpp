@@ -80,6 +80,7 @@ uint32_t createShaderProgram(const std::string &name,
 
   if (!linkProgram(program)) {
     glDeleteProgram(program);
+    PLOG_E("Shader program {}, named {}, could NOT be created", program, name);
     program = 0;
   }
 
@@ -106,10 +107,12 @@ void unbindShader() { glUseProgram(0); }
 // Uniforms
 // ------------------------------------------------------------
 
-int getUniformLocation(uint32_t programId, const std::string &name)
+int getUniformLocation(uint32_t programId, const std::string &name,
+                       bool isError)
 {
   int loc = glGetUniformLocation(programId, name.c_str());
-  P_ASSERT_W(loc != -1, "Uniform {} not found on program {}", name, programId);
+  P_ASSERT_W(loc != -1 || !isError, "Uniform {} not found on program {}", name,
+             programId);
   return loc;
 }
 
@@ -166,6 +169,69 @@ void uploadUniformMat4(int loc, const glm::mat4 &m)
 void uploadUniformIntArray(int loc, int *values, uint32_t count)
 {
   GL_CALL(glUniform1iv(loc, static_cast<int32_t>(count), values));
+}
+
+static ShaderDataType glTypeToShaderDataType(GLenum glType)
+{
+  switch (glType) {
+  case GL_FLOAT:
+    return ShaderDataType::Float;
+  case GL_FLOAT_VEC2:
+    return ShaderDataType::Float2;
+  case GL_FLOAT_VEC3:
+    return ShaderDataType::Float3;
+  case GL_FLOAT_VEC4:
+    return ShaderDataType::Float4;
+  case GL_FLOAT_MAT3:
+    return ShaderDataType::Mat3;
+  case GL_FLOAT_MAT4:
+    return ShaderDataType::Mat4;
+  case GL_INT:
+    return ShaderDataType::Int;
+  case GL_INT_VEC2:
+    return ShaderDataType::Int2;
+  case GL_INT_VEC3:
+    return ShaderDataType::Int3;
+  case GL_INT_VEC4:
+    return ShaderDataType::Int4;
+  case GL_BOOL:
+    return ShaderDataType::Bool;
+  default:
+    return ShaderDataType::None;
+  }
+}
+
+std::vector<ShaderInputInfo> getVertexInputs(uint32_t programId)
+{
+  std::vector<ShaderInputInfo> inputs;
+  if (!programId)
+    return inputs;
+
+  GLint attributeCount = 0;
+  glGetProgramiv(programId, GL_ACTIVE_ATTRIBUTES, &attributeCount);
+
+  if (attributeCount == 0)
+    return inputs;
+
+  inputs.reserve(static_cast<size_t>(attributeCount));
+
+  constexpr GLsizei kBufferSize = 256;
+  char nameBuffer[kBufferSize];
+
+  for (GLint i = 0; i < attributeCount; i++) {
+    ShaderInputInfo info{};
+    GLsizei length = 0;
+    GLenum glType = 0;
+    glGetActiveAttrib(programId, static_cast<GLuint>(i), kBufferSize, &length,
+                      &info.size, &glType, nameBuffer);
+    nameBuffer[length] = '\0';
+    info.name = nameBuffer;
+    info.type = glTypeToShaderDataType(glType);
+    info.location = glGetAttribLocation(programId, nameBuffer);
+    inputs.push_back(std::move(info));
+  }
+
+  return inputs;
 }
 
 } // namespace pain::backend

@@ -5,50 +5,49 @@
  */
 
 #pragma once
+#include "Assets/ManagerMaterial.h"
+#include "CoreRender/MaterialComponent.h"
 #include "CoreRender/Renderer/BatchCube.h"
 #include "CoreRender/Renderer/BatchQuad.h"
 #include "CoreRender/Renderer/BatchSphere.h"
+#include "CoreRender/Renderer/Stats.h"
+#include "Physics/Movement3dComponent.h"
 #include "Physics/Particles/SprayCmp.h"
 #include "pch.h"
 
 #include "Core.h"
 
-#include "CoreRender/VertexArray.h"
-#include "Misc/BasicPerspCamera.h"
+#include "CoreRender/Buffers/VertexArray.h"
+#include "Misc/Basic3dPlayer.h"
 
 namespace pain
 {
 
 class Scene;
 class UIScene;
+struct ResolvedMaterial;
 
+/**
+ * @brief 3D renderer facade built on top of batched OpenGL rendering.
+ *
+ * Renderer3d owns and coordinates multiple batch renderAPI like Cube and UV
+ * Sphere and provides a simple API for drawing primitives inside a scene.
+ *
+ * Typical usage:
+ *  - Create using createRenderer3d().
+ *  - Call beginScene().
+ *  - Issue submit calls.
+ *  - Call endScene().
+ */
 class Renderer3d
 {
 public:
-  /** @brief Aggregated rendering statistics for a batch type.*/
-  /* Fields:
-   * - count: number of objects
-   * - indices: total index count
-   * - vertices: total vertex count
-   * - draws: draw calls issued
-   * - name: batch name
-   */
-  struct Stats {
-    uint32_t count;    ///< Number of objects in the batch
-    uint32_t indices;  ///< Total index count submitted
-    uint32_t vertices; ///< Total vertex count submitted
-    uint32_t draws;    ///< Number of draw calls issued
-    const char *name;  ///< Human-readable batch name
-  };
-
   /// @brief Factory function to create a renderer instance.
-  static Renderer3d createRenderer3d();
+  static Renderer3d createRenderer3d(MaterialManager &materialManager);
   Renderer3d &operator=(Renderer3d &&o) noexcept;
   /// @brief Change the active camera entity used for rendering.
   void changeCamera(reg::Entity camera);
 
-  /// @brief Change light
-  void changeLight(reg::Entity lightEntity);
   /// @brief Returns true if a valid camera is currently bound.
   bool hasCamera();
 
@@ -60,68 +59,51 @@ public:
    * @brief Begin a new rendering scene.
    *
    * @param globalTime Global engine time.
-   * @param scene      Scene being rendered.
-   * @param transform  Optional root transform applied to all draws.
+   * @param perspCamera Perspecitve camera component
+   * @param position camera position
    */
-  void beginScene(DeltaTime globalTime, const Scene &scene,
-                  const glm::mat4 &transform = glm::mat4(1.0f));
+  void beginScene(DeltaTime globalTime, const cmp::PerspCamera &perspCamera,
+                  const Transform3dComponent &position);
 
   // @brief Flush all batches and finalize the scene.
-  void endScene();
-
-  void setViewport(int x, int y, int width, int height);
-  void setClearColor(const glm::vec4 &color);
-  void clear();
+  void endScene(const Scene &scene);
 
   // ================================================================= //
   // Draw Polygons
   // ================================================================= //
 
-  /// @brief Draw a colored triangle primitive.
-  void drawCube(const glm::vec3 &position, const glm::vec3 &size,
-                const Color &tintColor, Texture &texture,
-                float tilingFactor = 1.f,
-                const std::array<glm::vec2, 4> &textureCoordinate = {
-                    glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                    glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-
-  /// @brief Draw a rotated triangle primitive.
-  void drawCube(const glm::vec3 &position, const glm::vec3 &size,
-                const Color &tintColor, const glm::vec3 rotation,
-                Texture &texture, float tilingFactor = 1.f,
-                const std::array<glm::vec2, 4> &textureCoordinate = {
-                    glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-                    glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
-
-  void drawUVSphere(const glm::vec3 &position, const glm::vec3 &size,
-                    const Color &tintColor, Texture &texture,
-                    SphereDivision div, float tilingFactor = 1.f);
-  void drawUVSphere(const glm::vec3 &position, const glm::vec3 &size,
-                    const Color &tintColor, Texture &texture,
-                    const glm::vec3 rotation, SphereDivision div,
-                    float tilingFactor = 1.f);
-
-  // ================================================================= //
-  // Particles
-  // ================================================================= //
-
-  // /// @brief Begin rendering a particle spray batch.
-  // void beginSprayParticle(const ParticleSprayComponent
-  // &particleSprayComponent);
-  //
-  // /// @brief Submit a single particle to the current spray batch.
-  // void drawSprayParticle(const SprayParticle &p);
+  /// @brief submit a cube polyhedron.
+  void submitCube(const glm::vec3 &position, float size,
+                  const Material &material);
+  /// @brief submit a rotated cube polyhedron. Rotation dimensions are in
+  /// radians
+  void submitCube(const glm::vec3 &position, float size,
+                  const Material &material, const glm::vec3 &rotation);
+  /// @brief submits cubes directly with transform
+  void submitCube(const glm::mat4 &transform, const Material &material);
+  /// @brief submit a UV sphere polyhedron.
+  void submitUVSphere(const glm::vec3 &position, float size, SphereDivision div,
+                      const Material &material);
+  /// @brief submit a rotating UV sphere polyhedron. Rotation dimensions are in
+  /// radians
+  void submitUVSphere(const glm::vec3 &position, float size, SphereDivision div,
+                      const Material &material, const glm::vec3 &rotation);
+  /// @brief submits sphere directly with transform
+  void submitUVSphere(const glm::mat4 &transform, SphereDivision div,
+                      const Material &material);
+  /// @brief a light position to be used by other shaders
+  void submitLight(const glm::vec3 &pos, const Color &color);
 
   // ================================================================= //
   // Transforms
   // ================================================================= //
 
   /// @brief Build a transform matrix without rotation.
-  glm::mat4 getTransform(const glm::vec3 &position, const glm::vec3 &size);
+  glm::mat4 getUniformScaleTransform(const glm::vec3 &position, float size);
 
   /// @brief Build a transform matrix with rotation.
-  glm::mat4 getTransform(const glm::vec3 &position, const glm::vec3 &size,
-                         const glm::vec3 &rotation);
+  glm::mat4 getUniformScaleTransform(const glm::vec3 &position, float size,
+                                     const glm::vec3 &rotation);
 
   // ================================================================= //
   // Resources / Debug
@@ -141,37 +123,47 @@ public:
    * auto stats = renderer.getStatistics<QuadBatch>();
    * @endcode
    */
-  template <typename Batch>
-    requires requires(Batch &b) { b.statsCount; }
-  Stats getStatistics()
-  {
-    if constexpr (std::is_same_v<Batch, CubeBatch>) {
-      return {m.cubeBatch.statsCount, m.cubeBatch.statsCount * 8,
-              m.cubeBatch.statsCount * 3, m.cubeBatch.drawCount, "Triangules"};
-    }
-  }
+  Stats getCubeStatistics();
+  Stats getSphereStatistics();
 
 private:
-  float constexpr smallSpacingOrder(short order) { return order / 1024.f; };
-  void flush();
-  void uploadBasicUniforms(const Scene &scene,
-                           const glm::mat4 &viewProjectionMatrix,
-                           DeltaTime globalTime, const glm::mat4 &transform,
-                           const glm::ivec2 &resolution,
+  float static constexpr smallSpacingOrder(short order)
+  {
+    return static_cast<float>(order) / 1024.F;
+  };
+  void flush() const;
+  void uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
+                           DeltaTime globalTime, const glm::ivec2 &resolution,
                            const glm::vec3 &cameraPos);
   void bindTextures();
   float allocateTextures(Texture &texture);
+  ResolvedMaterial resolveMaterial(const MaterialComponent &mat);
 
+  template <typename Batch>
+    requires requires(Batch &b) { b.statsCount; }
+  Stats getStatistics(Batch &b)
+  {
+    if constexpr (std::is_same_v<Batch, CubeBatch>) {
+      return {"Cubes", b.statsCount, b.statsCount * 8, b.statsCount * 3,
+              b.drawCount};
+    } else if constexpr (std::is_same_v<Batch, SphereBatch>) {
+      return {"Spheres", b.statsCount, b.statsCount * b.m_indicesPerSphere,
+              b.statsCount * b.m_verticesPerSphere, b.drawCount};
+    }
+  }
   struct M {
-    std::array<SphereBatch, static_cast<uint8_t>(SphereDivision::Count)>
-        sphereBatches;
-    CubeBatch cubeBatch;
+    MaterialManager &materialManager;
+    // std::array<SphereBatch, static_cast<uint8_t>(SphereDivision::Count)>
+    //     sphereBatches;
+    // CubeBatch cubeBatch;
     Texture *whiteTexture = nullptr;
     Texture **textureSlots;
     uint32_t textureSlotIndex = 1; // at init, there is 1 white texture
 
     reg::Entity lightEntity = reg::Entity{-1};
     reg::Entity cameraEntity = reg::Entity{-1};
+    Shader *currentShader = nullptr;
+
     // replaced by m_textBatch.fontAtlas
     // const Texture *m_fontAtlasTexture = nullptr;
   };

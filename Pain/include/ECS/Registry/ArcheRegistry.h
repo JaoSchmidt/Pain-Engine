@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
 
 #include "CoreFiles/LogWrapper.h"
@@ -135,7 +134,8 @@ public:
         newArchetype.fetchComponent<Components>(newColumn)...);
   }
 
-  // If bitmask is known, you can manually push components into the archetype
+  /// Assuming bitmask is known, you can manually push components into the
+  /// archetype. Only use this for binding outside c++
   template <ECSComponent C>
   void manualPush(Entity entity, Bitmask bitmask, C &&comps)
   {
@@ -341,7 +341,7 @@ public:
                                                        targetColumn};
   }
   template <ECSComponent... ObjectComponents>
-  void removeBatch(std::span<const Entity> entities)
+  void removeBatch(std::span<Entity> entities)
   {
     // useful
     struct RecordHash {
@@ -364,8 +364,8 @@ public:
     std::unordered_set<Record, RecordHash, RecordEq> replacedMap;
     replacedMap.reserve(entities.size());
 
-    // remove NOTE: for high remove batches, it may be faster to cache
-    // archetypes
+    // remove archetypes
+    // NOTE: for high remove batches, it may be faster to cache
     for (auto &target : entities) {
       Bitmask &bitmask = m_records[target].bitmask;
       Column &column = m_records[target].column;
@@ -402,7 +402,8 @@ private:
       "only when the system is instantiated.\n\n How to statically check "
       "yourself? just use something like:\n"
       "requires(reg::CompileTimeBitMask::allRegistered<YourComponentsHere."
-      "..>())";
+      "..>()).\nIf you think this is an error, please check you have the "
+      "correct tags inside WorldComponents, UIComponents, etc";
   // Bitmask related
   template <ECSComponent... Components>
   static constexpr Bitmask getMultipleBitmask()

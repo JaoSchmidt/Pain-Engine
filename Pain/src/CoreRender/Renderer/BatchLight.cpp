@@ -33,15 +33,15 @@ void PointLightBatch::addLight(const glm::vec3 &position,
     return;
 
   m_positions.emplace_back(position, radius);
-  m_colors.emplace_back(color, 1.0f);
+  m_colors.emplace_back(color, 1.0F);
 }
 
 void PointLightBatch::upload(Shader &shader)
 {
   shader.bind();
 
-  uint32_t count = static_cast<uint32_t>(m_positions.size());
-  shader.uploadUniformInt("u_PointLightCount", count);
+  unsigned long count = m_positions.size();
+  shader.uploadUniformInt("u_PointLightCount", static_cast<int32_t>(count));
 
   for (uint32_t i = 0; i < count; i++) {
     shader.uploadUniformFloat4(

@@ -6,201 +6,446 @@
 
 #include "CoreRender/Renderer/Renderer2d.h"
 #include "Assets/ManagerTexture.h"
-#include "CoreRender/CameraComponent.h"
+#include "Core.h"
+#include "CoreRender/Renderer/BatchRect.h"
 #include "Debugging/Profiling.h"
 
+#include "CoreRender/CameraComponent.h"
 #include "ECS/WorldScene.h"
 #include "Physics/MovementComponent.h"
+#include "TextComponent.h"
 #include "glm/ext/matrix_transform.hpp"
-
 #include "platform/ContextBackend.h"
 namespace pain
 {
-// TODO: use struct for draw parameters
-// struct QuadDrawParams {
-//   glm::vec2 position{0.f, 0.f};
-//   glm::vec2 size{1.0f, 1.0f};
-//   Color tintColor{255};
-//   float tilingFactor = 1.0f;
-//   RenderLayer layer = RenderLayer::Default;
-//   Texture *texture;
-//   std::array<glm::vec2, 4> texCoords = {
-//       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-//       glm::vec2(0.0f, 1.0f)};
-// };
-// struct CircleDrawParams {
-//   glm::vec2 position{0.f, 0.f};
-//   glm::vec2 size{0.1f, 0.1f};
-//   glm::vec4 tintColor{1.0f};
-//   std::array<glm::vec2, 4> texCoords = {
-//       glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
-//       glm::vec2(0.0f, 1.0f)};
-// };
 
-extern const Texture *m_fontAtlasTexture;
+// TODO: Eventually it would be nice to think about some features:
+// - allow the developer to create custom batches
+// - allow the developer to send any uniform it would like (maybe with a
+// feedback fnc before flush?)
+
+struct MaterialKey {
+  Shader *shader;
+  std::variant<ParamPBR, ParamPhong, std::monostate> params;
+  uint32_t flags; // Transparent, DoubleSided, etc.
+  RenderLayer layer;
+  auto operator<(const MaterialKey &o) const { return layer < o.layer; }
+};
+std::map<MaterialKey, QuadBatch> m_quadBatchCache;
+std::map<MaterialKey, TriBatch> m_triBatchCache;
+std::map<MaterialKey, RectBatch> m_rectBatchCache;
 
 // ================================================================= //
 // Renderer: basic wrapper around opengl
 // ================================================================= //
 // void Renderer2d::shutdown() {}
 
-void Renderer2d::setViewport(int x, int y, int width, int height)
+Stats Renderer2d::getQuadStatistics()
 {
-  backend::setViewPort(x, y, width, height);
+  Stats stats = {"Quads"};
+  for (auto it = m_quadBatchCache.begin(); it != m_quadBatchCache.end(); it++) {
+    stats += getStatistics(it->second);
+  }
+  return stats;
 }
-
-void Renderer2d::clear() { backend::clear(); }
-
-void Renderer2d::setClearColor(const glm::vec4 &color)
+Stats Renderer2d::getTriStatistics()
 {
-  backend::setClearColor(color);
+  Stats stats = {"Triangles"};
+  for (auto it = m_triBatchCache.begin(); it != m_triBatchCache.end(); it++) {
+    stats += getStatistics(it->second);
+  }
+  return stats;
 }
-bool Renderer2d::hasCamera() { return m.orthoCameraEntity != reg::Entity{-1}; }
+Stats Renderer2d::getSprayStatistics() { return getStatistics(m.sprayBatch); }
+Stats Renderer2d::getTextStatistics() { return getStatistics(m.textBatch); }
+
+// TODO: exclude those 2 as soon as possible
+bool Renderer2d::hasCamera() const
+{
+  return m.orthoCameraEntity != reg::Entity{-1};
+}
 void Renderer2d::changeCamera(reg::Entity cameraEntity)
 {
   m.orthoCameraEntity = cameraEntity;
 }
 
-void Renderer2d::beginScene(DeltaTime globalTime, const Scene &scene,
-                            const glm::mat4 &transform)
+void Renderer2d::beginScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+                            const Transform2dComponent &tc)
 {
   PROFILE_FUNCTION();
-  const cmp::OrthoCamera &cc =
-      std::as_const(scene).getComponent<Component::OrthoCamera>(
-          m.orthoCameraEntity);
-  const Transform2dComponent &tc =
-      std::as_const(scene).getComponent<Transform2dComponent>(
-          m.orthoCameraEntity);
-  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime, transform,
-                      cc.getResolution(), tc.m_position, cc.m_zoomLevel);
-
-  // Going back to frist vertex
-  for (uint8_t i = 0; i < NumLayers; i++) {
-    m.quadBatches[i].resetAll();
+  for (auto it = m_triBatchCache.begin(); it != m_triBatchCache.end(); it++) {
+    it->second.resetAll();
+  }
+  for (auto it = m_quadBatchCache.begin(); it != m_quadBatchCache.end(); it++) {
+    it->second.resetAll();
+  }
+  for (auto it = m_rectBatchCache.begin(); it != m_rectBatchCache.end(); it++) {
+    it->second.resetAll();
   }
   m.textBatch.resetAll();
   m.sprayBatch.resetAll();
-  m.circleBatch.resetAll();
-  m.triBatch.resetAll();
+}
+
+void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
+                                     DeltaTime globalTime,
+                                     const glm::ivec2 &resolution,
+                                     const glm::vec2 &cameraPos,
+                                     float zoomLevel)
+{
+  PROFILE_FUNCTION();
+  for (auto it = m_quadBatchCache.begin(); it != m_quadBatchCache.end(); it++) {
+    it->first.shader->bind();
+    it->first.shader->uploadUniformMat4("u_ViewProjection",
+                                        viewProjectionMatrix);
+  }
+  for (auto it = m_triBatchCache.begin(); it != m_triBatchCache.end(); it++) {
+    it->first.shader->bind();
+    it->first.shader->uploadUniformMat4("u_ViewProjection",
+                                        viewProjectionMatrix);
+  }
+  for (auto it = m_rectBatchCache.begin(); it != m_rectBatchCache.end(); it++) {
+    it->first.shader->bind();
+    it->first.shader->uploadUniformMat4("u_ViewProjection",
+                                        viewProjectionMatrix);
+  }
+
+  m.sprayBatch.shader.bind();
+  m.sprayBatch.shader.uploadUniformMat4("u_ViewProjection",
+                                        viewProjectionMatrix);
+  m.sprayBatch.shader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
+
+  m.textBatch.shader.bind();
+  m.textBatch.shader.uploadUniformMat4("u_ViewProjection",
+                                       viewProjectionMatrix);
+
+  m.debugGrid.shader.bind();
+  m.debugGrid.shader.uploadUniformFloat("u_zoomLevel", zoomLevel);
+  m.debugGrid.shader.uploadUniformFloat2("u_cameraPos", cameraPos);
+  m.debugGrid.shader.uploadUniformFloat("u_resolution_y", (float)resolution.y);
+  m.debugGrid.shader.uploadUniformMat4("u_ViewProjection",
+                                       viewProjectionMatrix);
+  // m_debugGrid.shader.uploadUniformMat4("u_Transform", transform);
+  // m_debugGrid.shader.uploadUniformFloat2("u_resolution",
+  // glm::vec2(resolution));
+
+  // float cellScreenPixels = (1.f / zoomLevel) * resolution.y;
+  // PLOG_I("cellScreenPixels inside BasicUniform= {}", cellScreenPixels);
+}
+
+void beforeFlush2d(const MaterialKey &mat)
+{
+  mat.shader->bind();
+  // Upload instancing??
+  // mat.shader->uploadUniformFloat4("u_Color", mat.color.getVector());
+  // mat.shader->uploadUniformFloat("u_Tiling", mat.tiling);
+
+  if (std::holds_alternative<ParamPBR>(mat.params)) {
+    const ParamPBR &p = std::get<ParamPBR>(mat.params);
+    mat.shader->uploadUniformFloat("u_Roughness", p.roughness);
+    mat.shader->uploadUniformFloat("u_Metallic", p.metallic);
+    mat.shader->uploadUniformFloat("u_Emission", p.emission);
+  } else if (std::holds_alternative<ParamPhong>(mat.params)) {
+    const ParamPhong &p = std::get<ParamPhong>(mat.params);
+    mat.shader->uploadUniformFloat("u_Ambient", p.ambient);
+    mat.shader->uploadUniformFloat("u_Diffuse", p.diffuse);
+    mat.shader->uploadUniformFloat("u_Highlight", p.highlight);
+  }
 }
 
 void Renderer2d::flush()
 {
+  // When declaring new batches, remember that the values uploaded to the shader
+  // MUST be from here, if the batch has a shader inside, then you must send to
+  // the shader inside, not to the material. (Tho this method is obsolete)
   PROFILE_FUNCTION();
-  // bindTextures();
-  for (uint8_t i = 0; i < NumLayers; i++) {
-    m.quadBatches[i].flush(m.textureSlots, m.textureSlotIndex);
+  auto triIt = m_triBatchCache.begin();
+  auto quadIt = m_quadBatchCache.begin();
+  auto rectIt = m_rectBatchCache.begin();
+  for (RenderLayer layer = RenderLayer::A; layer <= RenderLayer::G;
+       layer = RenderLayer(static_cast<uint8_t>(layer) + 1)) {
+    while (triIt != m_triBatchCache.end() && triIt->first.layer == layer) {
+      beforeFlush2d(triIt->first);
+      triIt->second.flush();
+      ++triIt;
+    }
+    while (quadIt != m_quadBatchCache.end() && quadIt->first.layer == layer) {
+      beforeFlush2d(quadIt->first);
+      quadIt->second.flush(m.textureSlots, m.textureSlotIndex,
+                           quadIt->first.shader);
+      ++quadIt;
+    }
+    while (rectIt != m_rectBatchCache.end() && rectIt->first.layer == layer) {
+      beforeFlush2d(rectIt->first);
+      rectIt->second.flush(m.textureSlots, m.textureSlotIndex);
+      ++rectIt;
+    }
   }
-  m.circleBatch.flush();
-  m.sprayBatch.flush();
-  m.triBatch.flush();
-  m.textBatch.flush();
 
+  m.sprayBatch.flush();
+  m.textBatch.flush();
   m.debugGrid.flush();
 }
 
-void Renderer2d::endScene()
+void Renderer2d::endScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+                          const Transform2dComponent &tc)
 {
-  // quadBatch->sendAllDataToOpenGL();
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
   // otherwise flush() wouldn't need to be a function
+  uploadBasicUniforms(cc.getViewProjectionMatrix(), globalTime,
+                      cc.getResolution(), tc.m_position, cc.m_zoomLevel);
   flush();
 }
 
 // ================================================================= //
-// Draw Circles
+// Submit Quads
 // ================================================================= //
 
-void Renderer2d::drawCircle(const glm::vec2 &position, const float diameter,
-                            const Color &tintColor,
-                            const std::array<glm::vec2, 4> &textureCoordinate)
+void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                            RenderLayer layer, const Material &material,
+                            Color overrideColor)
+{
+  const glm::mat4 transform = getTransform(position, size);
+  submitRect(transform, layer, material, overrideColor);
+}
+
+void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                            const float rotationRadians, RenderLayer layer,
+                            const Material &material, Color overrideColor)
 {
   PROFILE_FUNCTION();
-  if (m.circleBatch.indexCount >= QuadBatch::MaxIndices) {
-    m.circleBatch.flush();
-    m.circleBatch.resetPtr();
+  const glm::mat4 transform = getTransform(position, size, rotationRadians);
+  submitRect(transform, layer, material, overrideColor);
+}
+
+void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
+                            const Material &material, Color overrideColor)
+{
+  PROFILE_FUNCTION();
+  MaterialKey key = {.shader = material.m_shader,
+                     .params = material.m_params,
+                     .flags = material.m_flags,
+                     .layer = layer};
+  auto it = m_rectBatchCache.find(key);
+  if (it == m_rectBatchCache.end()) {
+    auto [newIt, inserted] = m_rectBatchCache.emplace(
+        std::move(key), RectBatch::create(material.m_shader));
+    it = newIt;
+    if (inserted)
+      newIt->second.resetAll();
   }
+  RectBatch &batch = it->second;
+
+  if (batch.indexCount >= RectBatch::MaxIndices) {
+    batch.flush(m.textureSlots, m.textureSlotIndex);
+    batch.resetPtr();
+  }
+
+  if (material.isTextureSheet()) {
+    const float texIndex =
+        allocateTextures(material.getTextureFromTextureSheet());
+    batch.allocateRect(transform, overrideColor, material.m_tilingFactor,
+                       texIndex, material.getCoords());
+  } else {
+    constexpr std::array<glm::vec2, 4> textureCoordinate = {
+        glm::vec2(0.0F, 0.0F), glm::vec2(1.0F, 0.0F), glm::vec2(1.0F, 1.0F),
+        glm::vec2(0.0F, 1.0F)};
+    const float texIndex = allocateTextures(material.getTexture());
+    batch.allocateRect(transform, overrideColor, material.m_tilingFactor,
+                       texIndex, textureCoordinate);
+  }
+}
+// Color override versions
+void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
+                            const Material &material)
+{
+  submitRect(transform, layer, material, material.m_color);
+}
+void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                            RenderLayer layer, const Material &material)
+{
+  submitRect(position, size, layer, material, material.m_color);
+}
+void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
+                            const float rotationRadians, RenderLayer layer,
+                            const Material &material)
+{
+  submitRect(position, size, rotationRadians, layer, material,
+             material.m_color);
+}
+
+// ================================================================= //
+// Submit Quads
+// ================================================================= //
+
+void Renderer2d::submitQuad(const glm::vec2 &position, float size,
+                            RenderLayer layer, const Material &material)
+{
+  submitQuad(position, size, layer, material, material.m_color);
+}
+
+void Renderer2d::submitQuad(const glm::vec2 &position, float size,
+                            RenderLayer layer, const Material &material,
+                            Color overrideColor)
+{
+  const glm::mat4 transform = getUniformTransform(position, size);
+  submitQuad(std::move(transform), layer, material, overrideColor);
+}
+
+void Renderer2d::submitQuad(const glm::vec2 &position, float size,
+                            const float rotationRadians, RenderLayer layer,
+                            const Material &material)
+{
+  submitQuad(position, size, rotationRadians, layer, material,
+             material.m_color);
+}
+
+void Renderer2d::submitQuad(const glm::vec2 &position, float size,
+                            const float rotationRadians, RenderLayer layer,
+                            const Material &material, Color overrideColor)
+{
+  PROFILE_FUNCTION();
   const glm::mat4 transform =
-      getTransform(position, glm::vec2(diameter, diameter));
-  m.circleBatch.allocateCircle(transform, tintColor, textureCoordinate);
+      getUniformTransform(position, size, rotationRadians);
+  submitQuad(std::move(transform), layer, material, overrideColor);
 }
 
-// ================================================================= //
-// Draw Quads
-// ================================================================= //
+void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
+                            const Material &material)
+{
+  submitQuad(transform, layer, material, material.m_color);
+}
 
-void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const Color &tintColor, RenderLayer layer,
-                          Texture &texture, float tilingFactor,
-                          const std::array<glm::vec2, 4> &textureCoordinate)
+void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
+                            const Material &material, Color overrideColor)
 {
   PROFILE_FUNCTION();
-  QuadBatch &batch = m.quadBatches[static_cast<uint8_t>(layer)];
+  MaterialKey key = {.shader = material.m_shader,
+                     .params = material.m_params,
+                     .flags = material.m_flags,
+                     .layer = layer};
+  auto it = m_quadBatchCache.find(key);
+  if (it == m_quadBatchCache.end()) {
+    auto [newIt, _] =
+        m_quadBatchCache.emplace(std::move(key), QuadBatch::create(key.shader));
+    it = newIt;
+  }
+  QuadBatch &batch = it->second;
 
-  if (batch.indexCount >= QuadBatch::MaxIndices) {
-    batch.flush(m.textureSlots, m.textureSlotIndex);
+  if (batch.m_count >= QuadBatch::MaxIndices) {
+    batch.flush(m.textureSlots, m.textureSlotIndex, material.m_shader);
     batch.resetPtr();
   }
 
-  const float texIndex = allocateTextures(texture);
-  const glm::mat4 transform = getTransform(position, size);
-  batch.allocateQuad(transform, tintColor, tilingFactor, texIndex,
-                     textureCoordinate);
+  if (material.isTextureSheet()) {
+    const float texIndex =
+        allocateTextures(material.getTextureFromTextureSheet());
+    batch.allocateQuad(transform, overrideColor, material.m_tilingFactor,
+                       texIndex);
+  } else {
+    const float texIndex = allocateTextures(material.getTexture());
+    batch.allocateQuad(transform, overrideColor, material.m_tilingFactor,
+                       texIndex);
+  }
 }
 
-void Renderer2d::drawQuad(const glm::vec2 &position, const glm::vec2 &size,
-                          const Color &tintColor, const float rotationRadians,
-                          RenderLayer layer, Texture &texture,
-                          float tilingFactor,
-                          const std::array<glm::vec2, 4> &textureCoordinate)
+// ================================================================= //
+// Submit Line
+// ================================================================= //
+
+/// @brief Submit a line with specific material
+void Renderer2d::submitLine(const glm::vec2 &origin,
+                            const glm::vec2 &destination, float thickness,
+                            RenderLayer layer, const Material &material)
+{
+  submitLine(origin, destination, thickness, layer, material, material.m_color);
+}
+
+/// @brief Submit a line with specific material. Override color
+void Renderer2d::submitLine(const glm::vec2 &origin,
+                            const glm::vec2 &destination, float thickness,
+                            RenderLayer layer, const Material &material,
+                            Color overrideColor)
+{
+  glm::vec2 delta = destination - origin;
+  float length = glm::length(delta);
+  glm::vec2 center = (origin + destination) * 0.5f;
+  float angle = std::atan2(delta.y, delta.x);
+  submitRect(center, {length, thickness}, angle, layer, material,
+             overrideColor);
+}
+
+// ================================================================= //
+// Submit Tri
+// ================================================================= //
+
+void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                           RenderLayer layer, const Material &material)
+{
+  submitTri(position, size, layer, material, material.m_color);
+}
+
+void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                           RenderLayer layer, const Material &material,
+                           Color overrideColor)
 {
   PROFILE_FUNCTION();
-  QuadBatch &batch = m.quadBatches[static_cast<uint8_t>(layer)];
+  const glm::mat4 transform = getTransform(position, size);
+  submitTri(transform, layer, material, overrideColor);
+}
 
-  if (batch.indexCount >= QuadBatch::MaxIndices) {
-    batch.flush(m.textureSlots, m.textureSlotIndex);
+void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                           const float rotationRadians, RenderLayer layer,
+                           const Material &material)
+{
+  submitTri(position, size, rotationRadians, layer, material, material.m_color);
+}
+
+void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
+                           const float rotationRadians, RenderLayer layer,
+                           const Material &material, Color overrideColor)
+{
+
+  PROFILE_FUNCTION();
+  const glm::mat4 transform = getTransform(position, size, rotationRadians);
+  submitTri(transform, layer, material, overrideColor);
+}
+
+void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
+                           const Material &material)
+{
+  submitTri(transform, layer, material, material.m_color);
+}
+
+void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
+                           const Material &material, Color overrideColor)
+{
+  PROFILE_FUNCTION();
+  MaterialKey key = MaterialKey{.shader = material.m_shader,
+                                .params = material.m_params,
+                                .flags = material.m_flags,
+                                .layer = layer};
+  auto it = m_triBatchCache.find(key);
+  if (it == m_triBatchCache.end()) {
+    auto [newIt, inserted] =
+        m_triBatchCache.emplace(std::move(key), TriBatch::create(key.shader));
+    it = newIt;
+    if (inserted)
+      newIt->second.resetAll();
+  }
+
+  TriBatch &batch = it->second;
+  if (batch.indexCount >= TriBatch::MaxIndices) {
+    batch.flush();
     batch.resetPtr();
   }
-
-  const float texIndex = allocateTextures(texture);
-  const glm::mat4 transform = getTransform(position, size, rotationRadians);
-  batch.allocateQuad(transform, tintColor, tilingFactor, texIndex,
-                     textureCoordinate);
+  batch.allocateTri(transform, overrideColor);
 }
 
 // ================================================================= //
-// Draw Tri
+// Submit Spray Particles
 // ================================================================= //
 
-void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
-                         const glm::vec4 &tintColor)
-{
-  if (m.triBatch.indexCount >= TriBatch::MaxIndices) {
-    m.triBatch.flush();
-    m.triBatch.resetPtr();
-  }
-  PROFILE_FUNCTION();
-  const glm::mat4 transform = getTransform(position, size);
-  m.triBatch.allocateTri(transform, tintColor);
-}
-void Renderer2d::drawTri(const glm::vec2 &position, const glm::vec2 &size,
-                         const glm::vec4 &tintColor,
-                         const float rotationRadians)
-{
-  if (m.triBatch.indexCount >= TriBatch::MaxIndices) {
-    m.triBatch.flush();
-    m.triBatch.resetPtr();
-  }
-  PROFILE_FUNCTION();
-  const glm::mat4 transform = getTransform(position, size, rotationRadians);
-  m.triBatch.allocateTri(transform, tintColor);
-}
-
-// ================================================================= //
-// Draw Spray Particles
-// ================================================================= //
-
-void Renderer2d::drawSprayParticle(const SprayParticle &p)
+void Renderer2d::submitSprayParticle(const SprayParticle &p)
 {
   if (m.sprayBatch.instanceCount >= SprayBatch::MaxPolygons) {
     m.sprayBatch.flush();
@@ -210,10 +455,41 @@ void Renderer2d::drawSprayParticle(const SprayParticle &p)
 }
 
 // ================================================================= //
-// Draw Text
+// Submit Text
 // ================================================================= //
-void Renderer2d::drawString(const glm::vec2 &position, const char *string,
-                            const Font &font, const glm::vec4 &color)
+
+double measureLine(const std::string_view &line, const Font &font)
+{
+  const auto &fg = font.getFontGeometry();
+  const auto &metrics = fg.getMetrics();
+  double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
+
+  double width = 0.0;
+  for (size_t i = 0; i < line.size(); ++i) {
+    const auto *glyph = fg.getGlyph((unsigned char)line[i]);
+    if (!glyph)
+      continue;
+
+    double advance = glyph->getAdvance();
+    if (i + 1 < line.size())
+      fg.getAdvance(advance, (unsigned char)line[i],
+                    (unsigned char)line[i + 1]);
+
+    width += fsScale * advance;
+  }
+  return width;
+}
+
+void Renderer2d::submitString(const glm::vec2 &position, float scale,
+                              const std::string_view &text, const Font &font,
+                              Color color, TextAlign align)
+{
+  glm::mat4 transform = getUniformTransform(position, scale / 40.f);
+  submitString(transform, text, font, color, align);
+}
+void Renderer2d::submitString(const glm::mat4 &transform,
+                              const std::string_view &text, const Font &font,
+                              Color color, TextAlign align)
 {
   PROFILE_FUNCTION();
   const auto &fontGeometry = font.getFontGeometry();
@@ -227,17 +503,18 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
 
   m.textBatch.fontAtlas = &font.getAtlasTexture();
 
-  double x = 0.0;
+  double x = align == TextAlign::Right ? -measureLine(text, font) : 0;
   double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
   double y = 0.0;
   float lineHeightOffset = 0.0f;
-  for (const char *letter = string; *letter != '\0'; letter++) {
-    switch (*letter) {
+  for (size_t i = 0; i < text.size(); i++) {
+    char letter = text[i];
+    switch (letter) {
     case '\r':
       continue;
       break;
     case '\n':
-      x = 0;
+      x = align == TextAlign::Right ? -measureLine(text, font) : 0;
       y -= fsScale * metrics.lineHeight + lineHeightOffset;
       continue;
       break;
@@ -246,9 +523,10 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
       x += 4.0f * (fsScale * spaceGlyphAdvance);
       break;
     default:
-      auto glyph = fontGeometry.getGlyph(static_cast<unsigned>(*letter));
+      const msdf_atlas::GlyphGeometry *glyph =
+          fontGeometry.getGlyph(static_cast<unsigned>(letter));
       if (!glyph) {
-        PLOG_E("Glyph '{}' not available on font family", *letter);
+        PLOG_E("Glyph '{}' not available on font family", letter);
       }
 
       double atlasLeft, atlasBottom, atlasRight, atlasTop;
@@ -267,29 +545,29 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
       quadMin += glm::vec2(x, y);
       quadMax += glm::vec2(x, y);
       float texelWidth =
-          1.0f / static_cast<float>(m.textBatch.fontAtlas->getWidth());
+          1.0F / static_cast<float>(m.textBatch.fontAtlas->getWidth());
       float texelHeight =
-          1.0f / static_cast<float>(m.textBatch.fontAtlas->getHeight());
+          1.0F / static_cast<float>(m.textBatch.fontAtlas->getHeight());
       texCoordMin *= glm::vec2(texelWidth, texelHeight);
       texCoordMax *= glm::vec2(texelWidth, texelHeight);
 
       m.textBatch.allocateCharacter(
-          glm::translate(glm::mat4(1.f), {position, 0.f}), color,
+          transform, color,
           // textureCoordinate
           {texCoordMin, glm::vec2(texCoordMin.x, texCoordMax.y), texCoordMax,
            glm::vec2(texCoordMax.x, texCoordMin.y)},
           // vertex positions
-          {glm::vec4{quadMin, 0.f, 1.f},
-           glm::vec4{quadMin.x, quadMax.y, 0.f, 1.f},
-           glm::vec4{quadMax, 0.f, 1.f},
-           glm::vec4{quadMax.x, quadMin.y, 0.f, 1.f}});
+          {glm::vec4{quadMin, 0.F, 1.F},
+           glm::vec4{quadMin.x, quadMax.y, 0.F, 1.F},
+           glm::vec4{quadMax, 0.F, 1.F},
+           glm::vec4{quadMax.x, quadMin.y, 0.F, 1.F}});
 
-      if (*letter != '\0') {
+      if (i < text.size() - 1) {
         double advance = glyph->getAdvance();
-        unsigned nextCharacter = static_cast<unsigned>(*(letter + 1));
-        fontGeometry.getAdvance(advance, static_cast<unsigned>(*letter),
+        unsigned nextCharacter = static_cast<unsigned char>(text[i + 1]);
+        fontGeometry.getAdvance(advance, static_cast<unsigned>(letter),
                                 nextCharacter);
-        float kerningOffset = 0.0f;
+        float kerningOffset = 0.0F;
         x += fsScale * advance + kerningOffset;
       }
       break;
@@ -300,7 +578,7 @@ void Renderer2d::drawString(const glm::vec2 &position, const char *string,
 // ================================================================= //
 // Old draw2d.cpp functions
 // ================================================================= //
-Renderer2d Renderer2d::createRenderer2d()
+Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
 {
   PROFILE_FUNCTION();
 
@@ -308,23 +586,14 @@ Renderer2d Renderer2d::createRenderer2d()
   Texture **textureSlots = new Texture *[backend::getTMU()];
   textureSlots[0] =
       &TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
-  return Renderer2d([textureSlots] {
-    return M{.quadBatches =
-                 {
-                     QuadBatch::create(),
-                     QuadBatch::create(),
-                     QuadBatch::create(),
-                     QuadBatch::create(),
-                     QuadBatch::create(),
-                     QuadBatch::create(),
-                     QuadBatch::create(),
-                 },
-             .triBatch = TriBatch::create(),       //
-             .circleBatch = CircleBatch::create(), //
-             .sprayBatch = SprayBatch::create(),   //
-             .textBatch = TextBatch::create(),     //
-             .debugGrid = DebugGrid::create(),
-             .textureSlots = textureSlots};
+  return Renderer2d([textureSlots, &materialManager] {
+    return M{
+        .materialManager = materialManager,
+        .sprayBatch = SprayBatch::create(), //
+        .textBatch = TextBatch::create(),   //
+        .debugGrid = DebugGrid::create(),
+        .textureSlots = textureSlots, //
+    };
   }); //
 }
 
@@ -335,58 +604,10 @@ void Renderer2d::bindTextures()
     m.textureSlots[i]->bindToSlot(i);
 }
 
-void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
-                                     DeltaTime globalTime,
-                                     const glm::mat4 &transform,
-                                     const glm::ivec2 &resolution,
-                                     const glm::vec2 &cameraPos,
-                                     float zoomLevel)
-{
-  PROFILE_FUNCTION();
-  for (uint8_t i = 0; i < NumLayers; i++) {
-    m.quadBatches[i].shader.bind();
-    m.quadBatches[i].shader.uploadUniformMat4("u_ViewProjection",
-                                              viewProjectionMatrix);
-    m.quadBatches[i].shader.uploadUniformMat4("u_Transform", transform);
-  }
-
-  m.triBatch.shader.bind();
-  m.triBatch.shader.uploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
-  m.triBatch.shader.uploadUniformMat4("u_Transform", transform);
-
-  m.sprayBatch.shader.bind();
-  m.sprayBatch.shader.uploadUniformMat4("u_ViewProjection",
-                                        viewProjectionMatrix);
-  m.sprayBatch.shader.uploadUniformMat4("u_Transform", transform);
-  m.sprayBatch.shader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
-
-  m.textBatch.shader.bind();
-  m.textBatch.shader.uploadUniformMat4("u_ViewProjection",
-                                       viewProjectionMatrix);
-  m.textBatch.shader.uploadUniformMat4("u_Transform", transform);
-
-  m.debugGrid.shader.bind();
-  m.debugGrid.shader.uploadUniformFloat("u_zoomLevel", zoomLevel);
-  m.debugGrid.shader.uploadUniformFloat2("u_cameraPos", cameraPos);
-  m.debugGrid.shader.uploadUniformFloat("u_resolution_y", (float)resolution.y);
-  m.debugGrid.shader.uploadUniformMat4("u_ViewProjection",
-                                       viewProjectionMatrix);
-  // m_debugGrid.shader.uploadUniformMat4("u_Transform", transform);
-  // m_debugGrid.shader.uploadUniformFloat2("u_resolution",
-  // glm::vec2(resolution));
-
-  // float cellScreenPixels = (1.f / zoomLevel) * resolution.y;
-  // PLOG_I("cellScreenPixels inside BasicUniform= {}", cellScreenPixels);
-  m.circleBatch.shader.bind();
-  m.circleBatch.shader.uploadUniformMat4("u_ViewProjection",
-                                         viewProjectionMatrix);
-  m.circleBatch.shader.uploadUniformMat4("u_Transform", transform);
-}
-
 float Renderer2d::allocateTextures(Texture &texture)
 {
   PROFILE_FUNCTION();
-  float textureIndex = 0.0f;
+  float textureIndex = 0.F;
   // use it to allocate new texture
   if (texture.m_slot == 0) {
     textureIndex = (float)m.textureSlotIndex;
@@ -398,7 +619,7 @@ float Renderer2d::allocateTextures(Texture &texture)
   }
   // TODO: check if m_textureSlotIndex is bigger than 32, then flush
 
-  P_ASSERT_W(textureIndex != 0.0f,
+  P_ASSERT_W(textureIndex != 0.F,
              "Missing texture inside a drawQuad that requires textures");
   return textureIndex;
 }
@@ -418,22 +639,38 @@ void Renderer2d::removeTexture(const Texture &texture)
   m.textureSlotIndex--;
   return;
 }
-const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
-                                         const glm::vec2 &size)
+glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
+                                          float scale)
 {
   PROFILE_FUNCTION();
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::scale(glm::mat4(1.0F), {scale, scale, 1.0F});
 }
-const glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
-                                         const glm::vec2 &size,
-                                         const float rotationAngleRadians)
+glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
+                                          float scale,
+                                          const float rotationRadians)
 {
   PROFILE_FUNCTION();
-  return glm::translate(glm::mat4(1.0f), {position, 0.f}) *
-         glm::rotate(glm::mat4(1.0f), rotationAngleRadians,
-                     {0.0f, 0.0f, 1.0f}) *
-         glm::scale(glm::mat4(1.0f), {size.x, size.y, 1.0f});
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::rotate(glm::mat4(1.0F), rotationRadians, {0.0F, 0.0F, 1.0F}) *
+         glm::scale(glm::mat4(1.0F), {scale, scale, 1.0F});
+}
+glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
+                                   const glm::vec2 &size)
+{
+  PROFILE_FUNCTION();
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::scale(glm::mat4(1.0F), {size.x, size.y, 1.0F});
+}
+
+glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
+                                   const glm::vec2 &size,
+                                   const float rotationRadians)
+{
+  PROFILE_FUNCTION();
+  return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
+         glm::rotate(glm::mat4(1.0F), rotationRadians, {0.0F, 0.0F, 1.0F}) *
+         glm::scale(glm::mat4(1.0F), {size.x, size.y, 1.0F});
 }
 
 void Renderer2d::setCellGridSize(float cellsize)
@@ -458,6 +695,15 @@ void Renderer2d::beginSprayParticle(const ParticleSprayComponent &psc)
   m.sprayBatch.shader.uploadUniformFloat("u_ParticleVelocity", psc.velocity);
   m.sprayBatch.shader.uploadUniformFloat("u_LifeTime",
                                          psc.lifeTime.getSecondsf());
+}
+
+Renderer2d::~Renderer2d()
+{
+  delete[] m.textureSlots;
+
+  m_triBatchCache.clear();
+  m_quadBatchCache.clear();
+  m_rectBatchCache.clear();
 }
 
 } // namespace pain

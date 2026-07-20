@@ -1,6 +1,7 @@
 --- @enum EventType
 EventType = {
-  Collision = 1,
+	Collision = 1,
+	ImGuiChange = 2,
 }
 
 ---@class CollisionEvent
@@ -16,3 +17,13 @@ Event = {}
 ---@param event EventType
 ---@param callback fun(e: table)
 function Event.subscribe(event, callback) end
+
+---@overload fun(eventId: integer, callback: fun())
+---@param eventId integer
+---@param callback fun(eventId, e: table)
+function Event.subscribeCustom(eventId, callback) end
+
+---@overload fun(eventId: integer, callback: fun())
+---@param eventId integer
+---@param t table
+function Event.enqueueCustom(eventId, t) end

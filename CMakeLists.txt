@@ -5,7 +5,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
-set(MACRO_DEFINITIONS "PAIN_RENDERER_OPENGL")
+# NOTE: OPENGL is the only alternative atm
+set(RENDERER_FRAMEWORK "PAIN_RENDERER_OPENGL")
 project(${PROJECT_NAME} VERSION 0.1.0)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
@@ -16,7 +17,7 @@ add_library(${LIBRARY_NAME} STATIC ${SOURCES})
 # modules:")
 
 # foreach(source ${MODULES}) message("- ${source}") endforeach() target_sources(
-# ${LIBRARY_NAME} PUBLIC FILE_SET CXX_MODULES FILES ${MODULES} PRIVATE
+# ${LIBRARY_NAME} PUBLIC file_SET CXX_MODULES FILES ${MODULES} PRIVATE
 # ${SOURCES} )
 set(BUILD_SHARED_LIBS OFF)
 
@@ -24,8 +25,7 @@ target_include_directories(
   ${LIBRARY_NAME}
   PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include>
-         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>
-)
+         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/include/CoreRender/Text>)
 set_target_properties(${LIBRARY_NAME} PROPERTIES CXX_STANDARD 20
                                                  CXX_STANDARD_REQUIRED ON)
 target_compile_features(${LIBRARY_NAME} PUBLIC cxx_std_20)
@@ -102,6 +102,7 @@ elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
             /EHsc # Exception handling model
             /Zi # Generate debug info
             /std:c++20 # C++20 standard
+            /bigobj # prevents exceeded obj format limit bug
   )
   set_target_properties(${LIBRARY_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
 else()
@@ -121,19 +122,12 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/mINI/CMakeLists.txt")
   message("Fetching mINI")
   FetchContent_Declare(mINI GIT_REPOSITORY https://github.com/metayeti/mINI.git)
   FetchContent_MakeAvailable(mINI)
-  target_include_directories(
-        ${LIBRARY_NAME}
-        SYSTEM PUBLIC
-        ${mINI_SOURCE_DIR}
-  )
+  target_include_directories(${LIBRARY_NAME} SYSTEM PUBLIC ${mINI_SOURCE_DIR})
 else()
   message("Using submodule for mINI")
   add_subdirectory(Pain/external/mINI)
-  target_include_directories(
-      ${LIBRARY_NAME}
-      SYSTEM PUBLIC
-      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/mINI>
-  )
+  target_include_directories(${LIBRARY_NAME} SYSTEM
+                             PUBLIC ${PROJECT_SOURCE_DIR}/Pain/external/mINI>)
 endif()
 
 # GLM
@@ -178,111 +172,59 @@ else()
 endif()
 
 # perlin noise
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/PerlinNoise/.git")
+if(NOT EXISTS
+   "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/PerlinNoise/PerlinNoise.hpp")
   message("Fetching PerlinNoise")
   FetchContent_Declare(
     perlin
     GIT_REPOSITORY https://github.com/Reputeless/PerlinNoise.git
-    GIT_TAG master
-  )
+    GIT_TAG master)
   FetchContent_MakeAvailable(perlin)
-  target_include_directories(
-      ${LIBRARY_NAME}
-      SYSTEM PUBLIC
-      ${perlin_SOURCE_DIR}
-  )
+  target_include_directories(${LIBRARY_NAME} SYSTEM PUBLIC ${perlin_SOURCE_DIR})
 else()
   message("Using submodule for PerlinNoise")
   target_include_directories(
-    ${LIBRARY_NAME} SYSTEM PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>
-  )
+    ${LIBRARY_NAME} SYSTEM
+    PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/PerlinNoise>)
 endif()
 
 # stb
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/stb/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/stb/README.md")
   message("Fetching stb")
   FetchContent_Declare(
     stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
-    GIT_TAG master
-  )
+    GIT_TAG master)
   FetchContent_MakeAvailable(stb)
-  target_include_directories(
-      ${LIBRARY_NAME}
-      SYSTEM PUBLIC
-      ${stb_SOURCE_DIR}
-  )
+  target_include_directories(${LIBRARY_NAME} SYSTEM PUBLIC ${stb_SOURCE_DIR})
 else()
   message("Using submodule for stb")
   target_include_directories(
     ${LIBRARY_NAME} SYSTEM
-    PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/stb>
-  )
-endif()
-
-# IMGUI
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui/.git")
-  message("Fetching Imgui")
-  FetchContent_Declare(
-    imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui
-    GIT_TAG v1.92.5-docking
-  )
-  FetchContent_MakeAvailable(imgui)
-
-  add_library(imgui STATIC
-      ${imgui_SOURCE_DIR}/imgui.cpp
-      ${imgui_SOURCE_DIR}/imgui_draw.cpp
-      ${imgui_SOURCE_DIR}/imgui_tables.cpp
-      ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-      ${imgui_SOURCE_DIR}/imgui_demo.cpp
-      ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
-      ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
-  )
-
-  target_include_directories(imgui PUBLIC
-      ${imgui_SOURCE_DIR}
-      ${imgui_SOURCE_DIR}/backends
-  )
-  target_link_libraries(imgui PRIVATE SDL2::SDL2)
-  target_sources(
-    imgui
-    PRIVATE ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp)
-else()
-  message("Using submodule for imgui")
-  set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/imgui)
-  add_library(imgui STATIC
-      ${IMGUI_DIR}/imgui.cpp
-      ${IMGUI_DIR}/imgui_draw.cpp
-      ${IMGUI_DIR}/imgui_tables.cpp
-      ${IMGUI_DIR}/imgui_widgets.cpp
-      ${IMGUI_DIR}/imgui_demo.cpp
-      ${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp
-      ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-  )
-  target_include_directories(imgui PUBLIC
-      ${IMGUI_DIR}
-      ${IMGUI_DIR}/backends
-  )
-  target_link_libraries(imgui PRIVATE SDL2::SDL2)
-  target_sources(
-    imgui
-    PRIVATE ${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp)
-
+    PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Pain/external/stb>)
 endif()
 
 # msdf-atlas-gen
-set(MSDF_ATLAS_USE_VCPKG OFF CACHE BOOL "" FORCE)
-set(MSDF_ATLAS_USE_SKIA OFF CACHE BOOL "" FORCE)
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/msdf-atlas-gen/.git")
+set(MSDF_ATLAS_USE_VCPKG
+    OFF
+    CACHE BOOL "Vcpkg is deactivated for MSDF Lib" FORCE)
+set(MSDF_ATLAS_USE_SKIA
+    OFF
+    CACHE BOOL "Vcpkg is deactivated for MSDF Lib" FORCE)
+set(MSDFGEN_USE_SKIA
+    OFF
+    CACHE BOOL "Vcpkg is deactivated for MSDF Lib" FORCE)
+set(MSDFGEN_USE_VCPKG
+    OFF
+    CACHE BOOL "Vcpkg is deactivated for MSDF Lib" FORCE)
+if(NOT EXISTS
+   "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/msdf-atlas-gen/CMakeLists.txt")
   message("Fetching msdf-atlas-gen")
   FetchContent_Declare(
     msdf-atlas-gen
     GIT_REPOSITORY https://github.com/Chlumsky/msdf-atlas-gen.git
     GIT_TAG c76a32319934c39e51a8c4838240d7b2362b0882
-    GIT_SUBMODULES_RECURSE TRUE   
-  )
+    GIT_SUBMODULES_RECURSE TRUE)
   FetchContent_MakeAvailable(msdf-atlas-gen)
 else()
   message("Using submodule for msdf-atlas-gen")
@@ -303,7 +245,7 @@ else()
 endif()
 
 # Sol2
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/sol2/.git")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/sol2/CMakeLists.txt")
   message("Fetching Sol2")
   FetchContent_Declare(
     sol2
@@ -313,6 +255,20 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/sol2/.git")
 else()
   message("Using submodule for sol2")
   add_subdirectory("Pain/external/sol2")
+endif()
+
+# cpp-yaml
+if(NOT EXISTS
+   "${CMAKE_CURRENT_SOURCE_DIR}/Pain/external/yaml-cpp/CMakeLists.txt")
+  message("Fetching yaml-cpp")
+  FetchContent_Declare(
+    sol2
+    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+    GIT_TAG yaml-cpp-0.9.0)
+  FetchContent_MakeAvailable(yaml-cpp)
+else()
+  message("Using submodule for yaml-cpp")
+  add_subdirectory("Pain/external/yaml-cpp")
 endif()
 
 find_package(OpenGL REQUIRED)
@@ -334,35 +290,35 @@ target_link_libraries(
          lua_static
          glad
          mINI
+         yaml-cpp::yaml-cpp
          glm::glm
          spdlog::spdlog_header_only
-         imgui
          msdf-atlas-gen
          sol2::sol2)
 
 target_precompile_headers(${LIBRARY_NAME} PRIVATE
                           ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h)
 
+set(ENGINE_DIRECTORY "${PROJECT_SOURCE_DIR}")
+add_subdirectory(Example/PainlessEditor)
+
 # =========== Resources/Assets Managment ==================================
 
-set(GAME_FOLDER "Example/scriptGame")
-add_compile_definitions(${MACRO_DEFINITIONS})
+add_compile_definitions(${RENDERER_FRAMEWORK})
 
 # Sync Resources
-# - Engine resources are small and can be sync anywhere
 if(UNIX OR APPLE)
+  # NOTE: Engine resources are small and can be sync anywhere
   add_custom_target(
     sync_resources
-    # Syncing with Example projects
-    COMMAND rsync -av "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
-            "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
-    # Syncing with project folder (for debug purposes)
+    # Syncing with game build folder
     COMMAND
-      rsync -av "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources/"
+      rsync -av --chmod=F444,D775 "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
+      "${CMAKE_BINARY_DIR}/resources/"
+    # Syncing with main folder (for debugging inside nvim)
+    COMMAND
+      rsync -av --chmod=F444,D775 "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
       "${CMAKE_SOURCE_DIR}/resources/"
-    # Syncing with game
-    COMMAND rsync -av "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
-            "${CMAKE_BINARY_DIR}/resources/"
     COMMENT "Syncing resources folder")
   # Add dependency to sync_resources target on make
   add_dependencies(${LIBRARY_NAME} sync_resources)
@@ -370,41 +326,70 @@ else()
   add_custom_target(
     sync_resources
     COMMAND
-      ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources"
-      "${CMAKE_CURRENT_BINARY_DIR}/${GAME_FOLDER}/resources"
+      ${CMAKE_COMMAND} -E copy_directory
+      "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources"
+      "${CMAKE_BINARY_DIR}/resources"
     COMMENT "Syncing resources folder")
 
   add_dependencies(${LIBRARY_NAME} sync_resources)
 endif()
 
-# =========== Dump shit to separete the compiler vomiting information ======
-# get current date (every build) set(COLOR_GREEN "\x1b[1;32m") set(COLOR_BLUE
-# "\x1b[1;34m") set(COLOR_RESET "\x1b[0m") string(TIMESTAMP NOW "%Y-%m-%d
-# %H:%M:%S")
-
-string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
-
 if(UNIX)
+  string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
   add_custom_target(
     BuildInitialBanner ALL
     COMMAND
       printf
       "\\n\\033[1;32m==========================================================================================\\n"
-    COMMAND printf "  BUILD:   ${PROJECT_NAME}\\n"
-    COMMAND printf "  VERSION:   ${PROJECT_VERSION}\\n"
-    COMMAND printf "  TYPE:    ${CMAKE_BUILD_TYPE}\\n"
-    COMMAND printf "  STANDARD:  C++${CMAKE_CXX_STANDARD}\\n"
+    COMMAND printf "  PROJECT:              ${PROJECT_NAME}\\n"
+    COMMAND printf "  TARGET:               ${TARGET_NAME}\\n"
+    COMMAND printf "  VERSION:              ${PROJECT_VERSION}\\n"
+    COMMAND printf "  TYPE:                 ${CMAKE_BUILD_TYPE}\\n"
+    COMMAND printf "  GENERATOR:            ${CMAKE_GENERATOR}\\n"
     COMMAND
       printf
-      "  COMPILER: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\\n"
-    COMMAND printf "  SOURCE:    ${CMAKE_CURRENT_SOURCE_DIR}\\n"
-    COMMAND printf "  BINARY:    ${CMAKE_CURRENT_BINARY_DIR}\\n"
+      "  SYSTEM:               ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_PROCESSOR})\\n"
+    COMMAND printf "  STANDARD:             C++${CMAKE_CXX_STANDARD}\\n"
+    COMMAND
+      printf
+      "  COMPILER:             ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\\n"
+    COMMAND printf "  COMPILER PATH:        ${CMAKE_CXX_COMPILER}\\n"
+    COMMAND printf "  COMPILER LAUNCHER:    ${CMAKE_CXX_COMPILER_LAUNCHER}\\n"
+    COMMAND printf "  C FLAGS:              ${CMAKE_C_FLAGS}\\n"
+    COMMAND printf "  CXX FLAGS:            ${CMAKE_CXX_FLAGS}\\n"
+    COMMAND
+      printf
+      "  CXX FLAGS (${CMAKE_BUILD_TYPE}): ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}\\n"
+    COMMAND printf "  EXE LINKER FLAGS:     ${CMAKE_EXE_LINKER_FLAGS}\\n"
+    COMMAND printf "  SHARED LINKER FLAGS:  ${CMAKE_SHARED_LINKER_FLAGS}\\n"
+    COMMAND printf "  MODULE LINKER FLAGS:  ${CMAKE_MODULE_LINKER_FLAGS}\\n"
+    COMMAND printf "  EXPORT COMPILE CMDS:  ${CMAKE_EXPORT_COMPILE_COMMANDS}\\n"
+    COMMAND printf "  INSTALL PREFIX:       ${CMAKE_INSTALL_PREFIX}\\n"
+    COMMAND printf "  BUILD PARALLEL:       $ENV{CMAKE_BUILD_PARALLEL_LEVEL}\\n"
+    COMMAND printf "  SOURCE:               ${CMAKE_SOURCE_DIR}\\n"
+    COMMAND printf "  BINARY:               ${CMAKE_BINARY_DIR}\\n"
     COMMAND printf "  DATE:    ${NOW}\\n"
     COMMAND
       printf
       "==========================================================================================\\033[0m\\n\\n"
     VERBATIM)
-endif()
 
-# =========================================================================
-add_subdirectory(${GAME_FOLDER})
+  # Quality of Life (e.g.: ./notify_wrapper.sh ninja -j8)
+  set(NOTIFY_WRAPPER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/notify_wrapper.sh")
+  set(NOTIFY_WRAPPER_DST "${CMAKE_CURRENT_BINARY_DIR}/notify_wrapper.sh")
+
+  if(EXISTS ${NOTIFY_WRAPPER_SRC})
+    configure_file(${NOTIFY_WRAPPER_SRC} ${NOTIFY_WRAPPER_DST} COPYONLY)
+
+    file(
+      CHMOD
+      ${NOTIFY_WRAPPER_DST}
+      PERMISSIONS
+      OWNER_READ
+      OWNER_EXECUTE
+      GROUP_READ
+      GROUP_EXECUTE
+      WORLD_READ
+      WORLD_EXECUTE)
+  endif()
+endif()

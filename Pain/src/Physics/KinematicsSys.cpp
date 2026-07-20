@@ -28,8 +28,8 @@ void Systems::Kinematics::onUpdate(DeltaTime deltaTime)
       auto *__restrict r = std::get<0>(chunk.arrays);
 
       for (size_t i = 0; i < chunk.count; ++i) {
-        r[i].m_rotation = {cos(r[i].m_rotationAngle), sin(r[i].m_rotationAngle),
-                           0};
+        r[i].m_rotation = {cos(glm::radians(r[i].m_rotationRadians)),
+                           sin(glm::radians(r[i].m_rotationRadians)), 0};
       }
     }
   }

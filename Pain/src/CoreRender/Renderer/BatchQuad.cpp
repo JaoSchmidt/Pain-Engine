@@ -6,62 +6,82 @@
 
 // QuadBatch.cpp
 #include "CoreRender/Renderer/BatchQuad.h"
-#include "platform/ContextBackend.h"
 #include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
+#include "platform/ContextBackend.h"
 #include <iostream>
 
 namespace pain
 {
 
-QuadBatch QuadBatch::create()
+QuadBatch QuadBatch::create(const Shader *shader)
 {
-  std::vector<uint32_t> indices(MaxIndices);
-  for (uint32_t i = 0, offset = 0; i < MaxIndices; i += 6, offset += 4) {
-    indices[i + 0] = offset + 0;
-    indices[i + 1] = offset + 1;
-    indices[i + 2] = offset + 2;
+  constexpr unsigned int indices[] = {0, 1, 2, 2, 3, 0};
+  constexpr glm::vec3 VertexPositions[4] = {
+      glm::vec3(-0.5F, -0.5F, 0.F),
+      glm::vec3(0.5F, -0.5F, 0.F),
+      glm::vec3(0.5F, 0.5F, 0.F),
+      glm::vec3(-0.5F, 0.5F, 0.F),
+  };
+  constexpr glm::vec2 FaceUVs[4] = {
+      {0.0F, 0.0F}, // bottom-left
+      {1.0F, 0.0F}, // bottom-right
+      {1.0F, 1.0F}, // top-right
+      {0.0F, 1.0F}, // top-left
+  };
 
-    indices[i + 3] = offset + 2;
-    indices[i + 4] = offset + 3;
-    indices[i + 5] = offset + 0;
+  BufferLayout staticLayout = {
+      {ShaderDataType::Float3, "a_Position"},
+      {ShaderDataType::Float2, "a_TexCoord"},
+  };
+  BufferLayout instanceLayout = {
+      {ShaderDataType::UByte4, "a_Color", true, true},
+      {ShaderDataType::Float, "a_TexIndex", false, true},
+      {ShaderDataType::Float, "a_TilingFactor", false, true},
+      {ShaderDataType::Mat4, "a_Transform", false, true},
+  };
+
+  if (shader) {
+    std::vector<BufferElement> combined;
+    combined.insert(combined.end(), staticLayout.getElements().begin(),
+                    staticLayout.getElements().end());
+    combined.insert(combined.end(), instanceLayout.getElements().begin(),
+                    instanceLayout.getElements().end());
+    P_ASSERT(shader->verifyVertexLayout(BufferLayout(std::move(combined))),
+             "QuadBatch layout doesn't match shader '{}'", shader->getName());
   }
 
-  Shader shader =
-      *Shader::createFromFile("resources/default/shaders/Texture.glsl");
+  std::unique_ptr<BatchVertex[]> vertices =
+      std::make_unique<BatchVertex[]>(VerticesPerQuad);
+  BatchVertex *pVertex = vertices.get();
+  for (uint32_t i = 0; i < VerticesPerQuad; i++) {
+    pVertex->position = VertexPositions[i];
+    pVertex->texCoord = FaceUVs[i];
+    pVertex++;
+  }
 
-  // Set texture samplers once
-  int *samplers = new int[backend::getTMU()];
-  for (int i = 0; i < backend::getTMUi(); i++)
-    samplers[i] = i;
-
-  shader.bind();
-  shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
-  delete[] samplers;
   return QuadBatch{
+      std::move(*VertexBuffer::createStaticVertexBuffer(
+          vertices.get(), sizeof(BatchVertex) * VerticesPerQuad,
+          std::move(staticLayout))),
       std::move(*VertexBuffer::createVertexBuffer(
-          MaxVertices * sizeof(Vertex),
-          {
-              {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::UByte4, "a_Color", true},
-              {ShaderDataType::Float2, "a_TexCoord"},
-              {ShaderDataType::Float, "a_TexIndex"},
-              {ShaderDataType::Float, "a_TilingFactor"},
-          })),
-      std::move(*IndexBuffer::createIndexBuffer(indices.data(), MaxIndices)),
-      std::move(shader)};
+          MaxPolygons * sizeof(InstanceVertex), std::move(instanceLayout))),
+      std::move(*IndexBuffer::createIndexBuffer(
+          indices, sizeof(indices) / sizeof(indices[0]))) //
+  };
 }
-QuadBatch::QuadBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
-    : vbo(std::move(vbo_)), ib(std::move(ib_)),         //
-      vao(*VertexArray::createVertexArray(vbo, ib)),    //
-      shader(std::move(shader_)),                       //
-      ptrInit(std::make_unique<Vertex[]>(MaxVertices)), //
-      ptr(ptrInit.get())                                //
+QuadBatch::QuadBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
+                     IndexBuffer &&ib_)
+    : vbo(std::move(vbo_)), instanceVBO(std::move(vboInstance_)),
+      ib(std::move(ib_)),                                         //
+      vao(*VertexArray::createVertexArray(vbo, instanceVBO, ib)), //
+      ptrInit(std::make_unique<InstanceVertex[]>(MaxPolygons)),   //
+      ptr(ptrInit.get())                                          //
 {};
 
 void QuadBatch::resetPtr()
 {
-  indexCount = 0;
+  m_count = 0;
   ptr = ptrInit.get();
 }
 void QuadBatch::resetAll()
@@ -73,49 +93,39 @@ void QuadBatch::resetAll()
 #endif
 }
 
-void QuadBatch::flush(Texture **textures, uint32_t textureCount)
+void QuadBatch::flush(Texture **textures, uint32_t textureCount, Shader *shader)
 {
-  if (!indexCount)
+  if (m_count == 0)
     return;
-  // sortByDrawOrder();
   vao.bind();
   vbo.bind();
 
-  const uint32_t count = static_cast<uint32_t>(ptr - ptrInit.get());
-  vbo.setData(ptrInit.get(), count * sizeof(Vertex));
+  instanceVBO.bind();
+  instanceVBO.setData(ptrInit.get(), m_count * sizeof(InstanceVertex));
 
   for (uint32_t i = 0; i < textureCount; i++)
     textures[i]->bindToSlot(i);
 
-  shader.bind();
+  shader->bind();
   ib.bind();
-  backend::drawIndexed(vao, indexCount * IndiceSize);
+  backend::drawIndexedInstanced(vao, 6, m_count);
 #ifndef NDEBUG
   drawCount++;
 #endif
 }
 
 void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
-                             const float tilingFactor, const float textureIndex,
-                             const std::array<glm::vec2, 4> &textureCoordinate)
+                             const float tilingFactor, const float textureIndex)
 {
   PROFILE_FUNCTION();
-  constexpr glm::vec4 QuadVertexPositions[4] = {
-      glm::vec4(-0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, -0.5f, 0.f, 1.f),
-      glm::vec4(0.5f, 0.5f, 0.f, 1.f),
-      glm::vec4(-0.5f, 0.5f, 0.f, 1.f),
-  };
-  for (unsigned i = 0; i < 4; i++) {
-    ptr->position = transform * QuadVertexPositions[i];
-    ptr->color = tintColor.value;
-    ptr->texCoord = textureCoordinate[i];
-    ptr->texIndex = textureIndex;
-    ptr->tilingFactor = tilingFactor;
-    ptr++;
-  }
+  ptr->color = tintColor.value;
+  ptr->texIndex = textureIndex;
+  ptr->tilingFactor = tilingFactor;
+  ptr->transform = transform;
+  ptr++;
+
   // drawOrder[indexCount] = order;
-  indexCount++;
+  m_count++;
 #ifndef NDEBUG
   statsCount++;
 #endif

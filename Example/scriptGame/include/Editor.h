@@ -6,7 +6,7 @@
 
 #pragma once
 #include "CoreFiles/Application.h"
-#include "CoreRender/FrameBuffer.h"
+#include "CoreRender/Buffers/FrameBuffer.h"
 #include "Misc/Events.h"
 #include "imgui_internal.h"
 #include <imgui.h>
@@ -23,10 +23,10 @@ public:
   NONMOVABLE(PainlessEditor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::Renderers &renderers, bool isMinimized,
+  void onRender(pain::RenderApi &renderAPI, 
                 pain::DeltaTime dt)
   {
-    UNUSED(isMinimized)
+    
 
     if (!m_app.getFrameInfo().swapChainTarget) {
       static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -38,8 +38,8 @@ public:
       ImGui::SetNextWindowPos(viewport->Pos);
       ImGui::SetNextWindowSize(viewport->Size);
       ImGui::SetNextWindowViewport(viewport->ID);
-      ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-      ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
       // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will
       // render our background and handle the pass-thru hole, so we ask Begin()
       // to not render a background.
@@ -53,7 +53,7 @@ public:
       // docking relationship between an active window and an inactive docking,
       // otherwise any change of dockspace/settings would lead to windows being
       // stuck in limbo and never being visible.
-      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0F, 0.0F));
       ImGui::Begin("DockSpace Demo", &m_dockspaceOpen, m_windowFlags);
       ImGui::PopStyleVar();
 
@@ -63,7 +63,7 @@ public:
       ImGuiIO &io = ImGui::GetIO();
       if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
         ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0F, 0.0F), dockspace_flags);
         static bool dockspace_initialized = false;
         if (!dockspace_initialized) {
           dockspace_initialized = true;
@@ -73,7 +73,7 @@ public:
           ImGuiID dock_id_left, dock_id_center;
 
           // Split: 25% left
-          ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25f,
+          ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25F,
                                       &dock_id_left, &dock_id_center);
           ImGui::DockBuilderDockWindow("Stats", dock_id_left);
           ImGui::DockBuilderDockWindow("Viewport", dock_id_center);
@@ -101,16 +101,16 @@ public:
       // -------------------------------------------------- //
 
       ImGui::Text("Renderer2D Stats:");
-      showStats(renderers.renderer2d.getStatistics<pain::QuadBatch>());
-      showStats(renderers.renderer2d.getStatistics<pain::CircleBatch>());
-      showStats(renderers.renderer2d.getStatistics<pain::TextBatch>());
-      showStats(renderers.renderer2d.getStatistics<pain::SprayBatch>());
-      showStats(renderers.renderer2d.getStatistics<pain::TriBatch>());
-      m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
+      showStats(renderAPI.renderer2d.getStatistics<pain::QuadBatch>());
+      showStats(renderAPI.renderer2d.getStatistics<pain::CircleBatch>());
+      showStats(renderAPI.renderer2d.getStatistics<pain::TextBatch>());
+      showStats(renderAPI.renderer2d.getStatistics<pain::SprayBatch>());
+      showStats(renderAPI.renderer2d.getStatistics<pain::TriBatch>());
+      m_imGuiDebugMenu.onRender(renderAPI,  dt);
 
       ImGui::Text("Renderer3D Stats:");
-      showStats(renderers.renderer3d.getStatistics<pain::CubeBatch>());
-      m_imGuiDebugMenu.onRender(renderers, isMinimized, dt);
+      showStats(renderAPI.renderer3d.getCubeStatistics());
+      m_imGuiDebugMenu.onRender(renderAPI,  dt);
       ImGui::End();
 
       ImGui::Begin("Viewport");
@@ -119,7 +119,7 @@ public:
         ImVec2 avail = ImGui::GetContentRegionAvail();
         if (avail.x != m_avail.x || avail.y != m_avail.y) {
           m_avail = avail;
-          renderers.renderer2d.setViewport(0, 0, avail.x, avail.y);
+          renderAPI.setViewPort(0, 0, avail.x, avail.y);
           getEventDispatcher().enqueue<pain::ImGuiViewportChangeEvent>(
               {glm::vec2(avail.x, avail.y)});
         }

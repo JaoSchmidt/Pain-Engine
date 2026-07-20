@@ -10,6 +10,7 @@
 #include "Scene.h"
 namespace pain
 {
+
 /**
  * @brief Scene specialization dedicated to gameplay / world simulation.
  *
@@ -83,9 +84,9 @@ public:
   {
     NativeScriptComponent &nsc =
         scene.getComponent<NativeScriptComponent>(entity);
-    nsc.bindAndInitiate<N>(std::move(n));
+    nsc.bindAndInitiate<N>(std::forward<N>(n));
     if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
+      nsc.onCreateFunction(nsc.instance.get());
     return static_cast<N &>(*nsc.instance);
   }
 
@@ -112,18 +113,19 @@ public:
         scene.getComponent<NativeScriptComponent>(entity);
     nsc.bindAndEmplace<N>(entity, scene, std::forward<Args>(args)...);
     if (nsc.instance && nsc.onCreateFunction)
-      nsc.onCreateFunction(nsc.instance);
+      nsc.onCreateFunction(nsc.instance.get());
     return static_cast<N &>(*nsc.instance);
   }
 
   /**
    * @brief Registers a system into the scene with compile-time validation.
+   * System will be executed during game loop IN ORDER they are added
    *
    * System must:
-   *  - be constructible with the scene registry and event dispatcher.
-   *  - The system satisfies the ValidSystem concept.
-   *  - All component tags declared by the system are registered in
-   *    WorldComponents.
+   *  - be constructible
+   *  - inherit the class Systems<WorldComponents>
+   *  - have at least one system interface: IOnUpdate, IOnEvent, IOnRender
+   *  - use components registered inside WorldComponents
    *
    * If the system already exists, insertion is ignored and a warning is logged.
    *
@@ -152,7 +154,7 @@ public:
     if constexpr (std::derived_from<Sys, IOnEvent>)
       m_eventSystems.emplace_back(s);
     if constexpr (std::derived_from<Sys, IOnRender>)
-      m_renderSystems.emplace_back(s);
+      m_renderSystems[static_cast<size_t>(s->getRenderPass())].emplace_back(s);
     if constexpr (std::derived_from<Sys, IOnUpdate>)
       m_updateSystems.emplace_back(s);
   }

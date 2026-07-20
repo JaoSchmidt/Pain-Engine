@@ -95,8 +95,9 @@ struct ParticleSys : public System<WorldComponents>, IOnUpdate, IOnRender {
    * IOnUpdate.
    */
   void onUpdate(DeltaTime deltaTime) override;
-  void onRender(pain::Renderers &renderer, bool isMinimized,
+  void onRender(RenderApi &renderAPI, 
                 DeltaTime deltaTime) override;
+  RenderPass getRenderPass() const override { return RenderPass::Dim2d; }
 };
 
 } // namespace Systems

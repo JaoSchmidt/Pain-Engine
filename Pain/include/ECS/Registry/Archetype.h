@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 #pragma once
 
 #include "Core.h"
@@ -39,25 +38,22 @@ public:
   template <typename C> std::vector<C> &createComponent()
   {
     auto it = m_componentMap.find(std::type_index(typeid(C)));
-    if (it != m_componentMap.end()) {
+    if (it != m_componentMap.end())
       return *static_cast<std::vector<C> *>(it->second.get());
-    } else {
 
-      auto deleter = [](void *vector) {
-        delete static_cast<std::vector<C> *>(vector);
-      };
-      m_removers.push_back([this](reg::Column column) {
-        return removeFromComponent<C>(column);
-      });
-      auto [newIt, isInserted] =
-          m_componentMap.emplace(std::type_index(typeid(C)),
-                                 ErasedVector{new std::vector<C>(), deleter});
-      P_ASSERT(isInserted, "Could not create new component vector");
-      PLOG_I("New component bitmask added {}", typeid(C).name());
+    auto deleter = [](void *vector) {
+      delete static_cast<std::vector<C> *>(vector);
+    };
+    m_removers.push_back(
+        [this](reg::Column column) { return removeFromComponent<C>(column); });
+    auto [newIt, isInserted] =
+        m_componentMap.emplace(std::type_index(typeid(C)),
+                               ErasedVector{new std::vector<C>(), deleter});
+    P_ASSERT(isInserted, "Could not create new component vector");
+    PLOG_I("New component bitmask added {}", typeid(C).name());
 
-      // store the deleter to use inside the destructor
-      return *static_cast<std::vector<C> *>(newIt->second.get());
-    }
+    // store the deleter to use inside the destructor
+    return *static_cast<std::vector<C> *>(newIt->second.get());
   }
   template <typename... Components> Column pushComponents(Components &&...comps)
   {
@@ -77,7 +73,6 @@ public:
     m_entities.emplace_back(entity);
     return column;
   }
-
   // directly add the component to the archetype, should be used N time per
   // entity, with N being the entity's number of components
   template <typename C, typename... Args> Column pushComponent(Args &&...args)

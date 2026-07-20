@@ -4,19 +4,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // TextBatch.h
 #pragma once
-#include "CoreRender/Shader.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
+#include "CoreRender/Renderer/Colors.h"
 
 namespace pain
 {
 
 struct TextQuadVertex {
   glm::vec3 position;
-  glm::vec4 color;
+  uint32_t color;
   glm::vec2 texCoord;
   // NOTE: (jao) you might want to implement `int texIndex` here but one texture
   // is more than fine for now
@@ -49,7 +49,7 @@ struct TextBatch {
   void resetPtr();
   void flush();
 
-  void allocateCharacter(const glm::mat4 &transform, const glm::vec4 &tintColor,
+  void allocateCharacter(const glm::mat4 &transform, const Color &tintColor,
                          const std::array<glm::vec2, 4> &textureCoordinate,
                          const std::array<glm::vec4, 4> &textVertexPositions);
 

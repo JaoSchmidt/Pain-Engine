@@ -54,10 +54,8 @@ void writeProfile(const ProfileResult &result)
   const DeltaTime duration = result.m_end - result.m_start;
   const DeltaTime start = result.m_start - m_zeroTime;
 
-  const double durationMili =
-      (double)(duration.getNanoSeconds() * 1'000'000.0 / freq);
-  const double startMili =
-      (double)(start.getNanoSeconds() * 1'000'000.0 / freq);
+  const double durationMili = duration.getNanoSeconds() * 1'000'000.0 / freq;
+  const double startMili = start.getNanoSeconds() * 1'000'000.0 / freq;
 
   m_outputStream << "{";
   m_outputStream << "\"cat\":\"function\",";

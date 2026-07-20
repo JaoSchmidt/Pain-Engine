@@ -17,15 +17,17 @@
 #pragma once
 
 #include "Core.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "ECS/Components/ComponentManager.h"
-#include "ECS/EventDispatcher.h"
 #include "ECS/Registry/ArcheRegistry.h"
+#include "Events/EventDispatcher.h"
 #include <iostream>
 
 namespace pain
 {
 class DeltaTime;
-struct Renderers;
+struct RenderApi;
+class RenderContext;
 
 /**
  * @brief Compile-time typelist used for tagging systems.
@@ -66,18 +68,21 @@ struct IOnEvent {
   virtual void onEvent(const SDL_Event &event) = 0;
 };
 
-/// @brief Interface for systems that participate in rendering.
+/// @brief Interface for systems that participate in 2d rendering.
 struct IOnRender {
   virtual ~IOnRender() = default;
 
   /**
-   * @brief Called during the render phase.
+   * @brief Called during the script phase. Used later to render materials in a
+   * specific order
    *
-   * @param renderer Active 2D renderer.
+   * @param renderContext Allow script render commands to be stored for later
+   * @param renderer Owns active renderAPI.
    * @param debug Whether debug rendering is enabled.
    * @param dt Frame delta time.
    */
-  virtual void onRender(Renderers &renderers, bool debug, DeltaTime dt) = 0;
+  virtual void onRender(RenderApi &renderAPI, DeltaTime dt) = 0;
+  virtual RenderPass getRenderPass() const = 0;
 };
 
 /**

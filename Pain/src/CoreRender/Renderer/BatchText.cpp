@@ -6,8 +6,9 @@
 
 // QuadBatch.cpp
 #include "CoreRender/Renderer/BatchText.h"
-#include "platform/ContextBackend.h"
+#include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
+#include "platform/ContextBackend.h"
 
 namespace pain
 {
@@ -25,16 +26,22 @@ TextBatch TextBatch::create()
     indices[i + 5] = offset + 0;
   }
 
+  BufferLayout layout = {
+      {ShaderDataType::Float3, "a_Position"},
+      {ShaderDataType::UByte4, "a_Color", true},
+      {ShaderDataType::Float2, "a_TexCoord"},
+  };
+
+  Shader shader =
+      *Shader::createFromFile("resources/default/shaders/Renderer2dText.glsl");
+  P_ASSERT(shader.verifyVertexLayout(layout),
+           "TextBatch layout doesn't match shader '{}'", shader.getName());
+
   return TextBatch{
-      *VertexBuffer::createVertexBuffer(
-          MaxVertices * sizeof(TextQuadVertex),
-          {
-              {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::Float4, "a_Color"},
-              {ShaderDataType::Float2, "a_TexCoord"},
-          }),
+      *VertexBuffer::createVertexBuffer(MaxVertices * sizeof(TextQuadVertex),
+                                        std::move(layout)),
       *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
-      *Shader::createFromFile("resources/default/shaders/Renderer2dText.glsl"),
+      std::move(shader),
   };
 }
 TextBatch::TextBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)
@@ -59,7 +66,7 @@ void TextBatch::resetAll()
 
 void TextBatch::flush()
 {
-  if (!indexCount || !fontAtlas) {
+  if ((indexCount == 0) || (fontAtlas == nullptr)) {
     return;
   }
 
@@ -82,14 +89,14 @@ void TextBatch::flush()
 }
 
 void TextBatch::allocateCharacter(
-    const glm::mat4 &transform, const glm::vec4 &tintColor,
+    const glm::mat4 &transform, const Color &tintColor,
     const std::array<glm::vec2, 4> &textureCoordinate,
     const std::array<glm::vec4, 4> &textVertexPositions)
 {
   PROFILE_FUNCTION();
   for (unsigned i = 0; i < 4; i++) {
     ptr->position = transform * textVertexPositions[i];
-    ptr->color = tintColor;
+    ptr->color = tintColor.value;
     ptr->texCoord = textureCoordinate[i];
     ptr++;
   }

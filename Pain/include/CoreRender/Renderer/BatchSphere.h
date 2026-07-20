@@ -7,20 +7,22 @@
 // BatchSphere.h
 #pragma once
 
-#include "CoreRender/Renderer/Misc.h"
-#include "CoreRender/Shader.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
+#include "CoreRender/Renderer/Colors.h"
 namespace pain
 {
 
 struct SphereVertex {
-  glm::vec3 position;
-  uint32_t color;
-  glm::vec2 texCoord;
-  float texIndex;
-  float tilingFactor;
-  glm::vec3 normal;
+  glm::vec3 position; // vertex position in the world
+  glm::vec2 texCoord; // Texture coordinate in the UV map
+};
+struct SphereInstanceVertex {
+  uint32_t color;     // Basic color mulitplied with the result texture
+  float texIndex;     // index of the texture in the TMUs
+  float tilingFactor; // directive for texture repetition
+  glm::mat4 transform;
 };
 
 struct SphereBatch {
@@ -32,17 +34,18 @@ struct SphereBatch {
   uint32_t drawCount = 0;
 
   VertexBuffer vbo;
+  VertexBuffer vboInstance;
   IndexBuffer ib;
   VertexArray vao;
-  Shader shader;
 
-  std::unique_ptr<Vertex[]> ptrInit;
-  Vertex *ptr = nullptr;
+  std::unique_ptr<SphereInstanceVertex[]> ptrInit;
+  SphereInstanceVertex *ptr = nullptr;
   // std::vector<int> drawOrder;
-  uint32_t indexCount = 0; // works for both draw order indexes and gpu indices
+  uint32_t m_count = 0; // works for both draw order indexes and gpu indices
   // std::unique_ptr<Vertex[]> sortBuffer;
 
-  static SphereBatch create(uint32_t slices, uint32_t stacks);
+  static SphereBatch create(uint32_t slices, uint32_t stacks,
+                           std::string name, const Shader *shader);
 
   void allocateSphereUV(const glm::mat4 &transform, const Color &tintColor,
                         float tilingFactor, float textureIndex);
@@ -50,18 +53,15 @@ struct SphereBatch {
   void resetPtr();
   void flush(Texture **textures, uint32_t textureCount);
 
-  uint32_t m_maxIndices = 0;
+  const uint32_t m_indicesPerSphere = 0;
+  const uint32_t m_verticesPerSphere = 0;
 
 private:
-  SphereBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_,
-              uint32_t maxVertices, uint32_t maxIndices, uint32_t slices,
-              uint32_t stack, uint32_t indicesPerSphere,
-              uint32_t verticesPerShpere);
+  SphereBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
+              IndexBuffer &&ib_, uint32_t indicesPerSphere,
+              uint32_t verticesPerSphere, std::string name);
 
-  uint32_t m_indicesPerSphere = 0;
-  uint32_t m_verticesPerSphere = 0;
-  uint32_t m_slices = 0;
-  uint32_t m_stacks = 0;
+  std::string m_name;
   // void swapQuadVertices(uint32_t sortedIndex, uint32_t unsortedIndex);
   // void sortByDrawOrder();
 };

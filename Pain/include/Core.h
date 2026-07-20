@@ -51,6 +51,13 @@
  * @param s Format string.
  * @param ... Optional format arguments.
  */
+#define P_ASSERT_SIMPLE(x)                                                     \
+  {                                                                            \
+    if (!(x)) {                                                                \
+      PLOG_E("Assertion Failed: {}", #x);                                      \
+      assert(x);                                                               \
+    }                                                                          \
+  }
 #define P_ASSERT_W(x, s, ...)                                                  \
   {                                                                            \
     if (!(x)) {                                                                \
@@ -60,6 +67,7 @@
 #else
 /** Disabled assertion macro in release builds. */
 #define P_ASSERT(x, ...)
+#define P_ASSERT_SIMPLE(x)
 /** Disabled warning assertion macro in release builds. */
 #define P_ASSERT_W(x, ...)
 #endif

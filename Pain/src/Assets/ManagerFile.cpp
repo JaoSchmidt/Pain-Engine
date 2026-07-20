@@ -8,7 +8,7 @@
 #include "Assets/ManagerFile.h"
 #include "Core.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Texture.h"
+#include "CoreRender/Buffers/Texture.h"
 #include <cstdio>
 #include <iostream>
 #include <stdio.h> /* defines FILENAME_MAX */

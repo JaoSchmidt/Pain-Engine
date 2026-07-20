@@ -57,7 +57,7 @@ struct Movement3dComponent {
   using tag = tag::Movement3d;
 
   glm::vec3 m_velocity{0.f, 0.f, 0.f}; /**< Linear velocity in 3D space. */
-  float m_rotationSpeed{0.0f};         /**< Angular rotation speed. */
+  float m_rotationSpeed{1.0f};         /**< Angular rotation speed. */
 
   /** @brief Creates a copy of this transform component. */
   Movement3dComponent clone() const { return *this; }

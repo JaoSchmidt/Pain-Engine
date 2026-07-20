@@ -7,8 +7,8 @@
 // RenderPipeline.h
 #pragma once
 
-#include "CoreRender/FrameBuffer.h"
-#include "CoreRender/Renderer/RenderContext.h"
+#include "CoreRender/Buffers/FrameBuffer.h"
+#include "CoreRender/Renderer/RenderApi.h"
 #include "ECS/Scene.h"
 
 namespace pain
@@ -25,6 +25,7 @@ namespace pain
 class RenderPipeline
 {
 public:
+  void temp();
   /**
    * @brief Creates a render pipeline using the *default* framebuffer
    * configuration.
@@ -56,7 +57,7 @@ public:
    * @param renderer Active renderer instance.
    * @param scene Scene containing camera components.
    */
-  void onWindowResized(const SDL_Event &event, Renderers &renderers,
+  void onWindowResized(const SDL_Event &event, RenderApi &renderAPI,
                        Scene &scene);
 
   /**
@@ -69,13 +70,12 @@ public:
    * - UI scene rendering
    *
    * @param renderer Active renderer instance.
-   * @param isMinimized Indicates whether the window is minimized.
    * @param currentTime Current frame delta time.
    * @param worldScene Scene containing world entities and systems.
    * @param uiScene Scene containing UI entities and systems.
    */
-  void pipeline(Renderers &renderers, bool isMinimized, DeltaTime currentTime,
-                Scene &worldScene, UIScene &uiScene);
+  void pipeline(RenderApi &renderAPI, bool isRenderingEnabled, DeltaTime currentTime,
+                Scene &worldScene, UIScene *uiScene);
 
   /** @brief Framebuffer owned by the render pipeline. */
   FrameBuffer m_frameBuffer;
@@ -91,7 +91,7 @@ public:
    *
    * @param scene Scene containing camera components.
    */
-  void subscribeToViewportChange(Scene &scene);
+  void subscribeToEvents(Scene &scene, RenderApi &renderAPI);
 
 private:
   /**

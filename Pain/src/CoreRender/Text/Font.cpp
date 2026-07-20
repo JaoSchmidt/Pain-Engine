@@ -5,6 +5,7 @@
  */
 
 #include "CoreRender/Text/Font.h"
+#include "Assets/ManagerTexture.h"
 #include "CoreFiles/AppConstants.h"
 
 #include "CoreFiles/LogWrapper.h"
@@ -17,7 +18,7 @@ Font *Font::create(const char *fontFilename)
   try {
     return new Font(fontFilename, 40.0);
   } catch (const std::exception &e) {
-    return getDefault();
+    return nullptr;
   }
 }
 Font *Font::create(const char *fontFilename, double emSize)
@@ -26,12 +27,13 @@ Font *Font::create(const char *fontFilename, double emSize)
     return new Font(fontFilename, emSize);
   } catch (const std::exception &e) {
     PLOG_W("Defaulting to default font texture");
-    return getDefault();
+    return nullptr;
   }
 }
 
 Font::Font(const char *fontFilename, double emSize)
-    : m_atlasTexture(generateAtlas(fontFilename, emSize)) {};
+    : m_glyphs(std::make_unique<std::vector<msdf_atlas::GlyphGeometry>>()),
+      m_atlasTexture(generateAtlas(fontFilename, emSize)) {};
 
 Texture Font::generateAtlas(const char *fontFilename, double emSize)
 {
@@ -40,7 +42,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   P_ASSERT(ft, "Could not load FreeType library");
   // Load font file
   msdfgen::FontHandle *font = msdfgen::loadFont(ft, fontFilename);
-  if (!font) {
+  if (font == nullptr) {
     PLOG_W("Font file not found \"{}\"", fontFilename);
     throw std::runtime_error(std::string("Font file not found \"") +
                              std::string(fontFilename) + std::string("\""));
@@ -49,7 +51,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   // FontGeometry is a helper class that loads a set of glyphs from a single
   // font. It can also be used to get additional font metrics, kerning
   // information, etc.
-  m_fontGeometry = msdf_atlas::FontGeometry(&m_glyphs);
+  m_fontGeometry = msdf_atlas::FontGeometry(m_glyphs.get());
   // Load a set of character glyphs:
   // The second argument can be ignored unless you mix different font sizes
   // in one atlas. In the last argument, you can specify a charset other
@@ -66,9 +68,10 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   // Apply MSDF edge coloring. See edge-coloring.h for other coloring
   // strategies.
   const double maxCornerAngle = 3.0;
-  for (msdf_atlas::GlyphGeometry &glyph : m_glyphs)
+  for (msdf_atlas::GlyphGeometry &glyph : *m_glyphs)
     glyph.edgeColoring(&msdfgen::edgeColoringInkTrap, maxCornerAngle, 0);
   // TightAtlasPacker class computes the layout of the atlas.
+  //  NOTE: (jaoschmidt) this is used for getting width and height
   msdf_atlas::TightAtlasPacker packer;
   // Set atlas parameters:
   // setDimensions or setDimensionsConstraint to find the best value
@@ -81,7 +84,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   packer.setMiterLimit(1.0);
   packer.setScale(emSize);
   // Compute atlas layout - pack glyphs
-  packer.pack(m_glyphs.data(), (int)m_glyphs.size());
+  packer.pack(m_glyphs->data(), (int)m_glyphs->size());
   // Get final atlas dimensions
   int width = 0, height = 0;
   packer.getDimensions(width, height);
@@ -89,7 +92,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
   // atlas bitmap.
   Texture texture =
       createAtlasTexture<uint8_t, float, 3, msdf_atlas::msdfGenerator>(
-          m_glyphs, width, height, fontFilename);
+          *m_glyphs, width, height, fontFilename);
   // Cleanup
   msdfgen::destroyFont(font);
   msdfgen::deinitializeFreetype(ft);
@@ -97,7 +100,7 @@ Texture Font::generateAtlas(const char *fontFilename, double emSize)
 }
 template <typename T, typename S, int N,
           msdf_atlas::GeneratorFunction<S, N> GenFunc>
-Texture createAtlasTexture(
+Texture Font::createAtlasTexture(
     // const char *fontName,
     const std::vector<msdf_atlas::GlyphGeometry> &glyphs,
     // const msdf_atlas::FontGeometry &fontGeometry,
@@ -124,8 +127,8 @@ Texture createAtlasTexture(
       (msdfgen::BitmapConstRef<T, N>)generator.atlasStorage();
 
   // Tranform the msdfgen bitmap into a Texture
-  Texture texture = createTexture(fontFilename, bitmap.width, bitmap.height,
-                                  ImageFormat::RGB8);
+  Texture texture = *Texture::createTexture(fontFilename, bitmap.width,
+                                            bitmap.height, ImageFormat::RGB8);
   texture.setData((void *)bitmap.pixels, bitmap.width * bitmap.height * 3);
 
   // For tests only, transform into a SDL_Surface
@@ -152,13 +155,6 @@ msdf_atlas::Charset Font::getLatinCharset()
       charset.add(c);
   }
   return charset;
-}
-
-Font *Font::getDefault()
-{
-  static Font m_defaultFont("resources/default/fonts/OpenSans-Regular.ttf",
-                            40.0);
-  return &m_defaultFont;
 }
 
 } // namespace pain

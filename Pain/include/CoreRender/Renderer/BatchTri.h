@@ -4,19 +4,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-
 // TriBatch.h
 #pragma once
 
-#include "CoreRender/Shader.h"
-#include "CoreRender/Texture.h"
-#include "CoreRender/VertexArray.h"
+#include "CoreRender/Buffers/Shader.h"
+#include "CoreRender/Buffers/Texture.h"
+#include "CoreRender/Buffers/VertexArray.h"
+#include "CoreRender/Renderer/Colors.h"
 namespace pain
 {
 
 struct TriVertex {
   glm::vec3 position;
-  glm::vec4 color;
+  uint32_t color;
 };
 
 struct TriBatch {
@@ -30,19 +30,18 @@ struct TriBatch {
   VertexBuffer vbo;
   IndexBuffer ib;
   VertexArray vao;
-  Shader shader;
 
   std::unique_ptr<Vertex[]> cpuBuffer;
   Vertex *ptr = nullptr;
   uint32_t indexCount = 0;
 
-  static TriBatch create();
+  static TriBatch create(const Shader *shader);
   void resetAll();
   void resetPtr();
   void flush();
-  void allocateTri(const glm::mat4 &transform, const glm::vec4 &tintColor);
+  void allocateTri(const glm::mat4 &transform, const Color &tintColor);
 
 private:
-  TriBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_);
+  TriBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_);
 };
 } // namespace pain

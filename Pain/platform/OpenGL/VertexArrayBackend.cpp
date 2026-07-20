@@ -6,7 +6,7 @@
 
 // ContextBackend.cpp
 #include "platform/VertexArrayBackend.h"
-#include "CoreRender/BufferLayout.h"
+#include "CoreRender/Buffers/BufferLayout.h"
 
 #ifdef PAIN_RENDERER_OPENGL
 
@@ -63,11 +63,23 @@ constexpr GLenum getComponentGLType(ShaderDataType type)
       GL_UNSIGNED_BYTE, // UByte
   };
 
-  static_assert(static_cast<GLenum>(ShaderDataType::Bool) <
+  static_assert(static_cast<uint32_t>(ShaderDataType::Bool) <
                     sizeof(types) / sizeof(types[0]),
                 "Missing entry in types array");
 
   return types[static_cast<uint32_t>(type)];
+}
+constexpr bool canBeNormalized(ShaderDataType type)
+{
+  switch (type) {
+  case ShaderDataType::UByte:
+  case ShaderDataType::UByte2:
+  case ShaderDataType::UByte3:
+  case ShaderDataType::UByte4:
+    return true;
+  default:
+    return false;
+  }
 }
 
 uint32_t createVertexArray()
@@ -100,19 +112,60 @@ void addVertexBuffer(const VertexBuffer &vertexBuffer, uint32_t rendererId,
   vertexBuffer.bind();
 
   const auto &layout = vertexBuffer.getLayout();
+  // big atributes only
   for (const BufferElement &element : layout) {
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(                        //
-        index,                                    //
-        getComponentCount(element.type),          //
-        getComponentGLType(element.type),         //
-        element.normalized ? GL_TRUE : GL_FALSE,  //
-        static_cast<GLsizei>(layout.getStride()), //
-        // same as `(const void *)element.offset`, but won't generate warning
-        reinterpret_cast<const void *>(static_cast<uintptr_t>(element.offset)));
-    if (element.instanced)
-      glVertexAttribDivisor(index, 1);
-    index++;
+    if (element.normalized && !canBeNormalized(element.type)) {
+      P_ASSERT(!element.normalized || canBeNormalized(element.type),
+               "Invalid normalized vertex attribute type.");
+    }
+    // ---------------------------
+    // Handle matrices separately
+    // ---------------------------
+    if (element.type == ShaderDataType::Mat3 ||
+        element.type == ShaderDataType::Mat4) {
+      uint32_t columnCount = (element.type == ShaderDataType::Mat4) ? 4 : 3;
+      uint32_t size = (element.type == ShaderDataType::Mat4)
+                          ? sizeof(glm::vec4)
+                          : sizeof(glm::vec3);
+
+      for (uint32_t i = 0; i < columnCount; i++) {
+        glEnableVertexAttribArray(index);
+        glVertexAttribPointer(
+            index,                                    //
+            static_cast<GLint>(columnCount),          //
+            GL_FLOAT,                                 //
+            element.normalized ? GL_TRUE : GL_FALSE,  //
+            static_cast<GLsizei>(layout.getStride()), //
+            // same as (const void *)element.offset, but won't generate warning
+            reinterpret_cast<const void *>(
+                static_cast<uintptr_t>(element.offset) + size * i));
+
+        if (element.instanced)
+          glVertexAttribDivisor(index, 1);
+
+        index++;
+      }
+    } else {
+      // ---------------------------
+      // Normal attributes
+      // ---------------------------
+      GLint componentCount = getComponentCount(element.type);
+      glEnableVertexAttribArray(index);
+      glVertexAttribPointer(
+          index,                                    //
+          componentCount,                           //
+          getComponentGLType(element.type),         //
+          element.normalized ? GL_TRUE : GL_FALSE,  //
+          static_cast<GLsizei>(layout.getStride()), //
+          // same as (const void *)element.offset, but won't generate warning
+          reinterpret_cast<const void *>(
+              static_cast<uintptr_t>(element.offset)));
+
+      if (element.instanced)
+        glVertexAttribDivisor(index, 1);
+
+      index++;
+    }
   }
 }
 void setIndexBuffer(const IndexBuffer &indexBuffer, uint32_t rendererId)

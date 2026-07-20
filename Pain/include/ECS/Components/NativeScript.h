@@ -16,7 +16,7 @@
  * Script types may optionally implement the following callbacks:
  *  - onCreate()
  *  - onDestroy()
- *  - onRender(Renderers&, bool, DeltaTime)
+ *  - onRender(RenderContext&, DeltaTime)
  *  - onUpdate(DeltaTime)
  *  - onEvent(const SDL_Event&)
  *
@@ -29,13 +29,13 @@
 #include "CoreFiles/LogWrapper.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Scene.h"
-#include "Scripting/Concepts.h"
+#include "Scripting/Native/Concepts.h"
 #include <SDL2/SDL_events.h>
 
 namespace pain
 {
 // forward declare
-struct Renderers;
+class RenderContext;
 template <typename SceneT> class GameObject;
 class Scene;
 
@@ -72,7 +72,8 @@ public:
    * Lifetime is owned by the component. The instance is destroyed automatically
    * when the component is destroyed or reassigned.
    */
-  Scriptable *instance = nullptr;
+  std::unique_ptr<Scriptable, void (*)(Scriptable *)> instance = {nullptr,
+                                                                  nullptr};
   /**
    * @name Script lifecycle function pointers
    * @brief Generated wrappers for optional script callbacks.
@@ -81,11 +82,9 @@ public:
    * callbacks the script type implements.
    */
   ///@{
-  void (*destroyInstanceFunction)(Scriptable *&) = nullptr;
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
-  void (*onRenderFunction)(Scriptable *, Renderers &, bool,
-                           DeltaTime) = nullptr;
+  void (*onRenderFunction)(Scriptable *, RenderContext &, DeltaTime) = nullptr;
   void (*onUpdateFunction)(Scriptable *, DeltaTime) = nullptr;
   void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
   ///@}
@@ -108,13 +107,12 @@ public:
   {
     checkScriptMethods<T>();
 
-    instance = new T(std::move(t));
-    destroyInstanceFunction = [](Scriptable *&instance) {
-      delete static_cast<T *>(instance);
-      instance = nullptr;
-    };
+    instance = {new T(std::move(t)),
+                [](Scriptable *&instance) { //
+                  delete static_cast<T *>(instance);
+                }};
 
-    if constexpr (has_onCreate_method<T>) {
+    if constexpr (hasOnCreateMethod<T>) {
       onCreateFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onCreate();
       };
@@ -122,7 +120,7 @@ public:
       onCreateFunction = nullptr;
     }
 
-    if constexpr (has_onDestroy_method<T>) {
+    if constexpr (hasOnDestroyMethod<T>) {
       onDestroyFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
@@ -130,10 +128,10 @@ public:
       onDestroyFunction = nullptr;
     }
 
-    if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](Scriptable *instance, Renderers &renderer,
-                            bool isMinimized, DeltaTime realTime) {
-        static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
+    if constexpr (hasOnRenderMethod<T>) {
+      onRenderFunction = [](Scriptable *instance, RenderContext &renderContext,
+                            DeltaTime realTime) {
+        static_cast<T *>(instance)->onRender(renderContext, realTime);
       };
     } else {
       onRenderFunction = nullptr;
@@ -141,7 +139,7 @@ public:
 
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
-    if constexpr (has_onUpdate_method<T>) {
+    if constexpr (hasOnUpdateMethod<T>) {
       onUpdateFunction = [](Scriptable *instance, DeltaTime deltaTime) {
         static_cast<T *>(instance)->onUpdate(deltaTime);
       };
@@ -149,7 +147,7 @@ public:
       onUpdateFunction = nullptr;
     }
 
-    if constexpr (has_onEvent_method<T>) {
+    if constexpr (hasOnEventMethod<T>) {
       onEventFunction = [](Scriptable *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
@@ -175,15 +173,14 @@ public:
     static_assert(std::is_constructible_v<T, Args...>,
                   "Error: You are binding a function whose constructor doesn't "
                   "implement constructor: (Scene&, Entity, "
-                  "Args...). Pherhaps you are using the defualt constructor "
+                  "Args...). Pherhaps you are using the default constructor "
                   "instead of coding `using Scriptable::SceneObject;`?");
-    instance = new T(std::forward<Args>(args)...);
-    destroyInstanceFunction = [](Scriptable *&instance) {
-      delete static_cast<T *>(instance);
-      instance = nullptr;
-    };
+    instance = {new T(std::forward<Args>(args)...),
+                [](Scriptable *instance) { //
+                  delete static_cast<T *>(instance);
+                }};
 
-    if constexpr (has_onCreate_method<T>) {
+    if constexpr (hasOnCreateMethod<T>) {
       onCreateFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onCreate();
       };
@@ -191,7 +188,7 @@ public:
       onCreateFunction = nullptr;
     }
 
-    if constexpr (has_onDestroy_method<T>) {
+    if constexpr (hasOnDestroyMethod<T>) {
       onDestroyFunction = [](Scriptable *instance) {
         static_cast<T *>(instance)->onDestroy();
       };
@@ -199,10 +196,10 @@ public:
       onDestroyFunction = nullptr;
     }
 
-    if constexpr (has_onRender_method<T>) {
-      onRenderFunction = [](Scriptable *instance, Renderers &renderer,
-                            bool isMinimized, DeltaTime realTime) {
-        static_cast<T *>(instance)->onRender(renderer, isMinimized, realTime);
+    if constexpr (hasOnRenderMethod<T>) {
+      onRenderFunction = [](Scriptable *instance, RenderContext &renderContext,
+                            DeltaTime realTime) {
+        static_cast<T *>(instance)->onRender(renderContext, realTime);
       };
     } else {
       onRenderFunction = nullptr;
@@ -210,7 +207,7 @@ public:
 
     // TODO: Check if has onUpdate and onEvent functions, be aware of extra
     // argument
-    if constexpr (has_onUpdate_method<T>) {
+    if constexpr (hasOnUpdateMethod<T>) {
       onUpdateFunction = [](Scriptable *instance, DeltaTime deltaTime) {
         static_cast<T *>(instance)->onUpdate(deltaTime);
       };
@@ -218,7 +215,7 @@ public:
       onUpdateFunction = nullptr;
     }
 
-    if constexpr (has_onEvent_method<T>) {
+    if constexpr (hasOnEventMethod<T>) {
       onEventFunction = [](Scriptable *instance, const SDL_Event &event) {
         static_cast<T *>(instance)->onEvent(event);
       };
@@ -231,12 +228,7 @@ public:
   NativeScriptComponent(const NativeScriptComponent &) = delete;
   NativeScriptComponent &operator=(const NativeScriptComponent &) = delete;
   /// @brief Destroys the bound script instance if present.
-  ~NativeScriptComponent()
-  {
-    if (instance != nullptr) {
-      destroyInstanceFunction(instance);
-    } // else means this component is unbinded
-  }
+  ~NativeScriptComponent() = default;
 
   /**
    * @brief Move assignment operator.
@@ -248,11 +240,7 @@ public:
   {
     if (this != &other) {
       // Clean up current instance if needed
-      if (instance && destroyInstanceFunction)
-        destroyInstanceFunction(instance);
-
-      instance = other.instance;
-      destroyInstanceFunction = other.destroyInstanceFunction;
+      instance = std::move(other.instance);
       onCreateFunction = other.onCreateFunction;
       onDestroyFunction = other.onDestroyFunction;
       onRenderFunction = other.onRenderFunction;
@@ -261,7 +249,6 @@ public:
 
       // Clear the other's instance
       other.instance = nullptr;
-      other.destroyInstanceFunction = nullptr;
       other.onCreateFunction = nullptr;
       other.onDestroyFunction = nullptr;
       other.onRenderFunction = nullptr;
@@ -278,18 +265,15 @@ public:
    * deletion.
    */
   NativeScriptComponent(NativeScriptComponent &&other) noexcept
+      : instance(std::move(other.instance)),
+        onCreateFunction(other.onCreateFunction),
+        onDestroyFunction(other.onDestroyFunction),
+        onRenderFunction(other.onRenderFunction),
+        onUpdateFunction(other.onUpdateFunction),
+        onEventFunction(other.onEventFunction)
   {
-    instance = other.instance;
-    destroyInstanceFunction = other.destroyInstanceFunction;
-    onCreateFunction = other.onCreateFunction;
-    onDestroyFunction = other.onDestroyFunction;
-    onRenderFunction = other.onRenderFunction;
-    onUpdateFunction = other.onUpdateFunction;
-    onEventFunction = other.onEventFunction;
-
     // Clear the other's instance to avoid double delete
     other.instance = nullptr;
-    other.destroyInstanceFunction = nullptr;
     other.onCreateFunction = nullptr;
     other.onDestroyFunction = nullptr;
     other.onRenderFunction = nullptr;

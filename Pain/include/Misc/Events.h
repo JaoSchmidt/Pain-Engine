@@ -8,8 +8,8 @@
 #pragma once
 
 #include "Core.h"
-#include "ECS/EventDispatcher.h"
 #include "ECS/Registry/Entity.h"
+#include "Events/EventDispatcher.h"
 #include "glm/ext/vector_float2.hpp"
 #include <sol/state.hpp>
 
@@ -59,6 +59,17 @@ struct CollisionEvent {
     );
   }
 };
+struct ChangeActiveCameraEvent {
+  reg::Entity cam;
+  /** Converts this event into a Lua table representation. */
+  sol::table toLuaTable(const sol::state &lua) const
+  {
+    return lua.create_table_with( //
+        lua,                      //
+        "cam", cam                //
+    );
+  }
+};
 
 /**
  * List of event types synchronized with Lua.
@@ -73,7 +84,9 @@ struct CollisionEvent {
  * Usage:
  *   X(EventStructType, LuaVisibleName)
  */
-#define EVENT_TYPE_LIST X(CollisionEvent, Collision)
+#define EVENT_TYPE_LIST                                                        \
+  X(CollisionEvent, Collision)                                                 \
+  X(ImGuiViewportChangeEvent, ImGuiChange)
 
 /**
  * Creates and registers the Lua Event API.

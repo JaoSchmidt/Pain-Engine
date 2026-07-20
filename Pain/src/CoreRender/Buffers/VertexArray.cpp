@@ -1,0 +1,66 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+#include "CoreRender/Buffers/VertexArray.h"
+#include "CoreRender/Buffers/Buffers.h"
+#include "platform/VertexArrayBackend.h"
+
+namespace pain
+{
+std::optional<VertexArray>
+VertexArray::createVertexArray(VertexBuffer &vertexBuffer,
+                               IndexBuffer &indexBuffer)
+{
+  uint32_t rendererId = backend::createVertexArray();
+  uint32_t index = 0;
+  addVertexBuffer(vertexBuffer, rendererId, index);
+  setIndexBuffer(indexBuffer, rendererId);
+  return VertexArray(vertexBuffer, indexBuffer, rendererId);
+}
+
+std::optional<VertexArray>
+VertexArray::createVertexArray(VertexBuffer &vertexBuffer,
+                               VertexBuffer &instanceVertexBuffer,
+                               IndexBuffer &indexBuffer)
+{
+  uint32_t index = 0;
+  uint32_t rendererId = backend::createVertexArray();
+
+  addVertexBuffer(vertexBuffer, rendererId, index);
+  setIndexBuffer(indexBuffer, rendererId);
+  addVertexBuffer(instanceVertexBuffer, rendererId, index);
+  return VertexArray(vertexBuffer, indexBuffer, rendererId);
+}
+VertexArray::VertexArray(VertexBuffer &vertexBuffer, IndexBuffer &indexBuffer,
+                         uint32_t rendererId)
+    : m_vertexBuffer(vertexBuffer), m_indexBuffer(indexBuffer),
+      m_rendererId(rendererId) {};
+VertexArray::VertexArray(VertexArray &&o) noexcept
+    : m_vertexBuffer(o.m_vertexBuffer), m_indexBuffer(o.m_indexBuffer),
+      m_rendererId(o.m_rendererId)
+{
+  o.m_rendererId = 0;
+}
+
+VertexArray::~VertexArray()
+{
+  if (m_rendererId != 0)
+    backend::destroyVertexArray(m_rendererId);
+  // buffers will be deleted later from here, which is the correct order
+}
+void VertexArray::bind() const { backend::bindVertexArray(m_rendererId); }
+void VertexArray::unbind() { backend::unbindVertexArray(); }
+void VertexArray::addVertexBuffer(const VertexBuffer &vertexBuffer,
+                                  uint32_t rendererId, uint32_t &index)
+{
+  backend::addVertexBuffer(vertexBuffer, rendererId, index);
+}
+void VertexArray::setIndexBuffer(const IndexBuffer &indexBuffer,
+                                 uint32_t rendererId)
+{
+  backend::setIndexBuffer(indexBuffer, rendererId);
+}
+} // namespace pain
