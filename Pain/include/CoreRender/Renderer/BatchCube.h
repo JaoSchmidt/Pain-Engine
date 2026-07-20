@@ -7,6 +7,7 @@
 // BatchCube.h
 #pragma once
 
+#include "CoreRender/Buffers/Shader.h"
 #include "CoreRender/Buffers/Texture.h"
 #include "CoreRender/Buffers/VertexArray.h"
 #include "CoreRender/Renderer/Colors.h"
@@ -53,7 +54,7 @@ struct CubeBatch {
   std::unique_ptr<CubeInstanceVertex[]> ptrInit;
   CubeInstanceVertex *ptr = nullptr;
   uint32_t m_count = 0; // works for both draw order indexes and gpu indices
-  static CubeBatch create(std::string name);
+  static CubeBatch create(std::string name, const Shader *shader);
 
   void allocateCube(const glm::mat4 &transform, const Color &tintColor,
                     float tilingFactor, float textureIndex);

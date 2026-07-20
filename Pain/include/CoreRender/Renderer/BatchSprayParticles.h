@@ -14,13 +14,11 @@ namespace pain
 {
 struct ParticleVertex {
   glm::vec2 position; // -0.5 .. 0.5
-  // glm::vec2 texCoord;
 };
 struct InstanceParticleVertex {
   glm::vec2 normal;
   float startTime = 0;
   glm::vec2 emitStart;
-  glm::mat4 transform;
 };
 
 struct SprayBatch {

@@ -5,12 +5,13 @@
  */
 
 #include "CoreRender/Renderer/BatchTri.h"
+#include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "platform/ContextBackend.h"
 namespace pain
 {
 
-TriBatch TriBatch::create()
+TriBatch TriBatch::create(const Shader *shader)
 {
   // Indices (simple triangles)
   std::vector<uint32_t> indices(MaxIndices);
@@ -20,13 +21,19 @@ TriBatch TriBatch::create()
     indices[i + 2] = offset + 2;
   }
 
+  BufferLayout layout = {
+      {ShaderDataType::Float3, "a_Position"},
+      {ShaderDataType::UByte4, "a_Color", true},
+  };
+
+  if (shader) {
+    P_ASSERT(shader->verifyVertexLayout(layout),
+             "TriBatch layout doesn't match shader '{}'", shader->getName());
+  }
+
   return TriBatch{
-      *VertexBuffer::createVertexBuffer(
-          MaxVertices * sizeof(Vertex),
-          {
-              {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::UByte4, "a_Color", true},
-          }),
+      *VertexBuffer::createVertexBuffer(MaxVertices * sizeof(Vertex),
+                                        std::move(layout)),
       *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
   };
 }

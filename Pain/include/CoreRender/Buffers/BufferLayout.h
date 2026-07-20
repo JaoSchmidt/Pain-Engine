@@ -177,6 +177,12 @@ public:
     calculateOffsetsAndStride();
   }
 
+  BufferLayout(std::vector<BufferElement> elements)
+      : m_Elements(std::move(elements))
+  {
+    calculateOffsetsAndStride();
+  }
+
   /** Returns the total stride (in bytes) of a single vertex. */
   inline uint32_t getStride() const { return m_Stride; }
   /** Returns the ordered list of buffer elements. */

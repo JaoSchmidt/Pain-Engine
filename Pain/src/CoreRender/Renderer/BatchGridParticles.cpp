@@ -5,11 +5,11 @@
  */
 
 #include "CoreRender/Renderer/BatchGridParticles.h"
+#include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "platform/ContextBackend.h"
 namespace pain
 {
-// TODO, what is this?
 GridParticleBatch GridParticleBatch::create()
 {
   // Indices (quad-style)
@@ -24,15 +24,22 @@ GridParticleBatch GridParticleBatch::create()
     indices[i + 5] = offset + 0;
   }
 
+  BufferLayout layout = {
+      {ShaderDataType::Float2, "a_Direction"},
+      {ShaderDataType::UByte4, "a_Color", true},
+  };
+
+  Shader shader =
+      *Shader::createFromFile("resources/default/shaders/GridParticles.glsl");
+  P_ASSERT(shader.verifyVertexLayout(layout),
+           "GridParticleBatch layout doesn't match shader '{}'",
+           shader.getName());
+
   return GridParticleBatch{
       *VertexBuffer::createVertexBuffer(
-          MaxVertices * sizeof(GridParticleVertex),
-          {
-              {ShaderDataType::Float2, "a_Direction"},
-              {ShaderDataType::UByte4, "a_Color", true},
-          }),
+          MaxVertices * sizeof(GridParticleVertex), std::move(layout)),
       *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
-      *Shader::createFromFile("resources/default/shaders/GridParticles.glsl"),
+      std::move(shader),
   };
 }
 GridParticleBatch::GridParticleBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_,

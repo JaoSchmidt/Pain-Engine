@@ -227,8 +227,8 @@ void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
                      .layer = layer};
   auto it = m_rectBatchCache.find(key);
   if (it == m_rectBatchCache.end()) {
-    auto [newIt, inserted] =
-        m_rectBatchCache.emplace(std::move(key), RectBatch::create());
+    auto [newIt, inserted] = m_rectBatchCache.emplace(
+        std::move(key), RectBatch::create(material.m_shader));
     it = newIt;
     if (inserted)
       newIt->second.resetAll();
@@ -326,7 +326,7 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
   auto it = m_quadBatchCache.find(key);
   if (it == m_quadBatchCache.end()) {
     auto [newIt, _] =
-        m_quadBatchCache.emplace(std::move(key), QuadBatch::create());
+        m_quadBatchCache.emplace(std::move(key), QuadBatch::create(key.shader));
     it = newIt;
   }
   QuadBatch &batch = it->second;
@@ -427,7 +427,7 @@ void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
   auto it = m_triBatchCache.find(key);
   if (it == m_triBatchCache.end()) {
     auto [newIt, inserted] =
-        m_triBatchCache.emplace(std::move(key), TriBatch::create());
+        m_triBatchCache.emplace(std::move(key), TriBatch::create(key.shader));
     it = newIt;
     if (inserted)
       newIt->second.resetAll();
@@ -592,7 +592,6 @@ Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
         .sprayBatch = SprayBatch::create(), //
         .textBatch = TextBatch::create(),   //
         .debugGrid = DebugGrid::create(),
-        .triBatch = TriBatch::create(),
         .textureSlots = textureSlots, //
     };
   }); //

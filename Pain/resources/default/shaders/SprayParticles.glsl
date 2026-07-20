@@ -2,11 +2,9 @@
 #version 330 core
 
 layout (location = 0) in vec2 a_Position;  // Position of the quad (particle) in object space
-
 layout (location = 1) in vec2 a_Normal;          // Directional normal of the rocket base
 layout (location = 2) in float a_Time;     // Particle's birth time (for size growth and fading)
 layout (location = 3) in vec2 a_EmitStart;     // Particle's birth time (for size growth and fading)
-layout (location = 4) in mat4 a_Transform;    
 
 // Set by the particle system
 uniform float u_SizeChangeSpeed;  // how much smaller it gets over time

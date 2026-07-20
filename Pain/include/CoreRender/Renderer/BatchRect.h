@@ -43,7 +43,7 @@ struct RectBatch {
 
   // std::unique_ptr<Vertex[]> sortBuffer;
 
-  static RectBatch create();
+  static RectBatch create(Shader *shader);
 
   void allocateRect(const glm::mat4 &transform, const Color &tintColor,
                     const float tilingFactor, const float textureIndex,

@@ -14,7 +14,7 @@
 namespace pain
 {
 
-RectBatch RectBatch::create()
+RectBatch RectBatch::create(Shader *shader)
 {
   std::vector<uint32_t> indices(MaxIndices);
   for (uint32_t i = 0, offset = 0; i < MaxIndices; i += 6, offset += 4) {
@@ -27,27 +27,28 @@ RectBatch RectBatch::create()
     indices[i + 5] = offset + 0;
   }
 
-  Shader shader =
-      *Shader::createFromFile("resources/default/shaders/Texture.glsl");
+  BufferLayout layout = {
+      {ShaderDataType::Float3, "a_Position"},
+      {ShaderDataType::Float2, "a_TexCoord"},
+      {ShaderDataType::UByte4, "a_Color", true},
+      {ShaderDataType::Float, "a_TexIndex"},
+      {ShaderDataType::Float, "a_TilingFactor"},
+  };
+
+  P_ASSERT(shader->verifyVertexLayout(layout),
+           "RectBatch layout doesn't match shader '{}'", shader->getName());
 
   // Set texture samplers once
   int *samplers = new int[backend::getTMU()];
   for (int i = 0; i < backend::getTMUi(); i++)
     samplers[i] = i;
 
-  shader.bind();
-  shader.uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
+  shader->bind();
+  shader->uploadUniformIntArray("u_Textures", samplers, backend::getTMU());
   delete[] samplers;
   return RectBatch{
-      std::move(*VertexBuffer::createVertexBuffer(
-          MaxVertices * sizeof(Vertex),
-          {
-              {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::Float2, "a_TexCoord"},
-              {ShaderDataType::UByte4, "a_Color", true},
-              {ShaderDataType::Float, "a_TexIndex"},
-              {ShaderDataType::Float, "a_TilingFactor"},
-          })),
+      std::move(*VertexBuffer::createVertexBuffer(MaxVertices * sizeof(Vertex),
+                                                  std::move(layout))),
       std::move(*IndexBuffer::createIndexBuffer(indices.data(), MaxIndices))};
 }
 RectBatch::RectBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_)

@@ -7,15 +7,24 @@
 /** Shader.h */
 #pragma once
 #include "Core.h"
+#include "CoreRender/Buffers/BufferLayout.h"
 #include "pch.h"
 
 #include <functional>
 #include <glm/glm.hpp>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace pain
 {
+
+struct ShaderInput {
+  std::string name;
+  ShaderDataType type;
+  int32_t size;
+  int32_t location;
+};
 
 /** GPU shader program abstraction with API-agnostic uniform uploads. */
 class Shader
@@ -97,11 +106,18 @@ public:
   /** Parses a combined shader file into vertex and fragment source strings. */
   static std::pair<std::string, std::string> parseShader(const char *filepath);
 
+  /** Returns all active vertex input attributes for this shader program.
+   *  Result is cached after the first call. */
+  const std::vector<ShaderInput> &getVertexInputs() const;
+
+  bool verifyVertexLayout(const BufferLayout &layout) const;
+
 private:
   Shader() = default;
   Shader(std::string name, uint32_t programId);
   std::string m_name = "undefined";
   uint32_t m_programId = 0;
+  mutable std::optional<std::vector<ShaderInput>> m_cachedInputs;
 };
 
 } // namespace pain

@@ -23,7 +23,7 @@
 namespace pain
 {
 
-CubeBatch CubeBatch::create(std::string name)
+CubeBatch CubeBatch::create(std::string name, const Shader *shader)
 {
   std::vector<uint32_t> indices(IndicesPerCube);
   for (uint32_t i = 0, offset = 0; i < IndicesPerCube; i += 6, offset += 4) {
@@ -61,6 +61,27 @@ CubeBatch CubeBatch::create(std::string name)
       {-0.5F, 0.5F, 0.5F},   // 7
   };
 
+  BufferLayout staticLayout = {
+      {ShaderDataType::Float3, "a_Position"},
+      {ShaderDataType::Float2, "a_TexCoord"},
+  };
+  BufferLayout instanceLayout = {
+      {ShaderDataType::UByte4, "a_Color", true, true},
+      {ShaderDataType::Float, "a_TexIndex", false, true},
+      {ShaderDataType::Float, "a_TilingFactor", false, true},
+      {ShaderDataType::Mat4, "a_Transform", false, true},
+  };
+
+  if (shader) {
+    std::vector<BufferElement> combined;
+    combined.insert(combined.end(), staticLayout.getElements().begin(),
+                    staticLayout.getElements().end());
+    combined.insert(combined.end(), instanceLayout.getElements().begin(),
+                    instanceLayout.getElements().end());
+    P_ASSERT(shader->verifyVertexLayout(BufferLayout(std::move(combined))),
+             "CubeBatch layout doesn't match shader '{}'", shader->getName());
+  }
+
   std::unique_ptr<Vertex[]> vertices =
       std::make_unique<Vertex[]>(VerticesPerCube);
   Vertex *pVertex = vertices.get();
@@ -74,26 +95,15 @@ CubeBatch CubeBatch::create(std::string name)
     }
   }
 
-  // PLOG_T("Being created");
   return CubeBatch{
-      *VertexBuffer::createStaticVertexBuffer(
-          vertices.get(), VerticesPerCube * sizeof(Vertex),
-          {
-              {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::Float2, "a_TexCoord"},
-          }),
-      *VertexBuffer::createVertexBuffer(
-          MaxPolyhedrons * sizeof(CubeInstanceVertex),
-          {
-              {ShaderDataType::UByte4, "a_Color", true, true},
-              {ShaderDataType::Float, "a_TexIndex", false, true},
-              {ShaderDataType::Float, "a_TilingFactor", false, true},
-              {ShaderDataType::Mat4, "a_Transform", false, true},
-          }),
+      *VertexBuffer::createStaticVertexBuffer(vertices.get(),
+                                              VerticesPerCube * sizeof(Vertex),
+                                              std::move(staticLayout)),
+      *VertexBuffer::createVertexBuffer(MaxPolyhedrons *
+                                            sizeof(CubeInstanceVertex),
+                                        std::move(instanceLayout)),
       *IndexBuffer::createIndexBuffer(indices.data(), IndicesPerCube),
       std::move(name)};
-  // *IndexBuffer::createIndexBuffer(indices,
-  //                                 sizeof(indices) / sizeof(indices[0]))};
 }
 CubeBatch::CubeBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
                      IndexBuffer &&ib_, std::string name)

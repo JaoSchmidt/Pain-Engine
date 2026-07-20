@@ -5,7 +5,8 @@
  */
 
 // BatchSpray.cpp
-#include "CoreRender/Renderer/BatchSpray.h"
+#include "CoreRender/Renderer/BatchSprayParticles.h"
+#include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "platform/ContextBackend.h"
 #
@@ -40,24 +41,38 @@ SprayBatch SprayBatch::create()
     pVertex++;
   }
 
+  BufferLayout staticLayout = {
+      {ShaderDataType::Float2, "a_Position"},
+  };
+  BufferLayout instanceLayout = {
+      {ShaderDataType::Float2, "a_Normal", false, true},
+      {ShaderDataType::Float, "a_Time", false, true},
+      {ShaderDataType::Float2, "a_EmitStart", false, true},
+  };
+
+  Shader shader =
+      *Shader::createFromFile("resources/default/shaders/SprayParticles.glsl");
+
+  {
+    std::vector<BufferElement> combined;
+    combined.insert(combined.end(), staticLayout.getElements().begin(),
+                    staticLayout.getElements().end());
+    combined.insert(combined.end(), instanceLayout.getElements().begin(),
+                    instanceLayout.getElements().end());
+    P_ASSERT(shader.verifyVertexLayout(BufferLayout(std::move(combined))),
+             "SprayBatch layout doesn't match shader '{}'", shader.getName());
+  }
+
   return SprayBatch //
       {*VertexBuffer::createStaticVertexBuffer(
            vertices.get(), sizeof(ParticleVertex) * VerticesPerParticle,
-           {
-               {ShaderDataType::Float2, "a_Position"},
-           }),
-       *VertexBuffer::createVertexBuffer(
-           MaxPolygons * sizeof(InstanceParticleVertex),
-           {
-               {ShaderDataType::Float2, "a_Normal", false, true},
-               {ShaderDataType::Float, "a_Time", false, true},
-               {ShaderDataType::Float2, "a_EmitStart", false, true},
-               {ShaderDataType::Mat4, "a_Transform", false, true},
-           }),
+           std::move(staticLayout)),
+       *VertexBuffer::createVertexBuffer(MaxPolygons *
+                                             sizeof(InstanceParticleVertex),
+                                         std::move(instanceLayout)),
        *IndexBuffer::createIndexBuffer(indices,
                                        sizeof(indices) / sizeof(indices[0])),
-       *Shader::createFromFile(
-           "resources/default/shaders/SprayParticles.glsl")};
+       std::move(shader)};
 }
 SprayBatch::SprayBatch(VertexBuffer &&vbo_, VertexBuffer &&vboInstance_,
                        IndexBuffer &&ib_, Shader &&shader)

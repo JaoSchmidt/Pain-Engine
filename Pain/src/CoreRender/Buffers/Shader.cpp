@@ -206,4 +206,126 @@ Shader::~Shader()
   if (m_programId)
     backend::destroyShaderProgram(m_programId);
 }
+
+const std::vector<ShaderInput> &Shader::getVertexInputs() const
+{
+  if (!m_cachedInputs) {
+    auto backendInputs = backend::getVertexInputs(m_programId);
+    m_cachedInputs.emplace();
+    m_cachedInputs->reserve(backendInputs.size());
+    for (const auto &bi : backendInputs) {
+      m_cachedInputs->push_back(
+          ShaderInput{bi.name, bi.type, bi.size, bi.location});
+    }
+  }
+  return *m_cachedInputs;
+}
+
+constexpr std::string_view getShaderDataTypeName(ShaderDataType type)
+{
+  constexpr std::string_view counts[] = {
+      "None",   //
+      "Float",  //
+      "Float2", //
+      "Float3", //
+      "Float4", //
+      "Mat3",   //
+      "Mat4",   //
+      "Int",    //
+      "Int2",   //
+      "Int3",   //
+      "Int4",   //
+      "Bool",   //
+      "UByte",  //
+      "UByte2", //
+      "UByte3", //
+      "UByte4", //
+  };
+  static_assert(static_cast<uint32_t>(ShaderDataType::Bool) <
+                    sizeof(counts) / sizeof(counts[0]),
+                "Missing entry in counts array");
+
+  return static_cast<std::string_view>(counts[static_cast<uint32_t>(type)]);
+}
+
+bool isNormalizedEquivalent(const BufferElement &l, const ShaderInput &s)
+{
+  if (!l.normalized)
+    return false;
+  if ((l.type == ShaderDataType::UByte4 && s.type == ShaderDataType::Float4) ||
+      (l.type == ShaderDataType::UByte3 && s.type == ShaderDataType::Float3) ||
+      (l.type == ShaderDataType::UByte2 && s.type == ShaderDataType::Float2) ||
+      (l.type == ShaderDataType::UByte && s.type == ShaderDataType::Float))
+    return true;
+  return false;
+}
+
+// ----------------------------------------------------------
+// Debugging Shader layouts
+// ----------------------------------------------------------
+bool Shader::verifyVertexLayout(const BufferLayout &layout) const
+{
+  const std::vector<ShaderInput> &shaderInputs = getVertexInputs();
+  const std::vector<BufferElement> &layoutElements = layout.getElements();
+
+  std::vector<ShaderInput> sorted = shaderInputs;
+  std::sort(sorted.begin(), sorted.end(),
+            [](const ShaderInput &a, const ShaderInput &b) {
+              return a.location < b.location;
+            });
+
+  if (layoutElements.size() < sorted.size()) {
+    PLOG_E("Vertex layout mismatch for shader '{}': Engine layout has {} "
+           "attributes, file shader expects {}",
+           getName(), layoutElements.size(), sorted.size());
+    for (size_t i = 0; i < layoutElements.size(); i++) {
+      PLOG_E("  batch[{}]: '{}', type={}", i, layoutElements[i].name,
+             getShaderDataTypeName(layoutElements[i].type));
+    }
+    for (size_t i = 0; i < sorted.size(); i++) {
+      PLOG_E("  shader[{}]: '{}', type={}, location={}", i, sorted[i].name,
+             getShaderDataTypeName(sorted[i].type), sorted[i].location);
+    }
+    return false;
+  }
+
+  bool oops = false;
+  for (size_t i = 0; i < sorted.size(); i++) {
+    const ShaderInput &input = sorted[i];
+    const BufferElement &elem =
+        layoutElements[static_cast<size_t>(input.location)];
+
+    if (elem.name != input.name) {
+      PLOG_E("Vertex layout NAME mismatch for shader '{}': "
+             "position {} has '{}' in layout but '{}' in shader",
+             getName(), i, elem.name, input.name);
+      oops = true;
+      continue;
+    }
+    if (elem.type != input.type && !isNormalizedEquivalent(elem, input)) {
+      PLOG_E("Vertex layout TYPE mismatch for attribute '{}' in shader '{}': "
+             "layout type={} but shader type={}",
+             elem.name, getName(), getShaderDataTypeName(elem.type),
+             getShaderDataTypeName(input.type));
+      oops = true;
+      continue;
+    }
+  }
+
+  if (oops) {
+    PLOG_E("Here is the complete shader layout:")
+    for (size_t i = 0; i < sorted.size(); i++) {
+      PLOG_E("  shader[{}]: '{}', type={}, location={}", i, sorted[i].name,
+             getShaderDataTypeName(sorted[i].type), sorted[i].location);
+    }
+    PLOG_E("Compare this with what the engine expects:")
+    for (size_t i = 0; i < layoutElements.size(); i++) {
+      PLOG_E("  batch[{}]: '{}', type={}", i, layoutElements[i].name,
+             getShaderDataTypeName(layoutElements[i].type));
+    }
+  }
+
+  return true;
+}
+
 } // namespace pain

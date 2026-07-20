@@ -7,6 +7,7 @@
 
 // BatchSphere.cpp
 #include "CoreRender/Renderer/BatchSphere.h"
+#include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "glm/gtc/constants.hpp"
 #include "platform/ContextBackend.h"
@@ -18,7 +19,7 @@ float inline fdiv(uint32_t divided, uint32_t divisor)
   return static_cast<float>(divided) / static_cast<float>(divisor);
 }
 SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
-                                std::string name)
+                                std::string name, const Shader *shader)
 {
   constexpr float radius = 0.5F;
   const uint32_t verticePerSphere = (stacks - 2) * slices +     // Slices
@@ -26,6 +27,27 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
   const uint32_t indicesPerSphere = slices * 3 +                // top cap
                                     (stacks - 3) * slices * 6 + // middle
                                     slices * 3;                 // bottom cap
+
+  BufferLayout staticLayout = {
+      {ShaderDataType::Float3, "a_Position"},
+      {ShaderDataType::Float2, "a_TexCoord"},
+  };
+  BufferLayout instanceLayout = {
+      {ShaderDataType::UByte4, "a_Color", true, true},
+      {ShaderDataType::Float, "a_TexIndex", false, true},
+      {ShaderDataType::Float, "a_TilingFactor", false, true},
+      {ShaderDataType::Mat4, "a_Transform", false, true},
+  };
+
+  if (shader) {
+    std::vector<BufferElement> combined;
+    combined.insert(combined.end(), staticLayout.getElements().begin(),
+                    staticLayout.getElements().end());
+    combined.insert(combined.end(), instanceLayout.getElements().begin(),
+                    instanceLayout.getElements().end());
+    P_ASSERT(shader->verifyVertexLayout(BufferLayout(std::move(combined))),
+             "SphereBatch layout doesn't match shader '{}'", shader->getName());
+  }
   // -------- BUILD STATIC INDICES --------
   std::unique_ptr<uint32_t[]> indices =
       std::make_unique<uint32_t[]>(indicesPerSphere);
@@ -129,21 +151,12 @@ SphereBatch SphereBatch::create(uint32_t slices, uint32_t stacks,
   // pVertex->texCoord = {0.5F, 0.0F};
 
   return SphereBatch(
-      *VertexBuffer::createStaticVertexBuffer(
-          vertices.get(), verticePerSphere * sizeof(Vertex),
-          {
-              {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::Float2, "a_TexCoord"},
-          }),
-      *VertexBuffer::createVertexBuffer(
-          MaxPolyhedrons * sizeof(SphereInstanceVertex),
-          {
-              // Instances
-              {ShaderDataType::UByte4, "a_Color", true, true},
-              {ShaderDataType::Float, "a_TexIndex", false, true},
-              {ShaderDataType::Float, "a_TilingFactor", false, true},
-              {ShaderDataType::Mat4, "a_Transform", false, true},
-          }),
+      *VertexBuffer::createStaticVertexBuffer(vertices.get(),
+                                              verticePerSphere * sizeof(Vertex),
+                                              std::move(staticLayout)),
+      *VertexBuffer::createVertexBuffer(MaxPolyhedrons *
+                                            sizeof(SphereInstanceVertex),
+                                        std::move(instanceLayout)),
       *IndexBuffer::createIndexBuffer(indices.get(), indicesPerSphere),
       indicesPerSphere, verticePerSphere, std::move(name));
 }

@@ -191,8 +191,9 @@ void Renderer3d::submitCube(const glm::mat4 &transform,
                   .flags = material.m_flags};
   auto it = m_cubeBatchCache.find(key);
   if (it == m_cubeBatchCache.end()) {
-    auto [newIt, _] =
-        m_cubeBatchCache.emplace(std::move(key), CubeBatch::create("batch"));
+    Shader *shaderPtr = key.shader;
+    auto [newIt, _] = m_cubeBatchCache.emplace(
+        std::move(key), CubeBatch::create("batch", shaderPtr));
     it = newIt;
   }
   CubeBatch &batch = it->second;
@@ -235,9 +236,11 @@ void Renderer3d::submitUVSphere(const glm::mat4 &transform, SphereDivision div,
                   .flags = material.m_flags};
   auto it = m_sphereBatchCache.find(key);
   if (it == m_sphereBatchCache.end()) {
+    Shader *shaderPtr = key.shader;
     auto [newIt, _] = m_sphereBatchCache.emplace(
         std::move(key),
-        SphereBatch::create(TP_VEC2(getResolution(div)), "batch"));
+        SphereBatch::create(TP_VEC2(getResolution(div)), "batch",
+                            shaderPtr));
     it = newIt;
   }
   SphereBatch &batch = it->second;

@@ -6,9 +6,11 @@
 
 // ShaderBackend.h
 #pragma once
+#include "CoreRender/Buffers/BufferLayout.h"
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <string>
+#include <vector>
 
 namespace pain::backend
 {
@@ -36,5 +38,14 @@ void uploadUniformFloat4(int location, const glm::vec4 &v);
 void uploadUniformMat3(int location, const glm::mat3 &m);
 void uploadUniformMat4(int location, const glm::mat4 &m);
 void uploadUniformIntArray(int location, int *values, uint32_t count);
+
+struct ShaderInputInfo {
+  std::string name;
+  ShaderDataType type;
+  int32_t size;
+  int32_t location;
+};
+
+std::vector<ShaderInputInfo> getVertexInputs(uint32_t programId);
 
 } // namespace pain::backend

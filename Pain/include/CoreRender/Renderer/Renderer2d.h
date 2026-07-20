@@ -13,7 +13,7 @@
 #include "CoreRender/Buffers/VertexArray.h"
 #include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/BatchQuad.h"
-#include "CoreRender/Renderer/BatchSpray.h"
+#include "CoreRender/Renderer/BatchSprayParticles.h"
 #include "CoreRender/Renderer/BatchText.h"
 #include "CoreRender/Renderer/BatchTri.h"
 #include "CoreRender/Renderer/Misc.h"
@@ -296,7 +296,6 @@ private:
     TextBatch textBatch;
     DebugGrid debugGrid;
 
-    TriBatch triBatch;
     // texture initializer
     Texture *whiteTexture = nullptr;
     Texture **textureSlots;

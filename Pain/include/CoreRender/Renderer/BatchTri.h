@@ -35,7 +35,7 @@ struct TriBatch {
   Vertex *ptr = nullptr;
   uint32_t indexCount = 0;
 
-  static TriBatch create();
+  static TriBatch create(const Shader *shader);
   void resetAll();
   void resetPtr();
   void flush();

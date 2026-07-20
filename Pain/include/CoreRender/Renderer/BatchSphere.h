@@ -44,7 +44,8 @@ struct SphereBatch {
   uint32_t m_count = 0; // works for both draw order indexes and gpu indices
   // std::unique_ptr<Vertex[]> sortBuffer;
 
-  static SphereBatch create(uint32_t slices, uint32_t stacks, std::string name);
+  static SphereBatch create(uint32_t slices, uint32_t stacks,
+                           std::string name, const Shader *shader);
 
   void allocateSphereUV(const glm::mat4 &transform, const Color &tintColor,
                         float tilingFactor, float textureIndex);

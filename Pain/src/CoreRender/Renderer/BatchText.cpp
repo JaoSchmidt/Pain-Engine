@@ -6,6 +6,7 @@
 
 // QuadBatch.cpp
 #include "CoreRender/Renderer/BatchText.h"
+#include "CoreFiles/LogWrapper.h"
 #include "Debugging/Profiling.h"
 #include "platform/ContextBackend.h"
 
@@ -25,16 +26,22 @@ TextBatch TextBatch::create()
     indices[i + 5] = offset + 0;
   }
 
+  BufferLayout layout = {
+      {ShaderDataType::Float3, "a_Position"},
+      {ShaderDataType::UByte4, "a_Color", true},
+      {ShaderDataType::Float2, "a_TexCoord"},
+  };
+
+  Shader shader =
+      *Shader::createFromFile("resources/default/shaders/Renderer2dText.glsl");
+  P_ASSERT(shader.verifyVertexLayout(layout),
+           "TextBatch layout doesn't match shader '{}'", shader.getName());
+
   return TextBatch{
-      *VertexBuffer::createVertexBuffer(
-          MaxVertices * sizeof(TextQuadVertex),
-          {
-              {ShaderDataType::Float3, "a_Position"},
-              {ShaderDataType::UByte4, "a_Color", true},
-              {ShaderDataType::Float2, "a_TexCoord"},
-          }),
+      *VertexBuffer::createVertexBuffer(MaxVertices * sizeof(TextQuadVertex),
+                                        std::move(layout)),
       *IndexBuffer::createIndexBuffer(indices.data(), MaxIndices),
-      *Shader::createFromFile("resources/default/shaders/Renderer2dText.glsl"),
+      std::move(shader),
   };
 }
 TextBatch::TextBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_, Shader &&shader_)

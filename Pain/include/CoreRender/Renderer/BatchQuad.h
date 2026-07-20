@@ -49,7 +49,7 @@ struct QuadBatch {
 
   // std::unique_ptr<Vertex[]> sortBuffer;
 
-  static QuadBatch create();
+  static QuadBatch create(const Shader *shader);
 
   void allocateQuad(const glm::mat4 &transform, const Color &tintColor,
                     const float tilingFactor, const float textureIndex);
