@@ -12,7 +12,7 @@ namespace Stars
 reg::Entity create(pain::Scene &scene, pain::TextureSheet &texSheet,
                    unsigned short id, glm::vec2 &pos)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("StarSheet");
   scene.createComponents(entity,
                          pain::Transform2dComponent{glm::vec3(pos, 0.f)}, //
                          pain::SpriteComponent::create({}, texSheet, id));
@@ -21,7 +21,7 @@ reg::Entity create(pain::Scene &scene, pain::TextureSheet &texSheet,
 reg::Entity create(pain::Scene &scene, pain::Texture &tex, unsigned short id,
                    glm::vec2 &pos)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("StarTex");
   scene.createComponents(entity,
                          pain::Transform2dComponent{glm::vec3(pos, 0.f)}, //
                          pain::SpriteComponent::create({}, tex));

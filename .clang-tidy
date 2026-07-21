@@ -16,6 +16,7 @@ Checks: >
   -readability-redundant-member-init,
   -readability-static-accessed-through-instance,
   -readability-uppercase-literal-suffix,
+  -readability-redundant-access-specifiers,
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,

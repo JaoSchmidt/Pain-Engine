@@ -18,7 +18,7 @@ reg::Entity Dummy2dCamera::createMovingCamera(pain::Scene &scene,
                                               int resolutionHeight,
                                               float zoomLevel, glm::vec2 center)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("Moving2DCamera");
   scene.createComponents(entity,                             //
                          pain::Transform2dComponent{center}, //
                          pain::RotationComponent{},          //
@@ -35,7 +35,7 @@ reg::Entity Dummy2dCamera::createStaticCamera(pain::Scene &scene,
                                               int resolutionHeight,
                                               float zoomLevel, glm::vec2 center)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("Static2DCamera");
   scene.createComponents(
       entity, pain::Transform2dComponent{center},
       Component::OrthoCamera::create(true, resolutionWidth, resolutionHeight,

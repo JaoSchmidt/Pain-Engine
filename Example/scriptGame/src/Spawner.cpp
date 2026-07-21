@@ -10,7 +10,7 @@
 
 reg::Entity Spawner::create(pain::Scene &scene)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("Spawner");
   scene.createComponents(                                     //
       entity,                                                 //
       pain::Transform2dComponent{},                           //

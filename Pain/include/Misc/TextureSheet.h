@@ -60,7 +60,7 @@ public:
                        float padding);
 
   /** Updates internal chunk coordinates based on a world position. */
-  void updateSurroundingChunks(glm::vec3 &playerPos);
+  // void updateSurroundingChunks(glm::vec3 &playerPos);
 
   /**
    * Returns texture coordinates for a sprite index.
@@ -73,10 +73,10 @@ public:
   }
 
   /** Returns the default tile map associated with the sheet. */
-  const std::vector<std::vector<int>> &getDefaultMap() const;
+  // const std::vector<std::vector<int>> &getDefaultMap() const;
 
   /** Returns the scenery tile map associated with the sheet. */
-  const std::vector<std::vector<int>> &getSceneryMap() const;
+  // const std::vector<std::vector<int>> &getSceneryMap() const;
 
   /** Returns texture coordinates for a sprite without bounds wrapping. */
   inline const std::array<glm::vec2, 4> &getTexCoord(unsigned short id) const
@@ -85,19 +85,19 @@ public:
   };
 
   /** Returns the underlying texture atlas (const). */
-  const Texture &getTexture() const { return m_texture; }
+  inline const Texture &getTexture() const { return m_texture; }
 
   /** Returns the underlying texture atlas. */
-  Texture &getTexture() { return m_texture; }
+  inline Texture &getTexture() { return m_texture; }
 
   /** Returns sprite width in pixels. */
-  int getSpriteWidth() const { return m_spriteSize.x; }
+  inline int getSpriteWidth() const { return m_spriteSize.x; }
 
   /** Returns sprite height in pixels. */
-  int getSpriteHeight() const { return m_spriteSize.y; }
+  inline int getSpriteHeight() const { return m_spriteSize.y; }
 
   /** Returns number of stored sprite entries. */
-  size_t size() const { return m_size; }
+  inline size_t size() const { return m_size; }
 
   MOVABLE(TextureSheet);
   NONCOPYABLE(TextureSheet)

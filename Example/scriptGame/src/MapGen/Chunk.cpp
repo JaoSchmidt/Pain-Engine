@@ -154,7 +154,7 @@ reg::Entity Chunk::create(pain::Scene &scene, glm::ivec2 offSet, int numDiv,
                           float chunkSize, MainMap &mainMap)
 
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("MapChunk");
 
   std::string file = std::format(FILE_FORMAT, offSet.x, offSet.y);
   scene.createComponents(                                                //

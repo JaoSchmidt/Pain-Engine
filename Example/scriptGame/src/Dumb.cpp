@@ -8,7 +8,7 @@
 
 reg::Entity DumbObject::create(pain::Scene &scene)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("DumbObject");
 
   scene.createComponents(entity, pain::Transform3dComponent{},
                          pain::Movement3dComponent{},

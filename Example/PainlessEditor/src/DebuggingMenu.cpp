@@ -18,7 +18,7 @@ namespace painless
 
 reg::Entity ImGuiDebugMenu::create(pain::UIScene &scene)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("ImGuiDebugMenu");
   scene.createComponents(entity, painless::ImGuiComponent{});
   return entity;
 }
@@ -30,11 +30,10 @@ ImGuiDebugMenu::Script::Script()
 }
 
 void ImGuiDebugMenu::Script::onRender(pain::RenderApi &renderAPI,
-                                      
                                       pain::DeltaTime currentTime)
 {
   UNUSED(renderAPI)
-  
+
   UNUSED(currentTime)
 
 #ifdef PROFILING

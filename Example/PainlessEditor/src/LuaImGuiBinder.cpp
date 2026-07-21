@@ -3,6 +3,7 @@
 #include "EditorLogs.h"
 #include "imgui.h"
 #define ImDrawIdx unsigned int
+
 namespace painless
 {
 void luabinder::bindImGui(sol::state &lua)

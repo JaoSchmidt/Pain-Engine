@@ -74,6 +74,16 @@ public:
    * @return Newly created entity identifier.
    */
   inline reg::Entity createEntity() { return m_registry.createEntity(); }
+  inline reg::Entity createEntity(std::string_view name)
+  {
+#ifndef NDEBUG
+    reg::Entity e = m_registry.createEntity();
+    m_entityNames.emplace(e, name);
+    return e;
+#else
+    return m_registry.createEntity();
+#endif
+  }
 
   /**
    * @brief Creates multiple components at once for an entity.
@@ -240,7 +250,13 @@ public:
   }
 
   /** @brief Removes an entity and all of its components from the registry. */
-  void removeEntity(reg::Entity entity) { m_registry.remove(entity); }
+  void removeEntity(reg::Entity entity)
+  {
+    m_registry.remove(entity);
+#ifndef NDEBUG
+    m_entityNames.erase(entity);
+#endif
+  }
 
   // =============================================================== //
   // LUA SCRIPTING RELATED
@@ -287,7 +303,7 @@ public:
   void updateSystems(const SDL_Event &event);
 
   /** @brief Executes render callbacks on systems implementing IOnRender. */
-  void renderSystems(RenderPass pass, RenderApi &renderAPI, 
+  void renderSystems(RenderPass pass, RenderApi &renderAPI,
                      DeltaTime currentTime);
 
   /**
@@ -370,6 +386,13 @@ public:
 
   AbstractScene() = delete;
 
+#ifndef NDEBUG
+  const reg::ArcheRegistry<Manager> &getRegistry() const { return m_registry; }
+  const std::unordered_map<reg::Entity, std::string> &getEntityNames() const
+  {
+    return m_entityNames;
+  }
+#endif
 protected:
   /// ECS registry storing entities and components.
   reg::ArcheRegistry<Manager> m_registry;
@@ -404,10 +427,9 @@ protected:
   /// Event dispatcher used by the scene.
   reg::EventDispatcher &m_eventDispatcher;
 
-  /* For making use of the application functionalities. Though it maybe more
-  useful if passed down to a specific object later in your game (e.g. debug
-  menus, speed up time menus, changing windows, etc)*/
-  // Application &m_app;
+#ifndef NDEBUG
+  std::unordered_map<reg::Entity, std::string> m_entityNames;
+#endif
 };
 
 } // namespace pain

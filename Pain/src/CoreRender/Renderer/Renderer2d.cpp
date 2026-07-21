@@ -39,7 +39,14 @@ std::map<MaterialKey, RectBatch> m_rectBatchCache;
 // Renderer: basic wrapper around opengl
 // ================================================================= //
 // void Renderer2d::shutdown() {}
-
+Stats Renderer2d::getRectStatistics()
+{
+  Stats stats = {"Rects"};
+  for (auto it = m_rectBatchCache.begin(); it != m_rectBatchCache.end(); it++) {
+    stats += getStatistics(it->second);
+  }
+  return stats;
+}
 Stats Renderer2d::getQuadStatistics()
 {
   Stats stats = {"Quads"};

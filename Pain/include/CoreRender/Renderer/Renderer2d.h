@@ -13,6 +13,7 @@
 #include "CoreRender/Buffers/VertexArray.h"
 #include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/BatchQuad.h"
+#include "CoreRender/Renderer/BatchRect.h"
 #include "CoreRender/Renderer/BatchSprayParticles.h"
 #include "CoreRender/Renderer/BatchText.h"
 #include "CoreRender/Renderer/BatchTri.h"
@@ -258,6 +259,8 @@ struct Renderer2d {
   Stats getSprayStatistics();
   /// @brief Retrieve rendering statistics for a specific batch type.
   Stats getTextStatistics();
+  /// @brief Retrieve rendering statistics for a specific batch type.
+  Stats getRectStatistics();
 
 private:
   template <typename Batch>
@@ -273,7 +276,10 @@ private:
     else if constexpr (std::is_same_v<Batch, SprayBatch>)
       return {"Sprays", m.sprayBatch.statsCount, m.sprayBatch.statsCount * 6,
               m.sprayBatch.statsCount * 4, m.sprayBatch.drawCount};
-    else if constexpr (std::is_same_v<Batch, QuadBatch>) {
+    else if constexpr (std::is_same_v<Batch, RectBatch>) {
+      return {"Rect", b.statsCount, b.statsCount * 6, b.statsCount * 4,
+              b.drawCount};
+    } else if constexpr (std::is_same_v<Batch, QuadBatch>) {
       return {"Quads", b.statsCount, b.statsCount * 6, b.statsCount * 4,
               b.drawCount};
     }

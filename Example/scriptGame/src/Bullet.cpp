@@ -11,7 +11,7 @@
 
 reg::Entity Bullet::create(pain::Scene &scene)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("Bullet");
   scene.createComponents(entity, pain::Transform2dComponent{}, //
                          pain::SpriteComponent{},              //
                          pain::Movement2dComponent{});

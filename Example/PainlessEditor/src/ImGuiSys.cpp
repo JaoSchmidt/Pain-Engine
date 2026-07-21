@@ -8,9 +8,9 @@
 
 #include "CoreFiles/LogWrapper.h"
 #include "ImGuiComponent.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_sdl2.h"
 #include "imgui.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_impl_sdl2.h"
 #include "implot.h"
 
 namespace pain
@@ -38,11 +38,25 @@ ImGuiSys::ImGuiSys(reg::ArcheRegistry<UIComponents> &archetype,
     style.WindowRounding = 0.0F;
     style.Colors[ImGuiCol_WindowBg].w = 1.0F;
   }
+  // TODO: this need to be moved to the OpenGL backend
   ImGui_ImplSDL2_InitForOpenGL(window, context);
   ImGui_ImplOpenGL3_Init("#version 430"); // OpenGL 3.0 and above
 
   m_showAnotherWindow = false;
   m_clearColor = ImVec4(0.45F, 0.55F, 0.60F, 1.00F);
+
+  // fonts
+  //   static ImWchar ranges[] = {0x1, static_cast<ImWchar>(0x1FFFF), 0};
+  //   static ImFontConfig cfg;
+  //   cfg.MergeMode = true;
+  //   cfg.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_LoadColor;
+  // #ifdef PLATFORM_IS_WINDOWS
+  //   m_io->Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\seguiemj.ttf", 16.0f,
+  //                                   &cfg);
+  // #else
+  //   m_io->Fonts->AddFontFromFileTTF("resources/default/fonts/NotoColorEmoji.ttf",
+  //                                   16.0f);
+  // #endif
 }
 
 void ImGuiSys::onEvent(const SDL_Event &event)

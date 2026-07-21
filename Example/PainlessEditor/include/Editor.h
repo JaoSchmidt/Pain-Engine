@@ -13,6 +13,8 @@
 
 #include "DebuggingMenu.h"
 #include "imgui_internal.h"
+#include <Misc/TextureSheet.h>
+#include <memory>
 namespace painless
 {
 
@@ -25,8 +27,7 @@ public:
   NONMOVABLE(Editor);
   // void init(Application *app) { m_app = app; }
 
-  void onRender(pain::RenderApi &renderAPI, 
-                pain::DeltaTime dt);
+  void onRender(pain::RenderApi &renderAPI, pain::DeltaTime currentTime);
   Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app);
 
   bool m_wasFocused = false;
@@ -43,8 +44,10 @@ private:
   bool m_dockspaceOpen = true;
   pain::Application &m_app;
   painless::ImGuiDebugMenu::Script m_imGuiDebugMenu;
+  std::unique_ptr<pain::TextureSheet> m_componentIcons;
+  pain::DeltaTime m_currentTime{0};
+  pain::DeltaTime m_lastInspectorUpdate{0};
   float m_splitRatio = 0.7F;
-  // TEMP BOTTOM BA
 };
 
 } // namespace painless

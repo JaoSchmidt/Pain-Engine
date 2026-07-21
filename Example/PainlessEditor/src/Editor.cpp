@@ -19,6 +19,8 @@
 #include "LuaImGuiBinder.h"
 #include "LuaImPlotBinder.h"
 #include "Misc/Events.h"
+#include "Stats/ComponentIcons.h"
+#include "Stats/EntityInspector.h"
 #include "imgui_internal.h"
 
 void showStats(const Stats &s)
@@ -46,10 +48,9 @@ void showStats(const Stats &s)
 
 namespace painless
 {
-void Editor::onRender(pain::RenderApi &renderAPI, 
-                      pain::DeltaTime dt)
+void Editor::onRender(pain::RenderApi &renderAPI, pain::DeltaTime currentTime)
 {
-  
+
   if (!m_app.getFrameInfo().swapChainTarget) {
     static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
 
@@ -122,13 +123,15 @@ void Editor::onRender(pain::RenderApi &renderAPI,
 
     ImGui::Begin("Stats");
 
-    // -------------------------------------------------- //
+    // ECS STATS -------------------------------------------------- //
 
+    // RENDERER STATS -------------------------------------------------- //
     if (ImGui::TreeNodeEx("Renderer2D Stats:", // unique ID
                           ImGuiTreeNodeFlags_Framed |
                               ImGuiTreeNodeFlags_SpanAvailWidth,
                           "Renderer2D Stats:")) {
       showStats(renderAPI.m_renderer2d.getQuadStatistics());
+      showStats(renderAPI.m_renderer2d.getRectStatistics());
       showStats(renderAPI.m_renderer2d.getTextStatistics());
       showStats(renderAPI.m_renderer2d.getSprayStatistics());
       showStats(renderAPI.m_renderer2d.getTriStatistics());
@@ -143,7 +146,7 @@ void Editor::onRender(pain::RenderApi &renderAPI,
       showStats(renderAPI.m_renderer3d.getSphereStatistics());
       ImGui::TreePop();
     }
-    m_imGuiDebugMenu.onRender(renderAPI,  dt);
+    m_imGuiDebugMenu.onRender(renderAPI, currentTime);
     ImGui::End();
 
     ImGui::Begin("Viewport");
@@ -172,6 +175,7 @@ void Editor::onRender(pain::RenderApi &renderAPI,
     }
     ImGui::End(); // "Viewport"
 
+    m_currentTime = currentTime;
     customPanel::renderAll();
 
     ImGui::End();
@@ -191,6 +195,11 @@ Editor::Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app)
 {
   luabinder::bindImGui(m_app.getLuaState());
   // luabinder::bindImPlot(m_app.getLuaState());
+
+  customPanel::registerPanel("ECS Inspector", 1.F, InterfaceMenu::SIDEBAR);
+  customPanel::addToPanel("ECS Inspector", [this]() {
+    EntityInspector::render(m_app.getWorldScene(), m_componentIcons.get());
+  });
 }
 
 Editor::~Editor()

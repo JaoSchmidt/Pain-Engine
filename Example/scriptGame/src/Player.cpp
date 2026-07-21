@@ -12,7 +12,7 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
                            int resolutionHeight, int resolutionWeigh,
                            float zoomLevel)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("ScriptGamePlayer");
   scene.createComponents(                             //
       entity, pain::Transform2dComponent{initialPos}, //
       pain::SpriteComponent::create(

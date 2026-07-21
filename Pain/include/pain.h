@@ -65,6 +65,7 @@
 #include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/Particles/ParticleSys.h"
+#include "Physics/Particles/TrailCmp.h"
 #include "Physics/RotationComponent.h"
 
 /// @name Logging Macros

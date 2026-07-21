@@ -24,7 +24,7 @@ reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionWidth,
                                   float fieldOfViewDegrees, float yaw,
                                   float pitch)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("Moving3DCamera");
   scene.createComponents(
       entity, pain::Transform3dComponent{}, //
       pain::RotationComponent{},            //
@@ -41,7 +41,7 @@ reg::Entity Dummy3dCamera::createBasicCamera(pain::Scene &scene,
                                              float fieldOfViewDegrees,
                                              float yaw, float pitch)
 {
-  reg::Entity entity = scene.createEntity();
+  reg::Entity entity = scene.createEntity("Static3DCamera");
   scene.createComponents(
       entity, pain::Transform3dComponent{},
       Component::PerspCamera::create(true, resolutionWidth, resolutionHeight,
