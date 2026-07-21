@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <imgui.h>
 #include <Misc/TextureSheet.h>
+#include <imgui.h>
 #include <pain.h>
 
 namespace painless
@@ -238,11 +238,18 @@ template <> struct ComponentPreview<pain::RotationComponent> {
 template <> struct ComponentPreview<pain::NativeScriptComponent> {
   static void render(const pain::NativeScriptComponent &c)
   {
-    if (c.instance) {
-      ImGui::Text("Instance: bound");
-    } else {
-      ImGui::TextDisabled("Instance: empty");
-    }
+    c.instance ? ImGui::Text("Instance: bound")
+               : ImGui::TextDisabled("Instance: empty");
+    c.onCreateFunction ? ImGui::Text("onCreate: bound")
+                       : ImGui::TextDisabled("onCreate: empty");
+    c.onUpdateFunction ? ImGui::Text("onUpdate: bound")
+                       : ImGui::TextDisabled("onUpdate: empty");
+    c.onRenderFunction ? ImGui::Text("onRender: bound")
+                       : ImGui::TextDisabled("onRender: empty");
+    c.onEventFunction ? ImGui::Text("onEvent: bound")
+                      : ImGui::TextDisabled("onEvent: empty");
+    c.onDestroyFunction ? ImGui::Text("onDestroy: bound")
+                        : ImGui::TextDisabled("onDestroy: empty");
   }
 };
 
@@ -358,10 +365,9 @@ struct EntityInspector {
       auto nameIt = names.find(entity);
       if (nameIt != names.end()) {
         // find existing group with same name
-        auto g = std::find_if(namedGroups.begin(), namedGroups.end(),
-                              [&](const NamedGroup &ng) {
-                                return ng.name == nameIt->second;
-                              });
+        auto g = std::find_if(
+            namedGroups.begin(), namedGroups.end(),
+            [&](const NamedGroup &ng) { return ng.name == nameIt->second; });
         if (g != namedGroups.end()) {
           g->entities.push_back(i);
         } else {
@@ -391,7 +397,7 @@ struct EntityInspector {
         snprintf(m_labelBuf, sizeof(m_labelBuf), "%s (%zu)##group",
                  ng.name.c_str(), ng.entities.size());
       else
-        snprintf(m_labelBuf, sizeof(m_labelBuf), "%s [%d]##single",
+        snprintf(m_labelBuf, sizeof(m_labelBuf), "%s [id = %d]##single",
                  ng.name.c_str(), ng.entities[0]);
 
       if (ImGui::TreeNode(m_labelBuf)) {
@@ -432,9 +438,10 @@ private:
   inline static char m_labelBuf[128];
 
   template <reg::CompileTimeBitMaskType Manager>
-  static void renderEntityNode(pain::AbstractScene<Manager> &scene, int i,
-                               const std::unordered_map<reg::Entity, std::string> &names,
-                               pain::TextureSheet *icons)
+  static void
+  renderEntityNode(pain::AbstractScene<Manager> &scene, int i,
+                   const std::unordered_map<reg::Entity, std::string> &names,
+                   pain::TextureSheet *icons)
   {
     const auto &records = scene.getRegistry().getRecords();
     auto record = records[i];
@@ -444,43 +451,33 @@ private:
     bool hasName = (nameIt != names.end());
 
     if (hasName)
-      snprintf(m_labelBuf, sizeof(m_labelBuf), "%s [%d]##inspector",
-               nameIt->second.c_str(), i);
-    else
-      snprintf(m_labelBuf, sizeof(m_labelBuf), "Entity %d##inspector", i);
+      ImGui::Text("Name: %s", nameIt->second.c_str());
+    ImGui::Text("ID: %d", i);
+    ImGui::Text("Bitmask: %d", record.bitmask.value);
 
-    if (ImGui::TreeNode(m_labelBuf)) {
-      if (hasName)
-        ImGui::Text("Name: %s", nameIt->second.c_str());
-      ImGui::Text("ID: %d", i);
-      ImGui::Text("Bitmask: %d", record.bitmask.value);
+    ImGui::Separator();
 
-      ImGui::Separator();
+    constexpr int totalBits =
+        static_cast<int>(Manager::getNumberOfRegisteredComponents());
 
-      constexpr int totalBits =
-          static_cast<int>(Manager::getNumberOfRegisteredComponents());
+    for (int bit = 0; bit < totalBits; ++bit) {
+      if (!(record.bitmask.value & (1 << bit)))
+        continue;
 
-      for (int bit = 0; bit < totalBits; ++bit) {
-        if (!(record.bitmask.value & (1 << bit)))
-          continue;
+      const char *compName = getWorldComponentName(bit);
+      ImGui::PushID(bit);
 
-        const char *compName = getWorldComponentName(bit);
-        ImGui::PushID(bit);
-
-        if (icons) {
-          renderComponentIcon(*icons, bit);
-          ImGui::SameLine();
-        }
-
-        if (ImGui::TreeNode(compName)) {
-          renderComponentPreview<Manager>(scene, entity, compName, bit);
-          ImGui::TreePop();
-        }
-
-        ImGui::PopID();
+      if (icons) {
+        renderComponentIcon(*icons, bit);
+        ImGui::SameLine();
       }
 
-      ImGui::TreePop();
+      if (ImGui::TreeNode(compName)) {
+        renderComponentPreview<Manager>(scene, entity, compName, bit);
+        ImGui::TreePop();
+      }
+
+      ImGui::PopID();
     }
   }
 
