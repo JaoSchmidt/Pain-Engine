@@ -40,10 +40,14 @@ void Shader::unbind()
 // Uniform uploads
 // ----------------------------------------------------------
 
-int Shader::getUniformLocation(const std::string &name, bool isError) const
+int Shader::getUniformLocation(const std::string &name, bool isError)
 {
   P_ASSERT(m_programId == s_binded, "Shader isn't properly binded");
-  return backend::getUniformLocation(m_programId, name, isError);
+  if (m_uniformLocationCache.find(name) != m_uniformLocationCache.end())
+    return m_uniformLocationCache[name];
+  int l = backend::getUniformLocation(m_programId, name.c_str(), isError);
+  m_uniformLocationCache[name] = l;
+  return l;
 }
 
 void Shader::uploadUniformInt(const std::string &name, int v, bool isError)

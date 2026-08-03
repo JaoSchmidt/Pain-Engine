@@ -20,25 +20,25 @@ namespace painless
 inline const char *getWorldComponentName(int bitIndex)
 {
   static constexpr const char *names[] = {
-      "OrthoCamera",     // 0
-      "PerspCamera",     // 1
-      "Transform2d",     // 2
-      "Movement2d",      // 3
-      "Transform3d",     // 4
-      "Movement3d",      // 5
-      "NativeScript",    // 6
-      "ParticleSpray",   // 7
-      "Rotation",        // 8
-      "Sprite",          // 9
-      "LuaScript",       // 10
-      "SAPCollider",     // 11
-      "LuaScheduleTask", // 12
-      "Mesh",            // 13
-      "Material",        // 14
-      "Light",           // 15
-      "ParticleTrail",   // 16
-      "TextComponent",   // 17
-      "ColorIndex"       // 18
+      "OrthoCamera",   // 0
+      "PerspCamera",   // 1
+      "Transform2d",   // 2
+      "Movement2d",    // 3
+      "Transform3d",   // 4
+      "Movement3d",    // 5
+      "NativeScript",  // 6
+      "ParticleSpray", // 7
+      "Rotation",      // 8
+      "Sprite",        // 9
+      "LuaScript",     // 10
+      "SAPCollider",   // 11
+      "LuaScheduler",  // 12
+      "Mesh",          // 13
+      "Material",      // 14
+      "Light",         // 15
+      "ParticleTrail", // 16
+      "TextComponent", // 17
+      "ColorIndex"     // 18
   };
   if (bitIndex >= 0 && bitIndex < 19)
     return names[bitIndex];
@@ -154,8 +154,8 @@ template <> struct ComponentPreview<pain::Movement3dComponent> {
   }
 };
 
-template <> struct ComponentPreview<cmp::OrthoCamera> {
-  static void render(const cmp::OrthoCamera &c)
+template <> struct ComponentPreview<pain::OrthoCameraComponent> {
+  static void render(const pain::OrthoCameraComponent &c)
   {
     ImGui::Text("Active: %s", c.m_active ? "yes" : "no");
     ImGui::Text("Zoom: %.2f", c.m_zoomLevel);
@@ -163,8 +163,8 @@ template <> struct ComponentPreview<cmp::OrthoCamera> {
   }
 };
 
-template <> struct ComponentPreview<cmp::PerspCamera> {
-  static void render(const cmp::PerspCamera &c)
+template <> struct ComponentPreview<pain::PerspCameraComponent> {
+  static void render(const pain::PerspCameraComponent &c)
   {
     ImGui::Text("Active: %s", c.m_active ? "yes" : "no");
     ImGui::Text("FOV: %.1f deg", c.m_fieldOfViewDegrees);
@@ -205,6 +205,12 @@ template <> struct ComponentPreview<pain::MaterialComponent> {
   {
     if (c.m_material) {
       ImGui::Text("Material: %p", (void *)c.m_material);
+      ImGui::Text("Name: %s", c.m_material->m_name.c_str());
+      ImGui::Text("Shader: %p", (void *)c.m_material->m_shader);
+      glm::vec4 rgba = c.m_material->m_color.getVector();
+      ImGui::ColorEdit4("Color", &rgba.x,
+                        ImGuiColorEditFlags_NoInputs |
+                            ImGuiColorEditFlags_NoLabel);
     } else {
       ImGui::TextDisabled("Material: null");
     }
@@ -279,8 +285,8 @@ template <> struct ComponentPreview<pain::SAPCollider> {
   }
 };
 
-template <> struct ComponentPreview<pain::cmp::LuaScheduleTask> {
-  static void render(const pain::cmp::LuaScheduleTask &c)
+template <> struct ComponentPreview<pain::LuaSchedulerComponent> {
+  static void render(const pain::LuaSchedulerComponent &c)
   {
     ImGui::Text("Interval: %.2f", c.interval);
     ImGui::Text("Elapsed: %.2f", c.elapsed);
@@ -501,15 +507,15 @@ private:
     check.template operator()<pain::Movement2dComponent>();
     check.template operator()<pain::Transform3dComponent>();
     check.template operator()<pain::Movement3dComponent>();
-    check.template operator()<cmp::OrthoCamera>();
-    check.template operator()<cmp::PerspCamera>();
+    check.template operator()<pain::OrthoCameraComponent>();
+    check.template operator()<pain::PerspCameraComponent>();
     check.template operator()<pain::NativeScriptComponent>();
     check.template operator()<pain::ParticleSprayComponent>();
     check.template operator()<pain::RotationComponent>();
     check.template operator()<pain::SpriteComponent>();
     check.template operator()<pain::LuaScriptComponent>();
     check.template operator()<pain::SAPCollider>();
-    check.template operator()<pain::cmp::LuaScheduleTask>();
+    check.template operator()<pain::LuaSchedulerComponent>();
     check.template operator()<pain::MeshComponent>();
     check.template operator()<pain::MaterialComponent>();
     check.template operator()<pain::LightComponent>();

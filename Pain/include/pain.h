@@ -67,6 +67,7 @@
 #include "Physics/Particles/ParticleSys.h"
 #include "Physics/Particles/TrailCmp.h"
 #include "Physics/RotationComponent.h"
+#include "aliasesECS.h"
 
 /// @name Logging Macros
 /// @{

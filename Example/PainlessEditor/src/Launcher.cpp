@@ -51,12 +51,11 @@ public:
     ELOG_I("Creating Launcher");
     m_init.readAndUpdate(true);
   }
-  void onRender(pain::RenderApi &renderer, 
-                pain::DeltaTime deltaTime)
+  void onRender(pain::RenderApi &renderer, pain::DeltaTime deltaTime)
   {
     UNUSED(renderer)
     UNUSED(deltaTime)
-    
+
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
@@ -163,8 +162,8 @@ pain::Application *createLauncher()
   // assert later. This makes no difference in release
   scene.createComponents(                              //
       scene.getEntity(), pain::Transform2dComponent{}, //
-      Component::OrthoCamera::create(true, width, height, 5.F,
-                                     scene.getEntity()) //
+      pain::OrthoCameraComponent::create(true, width, height, 5.F,
+                                         scene.getEntity()) //
   );
   pain::UIScene &uiscene = settingsApp->createUIScene();
   uiscene.addSystem<pain::Systems::ImGuiSys>(settingsApp->getRenderContext(),

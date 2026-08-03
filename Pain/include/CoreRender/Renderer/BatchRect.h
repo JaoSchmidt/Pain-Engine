@@ -50,7 +50,7 @@ struct RectBatch {
                     const std::array<glm::vec2, 4> &textureCoordinate);
   void resetAll();
   void resetPtr();
-  void flush(Texture **textures, uint32_t textureCount);
+  void flush(Texture **textures, uint32_t textureCount, Shader *shader);
 
 private:
   RectBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_);

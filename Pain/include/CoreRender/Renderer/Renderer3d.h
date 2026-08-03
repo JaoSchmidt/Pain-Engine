@@ -62,7 +62,7 @@ public:
    * @param perspCamera Perspecitve camera component
    * @param position camera position
    */
-  void beginScene(DeltaTime globalTime, const cmp::PerspCamera &perspCamera,
+  void beginScene(DeltaTime globalTime, const PerspCameraComponent &perspCamera,
                   const Transform3dComponent &position);
 
   // @brief Flush all batches and finalize the scene.

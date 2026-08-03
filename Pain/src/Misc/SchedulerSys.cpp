@@ -17,7 +17,7 @@ void LuaSchedulerSys::onUpdate(DeltaTime deltaTime)
 {
   PROFILE_SCOPE("onUpdate - LuaSchedulerSys");
 
-  auto chunks = query<cmp::LuaScheduleTask>();
+  auto chunks = query<LuaSchedulerComponent>();
   float deltaTimef = deltaTime.getSecondsf();
   for (auto &chunk : chunks) {
     auto *scripts = std::get<0>(chunk.arrays);

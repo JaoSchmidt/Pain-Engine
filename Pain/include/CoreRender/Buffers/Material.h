@@ -66,7 +66,6 @@ struct MaterialCreationInfo {
   Shader &shader;
   Texture &texture =
       TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
-  std::string name = "";
 };
 
 /**
@@ -99,7 +98,7 @@ struct Material {
    * define manually. Otherwise will generate an warning */
   TextureVariant m_texture = TextureVariant{&TextureManager::getDefaultTexture(
       TextureManager::DefaultTexture::Blank, false)};
-  std::string m_name = "";
+  std::string m_name = "empty";
 
   /** @brief small checker, used mainly on asserts */
   bool isTextureSheet() const
@@ -115,7 +114,8 @@ struct Material {
    *
    * @param info Material configuration parameters.
    */
-  static Material create(const MaterialCreationInfo &info)
+  static Material create(const MaterialCreationInfo &info,
+                         const std::string_view &name = "empty")
   {
     int *samplers = new int[backend::getTMU()];
     for (int i = 0; i < backend::getTMUi(); i++)
@@ -126,15 +126,13 @@ struct Material {
                                       false);
     delete[] samplers;
 
-    return Material{
-        //
-        .m_params = info.params,
-        .m_color = info.color,
-        .m_tilingFactor = info.tilingFactor,
-        .m_shader = &info.shader,
-        .m_texture = &info.texture,
-        .m_name = std::move(info.name),
-    };
+    return Material{//
+                    .m_params = info.params,
+                    .m_color = info.color,
+                    .m_tilingFactor = info.tilingFactor,
+                    .m_shader = &info.shader,
+                    .m_texture = &info.texture,
+                    .m_name = std::string(name)};
   }
 
   // ------------------------------------------------------------

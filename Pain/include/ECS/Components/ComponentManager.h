@@ -40,7 +40,7 @@ namespace tag
 {
 struct OrthoCamera;
 struct PerspCamera;
-struct LuaScheduleTask;
+struct LuaScheduler;
 struct LuaScript;
 struct Transform2d;
 struct Transform3d;
@@ -86,7 +86,7 @@ using WorldComponents = reg::CompileTimeBitMask< //
     tag::Sprite,                                 // 10
     tag::LuaScript,                              // 11
     tag::SAPCollider,                            // 12
-    tag::LuaScheduleTask,                        // 13
+    tag::LuaScheduler,                           // 13
     tag::Mesh,                                   // 14
     tag::Material,                               // 15
     tag::Light,                                  // 16

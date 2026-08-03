@@ -251,30 +251,30 @@ sol::state createLuaState()
   );
 
   // type returned by get_rotation(self)
-  lua.new_usertype<::cmp::OrthoCamera>(                        //
-      "OrthoCamera", sol::no_constructor,                      //
-      "resolution", &::cmp::OrthoCamera::m_resolution,         //
-      "active", &::cmp::OrthoCamera::m_active,                 //
-      "aspectRatio", &::cmp::OrthoCamera::m_aspectRatio,       //
-      "screenPosition", &::cmp::OrthoCamera::m_screenPosition, //
-      "entity", &::cmp::OrthoCamera::m_entity,                 //
-      "zoomLevel", &::cmp::OrthoCamera::m_zoomLevel,           //
+  lua.new_usertype<OrthoCameraComponent>(                        //
+      "OrthoCamera", sol::no_constructor,                        //
+      "resolution", &OrthoCameraComponent::m_resolution,         //
+      "active", &OrthoCameraComponent::m_active,                 //
+      "aspectRatio", &OrthoCameraComponent::m_aspectRatio,       //
+      "screenPosition", &OrthoCameraComponent::m_screenPosition, //
+      "entity", &OrthoCameraComponent::m_entity,                 //
+      "zoomLevel", &OrthoCameraComponent::m_zoomLevel,           //
       // methods
       "get_view_projection_matrix",
-      &::cmp::OrthoCamera::getViewProjectionMatrix, //
-      "recalculate_view_matrix", &::cmp::OrthoCamera::recalculateViewMatrix,
+      &OrthoCameraComponent::getViewProjectionMatrix, //
+      "recalculate_view_matrix", &OrthoCameraComponent::recalculateViewMatrix,
 
       // overloaded functions
       "set_projection",
-      sol::overload(
-          static_cast<void (::cmp::OrthoCamera::*)(float, float, float, float)>(
-              &::cmp::OrthoCamera::setProjection),
-          static_cast<void (::cmp::OrthoCamera::*)(float, float)>(
-              &::cmp::OrthoCamera::setProjection),
-          static_cast<void (::cmp::OrthoCamera::*)(int, int)>(
-              &::cmp::OrthoCamera::setProjection)),
+      sol::overload(static_cast<void (OrthoCameraComponent::*)(float, float,
+                                                               float, float)>(
+                        &OrthoCameraComponent::setProjection),
+                    static_cast<void (OrthoCameraComponent::*)(float, float)>(
+                        &OrthoCameraComponent::setProjection),
+                    static_cast<void (OrthoCameraComponent::*)(int, int)>(
+                        &OrthoCameraComponent::setProjection)),
       // static factory
-      "create", &::cmp::OrthoCamera::create);
+      "create", &OrthoCameraComponent::create);
 
   // ------ EVENTS ----------------------------------------
   // Usage in Lua: "Input.isKeyPressed(Scancode.SPACE)"
@@ -322,8 +322,8 @@ void addScheduler(sol::state &lua, Scene &worldScene)
   scheduler_api["every"] = [&](float interval, sol::function f) {
     reg::Entity e = worldScene.createEntity();
     worldScene.createComponents(
-        e, cmp::LuaScheduleTask{.onScheduleFunction = std::move(f),
-                                .interval = interval});
+        e, LuaSchedulerComponent{.onScheduleFunction = std::move(f),
+                                 .interval = interval});
   };
   lua["Scheduler"] = scheduler_api;
 }

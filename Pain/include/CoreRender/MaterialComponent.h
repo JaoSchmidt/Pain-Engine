@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "Assets/ManagerMaterial.h"
 #include "CoreRender/Buffers/Material.h"
 #include "ECS/Components/ComponentManager.h"
 
@@ -23,6 +24,12 @@ namespace pain
 struct MaterialComponent {
   using tag = tag::Material;
   static MaterialComponent create(Material &m) { return MaterialComponent(m); }
+  static MaterialComponent create(MaterialManager &mm,
+                                  const std::string_view &materialName,
+                                  const MaterialCreationInfo &info)
+  {
+    return MaterialComponent(mm.createMaterial(materialName, info));
+  }
   const Material *operator->() const { return std::as_const(m_material); };
 
   const Material &operator*() const { return *m_material; }
@@ -42,7 +49,7 @@ struct MaterialComponent {
   ~MaterialComponent() = default;
 
   MaterialComponent(Material &m) : m_material(&m) {};
-  const Material *m_material;
+  const Material *m_material = nullptr;
 };
 
 } // namespace pain

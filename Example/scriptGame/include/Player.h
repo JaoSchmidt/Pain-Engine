@@ -26,7 +26,7 @@ public:
   using pain::OrthoCameraScript::onUpdate;
 
 private:
-  void onMouseScrolled(const SDL_Event &e, Component::OrthoCamera &cc);
+  void onMouseScrolled(const SDL_Event &e, OrthoCameraComponent &cc);
 };
 
 }; // namespace Player

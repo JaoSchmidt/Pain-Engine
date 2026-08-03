@@ -259,7 +259,7 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
                     onComponentAdded<SAPCollider>(*&scene, e);
                   }};
             }));
-  if constexpr (WorldComponents::isRegistered<::cmp::OrthoCamera>())
+  if constexpr (WorldComponents::isRegistered<OrthoCameraComponent>())
     worldTbl["OrthoCamera"] = sol::overload(
         [&](sol::optional<bool> oActive, sol::optional<int> oWidth,
             sol::optional<int> oHeight, sol::optional<float> oZoom) {
@@ -269,11 +269,11 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
           float zoom = oZoom.value_or(initConfig.defaultZoom2d);
 
           return LuaComponentDesc{
-              scene.getSingleBitmask<::cmp::OrthoCamera>(),
+              scene.getSingleBitmask<OrthoCameraComponent>(),
               [=, &scene](reg::Entity e, reg::Bitmask b) {
-                scene.manualPush(
-                    e, b,
-                    ::cmp::OrthoCamera::create(active, width, height, zoom, e));
+                scene.manualPush(e, b,
+                                 OrthoCameraComponent::create(active, width,
+                                                              height, zoom, e));
               }};
         },
         [&](sol::optional<sol::table> oTbl) {
@@ -299,11 +299,11 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
           }
 
           return LuaComponentDesc{
-              scene.getSingleBitmask<::cmp::OrthoCamera>(),
+              scene.getSingleBitmask<OrthoCameraComponent>(),
               [=, &scene](reg::Entity e, reg::Bitmask b) {
-                scene.manualPush(
-                    e, b,
-                    ::cmp::OrthoCamera::create(active, width, height, zoom, e));
+                scene.manualPush(e, b,
+                                 OrthoCameraComponent::create(active, width,
+                                                              height, zoom, e));
               }};
         } //
     );
@@ -417,16 +417,16 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
       });
   worldTbl["get_ortho_camera"] = sol::overload(
       [&](reg::Entity e) -> sol::object {
-        if (scene.hasAnyComponents<cmp::OrthoCamera>(e))
+        if (scene.hasAnyComponents<OrthoCameraComponent>(e))
           return sol::make_reference(
-              lua, std::ref(scene.getComponent<cmp::OrthoCamera>(e)));
+              lua, std::ref(scene.getComponent<OrthoCameraComponent>(e)));
         return sol::nil;
       },
       [&](sol::table self) -> sol::object {
         reg::Entity e = self["entity"];
-        if (scene.hasAnyComponents<cmp::OrthoCamera>(e))
+        if (scene.hasAnyComponents<OrthoCameraComponent>(e))
           return sol::make_reference(
-              lua, std::ref(scene.getComponent<cmp::OrthoCamera>(e)));
+              lua, std::ref(scene.getComponent<OrthoCameraComponent>(e)));
         return sol::nil;
       });
   lua["World"] = worldTbl;

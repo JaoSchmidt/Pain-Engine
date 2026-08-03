@@ -39,7 +39,7 @@ MaterialManager::createMaterial(const std::string_view &name,
         name, name);
     return it->second;
   }
-  Material material = Material::create(createInfo);
+  Material material = Material::create(createInfo, name);
 
   auto [it, inserted] = m_materials.emplace(name, std::move(material));
 

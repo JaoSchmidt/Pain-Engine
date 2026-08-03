@@ -31,13 +31,9 @@
  */
 #pragma once
 #include "Assets/DeltaTime.h"
+#include "CoreRender/CameraComponent.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
-
-namespace cmp
-{
-struct OrthoCamera;
-}
 
 namespace pain ::Systems
 {
@@ -60,7 +56,7 @@ namespace pain ::Systems
  * components are registered in the component manager before this system can be
  * added to a scene.
  *
- * @see cmp::OrthoCamera
+ * @see OrthoCameraComponent
  * @see System
  * @see IOnEvent
  */
@@ -69,9 +65,9 @@ struct CameraSys : public System<WorldComponents>, IOnEvent {
    * @brief Component tags required by this system.
    *
    * Declares that this system operates on entities containing:
-   *  - cmp::OrthoCamera
+   *  - OrthoCameraComponent
    */
-  using Tags = TypeList<::cmp::OrthoCamera>;
+  using Tags = TypeList<OrthoCameraComponent>;
 
   /** @brief Inherit base System constructors. */
   using System::System;

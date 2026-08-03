@@ -17,7 +17,7 @@
 
 #include "Assets/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
-#include "CoreRender/Renderer/Misc.h"
+#include "CoreRender/Renderer/Colors.h"
 #include "ECS/Components/ComponentManager.h"
 #include "pch.h"
 
@@ -37,7 +37,7 @@ namespace pain
  */
 struct GridParticle {
   glm::vec2 m_direction = glm::vec2(1.f); /**< Emission direction vector. */
-  Color color = StrongPink;
+  Color color = Colors::StrongPink;
 };
 
 /**

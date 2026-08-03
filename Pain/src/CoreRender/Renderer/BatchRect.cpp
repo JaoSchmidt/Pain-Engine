@@ -72,7 +72,7 @@ void RectBatch::resetAll()
 #endif
 }
 
-void RectBatch::flush(Texture **textures, uint32_t textureCount)
+void RectBatch::flush(Texture **textures, uint32_t textureCount, Shader *shader)
 {
   if (!indexCount)
     return;
@@ -85,6 +85,7 @@ void RectBatch::flush(Texture **textures, uint32_t textureCount)
   for (uint32_t i = 0; i < textureCount; i++)
     textures[i]->bindToSlot(i);
 
+  shader->bind();
   ib.bind();
   backend::drawIndexed(vao, indexCount * IndiceSize);
 #ifndef NDEBUG

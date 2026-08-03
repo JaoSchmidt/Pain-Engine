@@ -23,7 +23,7 @@ reg::Entity Dummy2dCamera::createMovingCamera(pain::Scene &scene,
                          pain::Transform2dComponent{center}, //
                          pain::RotationComponent{},          //
                          pain::Movement2dComponent{},        //
-                         Component::OrthoCamera::create(true, resolutionWidth,
+                         OrthoCameraComponent::create(true, resolutionWidth,
                                                         resolutionHeight,
                                                         zoomLevel, entity), //
                          pain::NativeScriptComponent{});
@@ -38,7 +38,7 @@ reg::Entity Dummy2dCamera::createStaticCamera(pain::Scene &scene,
   reg::Entity entity = scene.createEntity("Static2DCamera");
   scene.createComponents(
       entity, pain::Transform2dComponent{center},
-      Component::OrthoCamera::create(true, resolutionWidth, resolutionHeight,
+      OrthoCameraComponent::create(true, resolutionWidth, resolutionHeight,
                                      zoomLevel, entity) //
   );
   return entity;
@@ -47,7 +47,7 @@ void OrthoCameraScript::onMouseButtonUp(const SDL_Event &event)
 {
   if (event.button.button == SDL_BUTTON_LEFT) {
     auto [tc, mc, cc] = getComponents<Transform2dComponent, Movement2dComponent,
-                                      cmp::OrthoCamera>();
+                                      OrthoCameraComponent>();
     PLOG_I("position = ({},{})", TP_VEC2(tc.m_position));
     PLOG_I("velocity = ({},{})", TP_VEC2(mc.m_velocity));
     PLOG_I("rotationSpeed = {}", mc.m_rotationSpeed);
@@ -65,7 +65,7 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     auto [mc, tc, cc, rc] =
         getComponents<Movement2dComponent, Transform2dComponent,
-                      Component::OrthoCamera, RotationComponent>();
+                      OrthoCameraComponent, RotationComponent>();
 
     glm::vec3 moveDir{0.0F};
 
@@ -94,7 +94,7 @@ void OrthoCameraScript::onUpdate(DeltaTime deltaTime)
     cc.recalculateViewMatrix(tc.m_position, rc.m_rotationRadians);
   } else { // TODO: finish 3d ortho version
     auto [mc, tc, cc] = getComponents<Movement3dComponent, Transform3dComponent,
-                                      Component::OrthoCamera>();
+                                      OrthoCameraComponent>();
     cc.recalculateViewMatrix(glm::vec2(tc.m_position), 0);
   }
 }
@@ -115,7 +115,7 @@ void OrthoCameraScript::onEvent(const SDL_Event &event)
 
 void OrthoCameraScript::onMouseScrolled(const SDL_Event &event)
 {
-  Component::OrthoCamera &cc = getComponent<Component::OrthoCamera>();
+  OrthoCameraComponent &cc = getComponent<OrthoCameraComponent>();
   cc.m_zoomLevel -= (float)event.wheel.y * m_zoomSpeed;
   cc.m_zoomLevel = std::max(cc.m_zoomLevel, 0.25F);
   cc.setProjection(-cc.m_aspectRatio * cc.m_zoomLevel,

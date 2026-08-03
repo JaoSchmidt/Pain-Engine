@@ -29,7 +29,11 @@ struct MaterialKey {
   std::variant<ParamPBR, ParamPhong, std::monostate> params;
   uint32_t flags; // Transparent, DoubleSided, etc.
   RenderLayer layer;
-  auto operator<(const MaterialKey &o) const { return layer < o.layer; }
+  auto operator<(const MaterialKey &o) const
+  {
+    return std::tie(layer, shader, params, flags) <
+           std::tie(o.layer, o.shader, o.params, o.flags);
+  }
 };
 std::map<MaterialKey, QuadBatch> m_quadBatchCache;
 std::map<MaterialKey, TriBatch> m_triBatchCache;
@@ -76,7 +80,7 @@ void Renderer2d::changeCamera(reg::Entity cameraEntity)
   m.orthoCameraEntity = cameraEntity;
 }
 
-void Renderer2d::beginScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+void Renderer2d::beginScene(DeltaTime globalTime, const OrthoCameraComponent &cc,
                             const Transform2dComponent &tc)
 {
   PROFILE_FUNCTION();
@@ -183,7 +187,8 @@ void Renderer2d::flush()
     }
     while (rectIt != m_rectBatchCache.end() && rectIt->first.layer == layer) {
       beforeFlush2d(rectIt->first);
-      rectIt->second.flush(m.textureSlots, m.textureSlotIndex);
+      rectIt->second.flush(m.textureSlots, m.textureSlotIndex,
+                           rectIt->first.shader);
       ++rectIt;
     }
   }
@@ -193,7 +198,7 @@ void Renderer2d::flush()
   m.debugGrid.flush();
 }
 
-void Renderer2d::endScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+void Renderer2d::endScene(DeltaTime globalTime, const OrthoCameraComponent &cc,
                           const Transform2dComponent &tc)
 {
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
@@ -243,7 +248,7 @@ void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
   RectBatch &batch = it->second;
 
   if (batch.indexCount >= RectBatch::MaxIndices) {
-    batch.flush(m.textureSlots, m.textureSlotIndex);
+    batch.flush(m.textureSlots, m.textureSlotIndex, it->first.shader);
     batch.resetPtr();
   }
 
@@ -373,6 +378,13 @@ void Renderer2d::submitLine(const glm::vec2 &origin,
                             RenderLayer layer, const Material &material,
                             Color overrideColor)
 {
+  static int showline = 0;
+  if (showline < 6) {
+    PLOG_W("Line coords: ({},{}) -> ({},{})", TP_VEC2(origin),
+           TP_VEC2(destination));
+    showline++;
+  }
+
   glm::vec2 delta = destination - origin;
   float length = glm::length(delta);
   glm::vec2 center = (origin + destination) * 0.5f;

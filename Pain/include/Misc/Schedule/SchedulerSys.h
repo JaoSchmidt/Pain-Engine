@@ -8,7 +8,7 @@
  * @file LuaSchedulerSys.h
  * @brief System responsible for executing scheduled Lua tasks.
  *
- * This system processes entities containing cmp::LuaScheduleTask and triggers
+ * This system processes entities containing LuaSchedulerComponent and triggers
  * their scheduled callbacks when their accumulated time reaches the defined
  * interval.
  *
@@ -32,13 +32,11 @@
 #include "Assets/DeltaTime.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
+#include "Misc/Schedule/SchedulerComponent.h"
 
 namespace pain
 {
-namespace cmp
-{
-struct LuaScheduleTask;
-}
+struct LuaSchedulerComponent;
 
 namespace Systems
 {
@@ -47,7 +45,7 @@ namespace Systems
  * @brief Executes scheduled Lua tasks based on elapsed time.
  *
  * LuaSchedulerSys iterates over all entities containing
- * cmp::LuaScheduleTask and accumulates elapsed time each frame. When the
+ * LuaSchedulerComponent and accumulates elapsed time each frame. When the
  * elapsed time reaches the configured interval, the associated Lua callback
  * is executed.
  *
@@ -63,22 +61,22 @@ namespace Systems
  *  - IOnUpdate  → enables onUpdate() callbacks.
  *
  * @note The Tags list is validated at compile time to ensure that
- * cmp::LuaScheduleTask is registered in the component manager before this
+ * LuaSchedulerComponent is registered in the component manager before this
  * system can be added to a scene.
  *
  * @see System
  * @see IOnUpdate
- * @see cmp::LuaScheduleTask
+ * @see LuaSchedulerComponent
  */
 struct LuaSchedulerSys : public System<WorldComponents>, IOnUpdate {
   /**
    * @brief Component tags required by this system.
    *
    * Declares that this system operates on entities containing
-   * cmp::LuaScheduleTask. The engine validates these tags at compile time when
+   * LuaSchedulerComponent. The engine validates these tags at compile time when
    * inserting the system into a scene.
    */
-  using Tags = TypeList<cmp::LuaScheduleTask>;
+  using Tags = TypeList<LuaSchedulerComponent>;
 
   /** @brief Inherit base System constructors. */
   using System::System;

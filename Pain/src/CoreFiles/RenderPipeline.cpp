@@ -33,8 +33,8 @@ constexpr glm::vec4 s_clearColor = s_colorOptions[1];
 } // namespace
 
 template <typename Camera>
-  requires std::same_as<Camera, cmp::PerspCamera> ||
-           std::same_as<Camera, cmp::OrthoCamera>
+  requires std::same_as<Camera, PerspCameraComponent> ||
+           std::same_as<Camera, OrthoCameraComponent>
 void resizeFBViewport(const ImGuiViewportChangeEvent &event, Camera &cc,
                       FrameBuffer &frameBuffer)
 {
@@ -53,7 +53,7 @@ void RenderPipeline::subscribeToEvents(Scene &scene, RenderApi &renderAPI)
 {
   m_eventDispatcher.subscribe<ImGuiViewportChangeEvent>(
       [&](const ImGuiViewportChangeEvent &e) {
-        auto chunks = scene.query<cmp::OrthoCamera>();
+        auto chunks = scene.query<OrthoCameraComponent>();
         for (auto &chunk : chunks) {
           auto *c = std::get<0>(chunk.arrays);
 
@@ -61,7 +61,7 @@ void RenderPipeline::subscribeToEvents(Scene &scene, RenderApi &renderAPI)
             resizeFBViewport(e, c[i], m_frameBuffer);
           }
         }
-        auto chunks2 = scene.query<cmp::PerspCamera>();
+        auto chunks2 = scene.query<PerspCameraComponent>();
         for (auto &chunk : chunks2) {
           auto *c = std::get<0>(chunk.arrays);
 
@@ -72,9 +72,9 @@ void RenderPipeline::subscribeToEvents(Scene &scene, RenderApi &renderAPI)
       });
   m_eventDispatcher.subscribe<ChangeActiveCameraEvent>(
       [&](const ChangeActiveCameraEvent &e) {
-        auto &cam = scene.getComponent<cmp::OrthoCamera>(e.cam);
+        auto &cam = scene.getComponent<OrthoCameraComponent>(e.cam);
         if (cam.m_active) {
-          auto chunks = scene.query<cmp::OrthoCamera>();
+          auto chunks = scene.query<OrthoCameraComponent>();
           for (auto &chunk : chunks) {
             auto *c = std::get<0>(chunk.arrays);
             for (size_t i = 0; i < chunk.count; ++i)
@@ -107,8 +107,8 @@ RenderPipeline RenderPipeline::create(const FrameBufferCreationInfo &info,
 }
 
 template <typename Camera>
-  requires std::same_as<Camera, cmp::PerspCamera> ||
-           std::same_as<Camera, cmp::OrthoCamera>
+  requires std::same_as<Camera, PerspCameraComponent> ||
+           std::same_as<Camera, OrthoCameraComponent>
 void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
                   RenderApi &renderAPI)
 {
@@ -126,7 +126,7 @@ void RenderPipeline::onWindowResized(const SDL_Event &event,
                                      RenderApi &renderer, Scene &scene)
 {
   {
-    auto chunks = scene.query<cmp::OrthoCamera>();
+    auto chunks = scene.query<OrthoCameraComponent>();
     for (auto &chunk : chunks) {
       auto *c = std::get<0>(chunk.arrays);
 
@@ -140,7 +140,7 @@ void RenderPipeline::onWindowResized(const SDL_Event &event,
     }
   }
   {
-    auto chunks = scene.query<cmp::PerspCamera>();
+    auto chunks = scene.query<PerspCameraComponent>();
     for (auto &chunk : chunks) {
       auto *c = std::get<0>(chunk.arrays);
 
@@ -155,11 +155,11 @@ void RenderPipeline::onWindowResized(const SDL_Event &event,
   }
 }
 
-std::optional<std::pair<const std::reference_wrapper<cmp::OrthoCamera>,
+std::optional<std::pair<const std::reference_wrapper<OrthoCameraComponent>,
                         const std::reference_wrapper<Transform2dComponent>>>
 retrieve2dCamera(Scene &scene)
 {
-  auto chunks = scene.query<cmp::OrthoCamera, Transform2dComponent>();
+  auto chunks = scene.query<OrthoCameraComponent, Transform2dComponent>();
   for (auto &chunk : chunks) {
     auto *c = std::get<0>(chunk.arrays);
     auto *t = std::get<1>(chunk.arrays);
@@ -171,12 +171,12 @@ retrieve2dCamera(Scene &scene)
   }
   return {};
 }
-std::optional<std::pair<const std::reference_wrapper<cmp::PerspCamera>,
+std::optional<std::pair<const std::reference_wrapper<PerspCameraComponent>,
                         const std::reference_wrapper<Transform3dComponent>>>
 retrieve3dCamera(Scene &scene)
 {
   // TODO: implement for 3D OrthoCameras?
-  auto chunks = scene.query<cmp::PerspCamera, Transform3dComponent>();
+  auto chunks = scene.query<PerspCameraComponent, Transform3dComponent>();
   for (auto &chunk : chunks) {
     auto *c = std::get<0>(chunk.arrays);
     auto *t = std::get<1>(chunk.arrays);

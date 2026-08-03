@@ -12,7 +12,7 @@ namespace pain
 
 namespace Systems
 {
-void onWindowResized(const SDL_Event &event, Component::OrthoCamera &cc)
+void onWindowResized(const SDL_Event &event, OrthoCameraComponent &cc)
 {
   cc.m_aspectRatio = (float)event.window.data1 / (float)event.window.data2;
   cc.setProjection(-cc.m_aspectRatio * cc.m_zoomLevel,
@@ -30,7 +30,7 @@ void Systems::CameraSys::onEvent(const SDL_Event &event)
   // Update Resolution change
   // =============================================================== //
 
-  auto chunks = query<Component::OrthoCamera>();
+  auto chunks = query<OrthoCameraComponent>();
 
   for (auto &chunk : chunks) {
     auto *__restrict c = std::get<0>(chunk.arrays);

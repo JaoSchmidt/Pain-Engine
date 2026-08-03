@@ -18,6 +18,7 @@
 namespace pain::backend
 {
 
+//
 // ------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------
@@ -107,10 +108,9 @@ void unbindShader() { glUseProgram(0); }
 // Uniforms
 // ------------------------------------------------------------
 
-int getUniformLocation(uint32_t programId, const std::string &name,
-                       bool isError)
+int getUniformLocation(uint32_t programId, const char *name, bool isError)
 {
-  int loc = glGetUniformLocation(programId, name.c_str());
+  int loc = glGetUniformLocation(programId, name);
   P_ASSERT_W(loc != -1 || !isError, "Uniform {} not found on program {}", name,
              programId);
   return loc;

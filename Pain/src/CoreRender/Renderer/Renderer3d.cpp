@@ -58,7 +58,7 @@ Stats Renderer3d::getSphereStatistics()
   return stats;
 }
 
-void Renderer3d::beginScene(DeltaTime globalTime, const cmp::PerspCamera &pc,
+void Renderer3d::beginScene(DeltaTime globalTime, const PerspCameraComponent &pc,
                             const Transform3dComponent &tc)
 {
   PROFILE_FUNCTION();

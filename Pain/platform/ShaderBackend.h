@@ -24,7 +24,7 @@ void destroyShaderProgram(uint32_t programId);
 void bindShader(uint32_t programId);
 void unbindShader();
 
-int getUniformLocation(uint32_t programId, const std::string &name,
+int getUniformLocation(uint32_t programId, const char *name,
                        bool isError = true);
 
 void uploadUniformInt(int location, int value);

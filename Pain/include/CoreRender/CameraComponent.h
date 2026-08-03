@@ -68,16 +68,11 @@ public:
   PerspectiveMatrices(glm::mat4 perspectiveMatrix, glm::mat4 viewMatrix);
 };
 
-} // namespace pain
-
 /*
  * ============================================================================
  * **ECS Camera Components**
  * ============================================================================
  */
-
-namespace cmp
-{
 
 /**
  * @struct CameraResolution
@@ -106,7 +101,7 @@ struct CameraResolution {
  *
  * Used for 2D rendering and editor-style projections.
  */
-struct OrthoCamera : CameraResolution {
+struct OrthoCameraComponent : CameraResolution {
   using tag = pain::tag::OrthoCamera;
   float m_zoomLevel = 1.0F;
   pain::OrthographicMatrices m_matrices;
@@ -115,8 +110,8 @@ struct OrthoCamera : CameraResolution {
   const glm::mat4 &getViewProjectionMatrix() const;
 
   /** Creates a new orthographic camera component. */
-  static OrthoCamera create(bool active, int resWidth, int resHeight,
-                            float zoomLevel, reg::Entity entity);
+  static OrthoCameraComponent create(bool active, int resWidth, int resHeight,
+                                     float zoomLevel, reg::Entity entity);
 
   /** Recomputes the view matrix from position and rotation. */
   void recalculateViewMatrix(const glm::vec2 &position, float angleRadians);
@@ -132,7 +127,7 @@ struct OrthoCamera : CameraResolution {
 
   /** Adds to zoom level. */
   void addZoom(float zoom);
-  OrthoCamera() = delete;
+  OrthoCameraComponent() = delete;
   glm::vec2 screenToWorld(int mouseX, int mouseY,
                           const pain::Transform2dComponent &camTC,
                           const pain::RotationComponent &camRC);
@@ -141,9 +136,9 @@ struct OrthoCamera : CameraResolution {
                           const pain::Transform2dComponent &camTC);
 
 private:
-  OrthoCamera(bool active, float zoomLevel, pain::OrthographicMatrices oc,
-              float aspectRatio, int resWidth, int resHeight,
-              reg::Entity entity);
+  OrthoCameraComponent(bool active, float zoomLevel,
+                       pain::OrthographicMatrices oc, float aspectRatio,
+                       int resWidth, int resHeight, reg::Entity entity);
 };
 
 /**
@@ -152,7 +147,7 @@ private:
  *
  * Used for 3D rendering.
  */
-struct PerspCamera : CameraResolution {
+struct PerspCameraComponent : CameraResolution {
   using tag = pain::tag::PerspCamera;
   float m_fieldOfViewDegrees = 90.0F;
   pain::PerspectiveMatrices m_matrices;
@@ -161,9 +156,10 @@ struct PerspCamera : CameraResolution {
   const glm::mat4 &getViewProjectionMatrix() const;
 
   /** Creates a new perspective camera component. */
-  static PerspCamera create(bool active, int resWidth, int resHeight,
-                            float fieldOfViewDegrees, reg::Entity entity,
-                            float yaw, float pitch);
+  static PerspCameraComponent create(bool active, int resWidth, int resHeight,
+                                     float fieldOfViewDegrees,
+                                     reg::Entity entity, float yaw,
+                                     float pitch);
 
   /** Recomputes the view matrix from camera transform. */
   void recalculateViewMatrix(glm::vec3 position, glm::vec3 frontCamera);
@@ -172,14 +168,12 @@ struct PerspCamera : CameraResolution {
   void setProjection(float aspectRatio, float fieldOfViewDegrees);
   void setProjection(int width, int height);
 
-  PerspCamera() = delete;
+  PerspCameraComponent() = delete;
 
 private:
-  PerspCamera(bool active, pain::PerspectiveMatrices pe, float aspectRatio,
-              int resWidth, int resHeight, float fieldOfViewDegrees,
-              reg::Entity entity);
+  PerspCameraComponent(bool active, pain::PerspectiveMatrices pe,
+                       float aspectRatio, int resWidth, int resHeight,
+                       float fieldOfViewDegrees, reg::Entity entity);
 };
 
-} // namespace cmp
-
-namespace Component = cmp;
+} // namespace pain

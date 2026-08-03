@@ -76,11 +76,11 @@ struct Renderer2d {
    * @param perspCamera Perspecitve camera component
    * @param position camera position
    */
-  void beginScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+  void beginScene(DeltaTime globalTime, const OrthoCameraComponent &cc,
                   const Transform2dComponent &tc);
 
   // @brief Flush all batches and finalize the scene.
-  void endScene(DeltaTime globalTime, const cmp::OrthoCamera &cc,
+  void endScene(DeltaTime globalTime, const OrthoCameraComponent &cc,
                 const Transform2dComponent &tc);
 
   /// @brief Clears all renderer state and internal caches.

@@ -29,7 +29,7 @@ reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionWidth,
       entity, pain::Transform3dComponent{}, //
       pain::RotationComponent{},            //
       pain::Movement3dComponent{},          //
-      cmp::PerspCamera::create(true, resolutionWidth, resolutionHeight,
+      PerspCameraComponent::create(true, resolutionWidth, resolutionHeight,
                                fieldOfViewDegrees, entity, yaw, pitch), //
       pain::NativeScriptComponent{});
   pain::Scene::emplaceScript<PerspCameraScript>(entity, scene, yaw, pitch);
@@ -44,7 +44,7 @@ reg::Entity Dummy3dCamera::createBasicCamera(pain::Scene &scene,
   reg::Entity entity = scene.createEntity("Static3DCamera");
   scene.createComponents(
       entity, pain::Transform3dComponent{},
-      Component::PerspCamera::create(true, resolutionWidth, resolutionHeight,
+      PerspCameraComponent::create(true, resolutionWidth, resolutionHeight,
                                      fieldOfViewDegrees, entity, yaw, pitch) //
   );
   return entity;
@@ -56,7 +56,7 @@ void PerspCameraScript::onCreate()
   m_cameraFront = {0.0F, 0.0F, 1.0F};
 
   auto [tc, mc, pc] = getComponents<Transform3dComponent, Movement3dComponent,
-                                    cmp::PerspCamera>();
+                                    PerspCameraComponent>();
   m_cameraFront = glm::vec3(                                 //
       cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch)), //
       sin(glm::radians(m_pitch)),                            //
@@ -85,7 +85,7 @@ void PerspCameraScript::onUpdate(DeltaTime deltaTimeSec)
     return;
 
   auto [tc, mc, pc] = getComponents<Transform3dComponent, Movement3dComponent,
-                                    cmp::PerspCamera>();
+                                    PerspCameraComponent>();
   const Uint8 *state = SDL_GetKeyboardState(NULL);
   float moveAmount = (float)(deltaTimeSec.getSecondsf() *
                              (1.0 + 10.0 * state[SDL_SCANCODE_LSHIFT]));
@@ -119,7 +119,7 @@ template <bool IsMoving> void PerspCameraScript::setMovementState()
 void PerspCameraScript::onMouseButtonUp(const SDL_Event &event)
 {
   auto [tc, mc, pc] = getComponents<Transform3dComponent, Movement3dComponent,
-                                    cmp::PerspCamera>();
+                                    PerspCameraComponent>();
   if (event.button.button == SDL_BUTTON_LEFT) {
     PLOG_I("cameraFront = ({},{},{})", TP_VEC3(m_cameraFront));
     PLOG_I("yaw, pitch, roll = ({},{},{})", m_yaw, m_pitch, 0);
@@ -176,7 +176,7 @@ void PerspCameraScript::onMouseMoved(const SDL_Event &e)
       sin(glm::radians(m_pitch)),                            //
       sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch))  //
   );
-  auto [tc, cam] = getComponents<Transform3dComponent, cmp::PerspCamera>();
+  auto [tc, cam] = getComponents<Transform3dComponent, PerspCameraComponent>();
   cam.recalculateViewMatrix(tc.m_position, m_cameraFront);
 }
 
@@ -184,7 +184,7 @@ void PerspCameraScript::onMouseScrolled(const SDL_Event &event)
 {
   if (!m_isMovementEnable)
     return;
-  auto cam = getComponent<cmp::PerspCamera>();
+  auto cam = getComponent<PerspCameraComponent>();
 
   cam.m_fieldOfViewDegrees += static_cast<float>(event.wheel.y) * m_zoomSpeed;
   if (cam.m_fieldOfViewDegrees < 1.0F)

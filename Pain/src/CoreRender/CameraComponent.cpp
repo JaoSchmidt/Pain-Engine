@@ -40,9 +40,8 @@ OrthographicMatrices::OrthographicMatrices(glm::mat4 projectionMatrix,
           .m_viewProjectionCache{projectionMatrix * viewMatrix},
       } {};
 
-} // namespace pain
-void ::cmp::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
-                                               float angleRadians)
+void OrthoCameraComponent::recalculateViewMatrix(const glm::vec2 &position,
+                                                 float angleRadians)
 {
   // PLOG_E("Radians = {}, angle = {}", glm::radians(rotation), rotation);
   glm::mat4 transform =
@@ -53,12 +52,12 @@ void ::cmp::OrthoCamera::recalculateViewMatrix(const glm::vec2 &position,
   m_matrices.m_viewProjectionCache =
       m_matrices.m_projection * m_matrices.m_view;
 }
-void ::cmp::OrthoCamera::addZoom(float zoom)
+void OrthoCameraComponent::addZoom(float zoom)
 {
   m_zoomLevel += zoom;
   setProjection(-m_aspectRatio * zoom, m_aspectRatio * zoom, -zoom, zoom);
 }
-void ::cmp::OrthoCamera::setProjection(int width, int height)
+void OrthoCameraComponent::setProjection(int width, int height)
 {
   setResolution(width, height);
   float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
@@ -66,15 +65,15 @@ void ::cmp::OrthoCamera::setProjection(int width, int height)
   setProjection(-aspectRatio * m_zoomLevel, aspectRatio * m_zoomLevel,
                 -m_zoomLevel, m_zoomLevel);
 }
-void ::cmp::OrthoCamera::setProjection(float aspectRatio, float zoomLevel)
+void OrthoCameraComponent::setProjection(float aspectRatio, float zoomLevel)
 {
   m_aspectRatio = aspectRatio;
   m_zoomLevel = aspectRatio;
   setProjection(-aspectRatio * zoomLevel, aspectRatio * zoomLevel, -zoomLevel,
                 zoomLevel);
 }
-void ::cmp::OrthoCamera::setProjection(float left, float right, float bottom,
-                                       float top)
+void OrthoCameraComponent::setProjection(float left, float right, float bottom,
+                                         float top)
 {
   m_matrices.m_projection = glm::ortho(left, right, bottom, top, -1.0F, 1.0F);
   m_matrices.m_viewProjectionCache =
@@ -91,8 +90,8 @@ pain::PerspectiveMatrices::PerspectiveMatrices(glm::mat4 perspectiveMatrix,
                      .m_view{glm::mat4(1.0f)},
                      .m_viewProjectionCache{perspectiveMatrix * viewMatrix}} {};
 
-void Component::PerspCamera::recalculateViewMatrix(glm::vec3 position,
-                                                   glm::vec3 frontCamera)
+void PerspCameraComponent::recalculateViewMatrix(glm::vec3 position,
+                                                 glm::vec3 frontCamera)
 {
   glm::vec3 frontUnit = glm::normalize(frontCamera);
   const glm::vec3 up = glm::vec3(0.0F, 1.0F, 0.0F);
@@ -101,7 +100,7 @@ void Component::PerspCamera::recalculateViewMatrix(glm::vec3 position,
       m_matrices.m_projection * m_matrices.m_view;
 }
 
-void Component::PerspCamera::setProjection(int width, int height)
+void PerspCameraComponent::setProjection(int width, int height)
 {
   setResolution(width, height);
   float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
@@ -109,8 +108,8 @@ void Component::PerspCamera::setProjection(int width, int height)
   setProjection(aspectRatio, m_fieldOfViewDegrees);
 }
 
-void Component::PerspCamera::setProjection(float aspectRatio,
-                                           float fieldOfViewDegrees)
+void PerspCameraComponent::setProjection(float aspectRatio,
+                                         float fieldOfViewDegrees)
 {
   m_matrices.m_projection = glm::perspective(glm::radians(fieldOfViewDegrees),
                                              aspectRatio, 0.01F, 100.0F);
@@ -122,20 +121,20 @@ void Component::PerspCamera::setProjection(float aspectRatio,
 // Components getters
 // ======================================================================== //
 
-const glm::ivec2 &Component::CameraResolution::getResolution() const
+const glm::ivec2 &CameraResolution::getResolution() const
 {
   return m_resolution;
 }
-void Component::CameraResolution::setResolution(int w, int h)
+void CameraResolution::setResolution(int w, int h)
 {
   m_resolution = glm::ivec2(w, h);
 }
-float cmp::CameraResolution::getAspectRatio() const { return m_aspectRatio; }
-const glm::mat4 &Component::PerspCamera::getViewProjectionMatrix() const
+float CameraResolution::getAspectRatio() const { return m_aspectRatio; }
+const glm::mat4 &PerspCameraComponent::getViewProjectionMatrix() const
 {
   return m_matrices.m_viewProjectionCache;
 }
-const glm::mat4 &Component::OrthoCamera::getViewProjectionMatrix() const
+const glm::mat4 &OrthoCameraComponent::getViewProjectionMatrix() const
 {
   return m_matrices.m_viewProjectionCache;
 }
@@ -146,15 +145,15 @@ const glm::mat4 &Component::OrthoCamera::getViewProjectionMatrix() const
 
 // ----- Orthographic ------
 
-Component::OrthoCamera Component::OrthoCamera::create(bool active, int resWidth,
-                                                      int resHeight,
-                                                      float zoomLevel,
-                                                      reg::Entity entity)
+OrthoCameraComponent OrthoCameraComponent::create(bool active, int resWidth,
+                                                  int resHeight,
+                                                  float zoomLevel,
+                                                  reg::Entity entity)
 {
   const float aspectRatio =
       static_cast<float>(resWidth) / static_cast<float>(resHeight);
 
-  return Component::OrthoCamera{
+  return OrthoCameraComponent{
       active,
       zoomLevel,
       pain::OrthographicMatrices( //
@@ -166,17 +165,17 @@ Component::OrthoCamera Component::OrthoCamera::create(bool active, int resWidth,
       resHeight,
       entity};
 }
-Component::OrthoCamera::OrthoCamera(bool active, float zoomLevel,
-                                    pain::OrthographicMatrices oc,
-                                    float aspectRatio, int resWidth,
-                                    int resHeight, reg::Entity entity)
+OrthoCameraComponent::OrthoCameraComponent(bool active, float zoomLevel,
+                                           pain::OrthographicMatrices oc,
+                                           float aspectRatio, int resWidth,
+                                           int resHeight, reg::Entity entity)
     : CameraResolution{active, glm::vec2(resWidth, resHeight), aspectRatio,
                        entity},
       m_zoomLevel(zoomLevel), m_matrices(oc) {};
 
 glm::vec2
-Component::OrthoCamera::screenToWorld(int mouseX, int mouseY,
-                                      const pain::Transform2dComponent &camTC)
+OrthoCameraComponent::screenToWorld(int mouseX, int mouseY,
+                                    const pain::Transform2dComponent &camTC)
 {
   const float ndcX = (2.f * static_cast<float>(mouseX)) /
                          static_cast<float>(getResolution().x) -
@@ -191,9 +190,9 @@ Component::OrthoCamera::screenToWorld(int mouseX, int mouseY,
 }
 
 glm::vec2
-Component::OrthoCamera::screenToWorld(int mouseX, int mouseY,
-                                      const pain::Transform2dComponent &camTC,
-                                      const pain::RotationComponent &camRC)
+OrthoCameraComponent::screenToWorld(int mouseX, int mouseY,
+                                    const pain::Transform2dComponent &camTC,
+                                    const pain::RotationComponent &camRC)
 {
   const float ndcX = (2.f * static_cast<float>(mouseX)) /
                          static_cast<float>(getResolution().x) -
@@ -212,11 +211,11 @@ Component::OrthoCamera::screenToWorld(int mouseX, int mouseY,
 }
 
 // ----- Perspective ------
-Component::PerspCamera Component::PerspCamera::create(bool active, int resWidth,
-                                                      int resHeight,
-                                                      float fieldOfViewDegrees,
-                                                      reg::Entity entity,
-                                                      float yaw, float pitch)
+PerspCameraComponent PerspCameraComponent::create(bool active, int resWidth,
+                                                  int resHeight,
+                                                  float fieldOfViewDegrees,
+                                                  reg::Entity entity, float yaw,
+                                                  float pitch)
 {
   if (fieldOfViewDegrees > 200 || fieldOfViewDegrees < 40)
     PLOG_W("Warning. Perspective cameara FOV = {} is very {}, make sure you "
@@ -234,17 +233,18 @@ Component::PerspCamera Component::PerspCamera::create(bool active, int resWidth,
       ));
   const glm::vec3 up = glm::vec3(0.0F, 1.0F, 0.0F);
   glm::mat4 viewMatrix = glm::lookAt(glm::vec3{0}, cameraFront, up);
-  return Component::PerspCamera{
+  return PerspCameraComponent{
       active,      pain::PerspectiveMatrices(perspectiveMatrix, viewMatrix),
       aspectRatio, resWidth,
       resHeight,   fieldOfViewDegrees,
       entity};
 }
 
-Component::PerspCamera::PerspCamera(bool active, pain::PerspectiveMatrices pe,
-                                    float aspectRatio, int resWidth,
-                                    int resHeight, float fieldOfViewDegrees,
-                                    reg::Entity entity)
+PerspCameraComponent::PerspCameraComponent(
+    bool active, pain::PerspectiveMatrices pe, float aspectRatio, int resWidth,
+    int resHeight, float fieldOfViewDegrees, reg::Entity entity)
     : CameraResolution{active, glm::vec2(resWidth, resHeight), aspectRatio,
                        entity},
       m_fieldOfViewDegrees(fieldOfViewDegrees), m_matrices(pe) {};
+
+} // namespace pain

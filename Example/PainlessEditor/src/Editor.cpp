@@ -196,8 +196,8 @@ Editor::Editor(reg::Entity entity, pain::UIScene &scene, pain::Application &app)
   luabinder::bindImGui(m_app.getLuaState());
   // luabinder::bindImPlot(m_app.getLuaState());
 
-  customPanel::registerPanel("ECS Inspector", 1.F, InterfaceMenu::SIDEBAR);
-  customPanel::addToPanel("ECS Inspector", [this]() {
+  customPanel::registerPanel("ECS", 1.F, InterfaceMenu::SIDEBAR);
+  customPanel::addToPanel("ECS", [this]() {
     EntityInspector::render(m_app.getWorldScene(), m_componentIcons.get());
   });
 }

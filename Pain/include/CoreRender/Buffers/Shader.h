@@ -98,7 +98,7 @@ public:
   void uploadUniformIntArray(const std::string &name, int *values,
                              uint32_t size, bool isError = true);
 
-  int getUniformLocation(const std::string &name, bool isError = true) const;
+  int getUniformLocation(const std::string &name, bool isError = true);
   // ============================================================= //
   // **Utilities**
   // ============================================================= //
@@ -111,6 +111,10 @@ public:
   const std::vector<ShaderInput> &getVertexInputs() const;
 
   bool verifyVertexLayout(const BufferLayout &layout) const;
+  bool operator==(const Shader &o) const
+  {
+    return m_programId == o.m_programId;
+  }
 
 private:
   Shader() = default;
@@ -118,6 +122,8 @@ private:
   std::string m_name = "undefined";
   uint32_t m_programId = 0;
   mutable std::optional<std::vector<ShaderInput>> m_cachedInputs;
+  // NOTE: not sure if this hack also works for other frameworks besides opengl
+  std::unordered_map<std::string, int> m_uniformLocationCache;
 };
 
 } // namespace pain

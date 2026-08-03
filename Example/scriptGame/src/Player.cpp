@@ -25,7 +25,7 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
           .randAngleFactor = 20.f,
           .capacity = 100,
       }),
-      Component::OrthoCamera::create(resolutionWeigh, resolutionHeight,
+      OrthoCameraComponent::create(resolutionWeigh, resolutionHeight,
                                      zoomLevel, entity), //
       pain::NativeScriptComponent{},                     //
       pain::LuaScriptComponent::create(entity)           //
@@ -37,7 +37,7 @@ reg::Entity Player::create(pain::Scene &scene, pain::Texture &tex,
 void Player::Script::onRender(pain::RenderApi &renderer, 
                               pain::DeltaTime currentTime)
 {
-  auto &camCC = getComponent<Component::OrthoCamera>();
+  auto &camCC = getComponent<OrthoCameraComponent>();
   IMGUI_PLOG([=]() { ImGui::Text("Camera zoom: %.3f", camCC.m_zoomLevel); });
 }
 

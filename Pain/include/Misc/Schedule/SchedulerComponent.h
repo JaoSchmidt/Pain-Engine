@@ -16,8 +16,6 @@
 #include <sol/sol.hpp>
 namespace pain
 {
-namespace cmp
-{
 /**
  * @brief Stores Schedule information of an entity
  *
@@ -25,13 +23,12 @@ namespace cmp
  * Defines the schedule interval to be called at the specified interval by the
  * schedule system
  */
-struct LuaScheduleTask {
-  using tag = tag::LuaScheduleTask;
+struct LuaSchedulerComponent {
+  using tag = tag::LuaScheduler;
   // NOTE: not sure if I have to put optional here, but it maybe a good idea
   sol::protected_function onScheduleFunction; /**< Calback Function */
   float interval = 1.f; /**< Local interval for callback call */
   float elapsed = 0;    /**< Elapsed time after last call */
 };
 
-} // namespace cmp
 } // namespace pain
