@@ -198,15 +198,15 @@ EndGameFlags Application::run()
     // =============================================================== //
     if (m_config.isAccumulatorUnlocked) {
       while (!SDL_HasEvents(SDL_FIRSTEVENT, SDL_LASTEVENT)) {
-        m_runtime.worldScene.updateSystems(m_config.fixedFrameRate);
+        m_runtime.worldScene.updateSystems(m_config.fixedDeltaTime);
       }
     } else {
       DeltaTime deltaSeconds = deltaTime * m_config.timeMultiplier;
       accumulator += deltaSeconds;
 
-      while (accumulator >= m_config.fixedFrameRate) {
-        m_runtime.worldScene.updateSystems(m_config.fixedFrameRate);
-        accumulator -= m_config.fixedFrameRate;
+      while (accumulator >= m_config.fixedDeltaTime) {
+        m_runtime.worldScene.updateSystems(m_config.fixedDeltaTime);
+        accumulator -= m_config.fixedDeltaTime;
       }
     }
 

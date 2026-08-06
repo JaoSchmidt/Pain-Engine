@@ -194,7 +194,7 @@ private:
     constexpr static double fixedUpdateTime = 1.0 / 60.0;
     constexpr static double fixedFPS = 1.0 / 60.0;
     double timeMultiplier = 1.0;
-    DeltaTime fixedFrameRate = 16'666'666; /** 1/60 seconds in nanoseconds */
+    DeltaTime fixedDeltaTime = 16'666'666; /** 1/60 seconds in nanoseconds */
 
     /** FPS sample buffer size. */
     constexpr static int FPS_SAMPLE_COUNT = 64;
