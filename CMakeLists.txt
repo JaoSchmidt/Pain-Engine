@@ -338,7 +338,6 @@ foreach(EXAMPLE ${EXAMPLES})
     message(STATUS "Adding game: ${EXAMPLE}")
     add_subdirectory("Example/${EXAMPLE}")
 
-    message("bbbbbbbbbbbbbbbbbbbbb")
     # Write engine commit hash into each game project's build directory
     file(WRITE "${CMAKE_SOURCE_DIR}/Example/${EXAMPLE}/engine.version"
          "${ENGINE_GIT_COMMIT}\n")
