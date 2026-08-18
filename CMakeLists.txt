@@ -313,41 +313,59 @@ target_link_libraries(
 
 target_precompile_headers(${LIBRARY_NAME} PRIVATE
                           ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h)
-
-set(ENGINE_DIRECTORY "${PROJECT_SOURCE_DIR}")
-add_subdirectory(Example/PainlessEditor)
-
-# =========== Resources/Assets Managment ==================================
-
 add_compile_definitions(${RENDERER_FRAMEWORK})
 
-# Sync Resources
-if(UNIX OR APPLE)
-  # NOTE: Engine resources are small and can be sync anywhere
-  add_custom_target(
-    sync_resources
-    # Syncing with game build folder
-    COMMAND
-      rsync -av --chmod=F444,D775 "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
-      "${CMAKE_BINARY_DIR}/resources/"
-    # Syncing with main folder (for debugging inside nvim)
-    COMMAND
-      rsync -av --chmod=F444,D775 "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
-      "${CMAKE_SOURCE_DIR}/resources/"
-    COMMENT "Syncing resources folder")
-  # Add dependency to sync_resources target on make
-  add_dependencies(${LIBRARY_NAME} sync_resources)
-else()
-  add_custom_target(
-    sync_resources
-    COMMAND
-      ${CMAKE_COMMAND} -E copy_directory
-      "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources"
-      "${CMAKE_BINARY_DIR}/resources"
-    COMMENT "Syncing resources folder")
+# =========== Games ===============================
+set(ENGINE_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
-  add_dependencies(${LIBRARY_NAME} sync_resources)
-endif()
+file(
+  GLOB EXAMPLES
+  RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/Example"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Example/*")
+
+# we actually need to add this first since any game might depend on it
+list(REMOVE_ITEM EXAMPLES "PainlessEditor")
+list(REMOVE_ITEM EXAMPLES ".gitignore")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Example/PainlessEditor")
+
+foreach(EXAMPLE ${EXAMPLES})
+  if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Example/${EXAMPLE}")
+    message(STATUS "Adding game: ${EXAMPLE}")
+    add_subdirectory("Example/${EXAMPLE}")
+  endif()
+
+  # =========== Resources/Assets Managment ===============================
+  # Sync Resources
+  if(UNIX OR APPLE)
+    # NOTE: Engine resources are small and can be sync anywhere
+    add_custom_target(
+      sync_resources
+      # Syncing with game build folder
+      COMMAND
+        rsync -av --chmod=F444,D775
+        "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
+        "${CMAKE_BINARY_DIR}/Example/${EXAMPLE}/resources/"
+      # Syncing with main folder (for debugging purposes)
+      COMMAND
+        rsync -av --chmod=F444,D775
+        "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
+        "${CMAKE_SOURCE_DIR}/resources/"
+      COMMENT "Syncing resources folder")
+    # Add dependency to sync_resources target on make
+    add_dependencies(${LIBRARY_NAME} sync_resources)
+  else()
+    add_custom_target(
+      sync_resources
+      COMMAND
+        ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources"
+        "${CMAKE_BINARY_DIR}/Example/${EXAMPLE}/resources"
+      COMMENT "Syncing resources folder")
+
+    add_dependencies(${LIBRARY_NAME} sync_resources)
+  endif()
+
+endforeach()
 
 if(UNIX)
   string(TIMESTAMP NOW "%Y-%m-%d %H:%M:%S")
