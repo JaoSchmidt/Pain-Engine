@@ -328,10 +328,20 @@ list(REMOVE_ITEM EXAMPLES "PainlessEditor")
 list(REMOVE_ITEM EXAMPLES ".gitignore")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Example/PainlessEditor")
 
+execute_process(
+  COMMAND git -C ${PROJECT_SOURCE_DIR} rev-parse HEAD
+  OUTPUT_VARIABLE ENGINE_GIT_COMMIT
+  OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+
 foreach(EXAMPLE ${EXAMPLES})
   if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Example/${EXAMPLE}")
     message(STATUS "Adding game: ${EXAMPLE}")
     add_subdirectory("Example/${EXAMPLE}")
+
+    message("bbbbbbbbbbbbbbbbbbbbb")
+    # Write engine commit hash into each game project's build directory
+    file(WRITE "${CMAKE_SOURCE_DIR}/Example/${EXAMPLE}/engine.version"
+         "${ENGINE_GIT_COMMIT}\n")
   endif()
 
   # =========== Resources/Assets Managment ===============================
@@ -339,7 +349,7 @@ foreach(EXAMPLE ${EXAMPLES})
   if(UNIX OR APPLE)
     # NOTE: Engine resources are small and can be sync anywhere
     add_custom_target(
-      sync_resources
+      sync_resources_${EXAMPLE}
       # Syncing with game build folder
       COMMAND
         rsync -av --chmod=F444,D775
@@ -351,18 +361,17 @@ foreach(EXAMPLE ${EXAMPLES})
         "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
         "${CMAKE_SOURCE_DIR}/resources/"
       COMMENT "Syncing resources folder")
-    # Add dependency to sync_resources target on make
-    add_dependencies(${LIBRARY_NAME} sync_resources)
+    add_dependencies(${LIBRARY_NAME} sync_resources_${EXAMPLE})
   else()
     add_custom_target(
-      sync_resources
+      sync_resources_${EXAMPLE}
       COMMAND
         ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources"
         "${CMAKE_BINARY_DIR}/Example/${EXAMPLE}/resources"
       COMMENT "Syncing resources folder")
 
-    add_dependencies(${LIBRARY_NAME} sync_resources)
+    add_dependencies(${LIBRARY_NAME} sync_resources_${EXAMPLE})
   endif()
 
 endforeach()
