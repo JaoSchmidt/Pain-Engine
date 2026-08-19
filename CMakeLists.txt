@@ -325,6 +325,7 @@ file(
 
 # we actually need to add this first since any game might depend on it
 list(REMOVE_ITEM EXAMPLES "PainlessEditor")
+list(REMOVE_ITEM EXAMPLES "GameTemplate") # no need to compile the template, in case the user left there
 list(REMOVE_ITEM EXAMPLES ".gitignore")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Example/PainlessEditor")
 
