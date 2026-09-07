@@ -67,7 +67,15 @@ Stats Renderer2d::getTriStatistics()
   }
   return stats;
 }
-Stats Renderer2d::getSprayStatistics() { return getStatistics(m.sprayBatch); }
+Stats Renderer2d::getSprayStatistics()
+{
+  Stats stats = {"Sprays"};
+  for (auto it = m.sprayBatchCache.begin(); it != m.sprayBatchCache.end();
+       it++) {
+    stats += getStatistics(it->second);
+  }
+  return stats;
+}
 Stats Renderer2d::getTextStatistics() { return getStatistics(m.textBatch); }
 
 // TODO: exclude those 2 as soon as possible
@@ -80,7 +88,8 @@ void Renderer2d::changeCamera(reg::Entity cameraEntity)
   m.orthoCameraEntity = cameraEntity;
 }
 
-void Renderer2d::beginScene(DeltaTime globalTime, const OrthoCameraComponent &cc,
+void Renderer2d::beginScene(DeltaTime globalTime,
+                            const OrthoCameraComponent &cc,
                             const Transform2dComponent &tc)
 {
   PROFILE_FUNCTION();
@@ -94,7 +103,10 @@ void Renderer2d::beginScene(DeltaTime globalTime, const OrthoCameraComponent &cc
     it->second.resetAll();
   }
   m.textBatch.resetAll();
-  m.sprayBatch.resetAll();
+  for (auto it = m.sprayBatchCache.begin(); it != m.sprayBatchCache.end();
+       it++) {
+    it->second.resetAll();
+  }
 }
 
 void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
@@ -120,10 +132,17 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                                         viewProjectionMatrix);
   }
 
-  m.sprayBatch.shader.bind();
-  m.sprayBatch.shader.uploadUniformMat4("u_ViewProjection",
+  for (auto it = m.sprayBatchCache.begin(); it != m.sprayBatchCache.end();
+       it++) {
+    it->second.shader.bind();
+    it->second.shader.uploadUniformMat4("u_ViewProjection",
                                         viewProjectionMatrix);
-  m.sprayBatch.shader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
+  }
+  if (!m.sprayBatchCache.empty()) {
+    auto &shader = m.sprayBatchCache.begin()->second.shader;
+    shader.bind();
+    shader.uploadUniformFloat("u_Time", globalTime.getSecondsf());
+  }
 
   m.textBatch.shader.bind();
   m.textBatch.shader.uploadUniformMat4("u_ViewProjection",
@@ -165,13 +184,11 @@ void beforeFlush2d(const MaterialKey &mat)
 
 void Renderer2d::flush()
 {
-  // When declaring new batches, remember that the values uploaded to the shader
-  // MUST be from here, if the batch has a shader inside, then you must send to
-  // the shader inside, not to the material. (Tho this method is obsolete)
   PROFILE_FUNCTION();
   auto triIt = m_triBatchCache.begin();
   auto quadIt = m_quadBatchCache.begin();
   auto rectIt = m_rectBatchCache.begin();
+  auto sprayIt = m.sprayBatchCache.begin();
   for (RenderLayer layer = RenderLayer::A; layer <= RenderLayer::G;
        layer = RenderLayer(static_cast<uint8_t>(layer) + 1)) {
     while (triIt != m_triBatchCache.end() && triIt->first.layer == layer) {
@@ -191,9 +208,12 @@ void Renderer2d::flush()
                            rectIt->first.shader);
       ++rectIt;
     }
+    while (sprayIt != m.sprayBatchCache.end() && sprayIt->first == layer) {
+      sprayIt->second.flush();
+      ++sprayIt;
+    }
   }
 
-  m.sprayBatch.flush();
   m.textBatch.flush();
   m.debugGrid.flush();
 }
@@ -464,13 +484,23 @@ void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
 // Submit Spray Particles
 // ================================================================= //
 
-void Renderer2d::submitSprayParticle(const SprayParticle &p)
+void Renderer2d::submitSprayParticle(const SprayParticle &p, RenderLayer layer)
 {
-  if (m.sprayBatch.instanceCount >= SprayBatch::MaxPolygons) {
-    m.sprayBatch.flush();
-    m.sprayBatch.resetPtr();
+  auto it = m.sprayBatchCache.find(layer);
+  if (it == m.sprayBatchCache.end()) {
+    auto [newIt, inserted] =
+        m.sprayBatchCache.emplace(layer, SprayBatch::create());
+    it = newIt;
+    if (inserted)
+      newIt->second.resetAll();
   }
-  m.sprayBatch.allocateSprayParticles(p.normal, p.startTime, p.offset);
+  SprayBatch &batch = it->second;
+
+  if (batch.instanceCount >= SprayBatch::MaxPolygons) {
+    batch.flush();
+    batch.resetPtr();
+  }
+  batch.allocateSprayParticles(p.normal, p.startTime, p.offset);
 }
 
 // ================================================================= //
@@ -594,9 +624,6 @@ void Renderer2d::submitString(const glm::mat4 &transform,
   }
 }
 
-// ================================================================= //
-// Old draw2d.cpp functions
-// ================================================================= //
 Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
 {
   PROFILE_FUNCTION();
@@ -608,7 +635,6 @@ Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
   return Renderer2d([textureSlots, &materialManager] {
     return M{
         .materialManager = materialManager,
-        .sprayBatch = SprayBatch::create(), //
         .textBatch = TextBatch::create(),   //
         .debugGrid = DebugGrid::create(),
         .textureSlots = textureSlots, //
@@ -706,14 +732,21 @@ void Renderer2d::setCellGridSize(float cellsize)
 void Renderer2d::beginSprayParticle(const ParticleSprayComponent &psc)
 {
   PROFILE_FUNCTION();
-  m.sprayBatch.shader.bind();
-  m.sprayBatch.shader.uploadUniformFloat("u_SizeChangeSpeed",
-                                         psc.sizeChangeSpeed);
-  m.sprayBatch.shader.uploadUniformFloat("u_RandomSizeFactor",
-                                         psc.randSizeFactor);
-  m.sprayBatch.shader.uploadUniformFloat("u_ParticleVelocity", psc.velocity);
-  m.sprayBatch.shader.uploadUniformFloat("u_LifeTime",
-                                         psc.lifeTime.getSecondsf());
+  auto it = m.sprayBatchCache.find(psc.layer);
+  if (it == m.sprayBatchCache.end()) {
+    auto [newIt, inserted] =
+        m.sprayBatchCache.emplace(psc.layer, SprayBatch::create());
+    it = newIt;
+    if (inserted)
+      newIt->second.resetAll();
+  }
+  auto &shader = it->second.shader;
+  shader.bind();
+  shader.uploadUniformFloat("u_SizeChangeSpeed", psc.sizeChangeSpeed);
+  shader.uploadUniformFloat("u_RandomSizeFactor", psc.randSizeFactor);
+  shader.uploadUniformFloat("u_RotationSpeed", psc.rotationSpeed);
+  shader.uploadUniformFloat("u_ParticleVelocity", psc.velocity);
+  shader.uploadUniformFloat("u_LifeTime", psc.lifeTime.getSecondsf());
 }
 
 Renderer2d::~Renderer2d()

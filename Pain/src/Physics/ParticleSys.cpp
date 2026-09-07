@@ -100,7 +100,7 @@ void Systems::ParticleSys::onRender(RenderApi &renderer,
         for (size_t j = 0; j < psc[i].particles.size(); j++) {
           SprayParticle &pa = psc[i].particles[j];
           if (pa.alive)
-            renderer.m_renderer2d.submitSprayParticle(pa);
+            renderer.m_renderer2d.submitSprayParticle(pa, psc[i].layer);
           // Remove dead particles
           if (currentTime - pa.startTime >= psc[i].lifeTime) {
             pa.alive = false;

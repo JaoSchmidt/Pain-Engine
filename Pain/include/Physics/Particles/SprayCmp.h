@@ -18,6 +18,7 @@
 #include "Assets/DeltaTime.h"
 #include "CoreFiles/LogWrapper.h"
 #include "CoreRender/Renderer/Colors.h"
+#include "CoreRender/Renderer/Misc.h"
 #include "ECS/Components/ComponentManager.h"
 #include "pch.h"
 
@@ -50,13 +51,15 @@ struct ParticleSprayInitArgs {
       1.f; /**< Spray Particle Batch: Angular rotation speed. */
   DeltaTime interval =
       DeltaTime::oneSecond() / 2; ///< elapsed limit, 0 means no emisions
-  float velocity = 1.f;           ///< Base particle velocity.
+  float velocity =
+      1.f; ///< Base particle velocity. 0 Means particles are static
   DeltaTime lifeTime = DeltaTime::oneSecond();
   float sizeChangeSpeed = 1.f;  ///< Size growth / shrink speed.
   float randSizeFactor = 1.f;   ///< Random size variance factor.
   float randAngleFactor = 30.f; ///< Angle of emittion variance factor
   bool autoEmit = true; ///< Whether particles automatically spwan or not
-  Color color = Colors::Orange; ///< Particle base color.
+  Color color = Colors::Orange;       ///< Particle base color.
+  RenderLayer layer = RenderLayer::C; ///< Render layer of the spray.
   unsigned capacity;
 };
 
@@ -83,9 +86,11 @@ struct ParticleSprayComponent {
   float randSizeFactor = 1.f;  ///< Random size variance factor.
   float randAngleFactor =
       30.f; ///< Random initial angle variance factor, from 0 to 360 degrees
-  float rotationSpeed = 1.f;    ///< Random rotation speed factor.
+  float rotationSpeed =
+      0.f; ///< Random rotation speed factor. 0 means particles don't rotate
   Color color = Colors::Orange; ///< Particle base color.
   bool autoEmit = false;        /// Whether particles automatically spwan or not
+  RenderLayer layer = RenderLayer::C; ///< Render layer of the spray.
 
   std::vector<SprayParticle> particles =
       {}; /**< Circular buffer of particles. */
@@ -134,6 +139,7 @@ struct ParticleSprayComponent {
     c.maxNumberOfParticles = args.capacity;
     c.particles.resize(c.maxNumberOfParticles);
     c.randAngleFactor = args.randAngleFactor;
+    c.layer = args.layer;
     if (args.capacity == 0) {
       c.autoEmit = false;
     } else {

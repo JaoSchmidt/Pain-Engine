@@ -25,6 +25,7 @@
 #include "Physics/Particles/SprayCmp.h"
 #include "TextComponent.h"
 #include <array>
+#include <map>
 #include <string_view>
 
 namespace pain
@@ -204,8 +205,8 @@ struct Renderer2d {
   /// @brief Begin rendering a particle spray batch.
   void beginSprayParticle(const ParticleSprayComponent &psc);
 
-  /// @brief Submit a single particle to the current spray batch.
-  void submitSprayParticle(const SprayParticle &p);
+  /// @brief Submit a single particle to the spray batch of the given layer.
+  void submitSprayParticle(const SprayParticle &p, RenderLayer layer);
 
   // ================================================================= //
   // Text
@@ -274,8 +275,8 @@ private:
       return {"Glyphs", m.textBatch.statsCount, m.textBatch.statsCount * 6,
               m.textBatch.statsCount * 4, m.textBatch.drawCount};
     else if constexpr (std::is_same_v<Batch, SprayBatch>)
-      return {"Sprays", m.sprayBatch.statsCount, m.sprayBatch.statsCount * 6,
-              m.sprayBatch.statsCount * 4, m.sprayBatch.drawCount};
+      return {"Sprays", b.statsCount, b.statsCount * 6, b.statsCount * 4,
+              b.drawCount};
     else if constexpr (std::is_same_v<Batch, RectBatch>) {
       return {"Rect", b.statsCount, b.statsCount * 6, b.statsCount * 4,
               b.drawCount};
@@ -298,7 +299,7 @@ private:
 
   struct M {
     std::reference_wrapper<MaterialManager> materialManager;
-    SprayBatch sprayBatch;
+    std::map<RenderLayer, SprayBatch> sprayBatchCache;
     TextBatch textBatch;
     DebugGrid debugGrid;
 

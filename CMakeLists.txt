@@ -352,12 +352,12 @@ foreach(EXAMPLE ${EXAMPLES})
       sync_resources_${EXAMPLE}
       # Syncing with game build folder
       COMMAND
-        rsync -av --chmod=F444,D775
+        rsync -av --chmod=F444,D775 --exclude='*.xcf' --exclude='*.ase'
         "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
         "${CMAKE_BINARY_DIR}/Example/${EXAMPLE}/resources/"
       # Syncing with main folder (for debugging purposes)
       COMMAND
-        rsync -av --chmod=F444,D775
+        rsync -av --chmod=F444,D775  --exclude='*.xcf' --exclude='*.ase'
         "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
         "${CMAKE_SOURCE_DIR}/resources/"
       COMMENT "Syncing resources folder")
