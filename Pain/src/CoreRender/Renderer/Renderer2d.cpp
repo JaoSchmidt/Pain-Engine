@@ -88,9 +88,7 @@ void Renderer2d::changeCamera(reg::Entity cameraEntity)
   m.orthoCameraEntity = cameraEntity;
 }
 
-void Renderer2d::beginScene(DeltaTime globalTime,
-                            const OrthoCameraComponent &cc,
-                            const Transform2dComponent &tc)
+void Renderer2d::beginScene()
 {
   PROFILE_FUNCTION();
   for (auto it = m_triBatchCache.begin(); it != m_triBatchCache.end(); it++) {
@@ -635,7 +633,7 @@ Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
   return Renderer2d([textureSlots, &materialManager] {
     return M{
         .materialManager = materialManager,
-        .textBatch = TextBatch::create(),   //
+        .textBatch = TextBatch::create(), //
         .debugGrid = DebugGrid::create(),
         .textureSlots = textureSlots, //
     };

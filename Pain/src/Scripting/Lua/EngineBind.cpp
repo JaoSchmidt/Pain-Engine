@@ -11,8 +11,7 @@
 
 namespace pain
 {
-MaterialCreationInfo parseMaterialInfo(sol::table t, pain::ShaderManager &sm,
-                                       pain::MaterialManager &mm)
+MaterialCreationInfo parseMaterialInfo(sol::table t, pain::ShaderManager &sm)
 {
   Shader *shader = nullptr;
 
@@ -26,6 +25,10 @@ MaterialCreationInfo parseMaterialInfo(sol::table t, pain::ShaderManager &sm,
   } else if (shaderObj.is<std::string>()) {
     shader = &sm.getShader(shaderObj.as<std::string>());
   }
+
+  std::string name = "undefined lua material";
+  if (auto s = t["name"]; s.valid())
+    name = s.get<std::string>();
 
   // --- defaults ---
   Color color{255, 255, 255, 255};
@@ -51,6 +54,7 @@ MaterialCreationInfo parseMaterialInfo(sol::table t, pain::ShaderManager &sm,
   std::variant<ParamPBR, ParamPhong, std::monostate> params;
 
   return MaterialCreationInfo{
+      .name = name,
       .color = color,
       .tilingFactor = tiling,
       .params = params,
@@ -67,7 +71,7 @@ sol::table luabinder::bindEngine(sol::state &lua)
 }
 
 void luabinder::bindEngineMM(sol::state &lua, ShaderManager &sm,
-                              MaterialManager &mm)
+                             MaterialManager &mm)
 {
   // ------------------------------------------------------------
   // Engine table (reuse if exists)
@@ -110,8 +114,9 @@ void luabinder::bindEngineMM(sol::state &lua, ShaderManager &sm,
 
   matTbl["create"] = [&sm, &mm](const std::string &name,
                                 sol::table t) -> pain::Material & {
-    MaterialCreationInfo info = parseMaterialInfo(std::move(t), sm, mm);
-    return mm.createMaterial(name, info);
+    MaterialCreationInfo info = parseMaterialInfo(std::move(t), sm);
+    info.name = name;
+    return mm.createMaterial(info);
   };
 
   matTbl["get"] = [&mm](const std::string &name) -> pain::Material & {

@@ -27,8 +27,7 @@ public:
   // **Material API**
   // ============================================================= //
 
-  Material &createMaterial(const std::string_view &name,
-                           const pain::MaterialCreationInfo &createInfo);
+  Material &createMaterial(const pain::MaterialCreationInfo &createInfo);
 
   Material &getMaterial(const std::string_view &name);
   const Material &getMaterial(const std::string_view &name) const;

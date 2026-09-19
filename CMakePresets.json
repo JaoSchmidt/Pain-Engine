@@ -45,7 +45,8 @@
       "binaryDir": "build-ci",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "g++"
+        "CMAKE_CXX_COMPILER": "g++",
+        "PAIN_BUILD_GAMETEMPLATE": "ON"
       }
     },
     {
@@ -57,6 +58,7 @@
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "Release",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+        "PAIN_BUILD_GAMETEMPLATE": "ON"
       }
     }
   ],

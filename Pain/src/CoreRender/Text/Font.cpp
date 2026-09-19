@@ -127,9 +127,11 @@ Texture Font::createAtlasTexture(
       (msdfgen::BitmapConstRef<T, N>)generator.atlasStorage();
 
   // Tranform the msdfgen bitmap into a Texture
-  Texture texture = *Texture::createTexture(fontFilename, bitmap.width,
-                                            bitmap.height, ImageFormat::RGB8);
-  texture.setData((void *)bitmap.pixels, bitmap.width * bitmap.height * 3);
+  Texture texture = *Texture::createTexture(
+      fontFilename, static_cast<uint32_t>(bitmap.width),
+      static_cast<uint32_t>(bitmap.height), ImageFormat::RGB8);
+  texture.setData((void *)bitmap.pixels,
+                  static_cast<uint32_t>(bitmap.width * bitmap.height * 3));
 
   // For tests only, transform into a SDL_Surface
   // SDL_Surface *surf = SDL_CreateRGBSurfaceFrom(

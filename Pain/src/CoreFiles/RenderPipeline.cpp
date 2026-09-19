@@ -224,8 +224,7 @@ void RenderPipeline::pipeline(RenderApi &renderAPI, bool isRenderingEnabled,
     }
     if (wrap2d) {
       backend::disable3d();
-      renderAPI.m_renderer2d.beginScene(currentTime, wrap2d->first,
-                                        wrap2d->second);
+      renderAPI.m_renderer2d.beginScene();
       worldScene.renderSystems(RenderPass::Dim2d, renderAPI, currentTime);
       renderAPI.m_renderer2d.endScene(currentTime, wrap2d->first,
                                       wrap2d->second);

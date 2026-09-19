@@ -318,6 +318,9 @@ add_compile_definitions(${RENDERER_FRAMEWORK})
 # =========== Games ===============================
 set(ENGINE_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+# Compiles Example/GameTemplate when enabled (used by CI to validate the template)
+option(PAIN_BUILD_GAMETEMPLATE "Build Example/GameTemplate" OFF)
+
 file(
   GLOB EXAMPLES
   RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/Example"
@@ -325,7 +328,10 @@ file(
 
 # we actually need to add this first since any game might depend on it
 list(REMOVE_ITEM EXAMPLES "PainlessEditor")
-list(REMOVE_ITEM EXAMPLES "GameTemplate") # no need to compile the template, in case the user left there
+if(NOT PAIN_BUILD_GAMETEMPLATE)
+  list(REMOVE_ITEM EXAMPLES
+       "GameTemplate") # skip the template unless PAIN_BUILD_GAMETEMPLATE is ON
+endif()
 list(REMOVE_ITEM EXAMPLES ".gitignore")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Example/PainlessEditor")
 

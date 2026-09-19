@@ -25,10 +25,9 @@ struct MaterialComponent {
   using tag = tag::Material;
   static MaterialComponent create(Material &m) { return MaterialComponent(m); }
   static MaterialComponent create(MaterialManager &mm,
-                                  const std::string_view &materialName,
                                   const MaterialCreationInfo &info)
   {
-    return MaterialComponent(mm.createMaterial(materialName, info));
+    return MaterialComponent(mm.createMaterial(info));
   }
   const Material *operator->() const { return std::as_const(m_material); };
 

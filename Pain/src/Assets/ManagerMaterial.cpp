@@ -28,23 +28,24 @@ MaterialManager::MaterialManager(ShaderManager &shaderManager)
 // ============================================================= //
 
 Material &
-MaterialManager::createMaterial(const std::string_view &name,
-                                const pain::MaterialCreationInfo &createInfo)
+MaterialManager::createMaterial(const pain::MaterialCreationInfo &createInfo)
 {
-  if (auto it = m_materials.find(name); it != m_materials.end()) {
+  if (auto it = m_materials.find(createInfo.name); it != m_materials.end()) {
     PLOG_W(
         "Attention: You are re-creating the material {} which already exists "
         "inside the material manager, perhaps you meant to use "
         "getMaterial(\"{}\")?",
-        name, name);
+        createInfo.name, createInfo.name);
     return it->second;
   }
-  Material material = Material::create(createInfo, name);
+  Material material = Material::create(createInfo, createInfo.name);
 
-  auto [it, inserted] = m_materials.emplace(name, std::move(material));
+  auto [it, inserted] =
+      m_materials.emplace(createInfo.name, std::move(material));
 
   return it->second;
 }
+
 const Material &MaterialManager::getMaterial(const std::string_view &name) const
 {
   auto it = m_materials.find(name);

@@ -3,8 +3,13 @@
 imgui.ini
 config.ini
 notify_wrapper.sh
+outside-build.sh
+PASSWORD
 resources
 !Pain/resources
+Example/*
+!Example/GameTemplate/
+!Example/PainlessEditor/
 # syncthing stuff
 .stfolder
 .stfolder

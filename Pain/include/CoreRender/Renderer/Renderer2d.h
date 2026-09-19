@@ -72,13 +72,8 @@ struct Renderer2d {
 
   /**
    * @brief Begin a new rendering scene.
-   *
-   * @param globalTime Global engine time.
-   * @param perspCamera Perspecitve camera component
-   * @param position camera position
    */
-  void beginScene(DeltaTime globalTime, const OrthoCameraComponent &cc,
-                  const Transform2dComponent &tc);
+  void beginScene();
 
   // @brief Flush all batches and finalize the scene.
   void endScene(DeltaTime globalTime, const OrthoCameraComponent &cc,

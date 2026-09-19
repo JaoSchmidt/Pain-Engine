@@ -60,6 +60,7 @@ struct ParamPhong {       /// Phong only parameters
  * properties without directly touching the component fields.
  */
 struct MaterialCreationInfo {
+  std::string_view name = "undefined shader";
   Color color = {255, 255, 255, 255}; ///< Tint color.
   float tilingFactor = 1.f;           ///< Texture tiling multiplier.
   std::variant<ParamPBR, ParamPhong, std::monostate> params = std::monostate{};
