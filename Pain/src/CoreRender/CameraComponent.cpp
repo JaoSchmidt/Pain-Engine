@@ -204,8 +204,8 @@ OrthoCameraComponent::screenToWorld(int mouseX, int mouseY,
       glm::vec2(ndcX * m_zoomLevel * m_aspectRatio, ndcY * m_zoomLevel);
 
   const float angle = camRC.m_rotationRadians;
-  glm::mat2 rotation = glm::mat2(std::cos(angle), -std::sin(angle),
-                                 std::sin(angle), std::cos(angle));
+  glm::mat2 rotation = glm::mat2(std::cos(angle), std::sin(angle),
+                                 -std::sin(angle), std::cos(angle));
   return glm::vec2(camTC.m_position.x, camTC.m_position.y) +
          rotation * localCoord;
 }

@@ -40,7 +40,7 @@ namespace pain
  */
 struct SpriteCreationInfo {
   RenderLayer layer = RenderLayer::D; /**< Rendering order layer. */
-  ShapeVariant shape = QuadShape{};
+  ShapeVariant shape = RectShape{};
 };
 
 /**
