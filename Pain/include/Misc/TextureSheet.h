@@ -38,7 +38,7 @@ public:
    * @param padding Texel padding applied to avoid texture bleeding.
    */
   static TextureSheet
-  createWithDivisions(Texture &texture, unsigned nlinesX, unsigned ncolumnsY,
+  createTexSheetWithDivisions(Texture &texture, unsigned nlinesX, unsigned ncolumnsY,
                       std::initializer_list<std::pair<int, int>> coords,
                       float padding);
 
@@ -55,7 +55,7 @@ public:
    * @param padding Texel padding applied to avoid texture bleeding.
    */
   static TextureSheet
-  createWithDimensions(Texture &texture, float spriteWidth, float spriteHeight,
+  createTexSheetWithDimensions(Texture &texture, float spriteWidth, float spriteHeight,
                        std::initializer_list<std::pair<int, int>> coords,
                        float padding);
 

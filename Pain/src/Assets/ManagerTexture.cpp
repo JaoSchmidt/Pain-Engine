@@ -92,13 +92,13 @@ void TextureManager::initiateDefaultTextures()
                        GENERAL_TEXTURE_PATH);
   createDefaultTexture(TextureManager::DefaultTexture::Error,
                        ERROR_TEXTURE_PATH);
-  createWithDivisions(GENERAL_KEY, GENERAL_TEXTURE_PATH, 1, 1, {{0, 0}});
+  createTexSheetWithDivisions(GENERAL_KEY, GENERAL_TEXTURE_PATH, 1, 1, {{0, 0}});
 }
 
 // ---------------------------------------------------------- //
 // TextureSheet
 // ---------------------------------------------------------- //
-TextureSheet &TextureManager::createWithDimensions(
+TextureSheet &TextureManager::createTexSheetWithDimensions(
     const char *name, const char *texturePath, float spriteWidth,
     float spriteHeight, std::initializer_list<std::pair<int, int>> coords,
     bool keepOnRAM, float padding)
@@ -111,7 +111,7 @@ TextureSheet &TextureManager::createWithDimensions(
 
   Texture &tex =
       TextureManager::createTexture(texturePath, false, true, keepOnRAM);
-  TextureSheet sheet = TextureSheet::createWithDimensions(
+  TextureSheet sheet = TextureSheet::createTexSheetWithDimensions(
       tex, spriteWidth, spriteHeight, coords, padding);
 
   auto [it, inserted] = s_textureSheetMap.emplace(name, std::move(sheet));
@@ -119,7 +119,7 @@ TextureSheet &TextureManager::createWithDimensions(
     PLOG_E("Could not insert sprite sheet {}", name);
   return it->second;
 }
-TextureSheet &TextureManager::createWithDivisions(
+TextureSheet &TextureManager::createTexSheetWithDivisions(
     const char *name, const char *texturePath, unsigned nlinesX,
     unsigned ncolumnsY, std::initializer_list<std::pair<int, int>> coords,
     bool keepOnRAM, float padding)
@@ -132,7 +132,7 @@ TextureSheet &TextureManager::createWithDivisions(
 
   Texture &tex =
       TextureManager::createTexture(texturePath, false, true, keepOnRAM);
-  TextureSheet sheet = TextureSheet::createWithDivisions(
+  TextureSheet sheet = TextureSheet::createTexSheetWithDivisions(
       tex, nlinesX, ncolumnsY, coords, padding);
 
   auto [it, inserted] = s_textureSheetMap.emplace(name, std::move(sheet));

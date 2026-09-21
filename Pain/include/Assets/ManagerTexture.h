@@ -76,7 +76,7 @@ void addRendererForDeletingTextures(RenderApi &renderAPI);
  * @return Reference to the created or cached TextureSheet.
  */
 TextureSheet &
-createWithDimensions(const char *name, const char *texturePath,
+createTexSheetWithDimensions(const char *name, const char *texturePath,
                      float spriteWidth, float spriteHeight,
                      std::initializer_list<std::pair<int, int>> coords,
                      bool keepOnRAM = false, float padding = 0.5F);
@@ -99,7 +99,7 @@ createWithDimensions(const char *name, const char *texturePath,
  * @return Reference to the created or cached TextureSheet.
  */
 TextureSheet &
-createWithDivisions(const char *name, const char *texturePath, unsigned nlinesX,
+createTexSheetWithDivisions(const char *name, const char *texturePath, unsigned nlinesX,
                     unsigned ncolumnsY,
                     std::initializer_list<std::pair<int, int>> coords,
                     bool keepOnRAM = false, float padding = 0.5F);

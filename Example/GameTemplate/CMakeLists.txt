@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.22)
 set(PROJECT_NAME "Unnamed Project")
 project(${PROJECT_NAME} VERSION 0.1.0)
 
-set(TARGET_NAME "myexecutable")
+string(REPLACE " " "-" TARGET_NAME "${PROJECT_NAME}")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -32,7 +32,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES CXX_STANDARD 20
 
 # Compiler-specific options
 if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_options(${TARGET_NAME} PRIVATE /W4 /std:c++20 /Zi)
+  target_compile_options(${TARGET_NAME} PRIVATE /W4 /std:c++20 /Zi /bigobj)
   set_target_properties(${TARGET_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
 else()
   target_compile_options(${TARGET_NAME} PRIVATE -g -std=c++20 -Wall -Wextra)
@@ -40,7 +40,10 @@ endif()
 
 # =========== Pain Engine Integration ==================================
 # Link the engine library to your game executable
-target_link_libraries(${TARGET_NAME} PUBLIC Pain)
+target_link_libraries(${TARGET_NAME} PUBLIC 
+  Pain #
+  Painless #
+)
 
 # =========== Resources Management ==================================
 # Define the resources directory for your game

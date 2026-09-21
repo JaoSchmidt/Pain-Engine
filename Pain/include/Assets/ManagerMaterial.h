@@ -17,6 +17,9 @@ namespace pain
 class MaterialManager
 {
 public:
+  NONCOPYABLE(MaterialManager);
+  MOVABLE(MaterialManager);
+  ~MaterialManager() = default;
   // ============================================================= //
   // **Creation**
   // ============================================================= //
@@ -28,6 +31,7 @@ public:
   // ============================================================= //
 
   Material &createMaterial(const pain::MaterialCreationInfo &createInfo);
+  Material &getOrCreateMaterial(const pain::MaterialCreationInfo &createInfo);
 
   Material &getMaterial(const std::string_view &name);
   const Material &getMaterial(const std::string_view &name) const;

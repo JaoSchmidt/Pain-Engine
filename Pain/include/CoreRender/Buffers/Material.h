@@ -40,6 +40,8 @@ struct SheetStruct {
   unsigned short id;   /**< Sub-texture index inside the sheet. */
 };
 
+using TextureVariant = std::variant<Texture *, SheetStruct>;
+
 struct ParamPBR {         /// Physically Based Rendering
   float roughness = 1.0f; ///< 1 = matte
   float metallic = 0.0f;  ///< 0 = dielectric
@@ -65,8 +67,8 @@ struct MaterialCreationInfo {
   float tilingFactor = 1.f;           ///< Texture tiling multiplier.
   std::variant<ParamPBR, ParamPhong, std::monostate> params = std::monostate{};
   Shader &shader;
-  Texture &texture =
-      TextureManager::getDefaultTexture(TextureManager::DefaultTexture::Blank);
+  TextureVariant texture = TextureVariant{&TextureManager::getDefaultTexture(
+      TextureManager::DefaultTexture::Blank)};
 };
 
 /**
@@ -80,7 +82,6 @@ struct MaterialCreationInfo {
  * type-safe getters.
  */
 struct Material {
-  using TextureVariant = std::variant<Texture *, SheetStruct>;
   std::variant<ParamPBR, ParamPhong, std::monostate>
       m_params;                       ///< Shader specific parameters
   Color m_color = Colors::StrongPink; ///< Tint color.
@@ -132,7 +133,7 @@ struct Material {
                     .m_color = info.color,
                     .m_tilingFactor = info.tilingFactor,
                     .m_shader = &info.shader,
-                    .m_texture = &info.texture,
+                    .m_texture = info.texture,
                     .m_name = std::string(name)};
   }
 

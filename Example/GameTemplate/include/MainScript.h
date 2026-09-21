@@ -1,3 +1,4 @@
+#pragma once
 #include <pain.h>
 #include <painless.h>
 

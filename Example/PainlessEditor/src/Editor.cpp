@@ -16,6 +16,7 @@
 #include "CoreRender/Buffers/FrameBuffer.h"
 #include "CustomPanel.h"
 #include "ImGuiEmplacer.h"
+#include "ImGuiSys.h"
 #include "LuaImGuiBinder.h"
 #include "LuaImPlotBinder.h"
 #include "Misc/Events.h"
@@ -185,6 +186,9 @@ void Editor::onRender(pain::RenderApi &renderAPI, pain::DeltaTime currentTime)
 Editor &Editor::create(pain::UIScene &uiScene, pain::Application &app)
 {
   logWrapper::s_initEditorLogger();
+  uiScene.addSystem<pain::Systems::ImGuiSys>(app.getRenderContext(),
+                                             app.getRenderWindow());
+  uiScene.createComponents(uiScene.getEntity(), painless::ImGuiComponent{});
   Editor &editor =
       painless::emplaceImGuiScript<Editor>(uiScene.getEntity(), uiScene, app);
   return editor;

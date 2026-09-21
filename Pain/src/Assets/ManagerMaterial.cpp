@@ -34,8 +34,22 @@ MaterialManager::createMaterial(const pain::MaterialCreationInfo &createInfo)
     PLOG_W(
         "Attention: You are re-creating the material {} which already exists "
         "inside the material manager, perhaps you meant to use "
-        "getMaterial(\"{}\")?",
-        createInfo.name, createInfo.name);
+        "getMaterial(\"{}\")? or getOrCreateMaterial(\"{}\")?",
+        createInfo.name, createInfo.name, createInfo.name);
+    return it->second;
+  }
+  Material material = Material::create(createInfo, createInfo.name);
+
+  auto [it, inserted] =
+      m_materials.emplace(createInfo.name, std::move(material));
+
+  return it->second;
+}
+
+Material &MaterialManager::getOrCreateMaterial(
+    const pain::MaterialCreationInfo &createInfo)
+{
+  if (auto it = m_materials.find(createInfo.name); it != m_materials.end()) {
     return it->second;
   }
   Material material = Material::create(createInfo, createInfo.name);

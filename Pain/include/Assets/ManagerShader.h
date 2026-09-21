@@ -25,6 +25,9 @@ enum class DefaultShader : uint8_t {
 class ShaderManager
 {
 public:
+  NONCOPYABLE(ShaderManager);
+  NONMOVABLE(ShaderManager);
+  ~ShaderManager() = default;
   static ShaderManager create();
 
   Shader &loadShaderFromFile(const std::string &name, const char *filepath);

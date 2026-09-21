@@ -66,7 +66,7 @@ static constexpr std::initializer_list<std::pair<int, int>> kComponentCoords = {
 ComponentIconSheet ComponentIconSheet::create()
 {
   return {
-      .sheet = &pain::TextureManager::createWithDivisions(
+      .sheet = &pain::TextureManager::createTexSheetWithDivisions(
           "ComponentSymbols", kPlaceholderTexturePath, kGridRows, kGridCols,
           kComponentCoords, false, kPadding) //
   };

@@ -63,7 +63,7 @@ std::array<glm::vec2, 4> createVecFromCoord(const char *atlasFilenameXML,
 // This assumes that
 // 1. the atlas is a matrix
 // 2. you know the size of each sprite inside the matrix
-TextureSheet TextureSheet::createWithDimensions(
+TextureSheet TextureSheet::createTexSheetWithDimensions(
     Texture &texture, float spriteWidth, float spriteHeight,
     std::initializer_list<std::pair<int, int>> coords, float padding)
 {
@@ -81,7 +81,7 @@ TextureSheet TextureSheet::createWithDimensions(
 // This assumes that
 // 1. the atlas is a matrix
 // 2. you know how much columns and lines inside the atlas
-TextureSheet TextureSheet::createWithDivisions(
+TextureSheet TextureSheet::createTexSheetWithDivisions(
     Texture &texture, unsigned nlinesX, unsigned ncolumnsY,
     std::initializer_list<std::pair<int, int>> coords, float padding)
 {

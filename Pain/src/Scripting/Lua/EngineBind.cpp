@@ -59,7 +59,7 @@ MaterialCreationInfo parseMaterialInfo(sol::table t, pain::ShaderManager &sm)
       .tilingFactor = tiling,
       .params = params,
       .shader = *shader,
-      .texture = *tex,
+      .texture = tex,
   };
 }
 
