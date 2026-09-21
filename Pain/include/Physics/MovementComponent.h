@@ -75,7 +75,7 @@ struct Movement2dComponent {
   using tag = tag::Movement2d;
 
   glm::vec2 m_velocity{0.0f, 0.0f}; /**< Linear velocity in 2D space. */
-  float m_rotationSpeed{10.0f};     /**< Angular rotation speed. */
+  float m_rotationSpeed{1.0f};      /**< Angular rotation speed. */
 
   /** @brief Creates a copy of this transform component. */
   Movement2dComponent clone() const { return *this; }
