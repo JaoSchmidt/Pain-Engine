@@ -367,6 +367,7 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
   }
 
   if (material.isTextureSheet()) {
+    // TODO: allow quads to hold texture sheets
     const float texIndex =
         allocateTextures(material.getTextureFromTextureSheet());
     batch.allocateQuad(transform, overrideColor, material.m_tilingFactor,
