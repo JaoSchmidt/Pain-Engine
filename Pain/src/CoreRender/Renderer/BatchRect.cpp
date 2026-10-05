@@ -60,11 +60,13 @@ RectBatch::RectBatch(VertexBuffer &&vbo_, IndexBuffer &&ib_)
 
 void RectBatch::resetPtr()
 {
+  PROFILE_FUNCTION()
   indexCount = 0;
   ptr = ptrInit.get();
 }
 void RectBatch::resetAll()
 {
+  PROFILE_FUNCTION()
   resetPtr();
 #ifndef NDEBUG
   statsCount = 0;
@@ -74,6 +76,7 @@ void RectBatch::resetAll()
 
 void RectBatch::flush(Texture **textures, uint32_t textureCount, Shader *shader)
 {
+  PROFILE_FUNCTION()
   if (!indexCount)
     return;
   vao.bind();

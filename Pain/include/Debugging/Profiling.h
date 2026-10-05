@@ -27,10 +27,16 @@ namespace pain
 struct ProfileResult {
   /// Name of the profiled scope or function.
   const char *m_name;
-  /// Timestamp at which the scope started.
-  DeltaTime m_start;
-  /// Timestamp at which the scope ended.
-  DeltaTime m_end;
+  /**
+   * Timestamp at which the scope started, as raw
+   * SDL_GetPerformanceCounter() ticks.
+   */
+  uint64_t m_start;
+  /**
+   * Timestamp at which the scope ended, as raw
+   * SDL_GetPerformanceCounter() ticks.
+   */
+  uint64_t m_end;
   /// Hash of the thread ID that produced this profile event.
   size_t m_threadID;
 };
@@ -94,6 +100,9 @@ void closeStream();
  * which automatically manage the timer lifetime.
  *
  * If no profiling stream is currently active, the timer performs no work.
+ * A timer also discards its measurement if its session was closed or
+ * replaced before the timer stopped, because timestamps of different
+ * sessions are not comparable.
  */
 class ProfileTimer
 {
@@ -122,10 +131,18 @@ private:
   /// Name of the profiled scope.
   const char *m_name = "undefined";
 
-  /// Timestamp captured at construction time.
-  DeltaTime m_start = 0;
+  /// Raw SDL_GetPerformanceCounter() tick captured at construction time.
+  uint64_t m_start = 0;
 
-  /// Indicates whether the timer has already been stopped.
+  /**
+   * Id of the profiling session this timer was started in.
+   *
+   * 0 means the timer was not started inside a session. Such a timer never
+   * reports, even if a session is opened before it goes out of scope.
+   */
+  uint64_t m_sessionID = 0;
+
+  /// Indicates whether the timer is armed and has not stopped yet.
   bool m_stopped = true;
 };
 
