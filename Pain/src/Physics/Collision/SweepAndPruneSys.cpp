@@ -14,7 +14,13 @@
 #include "Physics/Collision/Collider.h"
 #include "Physics/MovementComponent.h"
 
-namespace pain::Systems
+#include <unordered_map>
+
+namespace pain
+{
+namespace Systems
+{
+namespace detail
 {
 
 void sortSAP(std::vector<EndPoint> &vec, std::vector<EndPointKey> &keyVec,
@@ -168,79 +174,93 @@ size_t insertEndPoint(reg::Entity entity, std::vector<EndPoint> &vecX,
   colComp.m_index = static_cast<int>(key_index);
   return key_index;
 }
-size_t SweepAndPruneSys::insertColliderDirectly(reg::Entity entity,
-                                                const Transform2dComponent &tc,
-                                                SAPCollider &sc)
-{
-  const bool isDynamic = hasAnyComponents<Movement2dComponent>(entity);
 
-  auto &endPointsX = isDynamic ? m_endPointsX : m_staticEndPointsX;
-  auto &endPointsY = isDynamic ? m_endPointsY : m_staticEndPointsY;
-  auto &endPointKeys = isDynamic ? m_endPointKeys : m_staticEndPointKeys;
-
-  return insertEndPoint(entity, endPointsX, endPointsY, endPointKeys, tc, sc);
-}
-size_t SweepAndPruneSys::insertCollider(reg::Entity entity)
+void sortAfterInsertion(
+    std::vector<EndPoint> &endPointsX,      //
+    std::vector<EndPoint> &endPointsY,      //
+    std::vector<EndPointKey> &endPointKeys, //
+    std::vector<EndPoint> &staticEndPointsX,      //
+    std::vector<EndPoint> &staticEndPointsY,      //
+    std::vector<EndPointKey> &staticEndPointKeys, //
+    bool &firstTime)
 {
-  auto [tc, sc] = getComponents<Transform2dComponent, SAPCollider>(entity);
-  return SweepAndPruneSys::insertColliderDirectly(entity, tc, sc);
-}
-
-void SweepAndPruneSys::insertColliderSpan(
-    const std::vector<reg::Entity> &entities)
-{
-  for (reg::Entity entity : entities)
-    insertCollider(entity);
+  sortSAP(endPointsX, endPointKeys, true);
+  sortSAP(endPointsY, endPointKeys, false);
+  sortSAP(staticEndPointsX, staticEndPointKeys, true);
+  sortSAP(staticEndPointsY, staticEndPointKeys, false);
+  firstTime = false;
 }
 
-void SweepAndPruneSys::sortAfterInsertion()
-{
-  sortSAP(m_endPointsX, m_endPointKeys, true);
-  sortSAP(m_endPointsY, m_endPointKeys, false);
-  sortSAP(m_staticEndPointsX, m_staticEndPointKeys, true);
-  sortSAP(m_staticEndPointsY, m_staticEndPointKeys, false);
-  m_firstTime = false;
-}
-
-void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<Transform2dComponent, SAPCollider,
+                               Movement2dComponent>>
+        chunksDynamic,
+    std::vector<reg::ChunkView<Transform2dComponent, SAPCollider>>
+        chunksStatic,
+    std::vector<EndPoint> &endPointsX,      //
+    std::vector<EndPoint> &endPointsY,      //
+    std::vector<EndPointKey> &endPointKeys, //
+    std::vector<EndPoint> &staticEndPointsX,      //
+    std::vector<EndPoint> &staticEndPointsY,      //
+    std::vector<EndPointKey> &staticEndPointKeys, //
+    std::vector<long> &activeList,                //
+    bool &firstTime,                              //
+    reg::EventDispatcher &eventDispatcher)
 {
   UNUSED(deltaTime)
-  // Step 0: In case its the first time, use faster sorter
-  if (m_firstTime) {
 
-    auto chunks =
-        query<Transform2dComponent, SAPCollider, Movement2dComponent>();
-    m_firstTime = false;
-    for (auto &chunk : chunks) {
+  // Lookup tables so the narrow phase can recover components without needing a
+  // CM-dependent query.
+  std::unordered_map<reg::Entity, std::tuple<Transform2dComponent *, SAPCollider *,
+                                             Movement2dComponent *>>
+      dynamicLookup;
+  for (auto &chunk : chunksDynamic) {
+    auto *t = std::get<0>(chunk.arrays);
+    auto *c = std::get<1>(chunk.arrays);
+    auto *m = std::get<2>(chunk.arrays);
+    for (size_t i = 0; i < chunk.count; ++i)
+      dynamicLookup.emplace(chunk.entities[i],
+                            std::make_tuple(&t[i], &c[i], &m[i]));
+  }
+  std::unordered_map<reg::Entity,
+                     std::pair<Transform2dComponent *, SAPCollider *>>
+      staticLookup;
+  for (auto &chunk : chunksStatic) {
+    auto *t = std::get<0>(chunk.arrays);
+    auto *c = std::get<1>(chunk.arrays);
+    for (size_t i = 0; i < chunk.count; ++i)
+      staticLookup.emplace(chunk.entities[i], std::make_pair(&t[i], &c[i]));
+  }
+
+  // Step 0: In case its the first time, use faster sorter
+  if (firstTime) {
+    for (auto &chunk : chunksDynamic) {
       auto *t = std::get<0>(chunk.arrays);
       auto *c = std::get<1>(chunk.arrays);
       auto &e = chunk.entities;
       for (size_t i = 0; i < chunk.count; ++i) {
-        insertEndPoint(e[i], m_endPointsX, m_endPointsY, m_endPointKeys, t[i],
-                       c[i]);
+        insertEndPoint(e[i], endPointsX, endPointsY, endPointKeys, t[i], c[i]);
       }
     }
-    auto chunks2 =
-        query<Transform2dComponent, SAPCollider>(exclude<Movement2dComponent>);
-    for (auto &chunk : chunks2) {
+    for (auto &chunk : chunksStatic) {
       auto *t = std::get<0>(chunk.arrays);
       auto *c = std::get<1>(chunk.arrays);
       auto &e = chunk.entities;
       for (size_t i = 0; i < chunk.count; ++i) {
-        insertEndPoint(e[i], m_staticEndPointsX, m_staticEndPointsY,
-                       m_staticEndPointKeys, t[i], c[i]);
+        insertEndPoint(e[i], staticEndPointsX, staticEndPointsY,
+                       staticEndPointKeys, t[i], c[i]);
       }
     }
-    sortSAP(m_endPointsX, m_endPointKeys, true);
-    sortSAP(m_endPointsY, m_endPointKeys, false);
-    sortSAP(m_staticEndPointsX, m_staticEndPointKeys, true);
-    sortSAP(m_staticEndPointsY, m_staticEndPointKeys, false);
+    sortSAP(endPointsX, endPointKeys, true);
+    sortSAP(endPointsY, endPointKeys, false);
+    sortSAP(staticEndPointsX, staticEndPointKeys, true);
+    sortSAP(staticEndPointsY, staticEndPointKeys, false);
+    firstTime = false;
   }
 
   // Step 1: Update all moving endpoints with new data from the components
-  auto chunks = query<Transform2dComponent, SAPCollider, Movement2dComponent>();
-
-  for (auto &chunk : chunks) {
+  for (auto &chunk : chunksDynamic) {
     auto *t = std::get<0>(chunk.arrays);
     auto *c = std::get<1>(chunk.arrays);
 
@@ -249,8 +269,10 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
       SAPCollider &collider = c[i];
       EndPointKey &proxy =
           collider.m_index >= 0
-              ? m_endPointKeys[static_cast<unsigned>(collider.m_index)]
-              : m_endPointKeys[insertCollider(chunk.entities[i])];
+              ? endPointKeys[static_cast<unsigned>(collider.m_index)]
+              : endPointKeys[insertEndPoint(chunk.entities[i], endPointsX,
+                                            endPointsY, endPointKeys, t[i],
+                                            c[i])];
 
       glm::vec2 center = t[i].m_position + collider.m_offset;
       glm::vec2 bottomLeft;
@@ -276,44 +298,40 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
       // ----------------------------------------------------------
       // Update X axis endpoints
       // ----------------------------------------------------------
-      m_endPointsX[proxy.index_minX].valueOnAxis = bottomLeft.x;
-      insertionSortEndpoint(m_endPointsX, m_endPointKeys, proxy.index_minX,
-                            true);
+      endPointsX[proxy.index_minX].valueOnAxis = bottomLeft.x;
+      insertionSortEndpoint(endPointsX, endPointKeys, proxy.index_minX, true);
 
-      m_endPointsX[proxy.index_maxX].valueOnAxis = topRight.x;
-      insertionSortEndpoint(m_endPointsX, m_endPointKeys, proxy.index_maxX,
-                            true);
+      endPointsX[proxy.index_maxX].valueOnAxis = topRight.x;
+      insertionSortEndpoint(endPointsX, endPointKeys, proxy.index_maxX, true);
 
       // ----------------------------------------------------------
       // Update Y axis endpoints
       // ----------------------------------------------------------
-      m_endPointsY[proxy.index_minY].valueOnAxis = bottomLeft.y;
-      insertionSortEndpoint(m_endPointsY, m_endPointKeys, proxy.index_minY,
-                            false);
+      endPointsY[proxy.index_minY].valueOnAxis = bottomLeft.y;
+      insertionSortEndpoint(endPointsY, endPointKeys, proxy.index_minY, false);
 
-      m_endPointsY[proxy.index_maxY].valueOnAxis = topRight.y;
-      insertionSortEndpoint(m_endPointsY, m_endPointKeys, proxy.index_maxY,
-                            false);
+      endPointsY[proxy.index_maxY].valueOnAxis = topRight.y;
+      insertionSortEndpoint(endPointsY, endPointKeys, proxy.index_maxY, false);
     }
   }
   // --------------------------------------------------------------------------
   // Step 3: Sweep and build active list to find overlapping pairs
   // --------------------------------------------------------------------------
   std::vector<std::pair<size_t, long>> potential_pairs;
-  potential_pairs.reserve(m_endPointKeys.size());
+  potential_pairs.reserve(endPointKeys.size());
 
   size_t staticIdx = 0;
   size_t dynIdx = 0;
-  const size_t dynIdxMax = m_endPointsX.size();
-  const size_t staticIdxMax = m_staticEndPointsX.size();
+  const size_t dynIdxMax = endPointsX.size();
+  const size_t staticIdxMax = staticEndPointsX.size();
   const EndPoint *staticEndPoint = nullptr;
   const EndPoint *dynEndPoint = nullptr;
 
   while (dynIdx < dynIdxMax || staticIdx < staticIdxMax) {
     // declare both endpoints
-    dynEndPoint = (dynIdx < dynIdxMax) ? &m_endPointsX[dynIdx] : nullptr;
+    dynEndPoint = (dynIdx < dynIdxMax) ? &endPointsX[dynIdx] : nullptr;
     staticEndPoint =
-        (staticIdx < staticIdxMax) ? &m_staticEndPointsX[staticIdx] : nullptr;
+        (staticIdx < staticIdxMax) ? &staticEndPointsX[staticIdx] : nullptr;
 
     bool processDynamic = false; // assume static process is valid (default)
     if (dynEndPoint && staticEndPoint) { // both process can be valid
@@ -330,18 +348,18 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
       // --- Dynamic processing ---
       if (dynEndPoint->isMin) {
         // add to active list and potential_pairs
-        for (long active_object : m_activeList) {
+        for (long active_object : activeList) {
           // some min x is overlaping with an active overlap, store it
           potential_pairs.emplace_back(dynEndPoint->key, active_object);
         }
         // activate the new overlap as well
-        m_activeList.push_back(static_cast<long>(dynEndPoint->key));
+        activeList.push_back(static_cast<long>(dynEndPoint->key));
 
       } else {
-        auto it = std::find(m_activeList.begin(), m_activeList.end(),
+        auto it = std::find(activeList.begin(), activeList.end(),
                             dynEndPoint->key);
-        if (it != m_activeList.end()) {
-          m_activeList.erase(it);
+        if (it != activeList.end()) {
+          activeList.erase(it);
         } else {
           PLOG_E("could not delete dynamic {}", dynEndPoint->key);
         }
@@ -352,10 +370,10 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
       if (staticEndPoint->isMin) {
         // HACK: set MSB to 1, making the value negative. I'm essentially using
         // the MSB to differentiate static and dynamic keys
-        m_activeList.push_back(
+        activeList.push_back(
             staticMSB(staticEndPoint->key)); // activate the new overlap as well
         // add to active list and potential_pairs
-        for (long active_object : m_activeList) {
+        for (long active_object : activeList) {
           // some min x is overlaping with an active overlap, store it
           if (active_object >= 0) // only store (dyn,static) or (dyn,dyn)
             potential_pairs.emplace_back(active_object,
@@ -365,10 +383,10 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
         // remove the overlap from the active objects
         // TODO: if necessary, this search can be removed by "simply" caching
         // the active list index inside the dynEndPoint
-        auto it = std::find(m_activeList.begin(), m_activeList.end(),
+        auto it = std::find(activeList.begin(), activeList.end(),
                             staticMSB(staticEndPoint->key));
-        if (it != m_activeList.end()) {
-          m_activeList.erase(it);
+        if (it != activeList.end()) {
+          activeList.erase(it);
         } else {
           PLOG_E("could not delete static key {}", staticEndPoint->key);
         }
@@ -377,9 +395,9 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
     }
   }
 
-  if (m_activeList.size() > 0) {
+  if (activeList.size() > 0) {
     PLOG_W("Warning: Active collision list still has endpoints keys inside");
-    m_activeList.clear();
+    activeList.clear();
   }
 
   // --------------------------------------------------------------------------
@@ -388,21 +406,21 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
   // --------------------------------------------------------------------------
   std::vector<std::pair<size_t, long>> validPairs;
   for (const std::pair<size_t, long> &pair : potential_pairs) {
-    EndPointKey entityProxy1 = m_endPointKeys[pair.first];
-    const float minY1 = m_endPointsY[entityProxy1.index_minY].valueOnAxis;
-    const float maxY1 = m_endPointsY[entityProxy1.index_maxY].valueOnAxis;
+    EndPointKey entityProxy1 = endPointKeys[pair.first];
+    const float minY1 = endPointsY[entityProxy1.index_minY].valueOnAxis;
+    const float maxY1 = endPointsY[entityProxy1.index_maxY].valueOnAxis;
 
     float minY2;
     float maxY2;
     // clang-format off
     if (pair.second < 0) { // indicates MSB = 1, meaning it is  static
-      EndPointKey &entityProxy2 = m_staticEndPointKeys[clearMSB(pair.second)];
-      minY2 = m_staticEndPointsY[entityProxy2.index_minY].valueOnAxis;
-      maxY2 = m_staticEndPointsY[entityProxy2.index_maxY].valueOnAxis;
+      EndPointKey &entityProxy2 = staticEndPointKeys[clearMSB(pair.second)];
+      minY2 = staticEndPointsY[entityProxy2.index_minY].valueOnAxis;
+      maxY2 = staticEndPointsY[entityProxy2.index_maxY].valueOnAxis;
     }else{
-      EndPointKey &entityProxy2 = m_endPointKeys[static_cast<size_t>(pair.second)];
-      minY2 = m_endPointsY[entityProxy2.index_minY].valueOnAxis;
-      maxY2 = m_endPointsY[entityProxy2.index_maxY].valueOnAxis;
+      EndPointKey &entityProxy2 = endPointKeys[static_cast<size_t>(pair.second)];
+      minY2 = endPointsY[entityProxy2.index_minY].valueOnAxis;
+      maxY2 = endPointsY[entityProxy2.index_maxY].valueOnAxis;
     }
     // clang-format on
 
@@ -417,15 +435,17 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
 
     // Dynamic vs Dynamic narrow collision
     if (pair.second >= 0) {
-      const reg::Entity entity1 = m_endPointKeys[pair.first].entity;
+      const reg::Entity entity1 = endPointKeys[pair.first].entity;
       const reg::Entity entity2 =
-          m_endPointKeys[static_cast<size_t>(pair.second)].entity;
-      auto [tIt_i, cIt_i, mIt_i] =
-          getComponents<Transform2dComponent, SAPCollider, Movement2dComponent>(
-              entity1);
-      auto [tIt_j, cIt_j, mIt_j] =
-          getComponents<Transform2dComponent, SAPCollider, Movement2dComponent>(
-              entity2);
+          endPointKeys[static_cast<size_t>(pair.second)].entity;
+      auto &dyn1 = dynamicLookup.at(entity1);
+      auto &dyn2 = dynamicLookup.at(entity2);
+      Transform2dComponent &tIt_i = *std::get<0>(dyn1);
+      SAPCollider &cIt_i = *std::get<1>(dyn1);
+      Movement2dComponent &mIt_i = *std::get<2>(dyn1);
+      Transform2dComponent &tIt_j = *std::get<0>(dyn2);
+      SAPCollider &cIt_j = *std::get<1>(dyn2);
+      Movement2dComponent &mIt_j = *std::get<2>(dyn2);
       glm::vec2 center1 = tIt_i.m_position + cIt_i.m_offset;
       glm::vec2 center2 = tIt_j.m_position + cIt_j.m_offset;
       ColDet::Result collisionHappened = {false};
@@ -462,7 +482,7 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
       // --- Perform Collision Reaction on Entities with Collision Scripts
       if (collisionHappened.isDetected) {
         if (cIt_i.m_isTrigger || cIt_j.m_isTrigger) {
-          m_eventDispatcher.enqueue<CollisionEvent>(
+          eventDispatcher.enqueue<CollisionEvent>(
               {entity1, entity2, collisionHappened.normal,
                collisionHappened.penetration});
         } else {
@@ -475,20 +495,22 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
         }
       }
     } else {
-      const reg::Entity entity1 = m_endPointKeys[pair.first].entity;
+      const reg::Entity entity1 = endPointKeys[pair.first].entity;
       const reg::Entity entity2 =
-          m_staticEndPointKeys[clearMSB(pair.second)].entity;
-      auto [tIt_i, cIt_i, mIt_i] =
-          getComponents<Transform2dComponent, SAPCollider, Movement2dComponent>(
-              entity1);
-      auto [tIt_j, cIt_j] =
-          getComponents<Transform2dComponent, SAPCollider>(entity2);
+          staticEndPointKeys[clearMSB(pair.second)].entity;
+      auto &dyn1 = dynamicLookup.at(entity1);
+      auto &stat2 = staticLookup.at(entity2);
+      Transform2dComponent &tIt_i = *std::get<0>(dyn1);
+      SAPCollider &cIt_i = *std::get<1>(dyn1);
+      Movement2dComponent &mIt_i = *std::get<2>(dyn1);
+      Transform2dComponent &tIt_j = *stat2.first;
+      SAPCollider &cIt_j = *stat2.second;
       glm::vec2 center1 = tIt_i.m_position + cIt_i.m_offset;
       glm::vec2 center2 = tIt_j.m_position + cIt_j.m_offset;
       ColDet::Result collisionHappened = {false};
 
       // -------------------------------------------------------------
-      // Collision detection on movable vs movable objects
+      // Collision detection on movable vs static objects
       // -------------------------------------------------------------
       std::visit(
           [&](auto &&shape1, auto &&shape2) {
@@ -519,7 +541,7 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
       // --- Perform Collision Reaction on Entities with Collision Scripts
       if (collisionHappened.isDetected) {
         if (cIt_i.m_isTrigger || cIt_j.m_isTrigger) {
-          m_eventDispatcher.enqueue<CollisionEvent>(
+          eventDispatcher.enqueue<CollisionEvent>(
               {entity1, entity2, collisionHappened.normal,
                collisionHappened.penetration});
         } else {
@@ -534,4 +556,6 @@ void SweepAndPruneSys::onUpdate(DeltaTime deltaTime)
   }
 }
 
-} // namespace pain::Systems
+} // namespace detail
+} // namespace Systems
+} // namespace pain

@@ -36,6 +36,7 @@
 #pragma once
 
 #include "Assets/DeltaTime.h"
+#include "Debugging/Profiling.h"
 #include "ECS/Systems.h"
 #include "Physics/Collision/Collider.h"
 #include "Physics/MovementComponent.h"
@@ -44,6 +45,41 @@ namespace pain
 {
 namespace Systems
 {
+
+namespace detail
+{
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<Transform2dComponent, ColliderComponent>>
+        chunksStatic,
+    std::vector<reg::ChunkView<Transform2dComponent, ColliderComponent,
+                               Movement2dComponent>>
+        chunks,
+    reg::EventDispatcher &eventDispatcher);
+void narrowPhaseCollisionStatic(          //
+    Transform2dComponent &t_i,            //
+    ColliderComponent &c_i,               //
+    Movement2dComponent &m_i,             //
+    reg::Entity entity_i,                 //
+    const Transform2dComponent &t_j,      //
+    const ColliderComponent &c_j,         //
+    reg::Entity entity_j,                 //
+    reg::EventDispatcher &eventDispatcher //
+);
+
+void narrowPhaseCollision(                //
+    Transform2dComponent &t_i,            //
+    ColliderComponent &c_i,               //
+    Movement2dComponent &m_i,             //
+    reg::Entity entity_i,                 //
+    Transform2dComponent &t_j,            //
+    ColliderComponent &c_j,               //
+    Movement2dComponent &m_j,             //
+    reg::Entity entity_j,                 //
+    reg::EventDispatcher &eventDispatcher //
+);
+
+} // namespace detail
 
 /**
  * @brief Brute-force collision detection system for dynamic and static
@@ -73,7 +109,8 @@ namespace Systems
  * @see System
  * @see IOnUpdate
  */
-struct NaiveCollisionSys : public System<WorldComponents>, IOnUpdate {
+template <reg::CompileTimeBitMaskType CM>
+struct NaiveCollisionSys : public System<CM>, public IOnUpdate {
   /**
    * @brief Component tags required by this system.
    *
@@ -87,7 +124,7 @@ struct NaiveCollisionSys : public System<WorldComponents>, IOnUpdate {
                         ColliderComponent>;
 
   /** @brief Inherit base System constructors. */
-  using System<WorldComponents>::System;
+  using System<CM>::System;
 
   /** @brief Prevent default construction. */
   NaiveCollisionSys() = delete;
@@ -98,56 +135,22 @@ struct NaiveCollisionSys : public System<WorldComponents>, IOnUpdate {
    * Iterates through all valid entity pairs and executes narrow-phase collision
    * tests and response logic.
    *
-   * @param dt Frame delta time.
+   * @param deltaTime Frame delta time.
    *
    * @note This method is invoked only because the system inherits from
    * IOnUpdate.
    */
-  void onUpdate(DeltaTime dt) override;
-
-private:
-  /**
-   * @brief Resolves collision between a dynamic entity and a static entity.
-   *
-   * Performs narrow-phase collision detection between a moving entity and a
-   * static collider, and applies the appropriate response to the dynamic
-   * movement component.
-   *
-   * @param t_i        Transform of the dynamic entity.
-   * @param c_i        Collider of the dynamic entity.
-   * @param m_i        Movement of the dynamic entity.
-   * @param entity_i  Entity identifier of the dynamic entity.
-   * @param t_j        Transform of the static entity.
-   * @param c_j        Collider of the static entity.
-   * @param entity_j  Entity identifier of the static entity.
-   */
-  void narrowPhaseCollisionStatic(Transform2dComponent &t_i,
-                                  ColliderComponent &c_i,
-                                  Movement2dComponent &m_i,
-                                  reg::Entity entity_i,
-                                  const Transform2dComponent &t_j,
-                                  const ColliderComponent &c_j,
-                                  reg::Entity entity_j);
-
-  /**
-   * @brief Resolves collision between two dynamic entities.
-   *
-   * Performs narrow-phase collision detection and applies response logic to
-   * both participating entities.
-   *
-   * @param t_i        Transform of the first entity.
-   * @param c_i        Collider of the first entity.
-   * @param m_i        Movement of the first entity.
-   * @param entity_i  Entity identifier of the first entity.
-   * @param t_j        Transform of the second entity.
-   * @param c_j        Collider of the second entity.
-   * @param m_j        Movement of the second entity.
-   * @param entity_j  Entity identifier of the second entity.
-   */
-  void narrowPhaseCollision(Transform2dComponent &t_i, ColliderComponent &c_i,
-                            Movement2dComponent &m_i, reg::Entity entity_i,
-                            Transform2dComponent &t_j, ColliderComponent &c_j,
-                            Movement2dComponent &m_j, reg::Entity entity_j);
+  void onUpdate(DeltaTime deltaTime) override
+  {
+    PROFILE_SCOPE("CollisionNaiveSys - onUpdate")
+    detail::_implOnUpdate(
+        deltaTime,
+        this->template query<Transform2dComponent, ColliderComponent>(
+            exclude<Movement2dComponent>),
+        this->template query<Transform2dComponent, ColliderComponent,
+                             Movement2dComponent>(),
+        this->m_eventDispatcher);
+  }
 };
 
 } // namespace Systems

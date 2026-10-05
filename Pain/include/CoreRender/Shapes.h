@@ -92,4 +92,5 @@ struct LineShape {
 using ShapeVariant =
     std::variant<QuadShape, RectShape, TriangleShape, LineShape>;
 
+using ColliderVariant = std::variant<CircleShape, AABBShape>;
 } // namespace pain

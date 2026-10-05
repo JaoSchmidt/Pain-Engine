@@ -26,6 +26,8 @@ struct AppInit {
   bool fullWindow = false;
   /** Ignore every other init config and fill the entire screen **/
   bool fullScreen = false;
+  /** Easy setup for a debug grid */
+  float gridCellSize = 0.f;
 };
 
 namespace luabinder

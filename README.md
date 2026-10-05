@@ -9,7 +9,7 @@ This repository contains the engine and example game entry points.
 
 - ImGui **Editor** and **Launcher**
 - Event **Bus/Obsersvable**
-- **Profiling** tool
+- **Profiling** tool, which can be used inside chrome://tracing
 - **Cross-platform** build (Linux / Windows)
 - Doxygen **Documentation**
 - **Texture**, **font**, and other asset managers, including:
@@ -81,8 +81,8 @@ CMake presets offer a painless, automatic way to download external libraries.
 Linux:
 
 ```bash
-cmake --preset ci
-cd build-ci
+cmake --preset default
+cd build
 make
 ```
 
@@ -95,91 +95,17 @@ cmake --build build-ci-windows --config Debug
 
 ### 🎮 Selecting / Creating a Game
 
-Pain-Engine builds a game entry point defined in the top-level `CMakeLists.txt`.
-
-To change that open `CMakeLists.txt` and search for `$GAME_FOLDER` variable:
-
-```
-set(GAME_FOLDER "your/game/folder/here")
-```
-
-Change this path to point to your game entry folder.
+Pain-Engine automatically builds a game entry when it's located inside `Example/<GAME FOLDER>`.  For more info, check the section "Game Compilation" inside `CMakeLists.txt`.
 
 ### ▶️ Example usage
 
-The most recent game is the creatively named "scriptGame" where `$GAME_FOLDER` should be pointing at the moment. You can use it as a template to create your own game.
+It is strongly recommended that you copy the creatively named `GameTemplate` since it already has a `CMakeLists.txt` file, which is used to instruct the compilation script.
 
-If not, here is a recommended initial setup:
-
-```cpp
-pain::Application *pain::createApplication()
-{
-  // Retrieve the context the player will alter when using the launcher
-  IniConfig ini;
-  ini.readAndUpdate();
-
-  // Retrieve the app context defined inside "resources/InternalConfig.ini"
-  InternalConfig internalIni;
-  internalIni.readAndUpdate(ini.assetsPath.value.c_str());
-
-  // Create the application + OpenGL + Event contexts
-  Application *app = Application::createApplication(         //
-      {.title = internalIni.title.get().c_str(),             //
-       .defaultWidth = ini.defaultWidth.get(),               //
-       .defaultHeight = ini.defaultHeight.get()},            //
-      {.swapChainTarget = internalIni.swapChainTarget.get()} //
-  );
-
-  // Create the ECS World Scene
-  pain::Scene &scene = app->createWorldSceneComponents(
-      internalIni.gridSize.get(), pain::NativeScriptComponent{});
-
-  // Individually add each system
-  scene.addSystem<Systems::SweepAndPruneSys>();
-  scene.addSystem<Systems::Render>();
-  scene.addSystem<Systems::NativeScript>();
-  scene.addSystem<Systems::LuaScript>();
-  scene.addSystem<Systems::Kinematics>();
-  scene.addSystem<Systems::LuaSchedulerSys>();
-
-  // (Optional) Defining a small native script (MainScript) for the world scene that will be executed on. Must have added System::NativeScript
-  MainScript::createScriptScene(     //
-      scene, ini.defaultWidth.get(), //
-      ini.defaultHeight.get(),       //
-      internalIni.zoomLevel.get(),   //
-      app                            //
-  );
-
-  // (Optional) Creating the ECS UI scene
-  UIScene &uiScene = app->createUIScene(pain::ImGuiComponent{});
-  // (Optional) A small native script that works as our game engine editor
-  UIScene::emplaceImGuiScript<PainlessEditor>(uiScene.getEntity(), uiScene,
-                                              *app);
-
-  return app;
-}
-
-#ifdef PLATFORM_IS_LINUX
-int main(int argc, char *argv[])
-#elif defined PLATFORM_IS_WINDOWS
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
-                   int nCmdShow)
-#endif
-{
-  bool isSettingsGuiNeeded = pain::Pain::initiateIni();
-  EndGameFlags flags;
-  flags.restartGame = !isSettingsGuiNeeded;
-  if (isSettingsGuiNeeded) {
-    pain::Application *app = pain::createLauncher();
-    flags = pain::Pain::runAndDeleteApplication(app);
-  }
-  while (flags.restartGame) {
-    pain::Application *app = pain::createApplication();
-    flags = pain::Pain::runAndDeleteApplication(app);
-  }
-  return 0;
-}
 ```
+cp -r Example/GameTemplate Example/MyGameFolder
+cd Example/MyGameFolder
+```
+From there I also recommend changing the variable "PROJECT_NAME" to name it as you wish
 
 ### 🧪 Continuous Integration
 

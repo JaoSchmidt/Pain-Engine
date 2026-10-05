@@ -23,18 +23,11 @@
 #pragma once
 
 #include "CoreRender/Shapes.h"
-#include "ECS/Registry/Entity.h"
-#include "Physics/MovementComponent.h"
+#include "ECS/Components/ComponentManager.h"
 #include <variant>
 
 namespace pain
 {
-
-// Forward declaration for system dependency.
-namespace Systems
-{
-struct SweepAndPruneSys;
-}
 
 /**
  * @brief Basic collider component attached to an entity.
@@ -144,49 +137,6 @@ struct SAPCollider {
    */
   static SAPCollider createCircle(float radius, bool isTrigger = false,
                                   const glm::vec2 &offset = {0.0F, 0.0F});
-
-  // ------------------------------------------------------------
-  // Immediate insertion into Sweep-And-Prune
-  // ------------------------------------------------------------
-
-  /**
-   * @brief Creates and registers a static AABB collider into the system.
-   *
-   * The collider is immediately inserted into the Sweep-And-Prune system
-   * and associated with the provided entity and transform.
-   *
-   * @param sys Sweep-And-Prune system instance.
-   * @param entity Owning entity.
-   * @param tc Transform component of the entity.
-   * @param size Full size of the box.
-   * @param isTrigger Whether the collider acts as a trigger.
-   * @param offset Local offset from the transform.
-   */
-  static SAPCollider createStaticAABB(Systems::SweepAndPruneSys &sys,
-                                      reg::Entity entity,
-                                      Transform2dComponent &tc,
-                                      const glm::vec2 &size = {0.1F, 0.1F},
-                                      bool isTrigger = false,
-                                      const glm::vec2 &offset = {0.0F, 0.0F});
-
-  /**
-   * @brief Creates and registers a static circular collider into the system.
-   *
-   * The collider is immediately inserted into the Sweep-And-Prune system
-   * and associated with the provided entity and transform.
-   *
-   * @param sys Sweep-And-Prune system instance.
-   * @param entity Owning entity.
-   * @param tc Transform component of the entity.
-   * @param radius Circle radius.
-   * @param isTrigger Whether the collider acts as a trigger.
-   * @param offset Local offset from the transform.
-   */
-  static SAPCollider createStaticCircle(Systems::SweepAndPruneSys &sys,
-                                        reg::Entity entity,
-                                        Transform2dComponent &tc, float radius,
-                                        bool isTrigger = false,
-                                        const glm::vec2 &offset = {0.0F, 0.0F});
 };
 
 } // namespace pain

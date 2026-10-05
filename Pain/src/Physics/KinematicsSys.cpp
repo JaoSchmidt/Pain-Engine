@@ -14,7 +14,15 @@ namespace pain
 
 namespace Systems
 {
-void Systems::Kinematics::onUpdate(DeltaTime deltaTime)
+namespace detail
+{
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<RotationComponent>> chunksRotation,
+    std::vector<reg::ChunkView<Transform2dComponent, Movement2dComponent>>
+        chunksMovement2d,
+    std::vector<reg::ChunkView<Transform3dComponent, Movement3dComponent>>
+        chunksMovement3d)
 {
   PROFILE_FUNCTION();
   // =============================================================== //
@@ -22,9 +30,7 @@ void Systems::Kinematics::onUpdate(DeltaTime deltaTime)
   // =============================================================== //
   {
     PROFILE_SCOPE("Scene::updateSystems - rotation");
-    auto chunks = query<RotationComponent>();
-
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksRotation) {
       auto *__restrict r = std::get<0>(chunk.arrays);
 
       for (size_t i = 0; i < chunk.count; ++i) {
@@ -39,10 +45,9 @@ void Systems::Kinematics::onUpdate(DeltaTime deltaTime)
   // =============================================================== //
   {
     PROFILE_SCOPE("Scene::updateSystems - movement");
-    auto chunks = query<Transform2dComponent, Movement2dComponent>();
     float dt = deltaTime.getSecondsf();
 
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksMovement2d) {
       auto *__restrict t = std::get<0>(chunk.arrays);
       auto *__restrict m = std::get<1>(chunk.arrays);
 
@@ -53,10 +58,9 @@ void Systems::Kinematics::onUpdate(DeltaTime deltaTime)
   }
   {
     PROFILE_SCOPE("Scene::updateSystems - movement");
-    auto chunks = query<Transform3dComponent, Movement3dComponent>();
     float dt = deltaTime.getSecondsf();
 
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksMovement3d) {
       auto *__restrict t = std::get<0>(chunk.arrays);
       auto *__restrict m = std::get<1>(chunk.arrays);
 
@@ -66,6 +70,7 @@ void Systems::Kinematics::onUpdate(DeltaTime deltaTime)
     }
   }
 }
+} // namespace detail
 
 } // namespace Systems
 } // namespace pain

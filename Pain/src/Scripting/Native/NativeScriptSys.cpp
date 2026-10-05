@@ -13,12 +13,13 @@ namespace pain
 {
 namespace Systems
 {
+namespace detail
+{
 
-void NativeScript::onUpdate(DeltaTime deltaTime)
+void _implOnUpdate(DeltaTime deltaTime,
+                   std::vector<reg::ChunkView<NativeScriptComponent>> chunks)
 {
   PROFILE_SCOPE("Scene::updateSystems - native scripts");
-
-  auto chunks = query<NativeScriptComponent>();
 
   for (auto &chunk : chunks) {
     auto *scripts = std::get<0>(chunk.arrays);
@@ -33,10 +34,9 @@ void NativeScript::onUpdate(DeltaTime deltaTime)
   }
 }
 
-void NativeScript::onEvent(const SDL_Event &e)
+void _implOnEvent(const SDL_Event &e,
+                  std::vector<reg::ChunkView<NativeScriptComponent>> chunks)
 {
-  auto chunks = query<NativeScriptComponent>();
-
   for (auto &chunk : chunks) {
     auto *scripts = std::get<0>(chunk.arrays);
 
@@ -50,13 +50,11 @@ void NativeScript::onEvent(const SDL_Event &e)
   }
 }
 
-void NativeScript::onRender(RenderApi &renderAPI, 
-                            DeltaTime currentTime)
+void _implOnRender(RenderApi &renderAPI, DeltaTime currentTime,
+                   std::vector<reg::ChunkView<NativeScriptComponent>> chunks)
 {
   UNUSED(renderAPI);
   PROFILE_SCOPE("Scene::renderSystems - NativeScripts");
-
-  auto chunks = query<NativeScriptComponent>();
 
   for (auto &chunk : chunks) {
     auto *scripts = std::get<0>(chunk.arrays);
@@ -65,12 +63,12 @@ void NativeScript::onRender(RenderApi &renderAPI,
       auto &nsc = scripts[i];
 
       if (nsc.instance && nsc.onRenderFunction) {
-        nsc.onRenderFunction(nsc.instance.get(), renderAPI.m_renderContext,
-                              currentTime);
+        nsc.onRenderFunction(nsc.instance.get(), renderAPI, currentTime);
       }
     }
   }
 }
 
+} // namespace detail
 } // namespace Systems
 } // namespace pain

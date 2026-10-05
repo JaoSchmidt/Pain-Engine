@@ -10,14 +10,14 @@
  * algorithm.
  *
  * Sweep And Prune System implements a better collision algorithm than the naive
- alternativ  *
+ * alternativ  *
  * High-level pipeline:
  *  1. Build or update endpoints from collider components.
  *  2. Incrementally sort endpoints using insertion sort for temporal coherence.
  *  3. Sweep along the primary axis (x) to generate potential overlapping pairs.
  *  4. Validate overlaps on the secondary axis (y).
  *  5. Perform narrow-phase collision detection and reaction. Equivalent to
- naive collision
+ * naive collision
  *
  * @note As with any systems in the engine, system headers follow the naming
  * convention and end with the suffix "Sys.h".
@@ -56,6 +56,53 @@ struct EndPointKey {
   size_t index_minY;
   size_t index_maxY;
 };
+
+namespace detail
+{
+void sortSAP(std::vector<EndPoint> &vec, std::vector<EndPointKey> &keyVec,
+             bool isX);
+
+void insertionSortEndpoint(std::vector<EndPoint> &endpoints,
+                           std::vector<EndPointKey> &keys, size_t index,
+                           bool isXAxis);
+
+size_t insertEndPoint(reg::Entity entity, std::vector<EndPoint> &vecX,
+                      std::vector<EndPoint> &vecY,
+                      std::vector<EndPointKey> &vecKeys,
+                      const Transform2dComponent &transComp,
+                      SAPCollider &colComp);
+
+void sortAfterInsertion(
+    std::vector<EndPoint> &endPointsX,      //
+    std::vector<EndPoint> &endPointsY,      //
+    std::vector<EndPointKey> &endPointKeys, //
+    std::vector<EndPoint> &staticEndPointsX,      //
+    std::vector<EndPoint> &staticEndPointsY,      //
+    std::vector<EndPointKey> &staticEndPointKeys, //
+    bool &firstTime);
+
+long staticMSB(size_t x);
+size_t clearMSB(long x);
+
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<Transform2dComponent, SAPCollider,
+                               Movement2dComponent>>
+        chunksDynamic,
+    std::vector<reg::ChunkView<Transform2dComponent, SAPCollider>>
+        chunksStatic,
+    std::vector<EndPoint> &endPointsX,      //
+    std::vector<EndPoint> &endPointsY,      //
+    std::vector<EndPointKey> &endPointKeys, //
+    std::vector<EndPoint> &staticEndPointsX,      //
+    std::vector<EndPoint> &staticEndPointsY,      //
+    std::vector<EndPointKey> &staticEndPointKeys, //
+    std::vector<long> &activeList,                //
+    bool &firstTime,                              //
+    reg::EventDispatcher &eventDispatcher);
+
+} // namespace detail
+
 /**
  * @brief Sweep-and-prune collision detection system.
  *
@@ -86,9 +133,10 @@ struct EndPointKey {
  * @see System
  * @see IOnUpdate
  */
-struct SweepAndPruneSys : public System<WorldComponents>, IOnUpdate {
+template <reg::CompileTimeBitMaskType CM>
+struct SweepAndPruneSys : public System<CM>, public IOnUpdate {
   /** @brief Inherit base System constructors. */
-  using System<WorldComponents>::System;
+  using System<CM>::System;
   /**
    * @brief Component tags required by this system.
    *
@@ -115,7 +163,18 @@ struct SweepAndPruneSys : public System<WorldComponents>, IOnUpdate {
    * @note This method is invoked only because the system inherits from
    * IOnUpdate.
    */
-  void onUpdate(DeltaTime deltaTime) override;
+  void onUpdate(DeltaTime deltaTime) override
+  {
+    detail::_implOnUpdate(
+        deltaTime,
+        this->template query<Transform2dComponent, SAPCollider,
+                             Movement2dComponent>(),
+        this->template query<Transform2dComponent, SAPCollider>(
+            exclude<Movement2dComponent>),
+        m_endPointsX, m_endPointsY, m_endPointKeys, m_staticEndPointsX,
+        m_staticEndPointsY, m_staticEndPointKeys, m_activeList, m_firstTime,
+        this->m_eventDispatcher);
+  }
   // void deleteStaticEntities(std::span<reg::Entity> entities);
   // void deleteStaticEntity(reg::Entity entitiy);
   // void deleteEntity(reg::Entity entitiy);
@@ -142,7 +201,9 @@ struct SweepAndPruneSys : public System<WorldComponents>, IOnUpdate {
       }
     };
     (deBlob(blob), ...);
-    sortAfterInsertion();
+    detail::sortAfterInsertion(m_endPointsX, m_endPointsY, m_endPointKeys,
+                               m_staticEndPointsX, m_staticEndPointsY,
+                               m_staticEndPointKeys, m_firstTime);
   }
 
   /**
@@ -154,7 +215,12 @@ struct SweepAndPruneSys : public System<WorldComponents>, IOnUpdate {
    * @param entity Target entity.
    * @return Index of the newly inserted endpoint key.
    */
-  size_t insertCollider(reg::Entity entity);
+  size_t insertCollider(reg::Entity entity)
+  {
+    auto [tc, sc] =
+        this->template getComponents<Transform2dComponent, SAPCollider>(entity);
+    return insertColliderDirectly(entity, tc, sc);
+  }
 
   /**
    * @brief Inserts a collider directly using provided component references.
@@ -169,17 +235,31 @@ struct SweepAndPruneSys : public System<WorldComponents>, IOnUpdate {
    */
   size_t insertColliderDirectly(reg::Entity entity,
                                 const Transform2dComponent &tc,
-                                SAPCollider &sc);
+                                SAPCollider &sc)
+  {
+    const bool isDynamic =
+        this->template hasAnyComponents<Movement2dComponent>(entity);
+
+    auto &endPointsX = isDynamic ? m_endPointsX : m_staticEndPointsX;
+    auto &endPointsY = isDynamic ? m_endPointsY : m_staticEndPointsY;
+    auto &endPointKeys = isDynamic ? m_endPointKeys : m_staticEndPointKeys;
+
+    return detail::insertEndPoint(entity, endPointsX, endPointsY, endPointKeys,
+                                  tc, sc);
+  }
 
   /**
    * @brief Inserts multiple collider entities at once.
    *
    * @param entities List of entities to insert.
    */
-  void insertColliderSpan(const std::vector<reg::Entity> &entities);
+  void insertColliderSpan(const std::vector<reg::Entity> &entities)
+  {
+    for (reg::Entity entity : entities)
+      insertCollider(entity);
+  }
 
 private:
-  void sortAfterInsertion();
   std::vector<EndPoint> m_endPointsX = {};
   std::vector<EndPoint> m_endPointsY = {};
 
@@ -193,18 +273,6 @@ private:
   std::vector<long> m_activeStaticList = {};
 
   bool m_firstTime = true;
-
-  static inline long staticMSB(size_t x)
-  {
-    long lx = static_cast<long>(x);
-    lx |= (1UL << ((sizeof(long) * 8) - 1));
-    return lx;
-  }
-  static inline size_t clearMSB(long x)
-  {
-    x &= ~(1UL << ((sizeof(long) * 8) - 1));
-    return static_cast<size_t>(x);
-  }
 };
 
 } // namespace Systems

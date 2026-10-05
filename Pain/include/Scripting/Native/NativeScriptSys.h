@@ -37,6 +37,17 @@ struct NativeScriptComponent;
 namespace Systems
 {
 
+namespace detail
+{
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<NativeScriptComponent>> chunks);
+void _implOnEvent(const SDL_Event &e,
+                  std::vector<reg::ChunkView<NativeScriptComponent>> chunks);
+void _implOnRender(RenderApi &renderAPI, DeltaTime currentTime,
+                   std::vector<reg::ChunkView<NativeScriptComponent>> chunks);
+} // namespace detail
+
 /**
  * @brief Executes native C++ script callbacks attached to entities.
  *
@@ -60,7 +71,8 @@ namespace Systems
  * @see IOnRender
  * @see NativeScriptComponent
  */
-struct NativeScript : public System<WorldComponents>,
+template <reg::CompileTimeBitMaskType CM>
+struct NativeScript : public System<CM>,
                       IOnUpdate,
                       IOnEvent,
                       IOnRender {
@@ -74,7 +86,7 @@ struct NativeScript : public System<WorldComponents>,
   using Tags = TypeList<NativeScriptComponent>;
 
   /** @brief Inherit base System constructors. */
-  using System::System;
+  using System<CM>::System;
 
   /**
    * @brief Executes native script update callbacks for all script components.
@@ -86,7 +98,11 @@ struct NativeScript : public System<WorldComponents>,
    * @note This method will only be called if the system inherits from
    * IOnUpdate.
    */
-  void onUpdate(DeltaTime deltaTime) override;
+  void onUpdate(DeltaTime deltaTime) override
+  {
+    detail::_implOnUpdate(deltaTime,
+                          this->template query<NativeScriptComponent>());
+  }
 
   /**
    * @brief Dispatches SDL events to native script callbacks.
@@ -98,7 +114,10 @@ struct NativeScript : public System<WorldComponents>,
    * @note This method will only be called if the system inherits from
    * IOnEvent.
    */
-  void onEvent(const SDL_Event &e) override;
+  void onEvent(const SDL_Event &e) override
+  {
+    detail::_implOnEvent(e, this->template query<NativeScriptComponent>());
+  }
 
   /**
    * @brief Executes native script rendering callbacks.
@@ -111,7 +130,11 @@ struct NativeScript : public System<WorldComponents>,
    * @note This method will only be called if the system inherits from
    * IOnRender.
    */
-  void onRender(RenderApi &renderAPI, DeltaTime currentTime) override;
+  void onRender(RenderApi &renderAPI, DeltaTime currentTime) override
+  {
+    detail::_implOnRender(
+        renderAPI, currentTime, this->template query<NativeScriptComponent>());
+  }
   RenderPass getRenderPass() const override { return RenderPass::Script; }
 };
 

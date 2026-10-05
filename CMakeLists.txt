@@ -315,10 +315,18 @@ target_precompile_headers(${LIBRARY_NAME} PRIVATE
                           ${CMAKE_CURRENT_SOURCE_DIR}/Pain/include/pch.h)
 add_compile_definitions(${RENDERER_FRAMEWORK})
 
+# Built-in profiler (see Pain/include/Debugging/Profiling.h). When enabled, the
+# PROFILE_SCOPE/PROFILE_FUNCTION macros are active and profile data is recorded.
+option(PAIN_PROFILING "Enable the built-in profiler" ON)
+if(PAIN_PROFILING)
+  add_compile_definitions("PROFILING")
+endif()
+
 # =========== Games ===============================
 set(ENGINE_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
-# Compiles Example/GameTemplate when enabled (used by CI to validate the template)
+# Compiles Example/GameTemplate when enabled (used by CI to validate the
+# template)
 option(PAIN_BUILD_GAMETEMPLATE "Build Example/GameTemplate" OFF)
 
 file(
@@ -329,8 +337,8 @@ file(
 # we actually need to add this first since any game might depend on it
 list(REMOVE_ITEM EXAMPLES "PainlessEditor")
 if(NOT PAIN_BUILD_GAMETEMPLATE)
-  list(REMOVE_ITEM EXAMPLES
-       "GameTemplate") # skip the template unless PAIN_BUILD_GAMETEMPLATE is ON
+  list(REMOVE_ITEM EXAMPLES "GameTemplate") # skip the template unless
+                                            # PAIN_BUILD_GAMETEMPLATE is ON
 endif()
 list(REMOVE_ITEM EXAMPLES ".gitignore")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Example/PainlessEditor")
@@ -340,6 +348,7 @@ execute_process(
   OUTPUT_VARIABLE ENGINE_GIT_COMMIT
   OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
 
+# ========= Game Compilation ========================
 foreach(EXAMPLE ${EXAMPLES})
   if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Example/${EXAMPLE}")
     message(STATUS "Adding game: ${EXAMPLE}")
@@ -363,7 +372,7 @@ foreach(EXAMPLE ${EXAMPLES})
         "${CMAKE_BINARY_DIR}/Example/${EXAMPLE}/resources/"
       # Syncing with main folder (for debugging purposes)
       COMMAND
-        rsync -av --chmod=F444,D775  --exclude='*.xcf' --exclude='*.ase'
+        rsync -av --chmod=F444,D775 --exclude='*.xcf' --exclude='*.ase'
         "${CMAKE_CURRENT_SOURCE_DIR}/Pain/resources/"
         "${CMAKE_SOURCE_DIR}/resources/"
       COMMENT "Syncing resources folder")

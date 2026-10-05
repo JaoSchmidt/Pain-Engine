@@ -41,6 +41,13 @@ struct LuaSchedulerComponent;
 namespace Systems
 {
 
+namespace detail
+{
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<LuaSchedulerComponent>> chunks);
+} // namespace detail
+
 /**
  * @brief Executes scheduled Lua tasks based on elapsed time.
  *
@@ -68,7 +75,8 @@ namespace Systems
  * @see IOnUpdate
  * @see LuaSchedulerComponent
  */
-struct LuaSchedulerSys : public System<WorldComponents>, IOnUpdate {
+template <reg::CompileTimeBitMaskType CM>
+struct LuaSchedulerSys : public System<CM>, IOnUpdate {
   /**
    * @brief Component tags required by this system.
    *
@@ -79,7 +87,7 @@ struct LuaSchedulerSys : public System<WorldComponents>, IOnUpdate {
   using Tags = TypeList<LuaSchedulerComponent>;
 
   /** @brief Inherit base System constructors. */
-  using System::System;
+  using System<CM>::System;
 
   /**
    * @brief Updates scheduled tasks and executes callbacks when due.
@@ -92,7 +100,11 @@ struct LuaSchedulerSys : public System<WorldComponents>, IOnUpdate {
    * @note This method is invoked only because the system inherits from
    * IOnUpdate.
    */
-  void onUpdate(DeltaTime deltaTime) override;
+  void onUpdate(DeltaTime deltaTime) override
+  {
+    detail::_implOnUpdate(deltaTime,
+                          this->template query<LuaSchedulerComponent>());
+  }
 };
 
 } // namespace Systems

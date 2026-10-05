@@ -242,7 +242,6 @@ void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
                             const float rotationRadians, RenderLayer layer,
                             const Material &material, Color overrideColor)
 {
-  PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   submitRect(transform, layer, material, overrideColor);
 }

@@ -18,7 +18,7 @@
 
 namespace pain
 {
-namespace Systems
+namespace Systems::detail
 {
 // NOTE: pay attention that the systems are communicating directly with the
 // renderAPI, meaning the state of the API (opengl, vulkan, directx) NEEDS to be
@@ -32,20 +32,31 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render2d::onRender(RenderApi &renderer, 
-                        DeltaTime currentTime)
+void _implOnRender(
+    RenderApi &renderer, DeltaTime currentTime,
+    std::vector<
+        reg::ChunkViewConst<const Transform2dComponent, const SpriteComponent,
+                            const RotationComponent, const MaterialComponent>>
+        chunksRotation,
+    std::vector<
+        reg::ChunkViewConst<const Transform2dComponent, const SpriteComponent,
+                            const MaterialComponent>>
+        chunksTexture,
+    std::vector<
+        reg::ChunkViewConst<const Transform2dComponent, const SpriteComponent,
+                            const ColorIndexComponent, const MaterialComponent>>
+        chunksColored,
+    std::vector<
+        reg::ChunkViewConst<const Transform2dComponent, const TextComponent>>
+        chunksText)
 {
-  
   UNUSED(currentTime)
   PROFILE_FUNCTION();
   Renderer2d &renderer2d = renderer.m_renderer2d;
   {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");
 
-    auto chunks =
-        queryConst<Transform2dComponent, SpriteComponent, RotationComponent,
-                   MaterialComponent>(exclude<ColorIndexComponent>);
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksRotation) {
       const auto *t = std::get<0>(chunk.arrays);
       const auto *s = std::get<1>(chunk.arrays);
       const auto *r = std::get<2>(chunk.arrays);
@@ -77,10 +88,7 @@ void Render2d::onRender(RenderApi &renderer,
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - texture quads");
-    auto chunks =
-        queryConst<Transform2dComponent, SpriteComponent, MaterialComponent>(
-            exclude<RotationComponent, ColorIndexComponent>);
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksTexture) {
       const auto *t = std::get<0>(chunk.arrays);
       const auto *s = std::get<1>(chunk.arrays);
       const MaterialComponent *m = std::get<2>(chunk.arrays);
@@ -109,10 +117,7 @@ void Render2d::onRender(RenderApi &renderer,
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - colored primitives");
-    auto chunks =
-        queryConst<Transform2dComponent, SpriteComponent, ColorIndexComponent,
-                   MaterialComponent>(exclude<RotationComponent>);
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksColored) {
       const auto *t = std::get<0>(chunk.arrays);
       const auto *s = std::get<1>(chunk.arrays);
       const auto *c = std::get<2>(chunk.arrays);
@@ -139,9 +144,7 @@ void Render2d::onRender(RenderApi &renderer,
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - colored primitives");
-    auto chunks = queryConst<Transform2dComponent, TextComponent>(
-        exclude<RotationComponent>);
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksText) {
       const auto *p = std::get<0>(chunk.arrays);
       const auto *t = std::get<1>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
@@ -197,5 +200,5 @@ void Render2d::onRender(RenderApi &renderer,
   }
 }
 
-} // namespace Systems
+} // namespace Systems::detail
 } // namespace pain

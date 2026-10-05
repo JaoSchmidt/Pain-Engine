@@ -31,14 +31,15 @@ inline const char *getWorldComponentName(int bitIndex)
       "Rotation",      // 8
       "Sprite",        // 9
       "LuaScript",     // 10
-      "SAPCollider",   // 11
-      "LuaScheduler",  // 12
-      "Mesh",          // 13
-      "Material",      // 14
-      "Light",         // 15
-      "ParticleTrail", // 16
-      "TextComponent", // 17
-      "ColorIndex"     // 18
+      "Collider",      // 11
+      "SAPCollider",   // 12
+      "LuaScheduler",  // 13
+      "Mesh",          // 14
+      "Material",      // 15
+      "Light",         // 16
+      "ParticleTrail", // 17
+      "TextComponent", // 18
+      "ColorIndex"     // 19
   };
   if (bitIndex >= 0 && bitIndex < 19)
     return names[bitIndex];
@@ -267,6 +268,23 @@ template <> struct ComponentPreview<pain::LuaScriptComponent> {
   }
 };
 
+template <> struct ComponentPreview<pain::ColliderComponent> {
+  static void render(const pain::ColliderComponent &c)
+  {
+    ImGui::Text("Offset: (%.2f, %.2f)", c.m_offset.x, c.m_offset.y);
+    ImGui::Text("Trigger: %s", c.m_isTrigger ? "yes" : "no");
+    if (std::holds_alternative<pain::CircleShape>(c.m_shape)) {
+      ImGui::Text("Shape: Circle (r=%.2f)",
+                  std::get<pain::CircleShape>(c.m_shape).radius);
+    } else if (std::holds_alternative<pain::AABBShape>(c.m_shape)) {
+      auto &aabb = std::get<pain::AABBShape>(c.m_shape);
+      ImGui::Text("Shape: AABB (%.2f x %.2f)", aabb.halfSize.x,
+                  aabb.halfSize.y);
+    } else if (std::holds_alternative<pain::CapsuleShape>(c.m_shape)) {
+      ImGui::Text("Shape: Capsule");
+    }
+  }
+};
 template <> struct ComponentPreview<pain::SAPCollider> {
   static void render(const pain::SAPCollider &c)
   {

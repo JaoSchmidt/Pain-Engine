@@ -18,12 +18,13 @@ namespace pain
 {
 namespace Systems
 {
+namespace detail
+{
 
-void LuaScript::onUpdate(DeltaTime deltaTime)
+void _implOnUpdate(DeltaTime deltaTime,
+                   std::vector<reg::ChunkView<LuaScriptComponent>> chunks)
 {
   PROFILE_SCOPE("onUpdate - LuaScripts");
-
-  auto chunks = query<LuaScriptComponent>();
 
   for (auto &chunk : chunks) {
     auto *scripts = std::get<0>(chunk.arrays);
@@ -44,11 +45,11 @@ void LuaScript::onUpdate(DeltaTime deltaTime)
   }
 }
 
-void LuaScript::onEvent(const SDL_Event &e)
+void _implOnEvent(const SDL_Event &e,
+                  std::vector<reg::ChunkView<LuaScriptComponent>> chunks)
 {
   PROFILE_SCOPE("onEvent - LuaScripts");
 
-  auto chunks = query<LuaScriptComponent>();
   const luabinder::LuaInputEvent ie{&e};
 
   for (auto &chunk : chunks) {
@@ -70,12 +71,10 @@ void LuaScript::onEvent(const SDL_Event &e)
   }
 }
 
-void LuaScript::onRender(RenderApi &renderer, 
-                         DeltaTime currentTime)
+void _implOnRender(RenderApi &renderer, DeltaTime currentTime,
+                   std::vector<reg::ChunkView<LuaScriptComponent>> chunks)
 {
   PROFILE_SCOPE("onRender - LuaScripts");
-
-  auto chunks = query<LuaScriptComponent>();
 
   for (auto &chunk : chunks) {
     auto *scripts = std::get<0>(chunk.arrays);
@@ -96,5 +95,6 @@ void LuaScript::onRender(RenderApi &renderer,
   }
 }
 
+} // namespace detail
 } // namespace Systems
 } // namespace pain

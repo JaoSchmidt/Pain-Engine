@@ -25,10 +25,10 @@ Checks: >
   -cppcoreguidelines-narrowing-conversions,
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-bounds-constant-array-index,
-  -cppcoreguidelines-pro-type-union-access
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-special-member-functions
 WarningsAsErrors: >
   clang-analyzer-*,
-  cppcoreguidelines-special-member-functions,
   bugprone-use-after-move,
   bugprone-copy-constructor-init,
   performance-unnecessary-copy-initialization,

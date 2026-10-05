@@ -212,7 +212,7 @@ void RenderPipeline::pipeline(RenderApi &renderAPI, bool isRenderingEnabled,
     auto wrap3d = retrieve3dCamera(worldScene);
 
     // Scripts don't actually use renderAPI, they fill the render context
-    worldScene.renderSystems(RenderPass::Script, renderAPI, currentTime);
+    // worldScene.renderSystems(RenderPass::Script, renderAPI, currentTime);
 
     P_ASSERT_W(wrap3d || wrap2d, "No active default camera");
     if (wrap3d) {
@@ -225,7 +225,9 @@ void RenderPipeline::pipeline(RenderApi &renderAPI, bool isRenderingEnabled,
     if (wrap2d) {
       backend::disable3d();
       renderAPI.m_renderer2d.beginScene();
+      // HACK: Temporary using render api directly inside scripts
       worldScene.renderSystems(RenderPass::Dim2d, renderAPI, currentTime);
+      worldScene.renderSystems(RenderPass::Script, renderAPI, currentTime);
       renderAPI.m_renderer2d.endScene(currentTime, wrap2d->first,
                                       wrap2d->second);
     }

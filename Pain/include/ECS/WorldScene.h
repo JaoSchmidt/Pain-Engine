@@ -116,48 +116,6 @@ public:
       nsc.onCreateFunction(nsc.instance.get());
     return static_cast<N &>(*nsc.instance);
   }
-
-  /**
-   * @brief Registers a system into the scene with compile-time validation.
-   * System will be executed during game loop IN ORDER they are added
-   *
-   * System must:
-   *  - be constructible
-   *  - inherit the class Systems<WorldComponents>
-   *  - have at least one system interface: IOnUpdate, IOnEvent, IOnRender
-   *  - use components registered inside WorldComponents
-   *
-   * If the system already exists, insertion is ignored and a warning is logged.
-   *
-   * @tparam Sys System type.
-   * @tparam Args Constructor argument types.
-   * @param args Arguments forwarded to the system constructor.
-   */
-  template <typename Sys, typename... Args>
-    requires std::is_constructible_v<Sys, reg::ArcheRegistry<WorldComponents> &,
-                                     reg::EventDispatcher &, Args...> &&
-             std::constructible_from<Sys, reg::ArcheRegistry<WorldComponents> &,
-                                     reg::EventDispatcher &, Args...> &&
-             ValidSystem<Sys> && AreAllTagsRegistered<typename Sys::Tags>::value
-  void addSystem(Args &&...args)
-  {
-    auto [itSystem, isInserted] = m_systems.emplace(
-        std::make_pair(std::type_index(typeid(Sys)), //
-                       std::make_unique<Sys>(m_registry, m_eventDispatcher,
-                                             std::forward<Args>(args)...) //
-                       ));
-    if (!isInserted) {
-      PLOG_W("Could not insert System {}", typeid(Sys).name());
-      return;
-    }
-    Sys *s = static_cast<Sys *>(itSystem->second.get());
-    if constexpr (std::derived_from<Sys, IOnEvent>)
-      m_eventSystems.emplace_back(s);
-    if constexpr (std::derived_from<Sys, IOnRender>)
-      m_renderSystems[static_cast<size_t>(s->getRenderPass())].emplace_back(s);
-    if constexpr (std::derived_from<Sys, IOnUpdate>)
-      m_updateSystems.emplace_back(s);
-  }
 };
 
 } // namespace pain

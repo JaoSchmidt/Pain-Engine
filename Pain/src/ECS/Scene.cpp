@@ -28,8 +28,8 @@ template <typename Component, reg::CompileTimeBitMaskType Manager>
 void onComponentAdded(AbstractScene<Manager> &scene, reg::Entity entity)
 {
   if constexpr (std::is_same_v<Component, SAPCollider>) {
-    Systems::SweepAndPruneSys *s =
-        scene.template getSys<Systems::SweepAndPruneSys>();
+    Systems::SweepAndPruneSys<pain::WorldComponents> *s =
+        scene.template getSys<Systems::SweepAndPruneSys<pain::WorldComponents>>();
     if (s) {
       s->insertCollider(entity);
     } else {
@@ -149,13 +149,12 @@ void AbstractScene<Manager>::updateSystems(const SDL_Event &event)
 template <reg::CompileTimeBitMaskType Manager>
 void AbstractScene<Manager>::renderSystems(RenderPass pass,
                                            RenderApi &renderAPI,
-                                           
+
                                            DeltaTime currentTime)
 {
   PROFILE_SCOPE("Scene::renderSystems - rendering native scripts");
   for (auto *sys : m_renderSystems[static_cast<uint8_t>(pass)])
-    static_cast<IOnRender *>(sys)->onRender(renderAPI, 
-                                            currentTime);
+    static_cast<IOnRender *>(sys)->onRender(renderAPI, currentTime);
 }
 
 template class AbstractScene<WorldComponents>;

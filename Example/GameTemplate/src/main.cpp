@@ -16,10 +16,16 @@ pain::Application *pain::createApplication()
   internalIni.readAndUpdate(ini.assetsPath.value);
 
   // Create the application + OpenGL + Event contexts
-  Application *app = Application::createApplication(         //
-      {.title = internalIni.title.get().c_str(),             //
-       .defaultWidth = ini.defaultWidth.get(),               //
-       .defaultHeight = ini.defaultHeight.get()},            //
+  Application *app = Application::createApplication( //
+      {
+          .title = internalIni.title.get().c_str(), //
+          .defaultWidth = ini.defaultWidth.get(),   //
+          .defaultHeight = ini.defaultHeight.get(),
+          .defaultZoom2d = internalIni.zoomLevel.get(),
+          .fullWindow = ini.fullwindow.get(),
+          .fullScreen = ini.fullscreen.get(),
+          .gridCellSize = internalIni.gridSize.get(),
+      },                                                     //
       {.swapChainTarget = internalIni.swapChainTarget.get()} //
   );
 
@@ -28,12 +34,12 @@ pain::Application *pain::createApplication()
   scene.createComponents(scene.getEntity(), cmp::Script{});
 
   // Individually add each system
-  scene.addSystem<Systems::SweepAndPruneSys>();
-  scene.addSystem<Systems::Render2d>();
-  scene.addSystem<Systems::NativeScript>();
-  scene.addSystem<Systems::LuaScript>();
-  scene.addSystem<Systems::Kinematics>();
-  scene.addSystem<Systems::LuaSchedulerSys>();
+  scene.addSystem<Systems::SweepAndPruneSys<pain::WorldComponents>>();
+  scene.addSystem<Systems::Render2d<pain::WorldComponents>>();
+  scene.addSystem<Systems::NativeScript<pain::WorldComponents>>();
+  scene.addSystem<Systems::LuaScript<pain::WorldComponents>>();
+  scene.addSystem<Systems::Kinematics<pain::WorldComponents>>();
+  scene.addSystem<Systems::LuaSchedulerSys<pain::WorldComponents>>();
 
   // (Optional) Defining a small native script (MainScript) for the world scene
   // that will be executed on. Must have added System::NativeScript

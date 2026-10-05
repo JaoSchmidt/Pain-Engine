@@ -32,12 +32,25 @@
 #include "Assets/DeltaTime.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
+#include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
+#include "Physics/RotationComponent.h"
 
 namespace pain
 {
 namespace Systems
 {
+
+namespace detail
+{
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<RotationComponent>> chunksRotation,
+    std::vector<reg::ChunkView<Transform2dComponent, Movement2dComponent>>
+        chunksMovement2d,
+    std::vector<reg::ChunkView<Transform3dComponent, Movement3dComponent>>
+        chunksMovement3d);
+} // namespace detail
 
 /**
  * @brief Performs per-frame kinematic integration and rotation updates.
@@ -63,7 +76,8 @@ namespace Systems
  * @see System
  * @see IOnUpdate
  */
-struct Kinematics : public System<WorldComponents>, IOnUpdate {
+template <reg::CompileTimeBitMaskType CM>
+struct Kinematics : public System<CM>, IOnUpdate {
   /**
    * @brief Component tags required by this system.
    *
@@ -76,7 +90,7 @@ struct Kinematics : public System<WorldComponents>, IOnUpdate {
   using Tags = TypeList<Transform2dComponent, Movement2dComponent>;
 
   /** @brief Inherit base System constructors. */
-  using System<WorldComponents>::System;
+  using System<CM>::System;
 
   /** @brief Prevent default construction. */
   Kinematics() = delete;
@@ -92,7 +106,14 @@ struct Kinematics : public System<WorldComponents>, IOnUpdate {
    * @note This method is invoked only because the system inherits from
    * IOnUpdate.
    */
-  void onUpdate(DeltaTime deltaTime) override;
+  void onUpdate(DeltaTime deltaTime) override
+  {
+    detail::_implOnUpdate(
+        deltaTime,
+        this->template query<RotationComponent>(),
+        this->template query<Transform2dComponent, Movement2dComponent>(),
+        this->template query<Transform3dComponent, Movement3dComponent>());
+  }
 };
 
 } // namespace Systems

@@ -85,7 +85,7 @@ using WorldComponents = reg::CompileTimeBitMask< //
     tag::Rotation,                               // 09
     tag::Sprite,                                 // 10
     tag::LuaScript,                              // 11
-    tag::SAPCollider,                            // 12
+    tag::Collider,                               // 12
     tag::LuaScheduler,                           // 13
     tag::Mesh,                                   // 14
     tag::Material,                               // 15

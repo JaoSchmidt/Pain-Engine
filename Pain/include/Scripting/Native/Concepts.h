@@ -12,7 +12,6 @@
 namespace pain
 {
 struct RenderApi;
-class RenderContext;
 } // namespace pain
 
 /** Concepts used during NativeScriptComponent::bind() to validate script
@@ -36,7 +35,7 @@ concept hasOnCreateMethod = requires(T &&t) {
  * DeltaTime) method. */
 template <typename T>
 concept hasOnRenderMethod =
-    requires(T &&t, pain::RenderContext &r, pain::DeltaTime d) {
+    requires(T &&t, pain::RenderApi &r, pain::DeltaTime d) {
       { t.onRender(r, d) };
     };
 
@@ -140,7 +139,7 @@ template <typename T> void checkScriptMethods()
   // Check for wrong signatures
   if constexpr (hasAnyCallableOnRender<T> && !hasOnRenderMethod<T>) {
     static_assert(false, "Error: onRender() has wrong signature! Should be "
-                         "onRender(RenderContext&, DeltaTime).");
+                         "onRender(RenderApi&, DeltaTime).");
   }
   if constexpr (hasAnyCallableOnUpdate<T> && !hasOnUpdateMethod<T>) {
     static_assert(false, "Error: onUpdate() has wrong signature! Should be "

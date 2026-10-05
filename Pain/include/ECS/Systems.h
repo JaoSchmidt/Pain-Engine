@@ -104,6 +104,9 @@ struct IOnRender {
  */
 template <typename CM> struct System {
 public:
+  /** @brief Component manager type this system is bound to. */
+  using ComponentManager = CM;
+
   /**
    * @brief Constructs a system bound to a registry and event dispatcher.
    *
@@ -130,26 +133,6 @@ public:
   // ---------------------------------------------------- //
   // Iterate archetypes
   // ---------------------------------------------------- //
-
-  /**
-   * @brief Queries archetypes containing a set of components.
-   *
-   * This overload exists when component bitmasks cannot be deduced at compile
-   * time. The system can still run, but it cannot be validated when inserted
-   * into a scene.
-   *
-   * @deprecated Prefer the constrained overload when possible.
-   */
-  template <typename... Components, typename... ExcludeComponents>
-  [[deprecated("Bitmask cannot be deduced for one the components in this "
-               "function. This is fine to call, but you won't be able to add "
-               "this system to any scene")]]
-  inline std::vector<reg::ChunkView<Components...>>
-  query(exclude_t<ExcludeComponents...> = {})
-  {
-    return m_registry.template query<Components...>(
-        exclude<ExcludeComponents...>);
-  }
 
   /**
    * @brief Queries archetypes containing a set of registered components.

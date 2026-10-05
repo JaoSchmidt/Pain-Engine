@@ -9,6 +9,7 @@
 #include "CoreRender/Text/TextComponent.h"
 #include "ECS/Components/NativeScript.h"
 #include "Misc/Schedule/SchedulerComponent.h"
+#include "Physics/Collision/Collider.h"
 #include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
 #include "Physics/Particles/SprayCmp.h"
@@ -34,4 +35,6 @@ using Mov3d = pain::Movement3dComponent;
 using Rot = pain::RotationComponent;
 using ParticleSpray = pain::ParticleSprayComponent;
 using Schedule = pain::LuaSchedulerComponent;
+using Collider = pain::ColliderComponent;
+using SAPCollider = pain::SAPCollider;
 } // namespace cmp

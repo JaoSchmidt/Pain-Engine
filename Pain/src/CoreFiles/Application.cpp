@@ -124,6 +124,9 @@ Application *Application::createApplication(AppInit &&initConfig,
     // other stuff unrelated to lua
     TextureManager::addRendererForDeletingTextures(app->m_ctx.renderAPI);
   }
+  // TODO: put this, and other settings into some observer design
+  app->getRenderApi().m_renderer2d.setCellGridSize(
+      app->getCurrentConfig().gridCellSize);
   return app;
 }
 EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
@@ -196,17 +199,20 @@ EndGameFlags Application::run()
     // =============================================================== //
     // Handle Updates
     // =============================================================== //
-    if (m_config.isAccumulatorUnlocked) {
-      while (!SDL_HasEvents(SDL_FIRSTEVENT, SDL_LASTEVENT)) {
-        m_runtime.worldScene.updateSystems(m_config.fixedDeltaTime);
-      }
-    } else {
-      DeltaTime deltaSeconds = deltaTime * m_config.timeMultiplier;
-      accumulator += deltaSeconds;
+    {
+      PROFILE_SCOPE("Application::run - Handle Updates");
+      if (m_config.isAccumulatorUnlocked) {
+        while (!SDL_HasEvents(SDL_FIRSTEVENT, SDL_LASTEVENT)) {
+          m_runtime.worldScene.updateSystems(m_config.fixedDeltaTime);
+        }
+      } else {
+        DeltaTime deltaSeconds = deltaTime * m_config.timeMultiplier;
+        accumulator += deltaSeconds;
 
-      while (accumulator >= m_config.fixedDeltaTime) {
-        m_runtime.worldScene.updateSystems(m_config.fixedDeltaTime);
-        accumulator -= m_config.fixedDeltaTime;
+        while (accumulator >= m_config.fixedDeltaTime) {
+          m_runtime.worldScene.updateSystems(m_config.fixedDeltaTime);
+          accumulator -= m_config.fixedDeltaTime;
+        }
       }
     }
 

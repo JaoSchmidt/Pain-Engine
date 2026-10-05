@@ -25,17 +25,17 @@ struct LuaComponentDesc {
 template <typename Component>
 void onComponentAdded(Scene &scene, reg::Entity entity)
 {
-  if constexpr (std::is_same_v<Component, SAPCollider>) {
-    Systems::SweepAndPruneSys *s =
-        scene.template getSys<Systems::SweepAndPruneSys>();
-    if (s) {
-      s->insertCollider(entity);
-    } else {
-      PLOG_W(
-          "You are trying to create Sweep and Prune component without adding "
-          "a proper Sweep and Prune system");
-    }
-  }
+  // if constexpr (std::is_same_v<Component, SAPCollider>) {
+  //   Systems::SweepAndPruneSys<WorldComponents> *s =
+  //       scene.template getSys<Systems::SweepAndPruneSys<WorldComponents>>();
+  //   if (s) {
+  //     s->insertCollider(entity);
+  //   } else {
+  //     PLOG_W(
+  //         "You are trying to create Sweep and Prune component without adding
+  //         " "a proper Sweep and Prune system");
+  //   }
+  // }
 }
 
 inline ShapeVariant parseSpriteShape(sol::object obj)
@@ -224,41 +224,45 @@ void luabinder::bindWorldComponents(Scene &scene, sol::state &lua,
   // ------------------------------------------------------------
   //  Sweep and Prune Component bind
   // ------------------------------------------------------------
-  if constexpr (WorldComponents::isRegistered<SAPCollider>())
-    worldTbl.set_function(
-        "SAPCollider",
-        sol::overload(
-            [&](glm::vec2 size, sol::optional<bool> oTrigger,
-                sol::optional<glm::vec2> oOffset) {
-              bool isTrigger = oTrigger.value_or(false);
-              glm::vec2 offset = oOffset.value_or(glm::vec2{0.f, 0.f});
-
-              return LuaComponentDesc{
-                  scene.getSingleBitmask<SAPCollider>(),
-                  [=, &scene](reg::Entity e, reg::Bitmask b) {
-                    scene.manualPush(
-                        e, b, SAPCollider::createAABB(size, isTrigger, offset));
-                  },
-                  [&scene](reg::Entity e) {
-                    onComponentAdded<SAPCollider>(*&scene, e);
-                  }};
-            },
-            [&](float radius, sol::optional<bool> oTrigger,
-                sol::optional<glm::vec2> oOffset) {
-              bool isTrigger = oTrigger.value_or(false);
-              glm::vec2 offset = oOffset.value_or(glm::vec2{0.f, 0.f});
-
-              return LuaComponentDesc{
-                  scene.getSingleBitmask<SAPCollider>(),
-                  [=, &scene](reg::Entity e, reg::Bitmask b) {
-                    scene.manualPush(
-                        e, b,
-                        SAPCollider::createCircle(radius, isTrigger, offset));
-                  },
-                  [&scene](reg::Entity e) {
-                    onComponentAdded<SAPCollider>(*&scene, e);
-                  }};
-            }));
+  // if constexpr (WorldComponents::isRegistered<SAPCollider>()) {
+  //   reg::Bitmask bm = scene.getSingleBitmask<SAPCollider>();
+  //   worldTbl.set_function(
+  //       "SAPCollider",
+  //       sol::overload(
+  //           [&](glm::vec2 size, sol::optional<bool> oTrigger,
+  //               sol::optional<glm::vec2> oOffset) {
+  //             bool isTrigger = oTrigger.value_or(false);
+  //             glm::vec2 offset = oOffset.value_or(glm::vec2{0.f, 0.f});
+  //
+  //             return LuaComponentDesc{
+  //                 bm,
+  //                 [=, &scene](reg::Entity e, reg::Bitmask b) {
+  //                   scene.manualPush(
+  //                       e, b, SAPCollider::createAABB(size, isTrigger,
+  //                       offset));
+  //                 },
+  //                 [&scene](reg::Entity e) {
+  //                   onComponentAdded<SAPCollider>(*&scene, e);
+  //                 }};
+  //           },
+  //           [&](float radius, sol::optional<bool> oTrigger,
+  //               sol::optional<glm::vec2> oOffset) {
+  //             bool isTrigger = oTrigger.value_or(false);
+  //             glm::vec2 offset = oOffset.value_or(glm::vec2{0.f, 0.f});
+  //
+  //             return LuaComponentDesc{
+  //                 bm,
+  //                 [=, &scene](reg::Entity e, reg::Bitmask b) {
+  //                   scene.manualPush(
+  //                       e, b,
+  //                       SAPCollider::createCircle(radius, isTrigger,
+  //                       offset));
+  //                 },
+  //                 [&scene](reg::Entity e) {
+  //                   onComponentAdded<SAPCollider>(*&scene, e);
+  //                 }};
+  //           }));
+  // }
   if constexpr (WorldComponents::isRegistered<OrthoCameraComponent>())
     worldTbl["OrthoCamera"] = sol::overload(
         [&](sol::optional<bool> oActive, sol::optional<int> oWidth,

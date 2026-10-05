@@ -21,7 +21,6 @@
 // Misc
 #include "Misc/Basic2dPlayer.h"
 #include "Misc/Basic3dPlayer.h"
-#include "Misc/BasicMainScene.h"
 #include "Misc/Events.h"
 // Renderer
 #include "CoreRender/Buffers/BufferLayout.h"
@@ -46,6 +45,7 @@
 #include "CoreRender/Text/ManagerFont.h"
 #include "CoreRender/Text/TextComponent.h"
 // ECS
+#include "ECS/Components/ComponentManager.h"
 #include "ECS/Components/NativeScript.h"
 #include "ECS/Scene.h"
 #include "ECS/Scriptable.h"
@@ -60,6 +60,7 @@
 #include "Scripting/Native/NativeScriptSys.h"
 
 #include "Physics/Collision/Collider.h"
+#include "Physics/Collision/CollisionNaiveSys.h"
 #include "Physics/Collision/SweepAndPruneSys.h"
 #include "Physics/KinematicsSys.h"
 #include "Physics/Movement3dComponent.h"

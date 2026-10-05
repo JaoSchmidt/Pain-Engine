@@ -16,7 +16,7 @@
  * Script types may optionally implement the following callbacks:
  *  - onCreate()
  *  - onDestroy()
- *  - onRender(RenderContext&, DeltaTime)
+ *  - onRender(RenderApi&, DeltaTime)
  *  - onUpdate(DeltaTime)
  *  - onEvent(const SDL_Event&)
  *
@@ -35,7 +35,7 @@
 namespace pain
 {
 // forward declare
-class RenderContext;
+struct RenderApi;
 template <typename SceneT> class GameObject;
 class Scene;
 
@@ -84,7 +84,7 @@ public:
   ///@{
   void (*onCreateFunction)(Scriptable *) = nullptr;
   void (*onDestroyFunction)(Scriptable *) = nullptr;
-  void (*onRenderFunction)(Scriptable *, RenderContext &, DeltaTime) = nullptr;
+  void (*onRenderFunction)(Scriptable *, RenderApi &, DeltaTime) = nullptr;
   void (*onUpdateFunction)(Scriptable *, DeltaTime) = nullptr;
   void (*onEventFunction)(Scriptable *, const SDL_Event &) = nullptr;
   ///@}
@@ -129,7 +129,7 @@ public:
     }
 
     if constexpr (hasOnRenderMethod<T>) {
-      onRenderFunction = [](Scriptable *instance, RenderContext &renderContext,
+      onRenderFunction = [](Scriptable *instance, RenderApi &renderContext,
                             DeltaTime realTime) {
         static_cast<T *>(instance)->onRender(renderContext, realTime);
       };
@@ -197,7 +197,7 @@ public:
     }
 
     if constexpr (hasOnRenderMethod<T>) {
-      onRenderFunction = [](Scriptable *instance, RenderContext &renderContext,
+      onRenderFunction = [](Scriptable *instance, RenderApi &renderContext,
                             DeltaTime realTime) {
         static_cast<T *>(instance)->onRender(renderContext, realTime);
       };

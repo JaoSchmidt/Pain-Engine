@@ -50,9 +50,34 @@ struct RotationComponent;
 struct SpriteComponent;
 struct MaterialComponent;
 struct ColorIndexComponent;
+struct TextComponent;
 
 namespace Systems
 {
+
+namespace detail
+{
+void _implOnRender(
+    RenderApi &renderer,
+    DeltaTime currentTime,
+    std::vector<reg::ChunkViewConst<const Transform2dComponent,
+                                    const SpriteComponent,
+                                    const RotationComponent,
+                                    const MaterialComponent>>
+        chunksRotation,
+    std::vector<reg::ChunkViewConst<const Transform2dComponent,
+                                    const SpriteComponent,
+                                    const MaterialComponent>>
+        chunksTexture,
+    std::vector<reg::ChunkViewConst<const Transform2dComponent,
+                                    const SpriteComponent,
+                                    const ColorIndexComponent,
+                                    const MaterialComponent>>
+        chunksColored,
+    std::vector<
+        reg::ChunkViewConst<const Transform2dComponent, const TextComponent>>
+        chunksText);
+} // namespace detail
 
 /**
  * @brief ECS system responsible for submitting all visible renderable
@@ -78,7 +103,8 @@ namespace Systems
  * @see System
  * @see IOnRender
  */
-struct Render2d : public System<WorldComponents>, IOnRender {
+template <reg::CompileTimeBitMaskType CM>
+struct Render2d : public System<CM>, IOnRender {
   /**
    * @brief Component signature required by this system.
    *
@@ -99,7 +125,7 @@ struct Render2d : public System<WorldComponents>, IOnRender {
                         ColorIndexComponent>;
 
   /** @brief Inherit base System constructors. */
-  using System::System;
+  using System<CM>::System;
 
   /**
    * @brief Submits renderable ECS components to the renderer.
@@ -114,7 +140,22 @@ struct Render2d : public System<WorldComponents>, IOnRender {
    * @note This method is invoked only because the system inherits from
    * IOnSystemRender.
    */
-  void onRender(RenderApi &renderer, DeltaTime currentTime) override;
+  void onRender(RenderApi &renderer, DeltaTime currentTime) override
+  {
+    detail::_implOnRender(
+        renderer, currentTime,
+        this->template queryConst<Transform2dComponent, SpriteComponent,
+                                  RotationComponent, MaterialComponent>(
+            exclude<ColorIndexComponent>),
+        this->template queryConst<Transform2dComponent, SpriteComponent,
+                                  MaterialComponent>(
+            exclude<RotationComponent, ColorIndexComponent>),
+        this->template queryConst<Transform2dComponent, SpriteComponent,
+                                  ColorIndexComponent, MaterialComponent>(
+            exclude<RotationComponent>),
+        this->template queryConst<Transform2dComponent, TextComponent>(
+            exclude<RotationComponent>));
+  }
   RenderPass getRenderPass() const override { return RenderPass::Dim2d; }
 };
 

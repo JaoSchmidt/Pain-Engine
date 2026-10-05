@@ -12,12 +12,14 @@
 // of scripts
 namespace pain ::Systems
 {
-
-void LuaSchedulerSys::onUpdate(DeltaTime deltaTime)
+namespace detail
+{
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<LuaSchedulerComponent>> chunks)
 {
   PROFILE_SCOPE("onUpdate - LuaSchedulerSys");
 
-  auto chunks = query<LuaSchedulerComponent>();
   float deltaTimef = deltaTime.getSecondsf();
   for (auto &chunk : chunks) {
     auto *scripts = std::get<0>(chunk.arrays);
@@ -40,4 +42,5 @@ void LuaSchedulerSys::onUpdate(DeltaTime deltaTime)
     }
   }
 }
+} // namespace detail
 } // namespace pain::Systems
