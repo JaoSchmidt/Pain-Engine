@@ -25,7 +25,6 @@ namespace pain
 class RenderPipeline
 {
 public:
-  void temp();
   /**
    * @brief Creates a render pipeline using the *default* framebuffer
    * configuration.
@@ -74,8 +73,8 @@ public:
    * @param worldScene Scene containing world entities and systems.
    * @param uiScene Scene containing UI entities and systems.
    */
-  void pipeline(RenderApi &renderAPI, bool isRenderingEnabled, DeltaTime currentTime,
-                Scene &worldScene, UIScene *uiScene);
+  void pipeline(RenderApi &renderAPI, bool isRenderingEnabled,
+                DeltaTime currentTime, Scene &worldScene, UIScene *uiScene);
 
   /** @brief Framebuffer owned by the render pipeline. */
   FrameBuffer m_frameBuffer;

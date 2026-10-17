@@ -14,23 +14,24 @@
 
 namespace pain
 {
-namespace Systems
+namespace Systems::detail
 {
 
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void LightSys::onRender(RenderApi &renderer, 
-                        DeltaTime currentTime)
+void _implOnRender(
+    RenderApi &renderer, DeltaTime currentTime,
+    std::vector<
+        reg::ChunkViewConst<const Transform3dComponent, const LightComponent>>
+        chunksLights)
 {
-  
   UNUSED(currentTime)
   PROFILE_FUNCTION();
   {
     PROFILE_SCOPE("Scene::renderLights");
 
-    auto chunks = queryConst<Transform3dComponent, LightComponent>();
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksLights) {
       const auto *t = std::get<0>(chunk.arrays);
       const auto *l = std::get<1>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
@@ -40,5 +41,5 @@ void LightSys::onRender(RenderApi &renderer,
   }
 }
 
-} // namespace Systems
+} // namespace Systems::detail
 } // namespace pain

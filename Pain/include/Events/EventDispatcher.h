@@ -76,7 +76,7 @@ public:
    * @param lua Reference to the active Lua state used for event conversion and
    * dispatch.
    */
-  EventDispatcher(sol::state &lua) : m_lua(lua) {};
+  EventDispatcher(sol::state *lua = nullptr) : m_lua(lua) {};
   // --------------------------------------------------
   // C++ Events and Dispatch (not fully static tho)
   // --------------------------------------------------
@@ -108,7 +108,7 @@ public:
     for (Listener<Event> &handler : list) {
       handler(event);
     }
-    trigger<Event>(event.toLuaTable(m_lua));
+    trigger<Event>(event.toLuaTable(*m_lua));
   }
   /**
    * @brief Enqueues an event to be dispatched later during update().
@@ -197,7 +197,7 @@ public:
   void trigger(size_t id, const sol::table &event);
 
 private:
-  sol::state &m_lua;
+  sol::state *m_lua;
   // C++ events
   std::map<std::type_index, ErasedVector> m_cppSubsribers;
   std::map<std::type_index, EventQueue> m_cppPending;
@@ -254,20 +254,19 @@ private:
     auto it = m_cppSubsribers.find(std::type_index(typeid(Event)));
     if (it != m_cppSubsribers.end()) {
       return *static_cast<std::vector<Listener<Event>> *>(it->second.get());
-    } else {
-
-      Deleter deleter = [](void *vector) {
-        delete static_cast<std::vector<Listener<Event>> *>(vector);
-      };
-      auto [newIt, isInserted] = m_cppSubsribers.emplace(
-          std::type_index(typeid(Event)),
-          ErasedVector{new std::vector<Listener<Event>>(), deleter});
-      P_ASSERT(isInserted, "Could not create new component vector");
-      PLOG_I("New subscription added {}", typeid(Event).name());
-
-      // store the deleter to use inside the destructor
-      return *static_cast<std::vector<Listener<Event>> *>(newIt->second.get());
     }
+
+    Deleter deleter = [](void *vector) {
+      delete static_cast<std::vector<Listener<Event>> *>(vector);
+    };
+    auto [newIt, isInserted] = m_cppSubsribers.emplace(
+        std::type_index(typeid(Event)),
+        ErasedVector{new std::vector<Listener<Event>>(), deleter});
+    P_ASSERT(isInserted, "Could not create new component vector");
+    PLOG_I("New subscription added {}", typeid(Event).name());
+
+    // store the deleter to use inside the destructor
+    return *static_cast<std::vector<Listener<Event>> *>(newIt->second.get());
   }
   // --------------------------------------------------
   // Lua Events Map

@@ -189,14 +189,6 @@ retrieve3dCamera(Scene &scene)
   return {};
 }
 
-void RenderPipeline::temp()
-{
-  // PLOG_I("Size = ({},{})", m_frameBuffer.getWidth(),
-  // m_frameBuffer.getHeight());
-
-  // PLOG_I("IsInside = {}",);
-}
-
 void RenderPipeline::pipeline(RenderApi &renderAPI, bool isRenderingEnabled,
                               DeltaTime currentTime, Scene &worldScene,
                               UIScene *uiScene)
@@ -220,7 +212,7 @@ void RenderPipeline::pipeline(RenderApi &renderAPI, bool isRenderingEnabled,
       renderAPI.m_renderer3d.beginScene(currentTime, wrap3d->first,
                                         wrap3d->second);
       worldScene.renderSystems(RenderPass::Dim3d, renderAPI, currentTime);
-      renderAPI.m_renderer3d.endScene(worldScene);
+      renderAPI.m_renderer3d.endScene();
     }
     if (wrap2d) {
       backend::disable3d();

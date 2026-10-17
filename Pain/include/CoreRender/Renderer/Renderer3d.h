@@ -23,8 +23,6 @@
 namespace pain
 {
 
-class Scene;
-class UIScene;
 struct ResolvedMaterial;
 
 /**
@@ -66,7 +64,7 @@ public:
                   const Transform3dComponent &position);
 
   // @brief Flush all batches and finalize the scene.
-  void endScene(const Scene &scene);
+  void endScene();
 
   // ================================================================= //
   // Draw Polygons

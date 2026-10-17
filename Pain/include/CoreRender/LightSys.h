@@ -47,6 +47,16 @@ namespace pain
 namespace Systems
 {
 
+namespace detail
+{
+void _implOnRender(
+    RenderApi &renderer,
+    DeltaTime currentTime,
+    std::vector<reg::ChunkViewConst<const Transform3dComponent,
+                                    const LightComponent>>
+        chunksLights);
+} // namespace detail
+
 /**
  * @brief ECS system responsible for submitting all visible renderable
  * components to the 2D renderer.
@@ -69,7 +79,8 @@ namespace Systems
  * @see System
  * @see IOnRender
  */
-struct LightSys : public System<WorldComponents>, IOnRender {
+template <reg::CompileTimeBitMaskType CM>
+struct LightSys : public System<CM>, IOnRender {
   /**
    * @brief Component signature required by this system.
    *
@@ -86,7 +97,7 @@ struct LightSys : public System<WorldComponents>, IOnRender {
                         >;
 
   /** @brief Inherit base System constructors. */
-  using System::System;
+  using System<CM>::System;
 
   /**
    * @brief Submits renderable ECS components to the renderer.
@@ -101,7 +112,12 @@ struct LightSys : public System<WorldComponents>, IOnRender {
    * @note This method is invoked only because the system inherits from
    * IOnRender.
    */
-  void onRender(RenderApi &renderer, DeltaTime currentTime) override;
+  void onRender(RenderApi &renderer, DeltaTime currentTime) override
+  {
+    detail::_implOnRender(
+        renderer, currentTime,
+        this->template queryConst<Transform3dComponent, LightComponent>());
+  }
   RenderPass getRenderPass() const override { return RenderPass::Dim3d; }
 };
 

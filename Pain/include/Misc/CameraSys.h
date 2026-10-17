@@ -37,6 +37,14 @@
 
 namespace pain ::Systems
 {
+namespace detail
+{
+void _implOnEvent(
+    const SDL_Event &event,
+    std::vector<reg::ChunkView<OrthoCameraComponent>> chunksRotation);
+
+} // namespace detail
+
 /**
  * @brief Event-driven system for updating orthographic camera state.
  *
@@ -60,7 +68,8 @@ namespace pain ::Systems
  * @see System
  * @see IOnEvent
  */
-struct CameraSys : public System<WorldComponents>, IOnEvent {
+template <reg::CompileTimeBitMaskType CM>
+struct CameraSys : public System<CM>, IOnEvent {
   /**
    * @brief Component tags required by this system.
    *
@@ -70,7 +79,7 @@ struct CameraSys : public System<WorldComponents>, IOnEvent {
   using Tags = TypeList<OrthoCameraComponent>;
 
   /** @brief Inherit base System constructors. */
-  using System::System;
+  using System<CM>::System;
 
   /**
    * @brief Handles incoming SDL events and updates camera state when required.
@@ -84,6 +93,9 @@ struct CameraSys : public System<WorldComponents>, IOnEvent {
    * @note This method is invoked only because the system inherits from
    * IOnEvent.
    */
-  void onEvent(const SDL_Event &event) override;
+  void onEvent(const SDL_Event &event) override
+  {
+    detail::_implOnEvent(event, this->template query<OrthoCameraComponent>());
+  }
 };
 } // namespace pain::Systems

@@ -53,6 +53,16 @@ struct MaterialComponent;
 namespace Systems
 {
 
+namespace detail
+{
+void _implOnRender(
+    RenderApi &renderer,
+    DeltaTime currentTime,
+    std::vector<
+        reg::ChunkView<Transform3dComponent, MeshComponent, MaterialComponent>>
+        chunksMesh);
+} // namespace detail
+
 /**
  * @brief ECS system responsible for submitting all visible renderable
  * components to the 2D renderer.
@@ -77,7 +87,8 @@ namespace Systems
  * @see System
  * @see IOnRender
  */
-struct Render3d : public System<WorldComponents>, IOnRender {
+template <reg::CompileTimeBitMaskType CM>
+struct Render3d : public System<CM>, IOnRender {
   /**
    * @brief Component signature required by this system.
    *
@@ -97,7 +108,7 @@ struct Render3d : public System<WorldComponents>, IOnRender {
                         MaterialComponent>;
 
   /** @brief Inherit base System constructors. */
-  using System::System;
+  using System<CM>::System;
 
   /**
    * @brief Submits renderable ECS components to the renderer.
@@ -112,7 +123,13 @@ struct Render3d : public System<WorldComponents>, IOnRender {
    * @note This method is invoked only because the system inherits from
    * IOnSystemRender.
    */
-  void onRender(RenderApi &renderer, DeltaTime currentTime) override;
+  void onRender(RenderApi &renderer, DeltaTime currentTime) override
+  {
+    detail::_implOnRender(
+        renderer, currentTime,
+        this->template query<Transform3dComponent, MeshComponent,
+                             MaterialComponent>());
+  }
   RenderPass getRenderPass() const override { return RenderPass::Dim3d; }
 };
 

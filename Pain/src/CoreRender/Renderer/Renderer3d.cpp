@@ -58,7 +58,8 @@ Stats Renderer3d::getSphereStatistics()
   return stats;
 }
 
-void Renderer3d::beginScene(DeltaTime globalTime, const PerspCameraComponent &pc,
+void Renderer3d::beginScene(DeltaTime globalTime,
+                            const PerspCameraComponent &pc,
                             const Transform3dComponent &tc)
 {
   PROFILE_FUNCTION();
@@ -118,9 +119,8 @@ void Renderer3d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
   // m.cubeBatch.shader.uploadUniformMat4("u_Transform", transform);
 }
 
-void Renderer3d::endScene(const Scene &scene)
+void Renderer3d::endScene()
 {
-  UNUSED(scene);
   // quadBatch->sendAllDataToOpenGL();
   // NOTE: sendAllDataToOpenGL probably won't be here in the future,
   // otherwise flush() wouldn't need to be a function
@@ -239,8 +239,7 @@ void Renderer3d::submitUVSphere(const glm::mat4 &transform, SphereDivision div,
     Shader *shaderPtr = key.shader;
     auto [newIt, _] = m_sphereBatchCache.emplace(
         std::move(key),
-        SphereBatch::create(TP_VEC2(getResolution(div)), "batch",
-                            shaderPtr));
+        SphereBatch::create(TP_VEC2(getResolution(div)), "batch", shaderPtr));
     it = newIt;
   }
   SphereBatch &batch = it->second;

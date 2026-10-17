@@ -37,8 +37,26 @@
 
 namespace pain
 {
+// Forward declarations to avoid heavy component includes.
+struct RotationComponent;
+struct TrailComponent;
+
 namespace Systems
 {
+
+namespace detail
+{
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<ParticleSprayComponent>> chunksSpray,
+    std::vector<reg::ChunkView<Transform2dComponent, TrailComponent>>
+        chunksTrail);
+void _implOnRender(
+    RenderApi &renderer, DeltaTime currentTime,
+    std::vector<reg::ChunkView<Transform2dComponent, ParticleSprayComponent,
+                               RotationComponent>>
+        chunksParticles);
+} // namespace detail
 
 /**
  * @brief Performs per-frame kinematic integration and rotation updates.
@@ -64,7 +82,8 @@ namespace Systems
  * @see System
  * @see IOnUpdate
  */
-struct ParticleSys : public System<WorldComponents>, IOnUpdate, IOnRender {
+template <reg::CompileTimeBitMaskType CM>
+struct ParticleSys : public System<CM>, IOnUpdate, IOnRender {
   /**
    * @brief Component tags required by this system.
    *
@@ -78,7 +97,7 @@ struct ParticleSys : public System<WorldComponents>, IOnUpdate, IOnRender {
                         ParticleSprayComponent>;
 
   /** @brief Inherit base System constructors. */
-  using System<WorldComponents>::System;
+  using System<CM>::System;
 
   /** @brief Prevent default construction. */
   ParticleSys() = delete;
@@ -94,9 +113,19 @@ struct ParticleSys : public System<WorldComponents>, IOnUpdate, IOnRender {
    * @note This method is invoked only because the system inherits from
    * IOnUpdate.
    */
-  void onUpdate(DeltaTime deltaTime) override;
-  void onRender(RenderApi &renderAPI, 
-                DeltaTime deltaTime) override;
+  void onUpdate(DeltaTime deltaTime) override
+  {
+    detail::_implOnUpdate(
+        deltaTime, this->template query<ParticleSprayComponent>(),
+        this->template query<Transform2dComponent, TrailComponent>());
+  }
+  void onRender(RenderApi &renderAPI, DeltaTime currentTime) override
+  {
+    detail::_implOnRender(
+        renderAPI, currentTime,
+        this->template query<Transform2dComponent, ParticleSprayComponent,
+                             RotationComponent>());
+  }
   RenderPass getRenderPass() const override { return RenderPass::Dim2d; }
 };
 

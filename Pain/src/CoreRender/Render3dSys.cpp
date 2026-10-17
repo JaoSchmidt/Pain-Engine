@@ -10,15 +10,12 @@
 #include "CoreRender/MeshComponent.h"
 #include "CoreRender/RenderContext.h"
 #include "CoreRender/Renderer/RenderApi.h"
-#include "CoreRender/SpriteComponent.h"
 #include "Debugging/Profiling.h"
 #include "Physics/Movement3dComponent.h"
-#include "Physics/MovementComponent.h"
-#include "Physics/RotationComponent.h"
 
 namespace pain
 {
-namespace Systems
+namespace Systems::detail
 {
 // NOTE: pay attention that the systems are communicating directly with the
 // renderAPI, meaning the state of the API (opengl, vulkan, directx) NEEDS to be
@@ -32,18 +29,18 @@ namespace Systems
 // =============================================================== //
 // Render Components
 // =============================================================== //
-void Render3d::onRender(RenderApi &renderer, 
-                        DeltaTime currentTime)
+void _implOnRender(
+    RenderApi &renderer, DeltaTime currentTime,
+    std::vector<
+        reg::ChunkView<Transform3dComponent, MeshComponent, MaterialComponent>>
+        chunksMesh)
 {
-  
   UNUSED(currentTime)
   PROFILE_FUNCTION();
   Renderer3d &renderer3d = renderer.m_renderer3d;
   {
     PROFILE_SCOPE("Scene::renderSystems - spheres");
-    auto chunks =
-        query<Transform3dComponent, MeshComponent, MaterialComponent>();
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksMesh) {
       const auto *t = std::get<0>(chunk.arrays);
       const auto *mesh = std::get<1>(chunk.arrays);
       const MaterialComponent *m = std::get<2>(chunk.arrays);
@@ -87,5 +84,5 @@ void Render3d::onRender(RenderApi &renderer,
   }
 }
 
-} // namespace Systems
+} // namespace Systems::detail
 } // namespace pain

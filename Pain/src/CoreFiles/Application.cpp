@@ -134,7 +134,7 @@ EngineContext::EngineContext(SDL_Window *window, void *sdlContext,
     :                                        //
       threadPool(ThreadPool{}),              //
       luaState(luabinder::createLuaState()), //
-      eventDispatcher(luaState),             //
+      eventDispatcher(&luaState),            //
       renderAPI(RenderApi::create()),        //
       renderPipeline(fbci.swapChainTarget
                          ? RenderPipeline::create(eventDispatcher)

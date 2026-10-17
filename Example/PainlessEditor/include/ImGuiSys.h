@@ -29,22 +29,32 @@
 #pragma once
 
 #include "Assets/DeltaTime.h"
-#include "Core.h"
-#include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
-
+#include "ImGuiComponent.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_sdl2.h"
 #include "imgui.h"
+#include "implot.h"
 
 namespace painless
 {
 struct ImGuiComponent;
 }
-namespace pain
+namespace pain::Systems
 {
-struct Renderer2d;
 
-namespace Systems
+namespace detail
 {
+void _construct(reg::EventDispatcher &eventDispatcher, SDL_GLContext context,
+                SDL_Window *window, ImGuiConfigFlags flags,
+                ImGuiIO *io = nullptr);
+void _destruct();
+void _implOnRender(
+    RenderApi &renderAPI, DeltaTime currentTime,
+    std::vector<reg::ChunkView<painless::ImGuiComponent>> chunks);
+void _implOnEvent(const SDL_Event &e,
+                  std::vector<reg::ChunkView<painless::ImGuiComponent>> chunks);
+} // namespace detail
 
 /**
  * @class ImGuiSys
@@ -56,7 +66,8 @@ namespace Systems
  *
  * The system assumes a single ImGui context is active at runtime.
  */
-struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
+template <reg::CompileTimeBitMaskType CM>
+struct ImGuiSys : public System<CM>, IOnRender, IOnEvent {
   /// @brief Component tags required by this system.
   using Tags = TypeList<painless::ImGuiComponent>;
 
@@ -74,23 +85,31 @@ struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
    * @param flags ImGui configuration flags used to initialize the context.
    */
   ImGuiSys(
-      reg::ArcheRegistry<UIComponents> &archetype,
-      reg::EventDispatcher &eventDispatcher, SDL_GLContext context,
-      SDL_Window *window,
+      reg::ArcheRegistry<CM> &archetype, reg::EventDispatcher &eventDispatcher,
+      SDL_GLContext context, SDL_Window *window,
       ImGuiConfigFlags flags =
           ImGuiConfigFlags_NavEnableKeyboard  // Enable Keyboard Controls
           | ImGuiConfigFlags_NavEnableGamepad // Enable Gamepad Controls
           | ImGuiConfigFlags_DockingEnable    // Enable Docking
-          | ImGuiConfigFlags_ViewportsEnable // Enable Multi-Viewport / Platform
-  );
+          | ImGuiConfigFlags_ViewportsEnable, // Enable Multi-Viewport/Platform
+      bool showAnotherWindow = false,
+      ImVec4 clearColor = ImVec4(0.45F, 0.55F, 0.60F, 1.00F))
+      : System<CM>(archetype, eventDispatcher),
+        m_showAnotherWindow(showAnotherWindow), m_clearColor(clearColor)
+  {
+    detail::_construct(eventDispatcher, context, window, flags, m_io);
+  }
   ImGuiSys(ImGuiSys &) = delete;
   ImGuiSys(ImGuiSys &&) = default;
   ImGuiSys &operator=(ImGuiSys &&) = delete;
   ImGuiSys &operator=(ImGuiSys &) = delete;
 
   /// @brief Destroy the ImGui system and release the ImGui context.
-  ~ImGuiSys();
-
+  ~ImGuiSys()
+  {
+    m_io = nullptr;
+    detail::_destruct();
+  }
   /**
    * @brief Render callback executed once per frame.
    *
@@ -100,7 +119,11 @@ struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
    * @param renderer Active renderer.
    * @param currentTime Current frame time.
    */
-  void onRender(RenderApi &renderAPI, DeltaTime currentTime) override;
+  void onRender(RenderApi &renderAPI, DeltaTime currentTime) override
+  {
+    detail::_implOnRender(renderAPI, currentTime,
+                          this->template query<painless::ImGuiComponent>());
+  }
 
   /**
    * @brief Event callback invoked for every incoming platform event.
@@ -110,7 +133,10 @@ struct ImGuiSys : public System<UIComponents>, IOnRender, IOnEvent {
    *
    * @param e Platform event.
    */
-  void onEvent(const SDL_Event &e) override;
+  void onEvent(const SDL_Event &e) override
+  {
+    detail::_implOnEvent(e, this->template query<painless::ImGuiComponent>());
+  }
 
   RenderPass getRenderPass() const override { return RenderPass::UI; };
 
@@ -122,5 +148,4 @@ private:
   ImVec4 m_clearColor;
 };
 
-} // namespace Systems
-} // namespace pain
+} // namespace pain::Systems

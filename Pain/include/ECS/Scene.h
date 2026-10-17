@@ -450,7 +450,7 @@ protected:
   /// Cached system lists for fast iteration.
   std::vector<IOnUpdate *> m_updateSystems;
   std::vector<IOnEvent *> m_eventSystems;
-  std::array<std::vector<IOnRender *>, (size_t)RenderPass::Count>
+  std::array<std::vector<IOnRender *>, static_cast<size_t>(RenderPass::Count)>
       m_renderSystems;
 
   /// Thread pool used by the scene.

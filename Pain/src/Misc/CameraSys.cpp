@@ -21,7 +21,9 @@ void onWindowResized(const SDL_Event &event, OrthoCameraComponent &cc)
   cc.setResolution(event.window.data1, event.window.data2);
 }
 
-void Systems::CameraSys::onEvent(const SDL_Event &event)
+void Systems::detail::_implOnEvent(
+    const SDL_Event &event,
+    std::vector<reg::ChunkView<OrthoCameraComponent>> chunks)
 {
   PROFILE_FUNCTION();
   PLOG_W("CameraSys is a WIP system, should not be used");
@@ -29,8 +31,6 @@ void Systems::CameraSys::onEvent(const SDL_Event &event)
   // =============================================================== //
   // Update Resolution change
   // =============================================================== //
-
-  auto chunks = query<OrthoCameraComponent>();
 
   for (auto &chunk : chunks) {
     auto *__restrict c = std::get<0>(chunk.arrays);

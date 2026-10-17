@@ -16,12 +16,15 @@
 namespace pain
 {
 
-namespace Systems
+namespace Systems::detail
 {
-void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
+void _implOnUpdate(
+    DeltaTime deltaTime,
+    std::vector<reg::ChunkView<ParticleSprayComponent>> chunksSpray,
+    std::vector<reg::ChunkView<Transform2dComponent, TrailComponent>>
+        chunksTrail)
 {
-  auto chunks = query<ParticleSprayComponent>();
-  for (auto &chunk : chunks) {
+  for (auto &chunk : chunksSpray) {
     auto *__restrict pc = std::get<0>(chunk.arrays);
     for (size_t i = 0; i < chunk.count; i++) {
       pc[i].elapsed += deltaTime;
@@ -29,9 +32,7 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
   }
   {
     PROFILE_SCOPE("Scene::updateSystems - trail");
-    auto chunks = query<Transform2dComponent, TrailComponent>();
-
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksTrail) {
       auto *tc = std::get<0>(chunk.arrays);
       auto *trail = std::get<1>(chunk.arrays);
 
@@ -51,20 +52,19 @@ void Systems::ParticleSys::onUpdate(DeltaTime deltaTime)
   }
 }
 
-void Systems::ParticleSys::onRender(RenderApi &renderer, 
-                                    DeltaTime currentTime)
+void _implOnRender(
+    RenderApi &renderer, DeltaTime currentTime,
+    std::vector<reg::ChunkView<Transform2dComponent, ParticleSprayComponent,
+                               RotationComponent>>
+        chunksParticles)
 {
-  
   PROFILE_FUNCTION();
   // =============================================================== //
   // Update Rotation Components
   // =============================================================== //
   {
     PROFILE_SCOPE("Scene::updateSystems - rotation");
-    auto chunks = query<Transform2dComponent, ParticleSprayComponent,
-                        RotationComponent>();
-
-    for (auto &chunk : chunks) {
+    for (auto &chunk : chunksParticles) {
       auto *__restrict tc = std::get<0>(chunk.arrays);
       auto *__restrict psc = std::get<1>(chunk.arrays);
       auto *__restrict rc = std::get<2>(chunk.arrays);
@@ -111,5 +111,5 @@ void Systems::ParticleSys::onRender(RenderApi &renderer,
   }
 }
 
-} // namespace Systems
+} // namespace Systems::detail
 } // namespace pain
