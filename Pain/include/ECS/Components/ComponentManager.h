@@ -25,9 +25,6 @@
 #pragma once
 #include "ECS/Registry/Bitmask.h"
 
-namespace pain
-{
-
 /**
  * @namespace pain::tag
  * @brief Component tag types used for compile-time registration.
@@ -123,5 +120,3 @@ static_assert(UIComponents::allRegistered<tag::ImGuiScript, tag::Transform2d>(),
 static_assert(XOR(WorldComponents::isRegistered<tag::SAPCollider>(),
                   WorldComponents::isRegistered<tag::Collider>()),
               "Cannot mix collider types togheter");
-
-} // namespace pain

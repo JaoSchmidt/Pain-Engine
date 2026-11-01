@@ -48,6 +48,7 @@ struct MaterialComponent {
   ~MaterialComponent() = default;
 
   MaterialComponent(Material &m) : m_material(&m) {};
+  MaterialComponent() = default;
   const Material *m_material = nullptr;
 };
 

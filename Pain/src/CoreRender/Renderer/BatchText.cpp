@@ -93,7 +93,6 @@ void TextBatch::allocateCharacter(
     const std::array<glm::vec2, 4> &textureCoordinate,
     const std::array<glm::vec4, 4> &textVertexPositions)
 {
-  PROFILE_FUNCTION();
   for (unsigned i = 0; i < 4; i++) {
     ptr->position = transform * textVertexPositions[i];
     ptr->color = tintColor.value;

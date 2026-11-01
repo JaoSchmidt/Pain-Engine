@@ -30,7 +30,6 @@
 
 #include "Assets/DeltaTime.h"
 #include "ECS/Systems.h"
-#include "ImGuiComponent.h"
 #include "imgui.h"
 
 namespace painless

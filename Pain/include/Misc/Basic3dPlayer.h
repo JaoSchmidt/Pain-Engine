@@ -23,11 +23,11 @@ reg::Entity createBasicCamera(pain::Scene &scene, int resolutionWidth,
                               float yaw, float pitch);
 } // namespace Dummy3dCamera
 
-class PerspCameraScript : public WorldObject
+class PerspCameraScript : public GameObject<Scene>
 {
 public:
   PerspCameraScript(reg::Entity entity, Scene &scene, float yaw, float pitch);
-  using WorldObject::WorldObject;
+  using GameObject<Scene>::GameObject;
   // PerspCameraScript(reg::Entity entity, Scene &scene);
   void onUpdate(DeltaTime deltaTimeSec);
   void onCreate();

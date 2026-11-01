@@ -12,12 +12,11 @@ namespace pain
 namespace ScriptAssetManager
 {
 
-class DefaultNativeScript : public WorldObject
+class DefaultNativeScript : public GameObject<Scene>
 {
   void onUpdate(DeltaTime deltaTimeSec);
   void onEvent(const SDL_Event &e);
-  void onRender(RenderContext &renderContext, 
-                DeltaTime currentTime);
+  void onRender(RenderContext &renderContext, DeltaTime currentTime);
   void onDestroy();
 };
 

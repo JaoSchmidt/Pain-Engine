@@ -18,7 +18,10 @@
 #pragma once
 
 #include "Core.h"
+#include "CoreFiles/ThreadPool.h"
+#include "ECS/Components/NativeScript.h"
 #include "ECS/Registry/Entity.h"
+#include "Events/EventDispatcher.h"
 #include "UIScene.h"
 #include "WorldScene.h"
 #include "aliases.h"
@@ -108,10 +111,14 @@ public:
    * @param entity Target entity.
    * @param scene Owning scene.
    */
-  GameObject(reg::Entity entity, SceneT &scene);
+  GameObject(reg::Entity entity, SceneT &scene)
+      : m_scene(scene), m_entity(entity) {};
 
   /** @brief Factory helper for creating a GameObject wrapper. */
-  static GameObject create(reg::Entity entity, SceneT &scene);
+  static GameObject create(reg::Entity entity, SceneT &scene)
+  {
+    return GameObject<SceneT>{entity, scene};
+  }
 
   // ------------------------------------------------------------
   // Self entity access
@@ -201,7 +208,7 @@ public:
   // ------------------------------------------------------------
 
   /** @brief Removes an entity from the scene. */
-  void removeEntity(reg::Entity entity);
+  void removeEntity(reg::Entity entity) { m_scene.get().removeEntity(entity); }
 
   // ------------------------------------------------------------
   // Queries
@@ -247,33 +254,32 @@ public:
   // ------------------------------------------------------------
 
   /** @brief Returns the wrapped entity identifier. */
-  reg::Entity getEntity() const { return m_entity; }
+  inline reg::Entity getEntity() const { return m_entity; }
 
   /** @brief Returns the scene event dispatcher. */
-  reg::EventDispatcher &getEventDispatcher();
-  const reg::EventDispatcher &getEventDispatcher() const;
+  inline reg::EventDispatcher &getEventDispatcher()
+  {
+    return m_scene.get().getEventDispatcher();
+  };
+  const reg::EventDispatcher &getEventDispatcher() const
+  {
+    return std::as_const(m_scene.get()).getEventDispatcher();
+  };
 
   /** @brief Returns the owning scene. */
-  SceneT &getScene();
-  const SceneT &getScene() const;
+  SceneT &getScene() { return m_scene.get(); }
+  const SceneT &getScene() const { return std::as_const(m_scene).get(); }
 
   /** @brief Returns the scene thread pool. */
-  ThreadPool &getThreadPool();
-  const ThreadPool &getThreadPool() const;
+  ThreadPool &getThreadPool() { return m_scene.get().getThreadPool(); }
+  const ThreadPool &getThreadPool() const
+  {
+    return std::as_const(m_scene.get()).getThreadPool();
+  }
 
 private:
   aRefWrap<SceneT> m_scene;
   reg::Entity m_entity;
 };
-
-// Explicit instantiation declarations
-extern template class GameObject<Scene>;
-extern template class GameObject<UIScene>;
-
-/** @brief Alias for a world script object. */
-using WorldObject = GameObject<Scene>;
-
-/** @brief Alias for a UI script object. */
-using UIObject = GameObject<UIScene>;
 
 } // namespace pain

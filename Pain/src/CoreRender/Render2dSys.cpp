@@ -51,7 +51,7 @@ void _implOnRender(
         chunksText)
 {
   UNUSED(currentTime)
-  PROFILE_FUNCTION();
+  PROFILE_SCOPE("Scene::renderSystems - Render2d");
   Renderer2d &renderer2d = renderer.m_renderer2d;
   {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");

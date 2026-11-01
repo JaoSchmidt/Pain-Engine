@@ -2,7 +2,6 @@
 cmake_minimum_required(VERSION 3.30)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_BUILD_TYPE "Debug")
 set(PROJECT_NAME "Pain Engine")
 set(LIBRARY_NAME "Pain")
 # NOTE: OPENGL is the only alternative atm
@@ -47,7 +46,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
             -Wno-sign-conversion
             -fdiagnostics-color=always
             -std=c++20
-            # specifc to gcc -fmodules-ts
+            # specific to clang
+            -Wreturn-std-move
+            -Wself-move
             -Wpessimizing-move)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL
                                                 "Release")
@@ -64,27 +65,32 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL
             -Wno-sign-conversion
             -fdiagnostics-color=always
             -std=c++20
+            -Wpessimizing-move
             # specifc to gcc -fmodules-ts
-            -Wpessimizing-move)
+  )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL
                                                   "Debug")
   remove_definitions("-DNDEBUG")
   target_compile_options(
     ${LIBRARY_NAME}
     PRIVATE -Wall
-            -g
-            -O0
+            -O3
             -Wextra
             -Wpedantic
             -Wconversion
-            # -Wno-unused-parameter -Wmissing-field-initializers
-            # -Wno-sign-conversion -fmodules -fmodules-cache-path=./module-cache
+            -Wno-unused-parameter
+            -Wmissing-field-initializers
+            -Wno-sign-conversion
+            # -Wno-unused-parameter # ------------------------------------
+            # -Wmissing-field-initializers # -------------------------------
+            # -Wno-sign-conversion  # ---------------------------------------
+            # -fmodules # -----------------------------------------------
+            # -fmodules-cache-path=./module-cache # -------------------------
             -ftemplate-backtrace-limit=0
             -fcolor-diagnostics
             -std=c++20
             # specific to clang
-            -Wreturn-std-move
-            -Wself-move)
+            -Wpessimizing-move)
 elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   remove_definitions("-DNDEBUG")
   target_compile_options(

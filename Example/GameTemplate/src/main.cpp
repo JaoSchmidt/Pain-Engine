@@ -34,12 +34,12 @@ pain::Application *pain::createApplication()
   scene.createComponents(scene.getEntity(), cmp::Script{});
 
   // Individually add each system
-  scene.addSystem<Systems::SweepAndPruneSys<pain::WorldComponents>>();
-  scene.addSystem<Systems::Render2d<pain::WorldComponents>>();
-  scene.addSystem<Systems::NativeScript<pain::WorldComponents>>();
-  scene.addSystem<Systems::LuaScript<pain::WorldComponents>>();
-  scene.addSystem<Systems::Kinematics<pain::WorldComponents>>();
-  scene.addSystem<Systems::LuaSchedulerSys<pain::WorldComponents>>();
+  scene.addSystem<Systems::SweepAndPruneSys<WorldComponents>>();
+  scene.addSystem<Systems::Render2d<WorldComponents>>();
+  scene.addSystem<Systems::NativeScript<WorldComponents>>();
+  scene.addSystem<Systems::LuaScript<WorldComponents>>();
+  scene.addSystem<Systems::Kinematics<WorldComponents>>();
+  scene.addSystem<Systems::LuaSchedulerSys<WorldComponents>>();
 
   // (Optional) Defining a small native script (MainScript) for the world scene
   // that will be executed on. Must have added System::NativeScript

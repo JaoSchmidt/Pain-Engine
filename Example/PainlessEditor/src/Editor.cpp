@@ -186,7 +186,7 @@ void Editor::onRender(pain::RenderApi &renderAPI, pain::DeltaTime currentTime)
 Editor &Editor::create(pain::UIScene &uiScene, pain::Application &app)
 {
   logWrapper::s_initEditorLogger();
-  uiScene.addSystem<pain::Systems::ImGuiSys<pain::UIComponents>>(
+  uiScene.addSystem<pain::Systems::ImGuiSys<UIComponents>>(
       app.getRenderContext(), app.getRenderWindow());
   uiScene.createComponents(uiScene.getEntity(), painless::ImGuiComponent{});
   Editor &editor =

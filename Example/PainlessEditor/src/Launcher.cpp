@@ -166,7 +166,7 @@ pain::Application *createLauncher()
                                          scene.getEntity()) //
   );
   pain::UIScene &uiscene = settingsApp->createUIScene();
-  uiscene.addSystem<pain::Systems::ImGuiSys<pain::UIComponents>>(
+  uiscene.addSystem<pain::Systems::ImGuiSys<UIComponents>>(
       settingsApp->getRenderContext(), settingsApp->getRenderWindow());
   uiscene.createComponents(uiscene.getEntity(), painless::ImGuiComponent{});
   painless::emplaceImGuiScript<ImGuiLauncher>(uiscene.getEntity(), uiscene,

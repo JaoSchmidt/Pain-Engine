@@ -82,7 +82,6 @@ void TriBatch::allocateTri(const glm::mat4 &transform, const Color &tintColor)
       glm::vec4(0.5F, -0.5F, 0.F, 1.F),
       glm::vec4(-0.5F, -0.5F, 0.F, 1.F),
   };
-  PROFILE_FUNCTION();
   for (unsigned i = 0; i < 3; i++) {
     ptr->position = transform * TriVertexPositions[i];
     ptr->color = tintColor.value;

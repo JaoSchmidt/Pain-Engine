@@ -1,10 +1,17 @@
 # Root CMakeLists.txt for Pain Engine Game Projects This file is part of the
 # Pain Engine repository. Your game lives inside Example/ alongside other games.
 #
-# Project Structure: Pain-Engine/ ├── Pain/                  (Engine source) └──
-# Example/ └── GameTemplate/      (this file) ├── CMakeLists.txt ├── src/ (your
-# game source files) ├── include/       (your game headers) └── resources/ (your
-# game assets)
+# cmake-format: off
+# Project Structure: 
+# Pain-Engine/    
+# ├── Pain/ (Engine source)
+# └── Example/ 
+#     └── GameTemplate/      (this file)
+#         ├── CMakeLists.txt
+#         ├── src/ (your game source files)
+#         ├── include/       (your game headers)
+#         └── resources/ (your game assets)
+# cmake-format: on
 
 cmake_minimum_required(VERSION 3.22)
 
@@ -40,9 +47,9 @@ endif()
 
 # =========== Pain Engine Integration ==================================
 # Link the engine library to your game executable
-target_link_libraries(${TARGET_NAME} PUBLIC 
-  Pain #
-  Painless #
+target_link_libraries(
+  ${TARGET_NAME} PUBLIC Pain #
+                        Painless #
 )
 
 # =========== Resources Management ==================================

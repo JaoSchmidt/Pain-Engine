@@ -214,7 +214,6 @@ void SphereBatch::allocateSphereUV(const glm::mat4 &transform,
                                    const Color &tintColor, float tilingFactor,
                                    float textureIndex)
 {
-  PROFILE_FUNCTION();
   ptr->color = tintColor.value;
   ptr->texIndex = textureIndex;
   ptr->tilingFactor = tilingFactor;

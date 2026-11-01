@@ -16,7 +16,7 @@
     },
     {
       "name": "release",
-      "displayName": "Default (GCC + Ninja + Release)",
+      "displayName": "Release (Clang + Ninja + Release)",
       "generator": "Ninja",
       "binaryDir": "target",
       "cacheVariables": {

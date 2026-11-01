@@ -66,7 +66,7 @@ private:
 
 public:
   /// @brief ECS component tag used for compile-time registration.
-  using tag = pain::tag::ImGuiScript;
+  using tag = tag::ImGuiScript;
   /**
    * @brief Pointer to the bound UI script instance (type-erased).
    *

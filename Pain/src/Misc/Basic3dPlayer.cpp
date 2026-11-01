@@ -30,7 +30,7 @@ reg::Entity Dummy3dCamera::create(pain::Scene &scene, int resolutionWidth,
       pain::RotationComponent{},            //
       pain::Movement3dComponent{},          //
       PerspCameraComponent::create(true, resolutionWidth, resolutionHeight,
-                               fieldOfViewDegrees, entity, yaw, pitch), //
+                                   fieldOfViewDegrees, entity, yaw, pitch), //
       pain::NativeScriptComponent{});
   pain::Scene::emplaceScript<PerspCameraScript>(entity, scene, yaw, pitch);
   return entity;
@@ -45,7 +45,7 @@ reg::Entity Dummy3dCamera::createBasicCamera(pain::Scene &scene,
   scene.createComponents(
       entity, pain::Transform3dComponent{},
       PerspCameraComponent::create(true, resolutionWidth, resolutionHeight,
-                                     fieldOfViewDegrees, entity, yaw, pitch) //
+                                   fieldOfViewDegrees, entity, yaw, pitch) //
   );
   return entity;
 }
@@ -73,11 +73,9 @@ void PerspCameraScript::onCreate()
   setMovementState<false>();
 }
 
-// PerspCameraScript::PerspCameraScript(reg::Entity entity, Scene &scene)
-//     : WorldObject(entity, scene) {};
 PerspCameraScript::PerspCameraScript(reg::Entity entity, Scene &scene,
                                      float yaw, float pitch)
-    : WorldObject(entity, scene), m_yaw(yaw), m_pitch(pitch) {};
+    : GameObject<Scene>(entity, scene), m_yaw(yaw), m_pitch(pitch) {};
 
 void PerspCameraScript::onUpdate(DeltaTime deltaTimeSec)
 {

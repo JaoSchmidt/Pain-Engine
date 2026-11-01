@@ -26,10 +26,10 @@ reg::Entity createStaticCamera(pain::Scene &scene, int resolutionWidth,
                                glm::vec2 center = {0, 0});
 } // namespace Dummy2dCamera
 
-class OrthoCameraScript : public WorldObject
+class OrthoCameraScript : public GameObject<Scene>
 {
 public:
-  using WorldObject::WorldObject;
+  using GameObject<Scene>::GameObject;
   void onUpdate(DeltaTime deltaTimeSec);
   void onEvent(const SDL_Event &e);
 

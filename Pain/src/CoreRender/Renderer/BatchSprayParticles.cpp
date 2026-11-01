@@ -122,7 +122,6 @@ void SprayBatch::allocateSprayParticles(const glm::vec2 &normal,
                                         const DeltaTime startTime,
                                         const glm::vec2 &emitStart)
 {
-  PROFILE_FUNCTION();
   ptr->normal = normal;
   ptr->startTime = startTime.getSecondsf();
   ptr->emitStart = emitStart;

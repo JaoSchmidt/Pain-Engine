@@ -117,7 +117,6 @@ void QuadBatch::flush(Texture **textures, uint32_t textureCount, Shader *shader)
 void QuadBatch::allocateQuad(const glm::mat4 &transform, const Color &tintColor,
                              const float tilingFactor, const float textureIndex)
 {
-  PROFILE_FUNCTION();
   ptr->color = tintColor.value;
   ptr->texIndex = textureIndex;
   ptr->tilingFactor = tilingFactor;

@@ -112,4 +112,6 @@ struct Pain {
   /// @brief Runs an application, deletes it, and returns its end flags.
   static EndGameFlags runAndDeleteApplication(Application *app);
 };
+using UIObject = GameObject<UIScene>;
+using WorldObject = GameObject<Scene>;
 } // namespace pain

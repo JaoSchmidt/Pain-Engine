@@ -310,7 +310,6 @@ private:
   template <typename NRVO>
     requires std::same_as<std::invoke_result_t<NRVO>, M>
   Renderer2d(NRVO &&factory) : m(factory()){};
-  friend class Application;
 };
 
 } // namespace pain

@@ -102,7 +102,7 @@ struct CameraResolution {
  * Used for 2D rendering and editor-style projections.
  */
 struct OrthoCameraComponent : CameraResolution {
-  using tag = pain::tag::OrthoCamera;
+  using tag = tag::OrthoCamera;
   float m_zoomLevel = 1.0F;
   pain::OrthographicMatrices m_matrices;
 
@@ -148,7 +148,7 @@ private:
  * Used for 3D rendering.
  */
 struct PerspCameraComponent : CameraResolution {
-  using tag = pain::tag::PerspCamera;
+  using tag = tag::PerspCamera;
   float m_fieldOfViewDegrees = 90.0F;
   pain::PerspectiveMatrices m_matrices;
 

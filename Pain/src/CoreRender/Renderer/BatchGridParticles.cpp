@@ -85,7 +85,6 @@ void GridParticleBatch::flush()
 void GridParticleBatch::allocateGridParticles(Color color,
                                               const glm::vec2 &direction)
 {
-  PROFILE_FUNCTION();
   // constexpr glm::vec2 SprayVertexPositions[4] = {
   //     glm::vec2(-0.5f, -0.5f),
   //     glm::vec2(0.5f, -0.5f),

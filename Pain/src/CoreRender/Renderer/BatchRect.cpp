@@ -100,7 +100,6 @@ void RectBatch::allocateRect(const glm::mat4 &transform, const Color &tintColor,
                              const float tilingFactor, const float textureIndex,
                              const std::array<glm::vec2, 4> &textureCoordinate)
 {
-  PROFILE_FUNCTION();
   constexpr glm::vec4 RectVertexPositions[4] = {
       glm::vec4(-0.5F, -0.5F, 0.F, 1.F),
       glm::vec4(0.5F, -0.5F, 0.F, 1.F),

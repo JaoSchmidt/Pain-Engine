@@ -249,7 +249,6 @@ void Renderer2d::submitRect(const glm::vec2 &position, const glm::vec2 &size,
 void Renderer2d::submitRect(const glm::mat4 &transform, RenderLayer layer,
                             const Material &material, Color overrideColor)
 {
-  PROFILE_FUNCTION();
   MaterialKey key = {.shader = material.m_shader,
                      .params = material.m_params,
                      .flags = material.m_flags,
@@ -332,7 +331,6 @@ void Renderer2d::submitQuad(const glm::vec2 &position, float size,
                             const float rotationRadians, RenderLayer layer,
                             const Material &material, Color overrideColor)
 {
-  PROFILE_FUNCTION();
   const glm::mat4 transform =
       getUniformTransform(position, size, rotationRadians);
   submitQuad(std::move(transform), layer, material, overrideColor);
@@ -347,7 +345,6 @@ void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
 void Renderer2d::submitQuad(const glm::mat4 &transform, RenderLayer layer,
                             const Material &material, Color overrideColor)
 {
-  PROFILE_FUNCTION();
   MaterialKey key = {.shader = material.m_shader,
                      .params = material.m_params,
                      .flags = material.m_flags,
@@ -425,7 +422,6 @@ void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
                            RenderLayer layer, const Material &material,
                            Color overrideColor)
 {
-  PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size);
   submitTri(transform, layer, material, overrideColor);
 }
@@ -442,7 +438,6 @@ void Renderer2d::submitTri(const glm::vec2 &position, const glm::vec2 &size,
                            const Material &material, Color overrideColor)
 {
 
-  PROFILE_FUNCTION();
   const glm::mat4 transform = getTransform(position, size, rotationRadians);
   submitTri(transform, layer, material, overrideColor);
 }
@@ -456,7 +451,6 @@ void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
 void Renderer2d::submitTri(const glm::mat4 &transform, RenderLayer layer,
                            const Material &material, Color overrideColor)
 {
-  PROFILE_FUNCTION();
   MaterialKey key = MaterialKey{.shader = material.m_shader,
                                 .params = material.m_params,
                                 .flags = material.m_flags,
@@ -538,7 +532,6 @@ void Renderer2d::submitString(const glm::mat4 &transform,
                               const std::string_view &text, const Font &font,
                               Color color, TextAlign align)
 {
-  PROFILE_FUNCTION();
   const auto &fontGeometry = font.getFontGeometry();
   const auto &metrics = fontGeometry.getMetrics();
   const double &spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
@@ -685,7 +678,6 @@ void Renderer2d::removeTexture(const Texture &texture)
 glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
                                           float scale)
 {
-  PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
          glm::scale(glm::mat4(1.0F), {scale, scale, 1.0F});
 }
@@ -693,7 +685,6 @@ glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
                                           float scale,
                                           const float rotationRadians)
 {
-  PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
          glm::rotate(glm::mat4(1.0F), rotationRadians, {0.0F, 0.0F, 1.0F}) *
          glm::scale(glm::mat4(1.0F), {scale, scale, 1.0F});
@@ -701,7 +692,6 @@ glm::mat4 Renderer2d::getUniformTransform(const glm::vec2 &position,
 glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
                                    const glm::vec2 &size)
 {
-  PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
          glm::scale(glm::mat4(1.0F), {size.x, size.y, 1.0F});
 }
@@ -710,7 +700,6 @@ glm::mat4 Renderer2d::getTransform(const glm::vec2 &position,
                                    const glm::vec2 &size,
                                    const float rotationRadians)
 {
-  PROFILE_FUNCTION();
   return glm::translate(glm::mat4(1.0F), {position, 0.F}) *
          glm::rotate(glm::mat4(1.0F), rotationRadians, {0.0F, 0.0F, 1.0F}) *
          glm::scale(glm::mat4(1.0F), {size.x, size.y, 1.0F});
@@ -729,7 +718,6 @@ void Renderer2d::setCellGridSize(float cellsize)
 
 void Renderer2d::beginSprayParticle(const ParticleSprayComponent &psc)
 {
-  PROFILE_FUNCTION();
   auto it = m.sprayBatchCache.find(psc.layer);
   if (it == m.sprayBatchCache.end()) {
     auto [newIt, inserted] =

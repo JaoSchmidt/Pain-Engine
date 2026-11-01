@@ -24,7 +24,7 @@ namespace painless
  * @return Reference to the script instance.
  */
 template <typename S>
-  requires(pain::UIComponents::isRegistered<ImGuiComponent>())
+  requires(UIComponents::isRegistered<ImGuiComponent>())
 S &getScript(reg::Entity entity, pain::UIScene &uiscene)
 {
   ImGuiComponent &nsc = uiscene.getComponent<ImGuiComponent>(entity);
@@ -44,7 +44,7 @@ S &getScript(reg::Entity entity, pain::UIScene &uiscene)
  * @return Reference to the bound script instance.
  */
 template <typename N>
-  requires(pain::UIComponents::isRegistered<ImGuiComponent>())
+  requires(UIComponents::isRegistered<ImGuiComponent>())
 N &emplaceImGuiScript(reg::Entity entity, pain::UIScene &scene, N &&n)
 {
   ImGuiComponent &nsc = scene.getComponent<ImGuiComponent>(entity);
@@ -70,7 +70,7 @@ N &emplaceImGuiScript(reg::Entity entity, pain::UIScene &scene, N &&n)
  */
 template <typename T, typename... Args>
   requires std::constructible_from<T, reg::Entity, pain::UIScene &, Args...> &&
-           (pain::UIComponents::isRegistered<ImGuiComponent>())
+           (UIComponents::isRegistered<ImGuiComponent>())
 T &emplaceImGuiScript(reg::Entity entity, pain::UIScene &scene, Args &&...args)
 {
   ImGuiComponent &nsc = scene.getComponent<ImGuiComponent>(entity);

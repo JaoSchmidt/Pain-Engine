@@ -28,8 +28,8 @@ template <typename Component, reg::CompileTimeBitMaskType Manager>
 void onComponentAdded(AbstractScene<Manager> &scene, reg::Entity entity)
 {
   if constexpr (std::is_same_v<Component, SAPCollider>) {
-    Systems::SweepAndPruneSys<pain::WorldComponents> *s =
-        scene.template getSys<Systems::SweepAndPruneSys<pain::WorldComponents>>();
+    Systems::SweepAndPruneSys<WorldComponents> *s =
+        scene.template getSys<Systems::SweepAndPruneSys<WorldComponents>>();
     if (s) {
       s->insertCollider(entity);
     } else {

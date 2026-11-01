@@ -22,7 +22,6 @@
 namespace pain
 {
 struct RenderApi;
-class Application;
 
 /**
  * @brief Generic scene abstraction owning an ECS registry, systems, scripting,
@@ -75,6 +74,7 @@ public:
     m_entityNames.emplace(e, name);
     return e;
 #else
+    UNUSED(name);
     return m_registry.createEntity();
 #endif
   }

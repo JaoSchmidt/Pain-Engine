@@ -178,22 +178,24 @@ EndGameFlags Application::run()
     // Calculate FPS sample
     // =============================================================== //
 
-    m_config.fpsSamples[m_config.currentSample] =
-        static_cast<double>(DeltaTime::oneSecond()) /
-        deltaTime.getNanoSeconds();
-    m_config.currentSample =
-        (m_config.currentSample + 1) % m_config.FPS_SAMPLE_COUNT;
+    {
+      m_config.fpsSamples[m_config.currentSample] =
+          static_cast<double>(DeltaTime::oneSecond()) /
+          deltaTime.getNanoSeconds();
+      m_config.currentSample =
+          (m_config.currentSample + 1) % m_config.FPS_SAMPLE_COUNT;
 
-    if (m_config.currentSample % 64 == 0) { // update displayed fps
-      m_config.currentTPS = 0.0;
-      for (const double fpsSample : m_config.fpsSamples) {
-        m_config.currentTPS += fpsSample;
+      if (m_config.currentSample % 64 == 0) { // update displayed fps
+        m_config.currentTPS = 0.0;
+        for (const double fpsSample : m_config.fpsSamples) {
+          m_config.currentTPS += fpsSample;
+        }
+        m_config.currentTPS /= m_config.FPS_SAMPLE_COUNT;
+        // IMGUI_PLOG_NAME("FPS", [m_config.currentTPS]() {
+        //   const std::string fps = "FPS: " + std::to_string(currentTPS);
+        //   ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
+        // });
       }
-      m_config.currentTPS /= m_config.FPS_SAMPLE_COUNT;
-      // IMGUI_PLOG_NAME("FPS", [m_config.currentTPS]() {
-      //   const std::string fps = "FPS: " + std::to_string(currentTPS);
-      //   ImGui::TextColored(ImVec4(1, 1, 0, 1), "%s", fps.c_str());
-      // });
     }
 
     // =============================================================== //
@@ -257,6 +259,9 @@ EndGameFlags Application::run()
       m_ctx.renderPipeline.pipeline(m_ctx.renderAPI, !m_config.isRendering,
                                     elapsedTime, m_runtime.worldScene,
                                     m_runtime.uiScene.get());
+    }
+    {
+      PROFILE_SCOPE("Application::run - Swap Window");
       P_ASSERT(m_ctx.window != nullptr, "m_window is nullptr")
       SDL_GL_SwapWindow(m_ctx.window);
     }
@@ -264,11 +269,13 @@ EndGameFlags Application::run()
     // =============================================================== //
     // Frame rate limiting
     // =============================================================== //
-    if (deltaTime.getSeconds() < m_config.fixedFPS) {
+    {
       PROFILE_SCOPE("Application::run - delayed");
-      uint32_t sleepMs = static_cast<uint32_t>(
-          (m_config.fixedFPS - deltaTime.getSeconds()) * 1000.0);
-      HighResolutionTimer::sleep(sleepMs);
+      if (deltaTime.getSeconds() < m_config.fixedFPS) {
+        uint32_t sleepMs = static_cast<uint32_t>(
+            (m_config.fixedFPS - deltaTime.getSeconds()) * 1000.0);
+        HighResolutionTimer::sleep(sleepMs);
+      }
     }
   };
 

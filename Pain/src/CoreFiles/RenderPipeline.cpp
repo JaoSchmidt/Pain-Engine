@@ -7,9 +7,6 @@
 #include "CoreFiles/RenderPipeline.h"
 #include "CoreRender/CameraComponent.h"
 #include "CoreRender/Renderer/RenderApi.h"
-#include "Debugging/Profiling.h"
-#include "ECS/UIScene.h"
-#include "ECS/WorldScene.h"
 #include "Misc/Events.h"
 #include "Physics/Movement3dComponent.h"
 #include "Physics/MovementComponent.h"
@@ -32,59 +29,10 @@ constexpr std::array<glm::vec4, 3> s_colorOptions = {
 constexpr glm::vec4 s_clearColor = s_colorOptions[1];
 } // namespace
 
-template <typename Camera>
-  requires std::same_as<Camera, PerspCameraComponent> ||
-           std::same_as<Camera, OrthoCameraComponent>
-void resizeFBViewport(const ImGuiViewportChangeEvent &event, Camera &cc,
-                      FrameBuffer &frameBuffer)
-{
-  int newx = static_cast<int>(event.newSize.x);
-  int newy = static_cast<int>(event.newSize.y);
-  frameBuffer.resizeFrameBuffer(newx, newy);
-  cc.setProjection(newx, newy);
-}
-
 RenderPipeline::RenderPipeline(FrameBuffer frameBuffer,
                                reg::EventDispatcher &eventDispatcher)
     : m_frameBuffer(std::move(frameBuffer)),
       m_eventDispatcher(eventDispatcher) {};
-
-void RenderPipeline::subscribeToEvents(Scene &scene, RenderApi &renderAPI)
-{
-  m_eventDispatcher.subscribe<ImGuiViewportChangeEvent>(
-      [&](const ImGuiViewportChangeEvent &e) {
-        auto chunks = scene.query<OrthoCameraComponent>();
-        for (auto &chunk : chunks) {
-          auto *c = std::get<0>(chunk.arrays);
-
-          for (size_t i = 0; i < chunk.count; ++i) {
-            resizeFBViewport(e, c[i], m_frameBuffer);
-          }
-        }
-        auto chunks2 = scene.query<PerspCameraComponent>();
-        for (auto &chunk : chunks2) {
-          auto *c = std::get<0>(chunk.arrays);
-
-          for (size_t i = 0; i < chunk.count; ++i) {
-            resizeFBViewport(e, c[i], m_frameBuffer);
-          }
-        }
-      });
-  m_eventDispatcher.subscribe<ChangeActiveCameraEvent>(
-      [&](const ChangeActiveCameraEvent &e) {
-        auto &cam = scene.getComponent<OrthoCameraComponent>(e.cam);
-        if (cam.m_active) {
-          auto chunks = scene.query<OrthoCameraComponent>();
-          for (auto &chunk : chunks) {
-            auto *c = std::get<0>(chunk.arrays);
-            for (size_t i = 0; i < chunk.count; ++i)
-              c[i].m_active = false;
-          }
-          renderAPI.setViewPort(cam.m_screenPosition.x, cam.m_screenPosition.y,
-                                cam.m_resolution.x, cam.m_resolution.y);
-        }
-      });
-};
 
 RenderPipeline RenderPipeline::create(reg::EventDispatcher &eventDispatcher)
 
@@ -122,33 +70,77 @@ void resizeCamera(const SDL_Event &event, Camera &c, FrameBuffer &fb,
   }
 }
 
-void RenderPipeline::onWindowResized(const SDL_Event &event,
-                                     RenderApi &renderer, Scene &scene)
+namespace detail
 {
-  {
-    auto chunks = scene.query<OrthoCameraComponent>();
-    for (auto &chunk : chunks) {
-      auto *c = std::get<0>(chunk.arrays);
 
-      for (size_t i = 0; i < chunk.count; ++i) {
-        if (event.type == SDL_WINDOWEVENT) {
-          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-            resizeCamera(event, c[i], m_frameBuffer, renderer);
-          }
+void _implResizeFBViewport(
+    const ImGuiViewportChangeEvent &event,
+    std::vector<reg::ChunkView<pain::OrthoCameraComponent>> chunks,
+    FrameBuffer &frameBuffer)
+{
+  const int newx = static_cast<int>(event.newSize.x);
+  const int newy = static_cast<int>(event.newSize.y);
+  frameBuffer.resizeFrameBuffer(newx, newy);
+  for (auto &chunk : chunks) {
+    auto *c = std::get<0>(chunk.arrays);
+    for (size_t i = 0; i < chunk.count; ++i) {
+      c[i].setProjection(newx, newy);
+    }
+  }
+}
+
+void _implResizeFBViewport(
+    const ImGuiViewportChangeEvent &event,
+    std::vector<reg::ChunkView<pain::PerspCameraComponent>> chunks,
+    FrameBuffer &frameBuffer)
+{
+  const int newx = static_cast<int>(event.newSize.x);
+  const int newy = static_cast<int>(event.newSize.y);
+  frameBuffer.resizeFrameBuffer(newx, newy);
+  for (auto &chunk : chunks) {
+    auto *c = std::get<0>(chunk.arrays);
+    for (size_t i = 0; i < chunk.count; ++i) {
+      c[i].setProjection(newx, newy);
+    }
+  }
+}
+
+void _implChangeActiveCameraEvent(
+    std::vector<reg::ChunkView<pain::OrthoCameraComponent>> chunks,
+    pain::OrthoCameraComponent &cam, RenderApi &renderAPI)
+{
+  for (auto &chunk : chunks) {
+    auto *c = std::get<0>(chunk.arrays);
+    for (size_t i = 0; i < chunk.count; ++i)
+      c[i].m_active = false;
+  }
+  renderAPI.setViewPort(cam.m_screenPosition.x, cam.m_screenPosition.y,
+                        cam.m_resolution.x, cam.m_resolution.y);
+}
+
+void _implOnWindowResized(
+    const SDL_Event &event, RenderApi &renderer, FrameBuffer &frameBuffer,
+    std::vector<reg::ChunkView<pain::OrthoCameraComponent>> ocChunks,
+    std::vector<reg::ChunkView<pain::PerspCameraComponent>> pcChunks)
+{
+  for (auto &chunk : ocChunks) {
+    auto *c = std::get<0>(chunk.arrays);
+
+    for (size_t i = 0; i < chunk.count; ++i) {
+      if (event.type == SDL_WINDOWEVENT) {
+        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+          resizeCamera(event, c[i], frameBuffer, renderer);
         }
       }
     }
   }
-  {
-    auto chunks = scene.query<PerspCameraComponent>();
-    for (auto &chunk : chunks) {
-      auto *c = std::get<0>(chunk.arrays);
+  for (auto &chunk : pcChunks) {
+    auto *c = std::get<0>(chunk.arrays);
 
-      for (size_t i = 0; i < chunk.count; ++i) {
-        if (event.type == SDL_WINDOWEVENT) {
-          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-            resizeCamera(event, c[i], m_frameBuffer, renderer);
-          }
+    for (size_t i = 0; i < chunk.count; ++i) {
+      if (event.type == SDL_WINDOWEVENT) {
+        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+          resizeCamera(event, c[i], frameBuffer, renderer);
         }
       }
     }
@@ -157,9 +149,11 @@ void RenderPipeline::onWindowResized(const SDL_Event &event,
 
 std::optional<std::pair<const std::reference_wrapper<OrthoCameraComponent>,
                         const std::reference_wrapper<Transform2dComponent>>>
-retrieve2dCamera(Scene &scene)
+_implRetrieve2dCamera(
+    std::vector<
+        reg::ChunkView<pain::OrthoCameraComponent, pain::Transform2dComponent>>
+        chunks)
 {
-  auto chunks = scene.query<OrthoCameraComponent, Transform2dComponent>();
   for (auto &chunk : chunks) {
     auto *c = std::get<0>(chunk.arrays);
     auto *t = std::get<1>(chunk.arrays);
@@ -173,10 +167,12 @@ retrieve2dCamera(Scene &scene)
 }
 std::optional<std::pair<const std::reference_wrapper<PerspCameraComponent>,
                         const std::reference_wrapper<Transform3dComponent>>>
-retrieve3dCamera(Scene &scene)
+_implRetrieve3dCamera(
+    std::vector<
+        reg::ChunkView<pain::PerspCameraComponent, pain::Transform3dComponent>>
+        chunks)
 {
   // TODO: implement for 3D OrthoCameras?
-  auto chunks = scene.query<PerspCameraComponent, Transform3dComponent>();
   for (auto &chunk : chunks) {
     auto *c = std::get<0>(chunk.arrays);
     auto *t = std::get<1>(chunk.arrays);
@@ -189,45 +185,6 @@ retrieve3dCamera(Scene &scene)
   return {};
 }
 
-void RenderPipeline::pipeline(RenderApi &renderAPI, bool isRenderingEnabled,
-                              DeltaTime currentTime, Scene &worldScene,
-                              UIScene *uiScene)
-{
-  PROFILE_FUNCTION();
-  m_frameBuffer.bind();
-  backend::clear();
-  // TODO: putting isRenderingEnabled here means there is no need for passing it
-  // through every single onRender function like we are doing now. Removing
-  // should be a task eventually
-  if (!isRenderingEnabled) {
-    auto wrap2d = retrieve2dCamera(worldScene);
-    auto wrap3d = retrieve3dCamera(worldScene);
-
-    // Scripts don't actually use renderAPI, they fill the render context
-    // worldScene.renderSystems(RenderPass::Script, renderAPI, currentTime);
-
-    P_ASSERT_W(wrap3d || wrap2d, "No active default camera");
-    if (wrap3d) {
-      backend::enable3d();
-      renderAPI.m_renderer3d.beginScene(currentTime, wrap3d->first,
-                                        wrap3d->second);
-      worldScene.renderSystems(RenderPass::Dim3d, renderAPI, currentTime);
-      renderAPI.m_renderer3d.endScene();
-    }
-    if (wrap2d) {
-      backend::disable3d();
-      renderAPI.m_renderer2d.beginScene();
-      // HACK: Temporary using render api directly inside scripts
-      worldScene.renderSystems(RenderPass::Dim2d, renderAPI, currentTime);
-      worldScene.renderSystems(RenderPass::Script, renderAPI, currentTime);
-      renderAPI.m_renderer2d.endScene(currentTime, wrap2d->first,
-                                      wrap2d->second);
-    }
-    renderAPI.m_renderContext.clear();
-  }
-  m_frameBuffer.unbind();
-  if (uiScene != nullptr)
-    uiScene->renderSystems(RenderPass::UI, renderAPI, currentTime);
-}
+} // namespace detail
 
 } // namespace pain
