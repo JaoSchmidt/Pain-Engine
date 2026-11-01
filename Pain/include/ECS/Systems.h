@@ -19,7 +19,7 @@
 #include "Core.h"
 #include "CoreRender/Renderer/Misc.h"
 #include "ECS/Components/ComponentManager.h"
-#include "ECS/Registry/ArcheRegistry.h"
+#include "ECS/Archetype/ArcheRegistry.h"
 #include "Events/EventDispatcher.h"
 #include <iostream>
 

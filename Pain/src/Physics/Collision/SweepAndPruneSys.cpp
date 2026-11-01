@@ -7,7 +7,7 @@
 // SweepAndPruneSys.cpp
 #include "Physics/Collision/SweepAndPruneSys.h"
 
-#include "ECS/Registry/ArcheRegistry.h"
+#include "ECS/Archetype/ArcheRegistry.h"
 #include "Misc/Events.h"
 #include "Physics/Collision/ColDetection.h"
 #include "Physics/Collision/ColReaction.h"

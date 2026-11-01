@@ -23,7 +23,7 @@
  */
 
 #pragma once
-#include "ECS/Registry/Bitmask.h"
+#include "ECS/Bitmask.h"
 
 /**
  * @namespace pain::tag

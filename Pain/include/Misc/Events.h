@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Core.h"
-#include "ECS/Registry/Entity.h"
+#include "ECS/Entity.h"
 #include "Events/EventDispatcher.h"
 #include "glm/ext/vector_float2.hpp"
 #include <sol/state.hpp>

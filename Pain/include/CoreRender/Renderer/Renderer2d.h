@@ -21,7 +21,7 @@
 #include "CoreRender/Renderer/MiscDebugGrid.h"
 #include "CoreRender/Renderer/Stats.h"
 #include "CoreRender/Text/Font.h"
-#include "ECS/Registry/Entity.h"
+#include "ECS/Entity.h"
 #include "Physics/Particles/SprayCmp.h"
 #include "TextComponent.h"
 #include <array>

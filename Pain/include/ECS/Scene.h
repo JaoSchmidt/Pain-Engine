@@ -10,9 +10,9 @@
 #include "Assets/DeltaTime.h"
 #include "Core.h"
 #include "CoreFiles/ThreadPool.h"
-#include "ECS/Registry/ArcheRegistry.h"
-#include "ECS/Registry/Bitmask.h"
-#include "ECS/Registry/Entity.h"
+#include "ECS/Archetype/ArcheRegistry.h"
+#include "ECS/Bitmask.h"
+#include "ECS/Entity.h"
 #include "ECS/Systems.h"
 #include "Events/EventDispatcher.h"
 

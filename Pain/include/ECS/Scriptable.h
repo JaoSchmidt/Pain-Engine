@@ -20,7 +20,7 @@
 #include "Core.h"
 #include "CoreFiles/ThreadPool.h"
 #include "ECS/Components/NativeScript.h"
-#include "ECS/Registry/Entity.h"
+#include "ECS/Entity.h"
 #include "Events/EventDispatcher.h"
 #include "UIScene.h"
 #include "WorldScene.h"
