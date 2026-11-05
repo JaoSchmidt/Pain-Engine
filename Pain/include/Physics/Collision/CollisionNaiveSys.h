@@ -56,28 +56,6 @@ void _implOnUpdate(
                                Movement2dComponent>>
         chunks,
     reg::EventDispatcher &eventDispatcher);
-void narrowPhaseCollisionStatic(          //
-    Transform2dComponent &t_i,            //
-    ColliderComponent &c_i,               //
-    Movement2dComponent &m_i,             //
-    reg::Entity entity_i,                 //
-    const Transform2dComponent &t_j,      //
-    const ColliderComponent &c_j,         //
-    reg::Entity entity_j,                 //
-    reg::EventDispatcher &eventDispatcher //
-);
-
-void narrowPhaseCollision(                //
-    Transform2dComponent &t_i,            //
-    ColliderComponent &c_i,               //
-    Movement2dComponent &m_i,             //
-    reg::Entity entity_i,                 //
-    Transform2dComponent &t_j,            //
-    ColliderComponent &c_j,               //
-    Movement2dComponent &m_j,             //
-    reg::Entity entity_j,                 //
-    reg::EventDispatcher &eventDispatcher //
-);
 
 } // namespace detail
 

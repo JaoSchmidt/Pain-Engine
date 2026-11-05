@@ -38,7 +38,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     ${LIBRARY_NAME}
     PRIVATE -Wall
             -g
-            -O0
             -Wextra
             -Wconversion
             -Wno-unused-parameter
@@ -56,7 +55,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL
   target_compile_options(
     ${LIBRARY_NAME}
     PRIVATE -Wall
-            -O3
             -Wextra
             -Wpedantic
             -Wconversion
@@ -69,12 +67,11 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL
             # specifc to gcc -fmodules-ts
   )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL
-                                                  "Debug")
+                                                  "Release")
   remove_definitions("-DNDEBUG")
   target_compile_options(
     ${LIBRARY_NAME}
     PRIVATE -Wall
-            -O3
             -Wextra
             -Wpedantic
             -Wconversion
@@ -103,7 +100,6 @@ elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     PRIVATE /W4 # Warning level 4 (high)
             /WX- # Don't treat warnings as errors
             # /permissive- # Standards conformance mode
-            /Od # Disable optimization
             /MP # Multi-processor compilation
             /EHsc # Exception handling model
             /Zi # Generate debug info
@@ -117,6 +113,34 @@ else()
                                              # -fdiagnostics-all-candidates
   )
 endif()
+
+# =========== Optimization Level ==================================
+# Single source of truth for the optimization level. Kept in sync with constexpr
+# value exposed in Pain/include/Core.h.
+set(PAIN_OPTIMIZATION_LEVEL
+    "1"
+    CACHE STRING "Optimization level: 0, 1, 2 or 3")
+set_property(CACHE PAIN_OPTIMIZATION_LEVEL PROPERTY STRINGS 0 1 2 3)
+if(NOT PAIN_OPTIMIZATION_LEVEL MATCHES "^[0-3]$")
+  message(
+    FATAL_ERROR "Invalid PAIN_OPTIMIZATION_LEVEL '${PAIN_OPTIMIZATION_LEVEL}'. "
+                "Use 0, 1, 2 or 3.")
+endif()
+
+if(MSVC)
+  if(PAIN_OPTIMIZATION_LEVEL STREQUAL "0")
+    set(PAIN_OPTIMIZATION_FLAG "/Od")
+  elseif(PAIN_OPTIMIZATION_LEVEL STREQUAL "1")
+    set(PAIN_OPTIMIZATION_FLAG "/O1")
+  else()
+    set(PAIN_OPTIMIZATION_FLAG "/O2")
+  endif()
+else()
+  set(PAIN_OPTIMIZATION_FLAG "-O${PAIN_OPTIMIZATION_LEVEL}")
+endif()
+target_compile_options(${LIBRARY_NAME} PRIVATE ${PAIN_OPTIMIZATION_FLAG})
+target_compile_definitions(
+  ${LIBRARY_NAME} PRIVATE PAIN_OPTIMIZATION_LEVEL=${PAIN_OPTIMIZATION_LEVEL})
 
 # =========== Adding Libraries ==================================
 # deactivate tests, examples, doc
@@ -347,6 +371,12 @@ if(NOT PAIN_BUILD_GAMETEMPLATE)
                                             # PAIN_BUILD_GAMETEMPLATE is ON
 endif()
 list(REMOVE_ITEM EXAMPLES ".gitignore")
+
+# Apply the same optimization level to every first-party target so the
+# PAIN_OPTIMIZATION_LEVEL constexpr has one value across the whole program.
+add_compile_options(${PAIN_OPTIMIZATION_FLAG})
+add_compile_definitions(PAIN_OPTIMIZATION_LEVEL=${PAIN_OPTIMIZATION_LEVEL})
+
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Example/PainlessEditor")
 
 execute_process(
@@ -408,6 +438,9 @@ if(UNIX)
     COMMAND printf "  TARGET:               ${TARGET_NAME}\\n"
     COMMAND printf "  VERSION:              ${PROJECT_VERSION}\\n"
     COMMAND printf "  TYPE:                 ${CMAKE_BUILD_TYPE}\\n"
+    COMMAND
+      printf
+      "  OPTIMIZATION:         ${PAIN_OPTIMIZATION_LEVEL} (${PAIN_OPTIMIZATION_FLAG})\\n"
     COMMAND printf "  GENERATOR:            ${CMAKE_GENERATOR}\\n"
     COMMAND
       printf

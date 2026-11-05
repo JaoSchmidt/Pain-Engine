@@ -8,7 +8,6 @@
 #include "Assets/ManagerTexture.h"
 #include "Core.h"
 #include "CoreRender/Renderer/BatchRect.h"
-#include "Debugging/Profiling.h"
 
 #include "CoreRender/CameraComponent.h"
 #include "ECS/WorldScene.h"
@@ -90,7 +89,6 @@ void Renderer2d::changeCamera(reg::Entity cameraEntity)
 
 void Renderer2d::beginScene()
 {
-  PROFILE_FUNCTION();
   for (auto it = m_triBatchCache.begin(); it != m_triBatchCache.end(); it++) {
     it->second.resetAll();
   }
@@ -113,7 +111,6 @@ void Renderer2d::uploadBasicUniforms(const glm::mat4 &viewProjectionMatrix,
                                      const glm::vec2 &cameraPos,
                                      float zoomLevel)
 {
-  PROFILE_FUNCTION();
   for (auto it = m_quadBatchCache.begin(); it != m_quadBatchCache.end(); it++) {
     it->first.shader->bind();
     it->first.shader->uploadUniformMat4("u_ViewProjection",
@@ -182,7 +179,6 @@ void beforeFlush2d(const MaterialKey &mat)
 
 void Renderer2d::flush()
 {
-  PROFILE_FUNCTION();
   auto triIt = m_triBatchCache.begin();
   auto quadIt = m_quadBatchCache.begin();
   auto rectIt = m_rectBatchCache.begin();
@@ -617,7 +613,6 @@ void Renderer2d::submitString(const glm::mat4 &transform,
 
 Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
 {
-  PROFILE_FUNCTION();
 
   // First texture is a  1x1 white texture
   Texture **textureSlots = new Texture *[backend::getTMU()];
@@ -635,14 +630,12 @@ Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
 
 void Renderer2d::bindTextures()
 {
-  PROFILE_FUNCTION();
   for (uint32_t i = 0; i < m.textureSlotIndex; i++)
     m.textureSlots[i]->bindToSlot(i);
 }
 
 float Renderer2d::allocateTextures(Texture &texture)
 {
-  PROFILE_FUNCTION();
   float textureIndex = 0.F;
   // use it to allocate new texture
   if (texture.m_slot == 0) {
@@ -661,7 +654,6 @@ float Renderer2d::allocateTextures(Texture &texture)
 }
 void Renderer2d::removeTexture(const Texture &texture)
 {
-  PROFILE_FUNCTION();
   if (texture.m_slot == 0) // m_textureSlots doesn't have the texture
     return;
   P_ASSERT_W(*m.textureSlots[texture.m_slot] == texture,

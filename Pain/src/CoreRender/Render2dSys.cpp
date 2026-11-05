@@ -56,14 +56,14 @@ void _implOnRender(
   {
     PROFILE_SCOPE("Scene::renderSystems - rotation quads");
 
-    for (auto &chunk : chunksRotation) {
-      const auto *t = std::get<0>(chunk.arrays);
-      const auto *s = std::get<1>(chunk.arrays);
-      const auto *r = std::get<2>(chunk.arrays);
-      const MaterialComponent *m = std::get<3>(chunk.arrays);
+    for (const auto &chunk : chunksRotation) {
+      const auto *__restrict t = std::get<0>(chunk.arrays);
+      const auto *__restrict s = std::get<1>(chunk.arrays);
+      const auto *__restrict r = std::get<2>(chunk.arrays);
+      const MaterialComponent *__restrict m = std::get<3>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         std::visit(
-            [&](auto &shape) {
+            [&](const auto &shape) {
               using T = std::decay_t<decltype(shape)>;
               if constexpr (std::is_same_v<T, QuadShape>) {
                 renderer2d.submitQuad(t[i].m_position, shape.side,
@@ -88,13 +88,13 @@ void _implOnRender(
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - texture quads");
-    for (auto &chunk : chunksTexture) {
-      const auto *t = std::get<0>(chunk.arrays);
-      const auto *s = std::get<1>(chunk.arrays);
-      const MaterialComponent *m = std::get<2>(chunk.arrays);
+    for (const auto &chunk : chunksTexture) {
+      const auto *__restrict t = std::get<0>(chunk.arrays);
+      const auto *__restrict s = std::get<1>(chunk.arrays);
+      const MaterialComponent *__restrict m = std::get<2>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         std::visit(
-            [&](auto &shape) {
+            [&](const auto &shape) {
               using T = std::decay_t<decltype(shape)>;
               if constexpr (std::is_same_v<T, QuadShape>) {
                 renderer2d.submitQuad(t[i].m_position, shape.side, s[i].layer,
@@ -117,14 +117,14 @@ void _implOnRender(
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - colored primitives");
-    for (auto &chunk : chunksColored) {
-      const auto *t = std::get<0>(chunk.arrays);
-      const auto *s = std::get<1>(chunk.arrays);
-      const auto *c = std::get<2>(chunk.arrays);
-      const auto *m = std::get<3>(chunk.arrays);
+    for (const auto &chunk : chunksColored) {
+      const auto *__restrict t = std::get<0>(chunk.arrays);
+      const auto *__restrict s = std::get<1>(chunk.arrays);
+      const auto *__restrict c = std::get<2>(chunk.arrays);
+      const auto *__restrict m = std::get<3>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         std::visit(
-            [&](auto &shape) {
+            [&](const auto &shape) {
               using T = std::decay_t<decltype(shape)>;
               if constexpr (std::is_same_v<T, QuadShape>) {
                 renderer2d.submitQuad(t[i].m_position, shape.side, s[i].layer,
@@ -144,9 +144,9 @@ void _implOnRender(
   }
   {
     PROFILE_SCOPE("Scene::renderSystems - colored primitives");
-    for (auto &chunk : chunksText) {
-      const auto *p = std::get<0>(chunk.arrays);
-      const auto *t = std::get<1>(chunk.arrays);
+    for (const auto &chunk : chunksText) {
+      const auto *__restrict p = std::get<0>(chunk.arrays);
+      const auto *__restrict t = std::get<1>(chunk.arrays);
       for (size_t i = 0; i < chunk.count; ++i) {
         renderer2d.submitString(p[i].m_position, t[i].scale, t[i].text,
                                 t[i].font, t[i].color, t[i].align);

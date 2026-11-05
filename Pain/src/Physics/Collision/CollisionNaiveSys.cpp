@@ -15,18 +15,20 @@ namespace pain
 {
 namespace Systems
 {
+namespace
+{
 
 // =============================================================
 // COLLISION DETECTION
 // =============================================================
-void detail::narrowPhaseCollisionStatic( //
-    Transform2dComponent &t_i,           //
-    ColliderComponent &c_i,              //
-    Movement2dComponent &m_i,            //
-    reg::Entity entity_i,                //
-    const Transform2dComponent &t_j,     //
-    const ColliderComponent &c_j,        //
-    reg::Entity entity_j,                //
+void narrowPhaseCollisionStatic(     //
+    Transform2dComponent &t_i,       //
+    const ColliderComponent &c_i,    //
+    Movement2dComponent &m_i,        //
+    const reg::Entity &entity_i,     //
+    const Transform2dComponent &t_j, //
+    const ColliderComponent &c_j,    //
+    const reg::Entity &entity_j,     //
     reg::EventDispatcher &eventDispatcher)
 {
   glm::vec2 center1 = t_i.m_position + c_i.m_offset;
@@ -73,15 +75,15 @@ void detail::narrowPhaseCollisionStatic( //
     }
   }
 }
-void detail::narrowPhaseCollision( //
-    Transform2dComponent &t_i,     //
-    ColliderComponent &c_i,        //
-    Movement2dComponent &m_i,      //
-    reg::Entity entity_i,          //
-    Transform2dComponent &t_j,     //
-    ColliderComponent &c_j,        //
-    Movement2dComponent &m_j,      //
-    reg::Entity entity_j,          //
+void narrowPhaseCollision(        //
+    Transform2dComponent &t_i,    //
+    const ColliderComponent &c_i, //
+    Movement2dComponent &m_i,     //
+    const reg::Entity &entity_i,  //
+    Transform2dComponent &t_j,    //
+    const ColliderComponent &c_j, //
+    Movement2dComponent &m_j,     //
+    const reg::Entity &entity_j,  //
     reg::EventDispatcher &eventDispatcher)
 {
   glm::vec2 center1 = t_i.m_position + c_i.m_offset;
@@ -131,6 +133,7 @@ void detail::narrowPhaseCollision( //
     }
   }
 }
+} // namespace
 void detail::_implOnUpdate(
     DeltaTime deltaTime,
     std::vector<reg::ChunkView<Transform2dComponent, ColliderComponent>>
@@ -141,22 +144,25 @@ void detail::_implOnUpdate(
     reg::EventDispatcher &eventDispatcher)
 {
   UNUSED(deltaTime)
+  PROFILE_SCOPE("Scene::updateSystems - collision detection")
   {
     PROFILE_SCOPE(
         "Scene::updateSystems - collision detection vs moving objects");
     for (size_t ci = 0; ci < chunks.size(); ++ci) {
       auto &chunk_i = chunks[ci];
 
-      auto *t_chunk_i = std::get<0>(chunk_i.arrays);
-      auto *c_chunk_i = std::get<1>(chunk_i.arrays);
-      auto *m_chunk_i = std::get<2>(chunk_i.arrays);
+      auto *__restrict t_i = std::get<0>(chunk_i.arrays);
+      const auto *__restrict c_i = std::get<1>(chunk_i.arrays);
+      auto *__restrict m_i = std::get<2>(chunk_i.arrays);
+      const reg::Entity *e_i = chunk_i.entities.data();
 
       for (size_t cj = ci; cj < chunks.size(); ++cj) {
         auto &chunk_j = chunks[cj];
 
-        auto *t_chunk_j = std::get<0>(chunk_j.arrays);
-        auto *c_chunk_j = std::get<1>(chunk_j.arrays);
-        auto *m_chunk_j = std::get<2>(chunk_j.arrays);
+        auto *__restrict t_j = std::get<0>(chunk_j.arrays);
+        const auto *__restrict c_j = std::get<1>(chunk_j.arrays);
+        auto *__restrict m_j = std::get<2>(chunk_j.arrays);
+        const reg::Entity *e_j = chunks[ci].entities.data();
 
         // Compare against different chunks, i.e: i ∈ chunk_i and j ∈ chunk_j
         const bool same_chunk = (ci == cj);
@@ -166,10 +172,8 @@ void detail::_implOnUpdate(
           size_t j_start = same_chunk ? i + 1 : 0;
 
           for (size_t j = j_start; j < chunk_j.count; ++j) {
-            narrowPhaseCollision(t_chunk_i[i], c_chunk_i[i], m_chunk_i[i],
-                                 chunk_i.entities[i], //
-                                 t_chunk_j[j], c_chunk_j[j], m_chunk_j[j],
-                                 chunk_j.entities[j], //
+            narrowPhaseCollision(t_i[i], c_i[i], m_i[i], e_i[i], //
+                                 t_j[j], c_j[j], m_j[j], e_j[j], //
                                  eventDispatcher);
           }
         }
@@ -183,21 +187,23 @@ void detail::_implOnUpdate(
     for (size_t ci = 0; ci < chunks.size(); ++ci) {
       auto &chunk_i = chunks[ci];
 
-      auto *t_chunk_i = std::get<0>(chunk_i.arrays);
-      auto *c_chunk_i = std::get<1>(chunk_i.arrays);
-      auto *m_chunk_i = std::get<2>(chunk_i.arrays);
+      auto *__restrict t_i = std::get<0>(chunk_i.arrays);
+      const auto *__restrict c_i = std::get<1>(chunk_i.arrays);
+      auto *__restrict m_i = std::get<2>(chunk_i.arrays);
+      const reg::Entity *e_i = chunk_i.entities.data();
 
       for (size_t cj = 0; cj < chunksStatic.size(); ++cj) {
         auto &chunk_j = chunksStatic[cj];
 
-        auto *t_chunk_j = std::get<0>(chunk_j.arrays);
-        auto *c_chunk_j = std::get<1>(chunk_j.arrays);
+        auto *__restrict t_j = std::get<0>(chunk_j.arrays);
+        const auto *__restrict c_j = std::get<1>(chunk_j.arrays);
+        const reg::Entity *e_j = chunk_i.entities.data();
 
         for (size_t i = 0; i < chunk_i.count; ++i) {
           for (size_t j = 0; j < chunk_j.count; ++j) {
-            narrowPhaseCollisionStatic( //
-                t_chunk_i[i], c_chunk_i[i], m_chunk_i[i], chunk_i.entities[i],
-                t_chunk_j[j], c_chunk_j[j], chunk_j.entities[j],
+            narrowPhaseCollisionStatic(         //
+                t_i[i], c_i[i], m_i[i], e_i[i], //
+                t_j[j], c_j[j], e_j[j],         //
                 eventDispatcher);
           }
         }

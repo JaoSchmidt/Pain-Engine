@@ -178,8 +178,8 @@ public:
         [&](const ChangeActiveCameraEvent &e) {
           auto &cam = scene.template getComponent<OrthoCameraComponent>(e.cam);
           if (cam.m_active) {
-            auto chunks = scene.template query<OrthoCameraComponent>();
-            detail::_implChangeActiveCameraEvent(chunks, cam, renderAPI);
+            detail::_implChangeActiveCameraEvent(
+                scene.template query<OrthoCameraComponent>(), cam, renderAPI);
           }
         });
   };

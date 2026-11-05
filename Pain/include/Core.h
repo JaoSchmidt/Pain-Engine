@@ -5,6 +5,28 @@
  */
 
 #pragma once
+
+/**
+ * Optimization level injected by CMake. Compilers expose whether optimization
+ * is enabled, but not which level, so fall back to a best-effort value when the
+ * project is built outside its CMake setup.
+ */
+#ifndef PAIN_OPTIMIZATION_LEVEL
+#if defined(__OPTIMIZE__) || defined(__OPTIMIZE_SIZE__)
+#define PAIN_OPTIMIZATION_LEVEL 1
+#else
+#define PAIN_OPTIMIZATION_LEVEL 0
+#endif
+#endif
+
+namespace pain
+{
+/** @brief Active compiler optimization level: 0, 1, 2 or 3. */
+inline constexpr int optimizationLevel = PAIN_OPTIMIZATION_LEVEL;
+inline constexpr bool isOptimized = optimizationLevel > 0;
+static_assert(optimizationLevel >= 0 && optimizationLevel <= 3);
+} // namespace pain
+
 /** Marks a variable or expression as intentionally unused to silence warnings.
  */
 #define UNUSED(x) (void)(x);

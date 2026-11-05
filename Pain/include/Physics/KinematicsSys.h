@@ -30,6 +30,7 @@
 
 #pragma once
 #include "Assets/DeltaTime.h"
+#include "Debugging/Profiling.h"
 #include "ECS/Components/ComponentManager.h"
 #include "ECS/Systems.h"
 #include "Physics/Movement3dComponent.h"
@@ -108,9 +109,9 @@ struct Kinematics : public System<CM>, IOnUpdate {
    */
   void onUpdate(DeltaTime deltaTime) override
   {
+    PROFILE_SCOPE("Scene::udpateSystems - Kinematics");
     detail::_implOnUpdate(
-        deltaTime,
-        this->template query<RotationComponent>(),
+        deltaTime, this->template query<RotationComponent>(),
         this->template query<Transform2dComponent, Movement2dComponent>(),
         this->template query<Transform3dComponent, Movement3dComponent>());
   }

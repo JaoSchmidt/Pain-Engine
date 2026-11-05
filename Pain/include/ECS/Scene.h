@@ -188,7 +188,7 @@ public:
 
   /// @brief Const version of query().
   template <reg::ECSComponent... Components, typename... ExcludeComponents>
-  inline std::vector<reg::ChunkView<const Components...>>
+  inline std::vector<reg::ChunkViewConst<const Components...>>
   queryConst(exclude_t<ExcludeComponents...> = {}) const
   {
     return m_registry.template queryConst<Components...>(

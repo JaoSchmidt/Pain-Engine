@@ -24,7 +24,6 @@ void _implOnUpdate(
     std::vector<reg::ChunkView<Transform3dComponent, Movement3dComponent>>
         chunksMovement3d)
 {
-  PROFILE_SCOPE("Scene::udpateSystems - Kinematics");
   // =============================================================== //
   // Update Rotation Components
   // =============================================================== //
