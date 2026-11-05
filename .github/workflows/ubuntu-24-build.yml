@@ -57,7 +57,7 @@ jobs:
       # GitHub runners don't need the apt/method bzip2 workaround
 
       - name: Configure build
-        run: cmake --preset ci
+        run: cmake --preset ci-linux
 
       - name: Build
         run: |
