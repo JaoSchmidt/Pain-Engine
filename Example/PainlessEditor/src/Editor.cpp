@@ -67,7 +67,7 @@ void Editor::onRender(pain::RenderApi &renderAPI, pain::DeltaTime currentTime)
     // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will
     // render our background and handle the pass-thru hole, so we ask Begin()
     // to not render a background.
-    if constexpr (ImGuiDockNodeFlags_PassthruCentralNode)
+    if constexpr (ImGuiDockNodeFlags_PassthruCentralNode != 0)
       m_windowFlags |= ImGuiWindowFlags_NoBackground;
 
     // Important: note that we proceed even if Begin() returns false (aka

@@ -80,7 +80,7 @@ string(TIMESTAMP BUILD_TIME "%Y-%m-%d %H:%M:%S")
 
 if(UNIX)
   add_custom_target(
-    BuildBanner ALL
+    "${TARGET_NAME}Banner" ALL
     COMMAND
       printf
       "\\n\\033[1;32m==========================================================================================\\n"

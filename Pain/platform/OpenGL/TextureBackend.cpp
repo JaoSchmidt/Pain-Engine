@@ -139,7 +139,7 @@ void bindTextureToSlot(uint32_t id, uint32_t slot)
 void setTextureData(uint32_t id, uint32_t width, uint32_t height,
                     ImageFormat dataFormat, const void *data, uint32_t size)
 {
-  uint32_t bytesPerPixel = getGLDataFormat(dataFormat) == GL_RGBA ? 4 : 3;
+  [[maybe_unused]] uint32_t bytesPerPixel = getGLDataFormat(dataFormat) == GL_RGBA ? 4 : 3;
   P_ASSERT_W(size == width * height * bytesPerPixel,
              "Data must be entire texture!");
   glTextureSubImage2D(id, 0, 0, 0, static_cast<int32_t>(width),

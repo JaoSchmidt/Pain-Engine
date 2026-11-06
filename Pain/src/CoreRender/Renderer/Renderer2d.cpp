@@ -621,6 +621,7 @@ Renderer2d Renderer2d::createRenderer2d(MaterialManager &materialManager)
   return Renderer2d([textureSlots, &materialManager] {
     return M{
         .materialManager = materialManager,
+        .sprayBatchCache = {},
         .textBatch = TextBatch::create(), //
         .debugGrid = DebugGrid::create(),
         .textureSlots = textureSlots, //

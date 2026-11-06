@@ -74,7 +74,7 @@ struct InternalConfig {
   X(std::string, title, "Unnamed Game", "game_title");
 
 #define X(type, variable, default, name)                                       \
-  Config<type>(variable) { default, name }
+  Config<type> variable { default, name }
   INTERNAL_INI_CONFIGS
 #undef X
 
@@ -102,7 +102,7 @@ struct IniConfig {
   // clang-format on
 
 #define X(type, variable, default, name)                                       \
-  Config<type>(variable) { default, name }
+  Config<type> variable { default, name }
   INI_CONFIGS
 #undef X
 

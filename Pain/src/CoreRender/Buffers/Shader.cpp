@@ -17,7 +17,7 @@ namespace
 {
 // Shaders classes don't consume that much memory, they are just a name and a
 // number
-uint32_t s_binded = 0;
+[[maybe_unused]] uint32_t s_binded = 0;
 } // namespace
 
 void Shader::bind() const

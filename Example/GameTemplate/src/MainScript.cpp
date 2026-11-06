@@ -5,7 +5,7 @@
 MainScript &MainScript::createScriptScene(pain::Scene &scene,
                                           pain::Application *app)
 {
-  pain::RenderApi &renderAPI = app->getRenderApi();
+  [[maybe_unused]] pain::RenderApi &renderAPI = app->getRenderApi();
   return pain::Scene::emplaceScript<MainScript>(scene.getEntity(), scene);
 }
 MainScript::MainScript(reg::Entity entity, pain::Scene &scene)

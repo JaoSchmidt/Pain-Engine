@@ -56,8 +56,7 @@ void dockerspaceBuild(const std::string &panelName, PanelInfo &info,
 void registerPanel(const std::string &name, float split, InterfaceMenu menu)
 {
   if (!g_customPanels.contains(name)) {
-    const std::string &panel =
-        g_customPanels.emplace(name, std::vector<SubPanel>{}).first->first;
+    g_customPanels.emplace(name, std::vector<SubPanel>{});
     g_panelInfo.emplace(std::piecewise_construct,    //
                         std::forward_as_tuple(name), //
                         std::forward_as_tuple(split, menu));
