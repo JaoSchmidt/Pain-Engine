@@ -97,7 +97,7 @@ elseif(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   )
   target_compile_options(
     ${LIBRARY_NAME}
-    PRIVATE /W4 # Warning level 4 (high)
+    PRIVATE /W3 # Warning level 4 (high)
             /WX- # Don't treat warnings as errors
             # /permissive- # Standards conformance mode
             /MP # Multi-processor compilation
